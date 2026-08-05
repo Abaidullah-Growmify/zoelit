@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { addresses as initialAddresses } from "@/lib/data";
-import { Badge, Button, Card, Input, Label } from "@/components/ui";
+import { Badge, Button, Card, Input, Label, PageHeader } from "@/components/ui";
 
 export default function AddressesPage() {
   const [items, setItems] = useState(initialAddresses);
@@ -42,13 +42,7 @@ export default function AddressesPage() {
 
   return (
     <div>
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-        <div>
-          <p className="font-bold text-blue-600">Shipping</p>
-          <h1 className="text-4xl font-black">Addresses</h1>
-        </div>
-        <Button onClick={() => setShowForm(true)}>Add New Address</Button>
-      </div>
+      <PageHeader eyebrow="Shipping" title="Addresses" description="Manage saved delivery locations and choose your default shipping address." action={<Button onClick={() => setShowForm(true)}>Add New Address</Button>} />
 
       <div className="mt-8 grid gap-4 md:grid-cols-2">
         {items.map((address) => (

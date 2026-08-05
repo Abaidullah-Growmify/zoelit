@@ -1,4 +1,5 @@
 import { FAQAccordion } from "./faq-accordion";
+import { PageHeader } from "@/components/ui";
 
 const faqs = [
   { question: "How do I track my order?", answer: "Sign in and open Dashboard > My Orders. Each order detail page shows the current status, payment state, tracking number when available, and timeline." },
@@ -14,11 +15,7 @@ export const metadata = { title: "FAQ | ZoeLit Commerce" };
 export default function FAQPage() {
   return (
     <section className="container-page py-12">
-      <div className="mx-auto max-w-3xl text-center">
-        <p className="font-bold text-blue-600">FAQ</p>
-        <h1 className="mt-3 text-4xl font-black md:text-5xl">Frequently asked questions</h1>
-        <p className="mt-4 text-slate-500 dark:text-slate-400">Clear answers about orders, checkout, account tools, and support.</p>
-      </div>
+      <PageHeader eyebrow="FAQ" title="Frequently asked questions" description="Clear answers about orders, checkout, account tools, and support." align="center" />
       <FAQAccordion faqs={faqs} />
     </section>
   );

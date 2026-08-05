@@ -1,4 +1,4 @@
-import { Badge, Card } from "@/components/ui";
+import { Card, PageHeader } from "@/components/ui";
 
 const sections = [
   { title: "Information We Collect", text: "We collect account details, contact information, shipping addresses, order history, and checkout-related data needed to provide the shopping experience." },
@@ -14,11 +14,7 @@ export const metadata = { title: "Privacy Policy | ZoeLit Commerce" };
 export default function PrivacyPolicyPage() {
   return (
     <section className="container-page py-12">
-      <div className="mx-auto max-w-3xl text-center">
-        <Badge>Privacy</Badge>
-        <h1 className="mt-4 text-4xl font-black md:text-5xl">Privacy Policy</h1>
-        <p className="mt-4 text-slate-500 dark:text-slate-400">Last updated August 5, 2026. This page explains how ZoeLit Commerce handles customer information in this e-commerce experience.</p>
-      </div>
+      <PageHeader eyebrow="Privacy" title="Privacy Policy" description="Last updated August 5, 2026. This page explains how ZoeLit Commerce handles customer information in this e-commerce experience." align="center" />
       <div className="mx-auto mt-10 grid max-w-4xl gap-5">
         {sections.map((section) => (
           <Card key={section.title} className="shadow-none">

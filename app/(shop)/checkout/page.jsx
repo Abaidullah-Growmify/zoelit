@@ -8,7 +8,7 @@ import { z } from "zod";
 import { getProduct } from "@/lib/data";
 import { money } from "@/lib/utils";
 import { useCartStore } from "@/store/cart-store";
-import { Button, Card, ErrorText, Input, Label } from "@/components/ui";
+import { Button, Card, ErrorText, Input, Label, PageHeader } from "@/components/ui";
 
 const schema = z.object({
   firstName: z.string().min(2, "First name is required"),
@@ -57,7 +57,8 @@ export default function CheckoutPage() {
   }
 
   return (
-      <section className="container-page py-12 sm:py-16 lg:py-20">
+      <section className="container-page py-12">
+        <PageHeader eyebrow="Checkout" title="Complete your order" description="Confirm your billing details, shipping cost, and payment method before placing the order." className="mb-8" />
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_460px] lg:items-start">
           <Card className="shadow-none">
             <div className="mb-6 border-b border-slate-200 pb-3 dark:border-slate-800">

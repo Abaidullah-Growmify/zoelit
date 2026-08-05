@@ -3,7 +3,7 @@
 import { money } from "@/lib/utils";
 import { useCartStore } from "@/store/cart-store";
 import { CartItemCard } from "@/components/cart-item-card";
-import { Button, Card, EmptyState } from "@/components/ui";
+import { Button, Card, EmptyState, PageHeader } from "@/components/ui";
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, subtotal } = useCartStore();
@@ -26,18 +26,12 @@ export default function CartPage() {
 
   return (
     <section className="container-page py-10 sm:py-12">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="font-bold text-blue-600 dark:text-blue-300">Shopping Cart</p>
-          <h1 className="mt-2 text-4xl font-black tracking-tight text-slate-950 sm:text-5xl dark:text-white">Review your bag</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-            Fine tune quantities, check shipping, and continue to secure checkout when everything looks right.
-          </p>
-        </div>
-        <Button asChild href="/products" variant="outline" className="w-full sm:w-auto">
-          Continue shopping
-        </Button>
-      </div>
+      <PageHeader
+        eyebrow="Shopping Cart"
+        title="Review your bag"
+        description="Fine tune quantities, check shipping, and continue to secure checkout when everything looks right."
+        action={<Button asChild href="/products" variant="outline" className="w-full sm:w-auto">Continue shopping</Button>}
+      />
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-4">

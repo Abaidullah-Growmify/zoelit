@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Button, Card, ErrorText, Input, Label } from "@/components/ui";
+import { Button, Card, ErrorText, Input, Label, PageHeader, SectionHeader } from "@/components/ui";
 
 const schema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -54,11 +54,12 @@ export default function ContactPage() {
 
   return (
     <section className="container-page py-12">
-      <div className="mx-auto max-w-3xl text-center">
-        <p className="font-bold text-blue-600">Get to know us</p>
-        <h1 className="mt-3 text-4xl font-black md:text-5xl">Have a project in mind? Let&apos;s talk.</h1>
-        <p className="mt-4 text-slate-500 dark:text-slate-400">Contact Zoel IT LTD for enquiries, support, office details, or product questions. Send us a message and we will help you quickly.</p>
-      </div>
+      <PageHeader
+        eyebrow="Get to know us"
+        title="Have a project in mind? Let's talk."
+        description="Contact Zoel IT LTD for enquiries, support, office details, or product questions. Send us a message and we will help you quickly."
+        align="center"
+      />
 
       <div className="mt-10 grid gap-6 lg:grid-cols-[.85fr_1.15fr]">
         <div className="grid gap-4">
@@ -120,10 +121,7 @@ export default function ContactPage() {
       </div>
 
       <div className="mt-14">
-        <div className="max-w-2xl">
-          <p className="font-bold uppercase tracking-[0.2em] text-blue-600">Locations</p>
-          <h2 className="mt-3 text-3xl font-black">Come and visit our offices around the world</h2>
-        </div>
+        <SectionHeader eyebrow="Locations" title="Come and visit our offices around the world" className="max-w-2xl" />
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
           {locations.map((location) => (
             <Card key={location.title} className="shadow-none">
