@@ -26,8 +26,19 @@ export function Input({ className, ...props }) {
   return <input className={cn("h-11 w-full rounded-md border border-slate-200 bg-white px-4 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50", className)} {...props} />;
 }
 
-export function Select({ className, ...props }) {
-  return <select className={cn("h-11 rounded-md border border-slate-200 bg-white px-4 text-sm text-slate-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50", className)} {...props} />;
+export function Select({ className, style, ...props }) {
+  return (
+    <select
+      className={cn("h-11 appearance-none rounded-md border border-slate-200 bg-white bg-no-repeat py-0 pl-4 pr-11 text-sm text-slate-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50", className)}
+      style={{
+        backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%230f172a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")",
+        backgroundPosition: "right 1rem center",
+        backgroundSize: "1rem",
+        ...style,
+      }}
+      {...props}
+    />
+  );
 }
 
 export function Label({ className, ...props }) {
