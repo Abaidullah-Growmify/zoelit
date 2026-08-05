@@ -1,0 +1,9 @@
+
+> zoelit_system@0.1.0 dev
+> next dev
+
+▲ Next.js 16.3.0 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://192.168.253.1:3001
+✓ Ready in 968ms
+✓ Running next.config.mjs took 35ms

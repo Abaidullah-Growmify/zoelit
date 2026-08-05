@@ -1,0 +1,11 @@
+import Link from "next/link";
+import { ArrowRight, Package, Clock, Wallet } from "lucide-react";
+import { customer, orders } from "@/lib/data";
+import { money, shortDate } from "@/lib/utils";
+import { Badge, Button, Card } from "@/components/ui";
+
+export default function DashboardPage() {
+  const pending = orders.filter((order) => ["Pending", "Processing"].includes(order.status)).length;
+  const spent = orders.filter((order) => order.status !== "Cancelled").reduce((sum, order) => sum + order.total, 0);
+  return <div><div className="flex flex-col justify-between gap-4 md:flex-row md:items-center"><div><p className="font-bold text-blue-600">Customer panel</p><h1 className="text-4xl font-black">Welcome back, {customer.name.split(" ")[0]}</h1><p className="mt-2 text-slate-500 dark:text-slate-400">Track orders, manage addresses, and keep checkout effortless.</p></div><Button asChild href="/products">Continue Shopping <ArrowRight className="size-4" /></Button></div><div className="mt-8 grid gap-4 md:grid-cols-3">{[{ label: "Total Orders", value: orders.length, icon: Package }, { label: "Pending Orders", value: pending, icon: Clock }, { label: "Total Spent", value: money(spent), icon: Wallet }].map((stat) => <Card key={stat.label}><stat.icon className="size-7 text-blue-600" /><p className="mt-5 text-sm font-bold text-slate-500 dark:text-slate-400">{stat.label}</p><p className="mt-2 text-3xl font-black">{stat.value}</p></Card>)}</div><Card className="mt-8 overflow-hidden"><div className="mb-5 flex items-center justify-between"><h2 className="text-xl font-black">Recent orders</h2><Link href="/dashboard/orders" className="text-sm font-bold text-blue-600">View all</Link></div><div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead className="text-slate-500 dark:text-slate-400"><tr><th className="py-3">Order</th><th>Date</th><th>Status</th><th>Total</th><th></th></tr></thead><tbody>{orders.slice(0, 5).map((order) => <tr key={order.id} className="border-t border-slate-100 dark:border-slate-800"><td className="py-4 font-bold">#{order.id}</td><td>{shortDate(order.date)}</td><td><Badge>{order.status}</Badge></td><td className="font-bold">{money(order.total)}</td><td><Link className="font-bold text-blue-600" href={`/dashboard/orders/${order.id}`}>Details</Link></td></tr>)}</tbody></table></div></Card></div>;
+}
