@@ -17,8 +17,7 @@ export default function HomePage() {
       <section className="relative overflow-hidden bg-[radial-gradient(circle_at_top_left,#dbeafe,transparent_35%),linear-gradient(135deg,#ffffff,#f8fafc)] py-20 dark:bg-[radial-gradient(circle_at_top_left,#1e3a8a,transparent_32%),linear-gradient(135deg,#020617,#0f172a)]">
         <div className="container-page grid items-center gap-12 lg:grid-cols-[1.05fr_.95fr]">
           <div>
-            <span className="inline-flex rounded-full bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">New season essentials</span>
-            <h1 className="mt-6 max-w-3xl text-5xl font-black tracking-tight text-slate-950 md:text-7xl dark:text-white">Premium commerce, crafted for trust.</h1>
+            <h1 className="max-w-3xl text-5xl font-black tracking-tight text-slate-950 md:text-7xl dark:text-white">Premium commerce, crafted for trust.</h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600 dark:text-slate-300">Shop refined everyday products with fast checkout, persistent cart, account dashboard, and a polished customer experience.</p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row"><Button asChild href="/products">Shop Collection <ArrowRight className="size-4" /></Button><Button asChild href="/dashboard" variant="outline">View Dashboard</Button></div>
           </div>
