@@ -8,7 +8,7 @@ export function Button({ asChild, className, variant = "primary", size = "md", .
 
 export function buttonClasses({ variant = "primary", size = "md" } = {}) {
   return cn(
-    "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-60",
+    "inline-flex items-center justify-center gap-2 rounded-md font-semibold transition hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-60",
     size === "sm" ? "h-9 px-4 text-sm" : "h-11 px-5 text-sm",
     variant === "primary" && "bg-blue-600 text-white shadow-lg shadow-blue-600/20 hover:bg-blue-700",
     variant === "secondary" && "bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-50 dark:hover:bg-slate-700",
@@ -19,15 +19,15 @@ export function buttonClasses({ variant = "primary", size = "md" } = {}) {
 }
 
 export function Card({ className, ...props }) {
-  return <div className={cn("rounded-3xl border border-slate-200 bg-white p-6 soft-shadow dark:border-slate-800 dark:bg-slate-900", className)} {...props} />;
+  return <div className={cn("rounded-lg border border-slate-200 bg-white p-6 soft-shadow dark:border-slate-800 dark:bg-slate-900", className)} {...props} />;
 }
 
 export function Input({ className, ...props }) {
-  return <input className={cn("h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50", className)} {...props} />;
+  return <input className={cn("h-11 w-full rounded-md border border-slate-200 bg-white px-4 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50", className)} {...props} />;
 }
 
 export function Select({ className, ...props }) {
-  return <select className={cn("h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50", className)} {...props} />;
+  return <select className={cn("h-11 rounded-md border border-slate-200 bg-white px-4 text-sm text-slate-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50", className)} {...props} />;
 }
 
 export function Label({ className, ...props }) {
@@ -52,7 +52,7 @@ export function Badge({ children, tone = "slate" }) {
 }
 
 export function Skeleton({ className }) {
-  return <div className={cn("skeleton rounded-2xl", className)} />;
+  return <div className={cn("skeleton rounded-md", className)} />;
 }
 
 export function EmptyState({ title, description, action }) {

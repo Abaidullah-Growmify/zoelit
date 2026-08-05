@@ -5,7 +5,7 @@ export function ProductGridSkeleton({ count = 8 }) {
 }
 
 export function ProductDetailSkeleton() {
-  return <div className="grid gap-10 lg:grid-cols-2"><Skeleton className="aspect-square w-full rounded-3xl" /><div><Skeleton className="h-5 w-28" /><Skeleton className="mt-4 h-12 w-3/4" /><Skeleton className="mt-4 h-8 w-32" /><Skeleton className="mt-8 h-24 w-full" /><Skeleton className="mt-8 h-12 w-48 rounded-full" /></div></div>;
+  return <div className="grid gap-10 lg:grid-cols-2"><Skeleton className="aspect-square w-full rounded-lg" /><div><Skeleton className="h-5 w-28" /><Skeleton className="mt-4 h-12 w-3/4" /><Skeleton className="mt-4 h-8 w-32" /><Skeleton className="mt-8 h-24 w-full" /><Skeleton className="mt-8 h-12 w-48 rounded-full" /></div></div>;
 }
 
 export function CartSkeleton() {

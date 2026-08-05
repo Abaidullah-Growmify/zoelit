@@ -38,7 +38,7 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
       <section className="container-page py-12">
-        <div className="rounded-[2rem] bg-blue-600 p-8 text-white shadow-2xl shadow-blue-600/20 md:p-10">
+        <div className="rounded-lg bg-blue-600 p-8 text-white shadow-2xl shadow-blue-600/20 md:p-10">
           <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.2em] text-blue-100">Premium commerce support</p>

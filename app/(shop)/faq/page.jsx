@@ -24,7 +24,7 @@ export default function FAQPage() {
         {faqs.map((item) => (
           <Card key={item.question} className="shadow-none transition hover:border-blue-200 hover:shadow-lg hover:shadow-blue-600/5 dark:hover:border-blue-500/30">
             <div className="flex gap-4">
-              <div className="grid size-10 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-500/10"><HelpCircle className="size-5" /></div>
+              <div className="grid size-10 shrink-0 place-items-center rounded-md bg-blue-50 text-blue-600 dark:bg-blue-500/10"><HelpCircle className="size-5" /></div>
               <div>
                 <h2 className="font-black">{item.question}</h2>
                 <p className="mt-2 leading-7 text-slate-600 dark:text-slate-300">{item.answer}</p>

@@ -12,7 +12,7 @@ export function ProductCard({ product }) {
   const addItem = useCartStore((state) => state.addItem);
   return (
     <Card className="group overflow-hidden p-3 transition hover:-translate-y-1 hover:shadow-2xl">
-      <Link href={`/products/${product.id}`} className="block overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-800">
+      <Link href={`/products/${product.id}`} className="block overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800">
         <Image src={product.image} alt={product.name} width={700} height={700} className="aspect-square w-full object-cover transition duration-500 group-hover:scale-105" />
       </Link>
       <div className="p-3">
