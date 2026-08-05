@@ -35,7 +35,7 @@ export default function RootLayout({ children }) {
       >
         <StoreHydration />
         {children}
-        <Toaster richColors position="top-right" />
+        <Toaster closeButton richColors position="top-right" />
       </body>
     </html>
   );
