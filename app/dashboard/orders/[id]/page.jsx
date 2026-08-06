@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { CheckCircle2, Circle } from "lucide-react";
 import { addresses, getOrder, orders, orderItems, statuses } from "@/lib/data";
 import { money, shortDate } from "@/lib/utils";
-import { Badge, Card, PageHeader } from "@/components/ui";
+import { DashboardPageHeader } from "@/components/dashboard-page-header";
+import { Badge, Card } from "@/components/ui";
 
 export function generateStaticParams() {
   return orders.map((order) => ({ id: order.id }));
@@ -19,8 +20,7 @@ export default async function OrderDetailPage({ params }) {
 
   return (
     <div>
-      <PageHeader
-        eyebrow="Order Details"
+      <DashboardPageHeader
         title={`Order #${order.id}`}
         description={`Placed ${shortDate(order.date)}. Review shipment progress, items, payment, and delivery information.`}
       />

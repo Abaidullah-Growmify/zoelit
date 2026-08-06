@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { Pencil } from "lucide-react";
 import { toast } from "sonner";
+import { DashboardPageHeader } from "@/components/dashboard-page-header";
 import { addresses as initialAddresses } from "@/lib/data";
-import { Badge, Button, Card, Input, Label, PageHeader } from "@/components/ui";
+import { Badge, Button, Card, Input, Label } from "@/components/ui";
 
 export default function AddressesPage() {
   const [items, setItems] = useState(initialAddresses);
@@ -43,7 +44,7 @@ export default function AddressesPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Shipping" title="Addresses" description="Manage saved delivery locations and choose your default shipping address." action={<Button onClick={() => setShowForm(true)}>Add New Address</Button>} />
+      <DashboardPageHeader title="Addresses" description="Manage saved delivery locations and choose your default shipping address." action={<Button onClick={() => setShowForm(true)}>Add New Address</Button>} />
 
       <div className="mt-8 grid gap-4 md:grid-cols-2">
         {items.map((address) => (

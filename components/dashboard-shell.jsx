@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Home, LogOut, MapPin, Menu, ShoppingBag, User, X, Heart } from "lucide-react";
+import { Bell, ChevronDown, Heart, Home, MapPin, Maximize2, Menu, Minimize2, PanelLeftClose, PanelLeftOpen, ShoppingBag, User, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
-import { Button } from "@/components/ui";
 import { DashboardSkeleton } from "@/components/skeletons";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const items = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
@@ -18,19 +18,98 @@ const items = [
   { href: "/products", label: "Wishlist", icon: Heart },
 ];
 
+const sidebarItems = items.filter((item) => item.href !== "/dashboard/profile");
+
 export function DashboardShell({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const user = useAuthStore((state) => state.user);
   const ready = useAuthStore((state) => state.hasHydrated);
   const logout = useAuthStore((state) => state.logout);
+  const pathname = usePathname();
   const router = useRouter();
   useEffect(() => { if (ready && !user) router.replace(`/login?next=${encodeURIComponent(window.location.pathname)}`); }, [ready, user, router]);
+  useEffect(() => {
+    const handleFullscreenChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
   if (!ready || !user) return <div className="container-page py-10"><DashboardSkeleton /></div>;
-  const sidebar = <Sidebar onNavigate={() => setMobileOpen(false)} onLogout={() => { logout(); toast.info("Signed out"); router.push("/login"); }} />;
-  return <div className="min-h-screen bg-slate-100 dark:bg-slate-950"><div className="lg:hidden sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-slate-900"><Link href="/" className="font-extrabold"><span className="text-blue-600">Zoe</span>Lit</Link><button onClick={() => setMobileOpen(true)} aria-label="Open dashboard menu"><Menu /></button></div><aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-slate-200 bg-white p-5 lg:block dark:border-slate-800 dark:bg-slate-900">{sidebar}</aside>{mobileOpen ? <div className="fixed inset-0 z-50 lg:hidden"><div className="absolute inset-0 bg-slate-950/40" onClick={() => setMobileOpen(false)} /><aside className="absolute inset-y-0 left-0 w-80 bg-white p-5 dark:bg-slate-900"><button className="mb-4 ml-auto block" onClick={() => setMobileOpen(false)} aria-label="Close menu"><X /></button>{sidebar}</aside></div> : null}<main className="lg:pl-72"><div className="container-page py-8 lg:py-10">{children}</div></main></div>;
+
+  const handleLogout = () => {
+    logout();
+    toast.info("Signed out");
+    router.push("/login");
+  };
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+      return;
+    }
+    document.documentElement.requestFullscreen();
+  };
+  const activeItem = items.find((item) => pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(`${item.href}/`))) || items[0];
+  const initials = getInitials(user?.name);
+  const sidebar = <Sidebar collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} onToggleCollapsed={() => setSidebarCollapsed((collapsed) => !collapsed)} />;
+  const mobileSidebar = <Sidebar collapsed={false} onNavigate={() => setMobileOpen(false)} />;
+
+  return (
+    <div className="min-h-screen bg-slate-100 bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,0.10),transparent_32rem)] dark:bg-slate-950 dark:bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,0.16),transparent_30rem)]">
+      <div className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/90 px-4 backdrop-blur lg:hidden dark:border-slate-800 dark:bg-slate-900/90">
+        <Link href="/dashboard" className="font-extrabold tracking-tight"><span className="text-blue-600">Zoe</span>Lit</Link>
+        <button className="grid size-10 place-items-center rounded-lg border border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" onClick={() => setMobileOpen(true)} aria-label="Open dashboard menu"><Menu className="size-5" /></button>
+      </div>
+      <aside className={cn("fixed inset-y-0 left-0 z-30 hidden border-r border-slate-200/80 bg-white/95 p-5 backdrop-blur transition-[width] duration-200 lg:block dark:border-slate-800 dark:bg-slate-900/95", sidebarCollapsed ? "w-24" : "w-72")}>{sidebar}</aside>
+      {mobileOpen ? <div className="fixed inset-0 z-50 lg:hidden"><div className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onClick={() => setMobileOpen(false)} /><aside className="absolute inset-y-0 left-0 w-80 overflow-hidden bg-white p-5 shadow-2xl dark:bg-slate-900"><button className="mb-4 ml-auto grid size-10 place-items-center rounded-lg border border-slate-200 dark:border-slate-700" onClick={() => setMobileOpen(false)} aria-label="Close dashboard menu"><X className="size-5" /></button>{mobileSidebar}</aside></div> : null}
+      <main className={cn("transition-[padding] duration-200", sidebarCollapsed ? "lg:pl-24" : "lg:pl-72")}>
+        <div className="relative z-40 overflow-visible border-b border-slate-200/80 bg-white/85 shadow-[0_1px_0_rgba(15,23,42,0.03)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/85">
+          <div className="container-page flex min-h-20 flex-col justify-center gap-4 py-4 xl:flex-row xl:items-center xl:justify-between">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">Account / {activeItem.label}</p>
+              <h2 className="mt-1 truncate font-heading text-xl font-extrabold tracking-[-0.02em] text-slate-950 dark:text-white">{activeItem.label}</h2>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <ThemeToggle className="shrink-0 rounded-lg bg-white shadow-sm ring-1 ring-slate-200 hover:bg-slate-50 dark:bg-slate-950 dark:ring-slate-700 dark:hover:bg-slate-800" />
+              <button type="button" onClick={toggleFullscreen} className="grid size-12 shrink-0 place-items-center rounded-lg bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-blue-700 dark:bg-slate-950 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800 dark:hover:text-blue-300" aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"} title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}>
+                {isFullscreen ? <Minimize2 className="size-5" /> : <Maximize2 className="size-5" />}
+              </button>
+              <button type="button" className="relative grid size-12 shrink-0 place-items-center rounded-lg bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-blue-700 dark:bg-slate-950 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800 dark:hover:text-blue-300" aria-label="Notifications">
+                <Bell className="size-5" />
+                <span className="absolute right-2 top-2 grid size-5 place-items-center rounded-full bg-blue-600 text-[10px] font-extrabold leading-none text-white ring-2 ring-white dark:ring-slate-950">2</span>
+              </button>
+              <div className="relative">
+                <button type="button" onClick={() => setProfileOpen((open) => !open)} className="flex h-12 items-center gap-2 rounded-lg bg-white px-2.5 text-left shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:bg-slate-950 dark:ring-slate-700 dark:hover:bg-slate-800" aria-expanded={profileOpen} aria-haspopup="menu">
+                  <span className="grid size-8 place-items-center rounded-full bg-blue-600 text-xs font-extrabold text-white shadow-md shadow-blue-600/20">{initials}</span>
+                  <span className="hidden max-w-32 truncate text-sm font-bold text-slate-900 lg:block dark:text-white">{user?.name || "ZoeLit Customer"}</span>
+                  <ChevronDown className="size-4 text-slate-400" />
+                </button>
+                {profileOpen ? <div className="absolute right-0 top-full z-50 mt-2 w-60 overflow-hidden rounded-xl border border-slate-200 bg-white p-2 shadow-2xl shadow-slate-950/15 ring-1 ring-slate-950/5 dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/30 dark:ring-white/10" role="menu">
+                  <div className="border-b border-slate-100 px-3 pb-3 pt-2 dark:border-slate-800">
+                    <p className="truncate text-sm font-bold text-slate-900 dark:text-white">{user?.name || "ZoeLit Customer"}</p>
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Customer account</p>
+                  </div>
+                  <div className="mt-2 space-y-1">
+                    <Link href="/dashboard/profile" onClick={() => setProfileOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-semibold leading-5 text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800" role="menuitem">Profile</Link>
+                    <button type="button" onClick={handleLogout} className="block w-full rounded-lg px-3 py-2 text-left text-sm font-semibold leading-5 text-rose-600 transition hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-500/10" role="menuitem">Sign out</button>
+                  </div>
+                </div> : null}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="container-page py-8 lg:py-10">{children}</div>
+      </main>
+    </div>
+  );
 }
 
-function Sidebar({ onNavigate, onLogout }) {
+function Sidebar({ collapsed, onNavigate, onToggleCollapsed }) {
   const pathname = usePathname();
-  return <div className="flex h-full flex-col"><div className="mb-8 flex items-center justify-between gap-4"><Link href="/" className="text-2xl font-extrabold"><span className="text-blue-600">Zoe</span>Lit</Link></div><nav className="space-y-2">{items.map((item) => { const active = pathname === item.href; return <Link key={`${item.label}-${item.href}`} href={item.href} onClick={onNavigate} className={cn("flex items-center gap-3 rounded-md px-4 py-3 text-sm font-bold transition", active ? "bg-blue-600 text-white" : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800")}><item.icon className="size-4" />{item.label}</Link>; })}</nav><div className="mt-auto rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950"><div className="mb-4 flex items-start gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-full bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-300"><LogOut className="size-4" /></span><div><p className="text-sm font-bold text-slate-900 dark:text-white">Leaving ZoeLit?</p><p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">Sign out safely and return to the secure login screen.</p></div></div><Button variant="danger" className="w-full shadow-lg shadow-rose-600/15" onClick={onLogout}><LogOut className="size-4" />Sign out</Button></div></div>;
+  return <div className="flex h-full min-h-0 flex-col"><div className={cn("mb-6 flex shrink-0 items-center gap-2", collapsed ? "justify-center" : "justify-between")}><Link href="/dashboard" className={cn("font-extrabold tracking-tight", collapsed ? "text-xl" : "text-2xl")} aria-label="ZoeLit Account"><span className="text-blue-600">Zoe</span>{collapsed ? null : "Lit"}</Link>{onToggleCollapsed ? <button type="button" onClick={onToggleCollapsed} className="grid size-10 place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-100 hover:text-blue-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300" aria-label={collapsed ? "Show sidebar" : "Hide sidebar"} title={collapsed ? "Show sidebar" : "Hide sidebar"}>{collapsed ? <PanelLeftOpen className="size-5" /> : <PanelLeftClose className="size-5" />}</button> : null}</div><nav className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">{sidebarItems.map((item) => { const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(`${item.href}/`)); return <Link key={`${item.label}-${item.href}`} href={item.href} onClick={onNavigate} className={cn("flex items-center rounded-xl py-3 text-sm font-bold transition", collapsed ? "justify-center px-3" : "gap-3 px-4", active ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800")} title={collapsed ? item.label : undefined} aria-label={collapsed ? item.label : undefined}><item.icon className="size-4" />{collapsed ? null : item.label}</Link>; })}</nav></div>;
+}
+
+function getInitials(name = "ZoeLit Customer") {
+  return name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
 }
