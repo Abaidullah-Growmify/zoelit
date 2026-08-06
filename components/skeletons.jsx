@@ -16,6 +16,35 @@ export function DashboardSkeleton() {
   return <div><Skeleton className="h-10 w-72" /><div className="mt-8 grid gap-4 md:grid-cols-3">{Array.from({ length: 3 }).map((_, i) => <Card key={i}><Skeleton className="h-4 w-24" /><Skeleton className="mt-5 h-9 w-28" /></Card>)}</div><Card className="mt-8"><Skeleton className="h-7 w-40" /><div className="mt-6 space-y-4">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div></Card></div>;
 }
 
+export function AdminPageSkeleton({ variant = "table" }) {
+  return (
+    <div>
+      <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+        <div className="w-full max-w-2xl">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="mt-3 h-10 w-64 max-w-full" />
+          <Skeleton className="mt-4 h-4 w-full max-w-lg" />
+        </div>
+        <Skeleton className="h-11 w-36" />
+      </div>
+      {variant === "dashboard" ? <AdminStatsSkeleton /> : null}
+      {variant === "form" ? <AdminFormSkeleton /> : <AdminTableSkeleton className={variant === "dashboard" ? "mt-6" : "mt-8"} />}
+    </div>
+  );
+}
+
+export function AdminStatsSkeleton() {
+  return <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">{Array.from({ length: 4 }).map((_, i) => <Card key={i}><div className="flex items-start justify-between gap-4"><div className="flex-1"><Skeleton className="h-4 w-24" /><Skeleton className="mt-5 h-9 w-28" /><Skeleton className="mt-5 h-3 w-36" /></div><Skeleton className="size-12 rounded-xl" /></div></Card>)}</div>;
+}
+
+export function AdminTableSkeleton({ rows = 6, className }) {
+  return <Card className={className}><Skeleton className="h-11 w-full" /><div className="mt-5 space-y-3">{Array.from({ length: rows }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}</div></Card>;
+}
+
+export function AdminFormSkeleton() {
+  return <div className="mt-8 grid gap-6 xl:grid-cols-[1fr_360px]"><div className="space-y-6">{Array.from({ length: 3 }).map((_, i) => <Card key={i}><Skeleton className="h-6 w-44" /><div className="mt-6 grid gap-4 md:grid-cols-2"><Skeleton className="h-11 w-full" /><Skeleton className="h-11 w-full" /><Skeleton className="h-11 w-full" /><Skeleton className="h-11 w-full" /></div></Card>)}</div><Card><Skeleton className="h-6 w-36" /><Skeleton className="mt-6 aspect-square w-full" /><Skeleton className="mt-5 h-11 w-full" /></Card></div>;
+}
+
 export function OrdersSkeleton() {
   return <Card><div className="space-y-4">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}</div></Card>;
 }

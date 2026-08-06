@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { addresses as initialAddresses } from "@/lib/data";
 import { Badge, Button, Card, Input, Label, PageHeader } from "@/components/ui";
@@ -58,7 +59,7 @@ export default function AddressesPage() {
               {address.country}
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
-              <Button size="sm" variant="secondary" onClick={() => toast.info("Edit address UI ready")}>Edit</Button>
+              <Button size="sm" variant="secondary" aria-label={`Edit ${address.label} address`} onClick={() => toast.info("Edit address UI ready")}><Pencil className="size-4" /></Button>
               <Button size="sm" variant="outline" onClick={() => setDefault(address.id)}>Set Default</Button>
               <Button size="sm" variant="danger" onClick={() => remove(address.id)}>Delete</Button>
             </div>
