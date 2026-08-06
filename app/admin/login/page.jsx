@@ -74,10 +74,6 @@ export default function AdminLoginPage() {
             {form.formState.isSubmitting ? <><Loader2 className="size-4 animate-spin" />Signing in...</> : "Sign in to admin"}
           </Button>
         </form>
-        <div className="mt-6 rounded-lg bg-slate-50 p-4 text-center dark:bg-slate-950">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-600 dark:text-blue-300">Design mode</p>
-          <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">This is a frontend-only admin login. No backend authentication is connected yet.</p>
-        </div>
       </section>
     </div>
   );
