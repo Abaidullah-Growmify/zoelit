@@ -41,7 +41,7 @@ export function AdminShell({ children }) {
   return (
     <div className="min-h-screen bg-slate-100 bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,0.10),transparent_32rem)] dark:bg-slate-950 dark:bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,0.16),transparent_30rem)]">
       <div className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/90 px-4 backdrop-blur lg:hidden dark:border-slate-800 dark:bg-slate-900/90">
-        <Link href="/admin" className="font-black tracking-tight"><span className="text-blue-600">Zoe</span>Lit Admin</Link>
+        <Link href="/admin" className="font-extrabold tracking-tight"><span className="text-blue-600">Zoe</span>Lit Admin</Link>
         <button className="grid size-10 place-items-center rounded-lg border border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" onClick={() => setMobileOpen(true)} aria-label="Open admin menu"><Menu className="size-5" /></button>
       </div>
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-slate-200/80 bg-white/95 p-5 backdrop-blur lg:block dark:border-slate-800 dark:bg-slate-900/95">{sidebar}</aside>
@@ -50,7 +50,7 @@ export function AdminShell({ children }) {
         <div className="border-b border-slate-200/80 bg-white/80 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/80">
           <div className="container-page flex min-h-20 flex-col justify-center gap-3 py-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-600 dark:text-blue-300">Commerce control room</p>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-600 dark:text-blue-300">Commerce control room</p>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Manage storefront content, orders, customers, and inventory.</p>
             </div>
             <div className="flex w-full flex-col gap-3 sm:flex-row md:w-[560px]">
@@ -58,7 +58,7 @@ export function AdminShell({ children }) {
                 <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                 <Input placeholder="Search admin..." aria-label="Search admin" className="h-12 rounded-lg pl-11 shadow-sm" />
               </div>
-              <Button asChild href="/" variant="outline" className="h-12 shrink-0 rounded-lg border-blue-200 px-5 font-black text-blue-700 shadow-sm hover:border-blue-300 hover:bg-blue-50 dark:border-blue-500/30 dark:text-blue-300 dark:hover:bg-blue-500/10">
+              <Button asChild href="/" variant="outline" className="h-12 shrink-0 rounded-lg border-blue-200 px-5 font-bold text-blue-700 shadow-sm hover:border-blue-300 hover:bg-blue-50 dark:border-blue-500/30 dark:text-blue-300 dark:hover:bg-blue-500/10">
                 View Store <ExternalLink className="size-4" />
               </Button>
             </div>
@@ -76,7 +76,7 @@ function Sidebar({ admin, onNavigate, onLogout }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <Link href="/admin" className="mb-6 shrink-0 text-2xl font-black tracking-tight"><span className="text-blue-600">Zoe</span>Lit Admin</Link>
+      <Link href="/admin" className="mb-6 shrink-0 text-2xl font-extrabold tracking-tight"><span className="text-blue-600">Zoe</span>Lit Admin</Link>
       <nav className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
         {items.map((item) => {
           const active = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(`${item.href}/`));
@@ -85,9 +85,9 @@ function Sidebar({ admin, onNavigate, onLogout }) {
       </nav>
       <div className="mt-4 shrink-0 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950">
         <div className="mb-4 flex items-center gap-3">
-          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-blue-600 font-black text-white shadow-lg shadow-blue-600/20">{initials}</span>
+          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-blue-600 font-extrabold text-white shadow-lg shadow-blue-600/20">{initials}</span>
           <div>
-            <p className="text-sm font-black text-slate-900 dark:text-white">{admin?.name || "ZoeLit Admin"}</p>
+            <p className="text-sm font-bold text-slate-900 dark:text-white">{admin?.name || "ZoeLit Admin"}</p>
             <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">Static design mode</p>
           </div>
         </div>

@@ -40,9 +40,9 @@ export default function CartPage() {
 
         <Card className="h-fit overflow-hidden p-0 lg:sticky lg:top-24">
           <div className="bg-[linear-gradient(135deg,#eff6ff_0%,#ffffff_55%,#dbeafe_100%)] p-6 dark:bg-[linear-gradient(135deg,#0f172a_0%,#020617_58%,#172554_100%)]">
-            <h2 className="text-2xl font-black tracking-tight text-slate-950 dark:text-white">Order summary</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-slate-950 dark:text-white">Order summary</h2>
             <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
-              {shipping === 0 ? "Free shipping unlocked for this order." : `${money(freeShippingRemaining)} away from free shipping.`}
+              {shipping === 0 ? "Free shipping unlocked for this order." : <><span className="tabular-nums">{money(freeShippingRemaining)}</span> away from free shipping.</>}
             </p>
           </div>
 
@@ -50,16 +50,16 @@ export default function CartPage() {
             <div className="space-y-3 text-sm">
               <div className="flex justify-between gap-4 text-slate-600 dark:text-slate-300">
                 <span>Subtotal</span>
-                <span className="font-bold text-slate-950 dark:text-white">{money(cartSubtotal)}</span>
+                <span className="font-bold tabular-nums text-slate-950 dark:text-white">{money(cartSubtotal)}</span>
               </div>
               <div className="flex justify-between gap-4 text-slate-600 dark:text-slate-300">
                 <span>Shipping</span>
-                <span className="font-bold text-slate-950 dark:text-white">{shipping === 0 ? "Free" : money(shipping)}</span>
+                <span className="font-bold tabular-nums text-slate-950 dark:text-white">{shipping === 0 ? "Free" : money(shipping)}</span>
               </div>
               <div className="border-t border-slate-200 pt-4 dark:border-slate-800">
-                <div className="flex justify-between gap-4 text-xl font-black text-slate-950 dark:text-white">
+                <div className="flex justify-between gap-4 text-xl font-bold text-slate-950 dark:text-white">
                   <span>Total</span>
-                  <span>{money(total)}</span>
+                  <span className="tabular-nums">{money(total)}</span>
                 </div>
               </div>
             </div>

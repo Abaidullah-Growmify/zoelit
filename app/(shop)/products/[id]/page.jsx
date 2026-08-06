@@ -113,34 +113,34 @@ export default async function ProductDetailPage({ params }) {
               </span>
             </div>
 
-            <h1 className="mt-4 text-3xl font-black leading-tight tracking-tight text-slate-950 md:text-4xl dark:text-white">{ingramProduct.description}</h1>
+            <h1 className="mt-4 text-3xl font-extrabold leading-tight tracking-tight text-slate-950 md:text-4xl dark:text-white">{ingramProduct.description}</h1>
 
             <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
               <div>
                 <dt className="font-bold text-slate-400">Vendor</dt>
-                <dd className="mt-1 font-black text-slate-950 dark:text-white">{ingramProduct.vendorName}</dd>
+                <dd className="mt-1 font-bold text-slate-950 dark:text-white">{ingramProduct.vendorName}</dd>
               </div>
               <div>
                 <dt className="font-bold text-slate-400">Vendor Part Number</dt>
-                <dd className="mt-1 font-black text-slate-950 dark:text-white">{ingramProduct.vendorPartNumber}</dd>
+                <dd className="mt-1 font-bold tabular-nums text-slate-950 dark:text-white">{ingramProduct.vendorPartNumber}</dd>
               </div>
               <div>
                 <dt className="font-bold text-slate-400">UPC</dt>
-                <dd className="mt-1 font-black text-slate-950 dark:text-white">{ingramProduct.upc}</dd>
+                <dd className="mt-1 font-bold tabular-nums text-slate-950 dark:text-white">{ingramProduct.upc}</dd>
               </div>
               <div>
                 <dt className="font-bold text-slate-400">Subcategory</dt>
-                <dd className="mt-1 font-black text-slate-950 dark:text-white">{ingramProduct.productSubcategory}</dd>
+                <dd className="mt-1 font-bold text-slate-950 dark:text-white">{ingramProduct.productSubcategory}</dd>
               </div>
             </dl>
 
             <div className="mt-5 border-y border-slate-200 py-5 dark:border-slate-800">
               <div className="flex items-end justify-between gap-5">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">Customer Price</p>
-                  <span className="mt-1 block text-3xl font-black text-slate-950 dark:text-white">{money(ingramProduct.pricing.customerPrice)}</span>
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Customer Price</p>
+                  <span className="mt-1 block text-3xl font-extrabold tabular-nums text-slate-950 dark:text-white">{money(ingramProduct.pricing.customerPrice)}</span>
                 </div>
-                <span className="inline-flex items-center gap-2 text-sm font-bold text-emerald-600 dark:text-emerald-400"><Truck className="size-4" />Available ({ingramProduct.availability.totalAvailability})</span>
+                <span className="inline-flex items-center gap-2 text-sm font-bold tabular-nums text-emerald-600 dark:text-emerald-400"><Truck className="size-4" />Available ({ingramProduct.availability.totalAvailability})</span>
               </div>
 
               {canPurchase ? <AddToCartButton product={product} className="mt-6 h-12 w-full rounded-lg text-base" /> : null}

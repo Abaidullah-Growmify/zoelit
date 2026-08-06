@@ -34,7 +34,7 @@ export default function LoginPage() {
           <Link href="/" className="mb-3 flex size-14 items-center justify-center rounded-lg bg-blue-600/10 text-blue-600 shadow-lg shadow-blue-600/10 dark:bg-blue-500/10 dark:text-blue-300">
             <UserRound className="size-7" />
           </Link>
-          <h1 className="text-2xl font-black tracking-tight text-slate-950 dark:text-white">ZoeLit Login</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight text-slate-950 dark:text-white">ZoeLit Login</h1>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Sign in to your shopping account.</p>
         </div>
         <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-4" noValidate>

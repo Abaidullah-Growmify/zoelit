@@ -62,7 +62,7 @@ export default function CheckoutPage() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_460px] lg:items-start">
           <Card className="shadow-none">
             <div className="mb-6 border-b border-slate-200 pb-3 dark:border-slate-800">
-              <h2 className="text-2xl font-black tracking-tight text-slate-950 dark:text-white">Billing Details</h2>
+              <h2 className="text-2xl font-bold tracking-tight text-slate-950 dark:text-white">Billing Details</h2>
             </div>
 
             <div className="grid gap-5 md:grid-cols-2">
@@ -89,7 +89,7 @@ export default function CheckoutPage() {
           </Card>
 
           <aside className="rounded-lg border border-slate-200 bg-white p-6 soft-shadow lg:sticky lg:top-24 sm:p-8 dark:border-slate-800 dark:bg-slate-900">
-            <h2 className="text-3xl font-black tracking-tight text-slate-950 dark:text-white">Your order</h2>
+            <h2 className="text-3xl font-bold tracking-tight text-slate-950 dark:text-white">Your order</h2>
 
             <div className="mt-6 divide-y divide-slate-200 border-y border-slate-200 text-sm dark:divide-slate-800 dark:border-slate-800">
               <OrderRow label="Product" value="Total" strong />
@@ -105,7 +105,7 @@ export default function CheckoutPage() {
                 <span>Shipping</span>
                 <label className="flex items-center gap-2 text-right">
                   <input type="radio" checked readOnly className="accent-blue-600" />
-                  <span>{shipping === 0 ? "Free Shipping" : `Delivery Cost : ${money(shipping)}`}</span>
+                  <span className="tabular-nums">{shipping === 0 ? "Free Shipping" : `Delivery Cost : ${money(shipping)}`}</span>
                 </label>
               </div>
               <OrderRow label="Sub Total" value={money(cartSubtotal)} strong />
@@ -115,7 +115,7 @@ export default function CheckoutPage() {
             </div>
 
             <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <p className="font-black text-slate-950 dark:text-white">Select Payment method</p>
+              <p className="font-bold text-slate-950 dark:text-white">Select Payment method</p>
               <div className="flex gap-5 text-sm text-slate-600 dark:text-slate-300">
                 <label className="flex items-center gap-1.5">
                   <input type="radio" value="stripe" {...form.register("paymentMethod")} className="accent-blue-600" />
@@ -159,7 +159,7 @@ function OrderRow({ label, value, strong, total }) {
   return (
     <div className="flex items-center justify-between gap-4 py-4 text-slate-600 dark:text-slate-300">
       <span className={strong || total ? "font-semibold text-slate-950 dark:text-white" : undefined}>{label}</span>
-      <span className={total ? "text-lg font-black text-blue-700 dark:text-blue-300" : strong ? "font-black text-slate-950 dark:text-white" : "font-medium text-slate-950 dark:text-white"}>{value}</span>
+      <span className={total ? "text-lg font-extrabold tabular-nums text-blue-700 dark:text-blue-300" : strong ? "font-bold tabular-nums text-slate-950 dark:text-white" : "font-medium tabular-nums text-slate-950 dark:text-white"}>{value}</span>
     </div>
   );
 }

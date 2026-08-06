@@ -67,7 +67,7 @@ export default function ContactPage() {
             <Card key={item.title} className="flex items-start gap-4 shadow-none">
               <div className="grid size-12 shrink-0 place-items-center rounded-md bg-blue-50 text-blue-600 dark:bg-blue-500/10"><item.icon className="size-5" /></div>
               <div>
-                <h2 className="font-black">{item.title}</h2>
+                <h2 className="font-bold">{item.title}</h2>
                 <div className="mt-1 grid gap-1 text-sm text-slate-500 dark:text-slate-400">
                   {item.lines.map((line) => (
                     <p key={line}>{line}</p>
@@ -80,7 +80,7 @@ export default function ContactPage() {
             <div className="flex items-start gap-4">
               <div className="grid size-12 shrink-0 place-items-center rounded-md bg-blue-50 text-blue-600 dark:bg-blue-500/10"><MessageCircle className="size-5" /></div>
               <div>
-                <h2 className="font-black">Social Media</h2>
+                <h2 className="font-bold">Social Media</h2>
                 <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Follow on social media</p>
                 <div className="mt-3 flex flex-wrap gap-3 text-sm font-semibold">
                   {socialLinks.map((link) => (
@@ -95,7 +95,7 @@ export default function ContactPage() {
         </div>
 
         <Card>
-            <h2 className="text-2xl font-black">Send a message</h2>
+            <h2 className="text-2xl font-bold">Send a message</h2>
             <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 grid gap-5 md:grid-cols-2">
             <Field label="Full name" name="name" placeholder="Enter your name" form={form} />
             <Field label="Email" name="email" type="email" placeholder="Enter your email" form={form} />
@@ -128,7 +128,7 @@ export default function ContactPage() {
               <div className="flex items-start gap-4">
                 <div className="grid size-12 shrink-0 place-items-center rounded-md bg-blue-50 text-blue-600 dark:bg-blue-500/10"><MapPin className="size-5" /></div>
                 <div>
-                  <h3 className="font-black">{location.title}</h3>
+                  <h3 className="font-bold">{location.title}</h3>
                   <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{location.address}</p>
                   <div className="mt-4 grid gap-2 text-sm font-medium text-slate-600 dark:text-slate-300">
                     <a href={`mailto:${location.email}`} className="transition hover:text-blue-600">{location.email}</a>

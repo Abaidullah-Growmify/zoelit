@@ -83,7 +83,7 @@ export function ProductCard({ product }) {
         </div>
         <div className="flex items-start justify-between gap-4">
           <Link href={`/products/${product.id}`} className="font-heading text-lg font-bold leading-tight tracking-[-0.015em] text-slate-950 transition hover:text-blue-600 focus-visible:outline-none focus-visible:text-blue-600 dark:text-white dark:hover:text-blue-300 dark:focus-visible:text-blue-300">{product.name}</Link>
-          <span className="shrink-0 font-heading text-lg font-bold tracking-[-0.015em] text-blue-600">{money(product.price)}</span>
+          <span className="shrink-0 font-heading text-lg font-bold tabular-nums tracking-[-0.015em] text-blue-600">{money(product.price)}</span>
         </div>
         <p className="mt-2 line-clamp-2 min-h-10 text-sm font-normal leading-6 text-slate-500 dark:text-slate-400">{product.description}</p>
         <div className="mt-auto border-t border-slate-100 pt-4 dark:border-slate-800">

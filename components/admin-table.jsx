@@ -7,7 +7,7 @@ export function AdminTable({ columns, children, className, wrapperClassName, tab
       <div className={cn("overflow-x-auto", wrapperClassName)}>
         <table className={cn("w-full text-left text-sm", tableClassName)}>
           <thead className="bg-slate-50/90 text-xs uppercase tracking-[0.12em] text-slate-500 dark:bg-slate-950/80 dark:text-slate-400">
-            <tr>{columns.map((column) => <th key={column} className="whitespace-nowrap px-5 py-4 font-black">{column}</th>)}</tr>
+            <tr>{columns.map((column) => <th key={column} className="whitespace-nowrap px-5 py-4 font-bold">{column}</th>)}</tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">{children}</tbody>
         </table>

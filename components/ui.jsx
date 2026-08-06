@@ -42,7 +42,7 @@ export function SectionHeader({ eyebrow, title, action, align = "left", classNam
     <div className={cn(centered ? "mx-auto max-w-2xl text-center" : "flex items-end justify-between gap-4", className)}>
       <div>
         {eyebrow ? <p className="text-sm font-semibold text-blue-600 dark:text-blue-300">{eyebrow}</p> : null}
-        <h2 className="mt-2 font-heading text-3xl font-extrabold tracking-[-0.02em] text-slate-950 dark:text-white">{title}</h2>
+        <h2 className="mt-2 font-heading text-3xl font-bold tracking-[-0.02em] text-slate-950 dark:text-white">{title}</h2>
       </div>
       {action ? <div className="shrink-0">{action}</div> : null}
     </div>

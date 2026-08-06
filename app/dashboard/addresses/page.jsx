@@ -49,7 +49,7 @@ export default function AddressesPage() {
         {items.map((address) => (
           <Card key={address.id}>
             <div className="flex justify-between gap-3">
-              <h2 className="text-xl font-black">{address.label}</h2>
+              <h2 className="text-xl font-bold">{address.label}</h2>
               {address.default ? <Badge tone="slate">Default</Badge> : null}
             </div>
             <p className="mt-4 text-sm leading-6 text-slate-600 dark:text-slate-300">
@@ -70,7 +70,7 @@ export default function AddressesPage() {
       {showForm ? (
         <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/50 p-4">
           <Card className="w-full max-w-xl">
-            <h2 className="text-2xl font-black">Add address</h2>
+            <h2 className="text-2xl font-bold">Add address</h2>
             <form onSubmit={add} className="mt-6 grid gap-4 md:grid-cols-2">
               <Field name="label" label="Label" />
               <Field name="name" label="Full name" />

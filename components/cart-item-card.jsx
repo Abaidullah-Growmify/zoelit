@@ -17,9 +17,9 @@ export function CartItemCard({ item, updateQuantity, removeItem }) {
 
         <div className="flex min-w-0 flex-1 flex-col justify-between gap-4">
           <div className="min-w-0 pr-10">
-            <h2 className="line-clamp-2 max-w-xl text-xl font-black leading-tight tracking-tight text-slate-950 dark:text-white">{product.name}</h2>
+            <h2 className="line-clamp-2 max-w-xl text-xl font-bold leading-tight tracking-tight text-slate-950 dark:text-white">{product.name}</h2>
             <p className="mt-1 line-clamp-1 max-w-xl text-sm leading-5 text-slate-500 dark:text-slate-400">{product.description}</p>
-            <p className="mt-2 text-base font-bold text-slate-500 dark:text-slate-400">{money(product.price)}</p>
+            <p className="mt-2 text-base font-bold tabular-nums text-slate-500 dark:text-slate-400">{money(product.price)}</p>
           </div>
 
           <div className="flex items-center justify-between gap-3">
@@ -27,12 +27,12 @@ export function CartItemCard({ item, updateQuantity, removeItem }) {
               <button className="grid size-7 place-items-center rounded-md text-slate-600 transition hover:bg-white hover:text-blue-600 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-blue-300" onClick={() => updateQuantity(item.productId, item.quantity - 1)} aria-label={`Decrease ${product.name} quantity`}>
                 <Minus className="size-4" />
               </button>
-              <span className="min-w-5 text-center text-base font-black text-slate-950 dark:text-white">{item.quantity}</span>
+              <span className="min-w-5 text-center text-base font-bold tabular-nums text-slate-950 dark:text-white">{item.quantity}</span>
               <button className="grid size-7 place-items-center rounded-md text-slate-600 transition hover:bg-white hover:text-blue-600 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-blue-300" onClick={() => updateQuantity(item.productId, item.quantity + 1)} aria-label={`Increase ${product.name} quantity`}>
                 <Plus className="size-4" />
               </button>
             </div>
-            <p className="shrink-0 text-right text-lg font-black text-slate-950 dark:text-white">{money(product.price * item.quantity)}</p>
+            <p className="shrink-0 text-right text-lg font-bold tabular-nums text-slate-950 dark:text-white">{money(product.price * item.quantity)}</p>
           </div>
         </div>
 
