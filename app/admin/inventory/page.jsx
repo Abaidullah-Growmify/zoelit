@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { AdminPageHeader } from "@/components/admin-page-header";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminTable } from "@/components/admin-table";
 import { categories, inventory } from "@/lib/admin-data";
@@ -26,9 +25,7 @@ export default function AdminInventoryPage() {
 
   return (
     <div>
-      <AdminPageHeader title="Inventory" description="Track stock health, low-stock thresholds, SKU references, and quick adjustment controls." />
       <AdminTable
-        className="mt-8"
         columns={columns}
         data={inventory}
         searchPlaceholder="Search SKU or product"

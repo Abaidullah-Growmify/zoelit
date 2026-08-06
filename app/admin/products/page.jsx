@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { Plus } from "lucide-react";
-import { AdminPageHeader } from "@/components/admin-page-header";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminTable } from "@/components/admin-table";
 import { Button } from "@/components/ui";
@@ -27,9 +26,8 @@ export default function AdminProductsPage() {
 
   return (
     <div>
-      <AdminPageHeader title="Products" description="Design-only product management for catalog items, pricing, images, ratings, and stock levels." action={<Button asChild href="/admin/products/new"><Plus className="size-4" />New product</Button>} />
       <AdminTable
-        className="mt-8"
+        action={<Button asChild href="/admin/products/new"><Plus className="size-4" />New product</Button>}
         columns={columns}
         data={adminProducts}
         searchPlaceholder="Search products or SKU"

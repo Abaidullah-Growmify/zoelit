@@ -18,6 +18,7 @@ export function AdminTable({
   rowActions,
   title,
   description,
+  action,
   pageSize = DEFAULT_PAGE_SIZE,
   zebra = true,
   className,
@@ -39,10 +40,10 @@ export function AdminTable({
     );
   }
 
-  return <AdminDataTable columns={columns} data={data} filters={filters} searchPlaceholder={searchPlaceholder} searchKeys={searchKeys} rowActions={rowActions} title={title} description={description} pageSize={pageSize} zebra={zebra} className={className} wrapperClassName={wrapperClassName} tableClassName={tableClassName} />;
+  return <AdminDataTable columns={columns} data={data} filters={filters} searchPlaceholder={searchPlaceholder} searchKeys={searchKeys} rowActions={rowActions} title={title} description={description} action={action} pageSize={pageSize} zebra={zebra} className={className} wrapperClassName={wrapperClassName} tableClassName={tableClassName} />;
 }
 
-function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys, rowActions, title, description, pageSize, zebra, className, wrapperClassName, tableClassName }) {
+function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys, rowActions, title, description, action, pageSize, zebra, className, wrapperClassName, tableClassName }) {
   const [query, setQuery] = useState("");
   const [filterValues, setFilterValues] = useState(() => Object.fromEntries(filters.map((filter) => [filter.key, filter.allLabel || "All"])));
   const [sort, setSort] = useState(() => {
@@ -107,11 +108,13 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
       <div className="border-b border-slate-100 p-5 dark:border-slate-800">
         {title || description ? (
           <div className="mb-4">
-            {title ? <h2 className="font-heading text-2xl font-extrabold tracking-[-0.02em] text-slate-950 dark:text-white">{title}</h2> : null}
-            {description ? <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{description}</p> : null}
+            <div>
+              {title ? <h2 className="font-heading text-2xl font-extrabold tracking-[-0.02em] text-slate-950 dark:text-white">{title}</h2> : null}
+              {description ? <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{description}</p> : null}
+            </div>
           </div>
         ) : null}
-        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_repeat(var(--filter-count),minmax(150px,190px))_auto]" style={{ "--filter-count": filters.length }}>
+        <div className={cn("grid gap-3", action ? "md:grid-cols-[minmax(0,1fr)_repeat(var(--filter-count),minmax(150px,190px))_auto_auto]" : "md:grid-cols-[minmax(0,1fr)_repeat(var(--filter-count),minmax(150px,190px))_auto]")} style={{ "--filter-count": filters.length }}>
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
             <Input value={query} onChange={(event) => updateQuery(event.target.value)} placeholder={searchPlaceholder} aria-label={searchPlaceholder} className="pl-10" />
@@ -123,6 +126,7 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
             </Select>
           ))}
           <Button variant="secondary" onClick={resetControls}>Reset</Button>
+          {action ? <div className="flex md:justify-end">{action}</div> : null}
         </div>
       </div>
       <div className={cn("overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", wrapperClassName)}>

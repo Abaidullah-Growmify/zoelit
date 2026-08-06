@@ -1,6 +1,5 @@
 "use client";
 
-import { AdminPageHeader } from "@/components/admin-page-header";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminTable } from "@/components/admin-table";
 import { adminOrders } from "@/lib/admin-data";
@@ -19,9 +18,7 @@ export default function AdminOrdersPage() {
 
   return (
     <div>
-      <AdminPageHeader title="Orders" description="Review purchase activity, payment state, fulfillment status, totals, and shipment tracking." />
       <AdminTable
-        className="mt-8"
         columns={columns}
         data={adminOrders}
         searchPlaceholder="Search order, customer, tracking"

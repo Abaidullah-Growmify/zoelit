@@ -67,9 +67,9 @@ export function AdminShell({ children }) {
         <Link href="/admin" className="font-extrabold tracking-tight"><span className="text-blue-600">Zoe</span>Lit Admin</Link>
         <button className="grid size-10 place-items-center rounded-lg border border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" onClick={() => setMobileOpen(true)} aria-label="Open admin menu"><Menu className="size-5" /></button>
       </div>
-      <aside className={cn("fixed inset-y-0 left-0 z-30 hidden border-r border-slate-200/80 bg-white/95 p-5 backdrop-blur transition-[width] duration-200 lg:block dark:border-slate-800 dark:bg-slate-900/95", sidebarCollapsed ? "w-24" : "w-72")}>{sidebar}</aside>
+      <aside className={cn("fixed inset-y-0 left-0 z-30 hidden border-r border-slate-200/80 bg-white/95 backdrop-blur transition-[width] duration-200 lg:block dark:border-slate-800 dark:bg-slate-900/95", sidebarCollapsed ? "w-32 p-3" : "w-72 p-5")}>{sidebar}</aside>
       {mobileOpen ? <div className="fixed inset-0 z-50 lg:hidden"><div className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onClick={() => setMobileOpen(false)} /><aside className="absolute inset-y-0 left-0 w-80 overflow-hidden bg-white p-5 shadow-2xl dark:bg-slate-900"><button className="mb-4 ml-auto grid size-10 place-items-center rounded-lg border border-slate-200 dark:border-slate-700" onClick={() => setMobileOpen(false)} aria-label="Close admin menu"><X className="size-5" /></button>{mobileSidebar}</aside></div> : null}
-      <main className={cn("transition-[padding] duration-200", sidebarCollapsed ? "lg:pl-24" : "lg:pl-72")}>
+      <main className={cn("transition-[padding] duration-200", sidebarCollapsed ? "lg:pl-32" : "lg:pl-72")}>
         <div className="relative z-40 overflow-visible border-b border-slate-200/80 bg-white/85 shadow-[0_1px_0_rgba(15,23,42,0.03)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/85">
           <div className="container-page flex min-h-20 flex-col justify-center gap-4 py-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="min-w-0">
@@ -79,15 +79,15 @@ export function AdminShell({ children }) {
             <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center xl:w-auto">
               <div className="flex flex-wrap items-center gap-2">
                 <ThemeToggle className="shrink-0 rounded-lg bg-white shadow-sm ring-1 ring-slate-200 hover:bg-slate-50 dark:bg-slate-950 dark:ring-slate-700 dark:hover:bg-slate-800" />
-                <button type="button" onClick={toggleFullscreen} className="grid size-12 shrink-0 place-items-center rounded-lg bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-blue-700 dark:bg-slate-950 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800 dark:hover:text-blue-300" aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"} title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}>
+                <button type="button" onClick={toggleFullscreen} className="grid size-11 shrink-0 place-items-center rounded-lg bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-blue-700 dark:bg-slate-950 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800 dark:hover:text-blue-300" aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"} title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}>
                   {isFullscreen ? <Minimize2 className="size-5" /> : <Maximize2 className="size-5" />}
                 </button>
-                <button type="button" className="relative grid size-12 shrink-0 place-items-center rounded-lg bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-blue-700 dark:bg-slate-950 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800 dark:hover:text-blue-300" aria-label="Notifications">
+                <button type="button" className="relative grid size-11 shrink-0 place-items-center rounded-lg bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-blue-700 dark:bg-slate-950 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800 dark:hover:text-blue-300" aria-label="Notifications">
                   <Bell className="size-5" />
-                  <span className="absolute right-2 top-2 grid size-5 place-items-center rounded-full bg-blue-600 text-[10px] font-extrabold leading-none text-white ring-2 ring-white dark:ring-slate-950">3</span>
+                  <span className="absolute right-1.5 top-1.5 grid size-4 place-items-center rounded-full bg-blue-600 text-[9px] font-extrabold leading-none text-white ring-2 ring-white dark:ring-slate-950">3</span>
                 </button>
                 <div className="relative">
-                  <button type="button" onClick={() => setProfileOpen((open) => !open)} className="flex h-12 items-center gap-2 rounded-lg bg-white px-2.5 text-left shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:bg-slate-950 dark:ring-slate-700 dark:hover:bg-slate-800" aria-expanded={profileOpen} aria-haspopup="menu">
+                  <button type="button" onClick={() => setProfileOpen((open) => !open)} className="flex h-11 items-center gap-2 rounded-lg bg-white px-2 text-left shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:bg-slate-950 dark:ring-slate-700 dark:hover:bg-slate-800" aria-expanded={profileOpen} aria-haspopup="menu">
                     <span className="grid size-8 place-items-center rounded-full bg-blue-600 text-xs font-extrabold text-white shadow-md shadow-blue-600/20">{initials}</span>
                     <span className="hidden max-w-32 truncate text-sm font-bold text-slate-900 lg:block dark:text-white">{admin?.name || "ZoeLit Admin"}</span>
                     <ChevronDown className="size-4 text-slate-400" />
@@ -119,8 +119,8 @@ function Sidebar({ collapsed, onNavigate, onToggleCollapsed }) {
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className={cn("mb-6 flex shrink-0 items-center gap-2", collapsed ? "justify-center" : "justify-between")}>
-        <Link href="/admin" className={cn("font-extrabold tracking-tight", collapsed ? "text-xl" : "text-2xl")} aria-label="ZoeLit Admin"><span className="text-blue-600">Zoe</span>{collapsed ? null : "Lit Admin"}</Link>
-        {onToggleCollapsed ? <button type="button" onClick={onToggleCollapsed} className="grid size-10 place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-100 hover:text-blue-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300" aria-label={collapsed ? "Show sidebar" : "Hide sidebar"} title={collapsed ? "Show sidebar" : "Hide sidebar"}>
+        <Link href="/admin" className={cn("font-extrabold tracking-tight", collapsed ? "grid size-12 place-items-center rounded-lg bg-blue-50 text-xl text-blue-600 ring-1 ring-blue-100 dark:bg-blue-500/10 dark:ring-blue-500/20" : "text-2xl")} aria-label="ZoeLit Admin"><span className="text-blue-600">{collapsed ? "Z" : "Zoe"}</span>{collapsed ? null : "Lit Admin"}</Link>
+        {onToggleCollapsed ? <button type="button" onClick={onToggleCollapsed} className={cn("grid place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-100 hover:text-blue-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300", collapsed ? "size-12" : "size-10")} aria-label={collapsed ? "Show sidebar" : "Hide sidebar"} title={collapsed ? "Show sidebar" : "Hide sidebar"}>
           {collapsed ? <PanelLeftOpen className="size-5" /> : <PanelLeftClose className="size-5" />}
         </button> : null}
       </div>

@@ -7,7 +7,6 @@ import { Bell, ChevronDown, Heart, Home, MapPin, Maximize2, Menu, Minimize2, Pan
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
-import { DashboardSkeleton } from "@/components/skeletons";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 const items = [
@@ -36,8 +35,6 @@ export function DashboardShell({ children }) {
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
-  if (!ready || !user) return <div className="container-page py-10"><DashboardSkeleton /></div>;
-
   const handleLogout = () => {
     logout();
     toast.info("Signed out");
@@ -54,6 +51,7 @@ export function DashboardShell({ children }) {
   const initials = getInitials(user?.name);
   const sidebar = <Sidebar collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} onToggleCollapsed={() => setSidebarCollapsed((collapsed) => !collapsed)} />;
   const mobileSidebar = <Sidebar collapsed={false} onNavigate={() => setMobileOpen(false)} />;
+  const loadingContent = !ready || !user;
 
   return (
     <div className="min-h-screen bg-slate-100 bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,0.10),transparent_32rem)] dark:bg-slate-950 dark:bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,0.16),transparent_30rem)]">
@@ -61,9 +59,9 @@ export function DashboardShell({ children }) {
         <Link href="/dashboard" className="font-extrabold tracking-tight"><span className="text-blue-600">Zoe</span>Lit</Link>
         <button className="grid size-10 place-items-center rounded-lg border border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" onClick={() => setMobileOpen(true)} aria-label="Open dashboard menu"><Menu className="size-5" /></button>
       </div>
-      <aside className={cn("fixed inset-y-0 left-0 z-30 hidden border-r border-slate-200/80 bg-white/95 p-5 backdrop-blur transition-[width] duration-200 lg:block dark:border-slate-800 dark:bg-slate-900/95", sidebarCollapsed ? "w-24" : "w-72")}>{sidebar}</aside>
+      <aside className={cn("fixed inset-y-0 left-0 z-30 hidden border-r border-slate-200/80 bg-white/95 backdrop-blur transition-[width] duration-200 lg:block dark:border-slate-800 dark:bg-slate-900/95", sidebarCollapsed ? "w-32 p-3" : "w-72 p-5")}>{sidebar}</aside>
       {mobileOpen ? <div className="fixed inset-0 z-50 lg:hidden"><div className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onClick={() => setMobileOpen(false)} /><aside className="absolute inset-y-0 left-0 w-80 overflow-hidden bg-white p-5 shadow-2xl dark:bg-slate-900"><button className="mb-4 ml-auto grid size-10 place-items-center rounded-lg border border-slate-200 dark:border-slate-700" onClick={() => setMobileOpen(false)} aria-label="Close dashboard menu"><X className="size-5" /></button>{mobileSidebar}</aside></div> : null}
-      <main className={cn("transition-[padding] duration-200", sidebarCollapsed ? "lg:pl-24" : "lg:pl-72")}>
+      <main className={cn("transition-[padding] duration-200", sidebarCollapsed ? "lg:pl-32" : "lg:pl-72")}>
         <div className="relative z-40 overflow-visible border-b border-slate-200/80 bg-white/85 shadow-[0_1px_0_rgba(15,23,42,0.03)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/85">
           <div className="container-page flex min-h-20 flex-col justify-center gap-4 py-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="min-w-0">
@@ -72,15 +70,15 @@ export function DashboardShell({ children }) {
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <ThemeToggle className="shrink-0 rounded-lg bg-white shadow-sm ring-1 ring-slate-200 hover:bg-slate-50 dark:bg-slate-950 dark:ring-slate-700 dark:hover:bg-slate-800" />
-              <button type="button" onClick={toggleFullscreen} className="grid size-12 shrink-0 place-items-center rounded-lg bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-blue-700 dark:bg-slate-950 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800 dark:hover:text-blue-300" aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"} title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}>
+              <button type="button" onClick={toggleFullscreen} className="grid size-11 shrink-0 place-items-center rounded-lg bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-blue-700 dark:bg-slate-950 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800 dark:hover:text-blue-300" aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"} title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}>
                 {isFullscreen ? <Minimize2 className="size-5" /> : <Maximize2 className="size-5" />}
               </button>
-              <button type="button" className="relative grid size-12 shrink-0 place-items-center rounded-lg bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-blue-700 dark:bg-slate-950 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800 dark:hover:text-blue-300" aria-label="Notifications">
+              <button type="button" className="relative grid size-11 shrink-0 place-items-center rounded-lg bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-blue-700 dark:bg-slate-950 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800 dark:hover:text-blue-300" aria-label="Notifications">
                 <Bell className="size-5" />
-                <span className="absolute right-2 top-2 grid size-5 place-items-center rounded-full bg-blue-600 text-[10px] font-extrabold leading-none text-white ring-2 ring-white dark:ring-slate-950">2</span>
+                <span className="absolute right-1.5 top-1.5 grid size-4 place-items-center rounded-full bg-blue-600 text-[9px] font-extrabold leading-none text-white ring-2 ring-white dark:ring-slate-950">2</span>
               </button>
               <div className="relative">
-                <button type="button" onClick={() => setProfileOpen((open) => !open)} className="flex h-12 items-center gap-2 rounded-lg bg-white px-2.5 text-left shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:bg-slate-950 dark:ring-slate-700 dark:hover:bg-slate-800" aria-expanded={profileOpen} aria-haspopup="menu">
+                <button type="button" onClick={() => setProfileOpen((open) => !open)} className="flex h-11 items-center gap-2 rounded-lg bg-white px-2 text-left shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:bg-slate-950 dark:ring-slate-700 dark:hover:bg-slate-800" aria-expanded={profileOpen} aria-haspopup="menu">
                   <span className="grid size-8 place-items-center rounded-full bg-blue-600 text-xs font-extrabold text-white shadow-md shadow-blue-600/20">{initials}</span>
                   <span className="hidden max-w-32 truncate text-sm font-bold text-slate-900 lg:block dark:text-white">{user?.name || "ZoeLit Customer"}</span>
                   <ChevronDown className="size-4 text-slate-400" />
@@ -99,7 +97,7 @@ export function DashboardShell({ children }) {
             </div>
           </div>
         </div>
-        <div className="container-page py-8 lg:py-10">{children}</div>
+        <div className="container-page py-8 lg:py-10">{loadingContent ? null : children}</div>
       </main>
     </div>
   );
@@ -107,7 +105,7 @@ export function DashboardShell({ children }) {
 
 function Sidebar({ collapsed, onNavigate, onToggleCollapsed }) {
   const pathname = usePathname();
-  return <div className="flex h-full min-h-0 flex-col"><div className={cn("mb-6 flex shrink-0 items-center gap-2", collapsed ? "justify-center" : "justify-between")}><Link href="/dashboard" className={cn("font-extrabold tracking-tight", collapsed ? "text-xl" : "text-2xl")} aria-label="ZoeLit Account"><span className="text-blue-600">Zoe</span>{collapsed ? null : "Lit"}</Link>{onToggleCollapsed ? <button type="button" onClick={onToggleCollapsed} className="grid size-10 place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-100 hover:text-blue-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300" aria-label={collapsed ? "Show sidebar" : "Hide sidebar"} title={collapsed ? "Show sidebar" : "Hide sidebar"}>{collapsed ? <PanelLeftOpen className="size-5" /> : <PanelLeftClose className="size-5" />}</button> : null}</div><nav className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">{sidebarItems.map((item) => { const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(`${item.href}/`)); return <Link key={`${item.label}-${item.href}`} href={item.href} onClick={onNavigate} className={cn("flex items-center rounded-xl py-3 text-sm font-bold transition", collapsed ? "justify-center px-3" : "gap-3 px-4", active ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800")} title={collapsed ? item.label : undefined} aria-label={collapsed ? item.label : undefined}><item.icon className="size-4" />{collapsed ? null : item.label}</Link>; })}</nav></div>;
+  return <div className="flex h-full min-h-0 flex-col"><div className={cn("mb-6 flex shrink-0 items-center gap-2", collapsed ? "justify-center" : "justify-between")}><Link href="/dashboard" className={cn("font-extrabold tracking-tight", collapsed ? "grid size-12 place-items-center rounded-lg bg-blue-50 text-xl text-blue-600 ring-1 ring-blue-100 dark:bg-blue-500/10 dark:ring-blue-500/20" : "text-2xl")} aria-label="ZoeLit Account"><span className="text-blue-600">{collapsed ? "Z" : "Zoe"}</span>{collapsed ? null : "Lit"}</Link>{onToggleCollapsed ? <button type="button" onClick={onToggleCollapsed} className={cn("grid place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-100 hover:text-blue-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300", collapsed ? "size-12" : "size-10")} aria-label={collapsed ? "Show sidebar" : "Hide sidebar"} title={collapsed ? "Show sidebar" : "Hide sidebar"}>{collapsed ? <PanelLeftOpen className="size-5" /> : <PanelLeftClose className="size-5" />}</button> : null}</div><nav className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">{sidebarItems.map((item) => { const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(`${item.href}/`)); return <Link key={`${item.label}-${item.href}`} href={item.href} onClick={onNavigate} className={cn("flex items-center rounded-xl py-3 text-sm font-bold transition", collapsed ? "justify-center px-3" : "gap-3 px-4", active ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800")} title={collapsed ? item.label : undefined} aria-label={collapsed ? item.label : undefined}><item.icon className="size-4" />{collapsed ? null : item.label}</Link>; })}</nav></div>;
 }
 
 function getInitials(name = "ZoeLit Customer") {

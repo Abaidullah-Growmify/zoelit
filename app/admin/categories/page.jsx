@@ -1,7 +1,6 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { AdminPageHeader } from "@/components/admin-page-header";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminTable } from "@/components/admin-table";
 import { Button } from "@/components/ui";
@@ -17,9 +16,8 @@ export default function AdminCategoriesPage() {
 
   return (
     <div>
-      <AdminPageHeader title="Categories" description="Organize storefront products by collection, merchandising group, and shop navigation label." action={<Button asChild href="/admin/categories/new"><Plus className="size-4" />Add category</Button>} />
       <AdminTable
-        className="mt-8"
+        action={<Button asChild href="/admin/categories/new"><Plus className="size-4" />Add category</Button>}
         columns={columns}
         data={categories}
         searchPlaceholder="Search categories"
