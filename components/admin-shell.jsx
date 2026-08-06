@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Bell, Boxes, ChevronDown, LayoutDashboard, Package, Settings, ShoppingBag, Tags, Users, Menu, X } from "lucide-react";
+import { Bell, Boxes, ChevronDown, LayoutDashboard, Maximize2, Minimize2, Package, PanelLeftClose, PanelLeftOpen, Settings, ShoppingBag, Tags, Users, Menu, X } from "lucide-react";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AdminPageSkeleton } from "@/components/skeletons";
@@ -23,6 +23,8 @@ const items = [
 export function AdminShell({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const admin = useAdminAuthStore((state) => state.admin);
@@ -33,6 +35,12 @@ export function AdminShell({ children }) {
     if (pathname !== "/admin/login" && ready && !admin) router.replace(`/admin/login?next=${encodeURIComponent(pathname)}`);
   }, [ready, admin, router, pathname]);
 
+  useEffect(() => {
+    const handleFullscreenChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
   if (pathname === "/admin/login") return children;
 
   const handleLogout = () => {
@@ -40,9 +48,17 @@ export function AdminShell({ children }) {
     toast.info("Admin signed out");
     router.push("/admin/login");
   };
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+      return;
+    }
+    document.documentElement.requestFullscreen();
+  };
   const activeItem = items.find((item) => pathname === item.href || (item.href !== "/admin" && pathname.startsWith(`${item.href}/`))) || items[0];
   const initials = getInitials(admin?.name);
-  const sidebar = <Sidebar onNavigate={() => setMobileOpen(false)} />;
+  const sidebar = <Sidebar collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} onToggleCollapsed={() => setSidebarCollapsed((collapsed) => !collapsed)} />;
+  const mobileSidebar = <Sidebar collapsed={false} onNavigate={() => setMobileOpen(false)} />;
   const loadingContent = !ready || !admin;
 
   return (
@@ -51,9 +67,9 @@ export function AdminShell({ children }) {
         <Link href="/admin" className="font-extrabold tracking-tight"><span className="text-blue-600">Zoe</span>Lit Admin</Link>
         <button className="grid size-10 place-items-center rounded-lg border border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" onClick={() => setMobileOpen(true)} aria-label="Open admin menu"><Menu className="size-5" /></button>
       </div>
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-slate-200/80 bg-white/95 p-5 backdrop-blur lg:block dark:border-slate-800 dark:bg-slate-900/95">{sidebar}</aside>
-      {mobileOpen ? <div className="fixed inset-0 z-50 lg:hidden"><div className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onClick={() => setMobileOpen(false)} /><aside className="absolute inset-y-0 left-0 w-80 overflow-hidden bg-white p-5 shadow-2xl dark:bg-slate-900"><button className="mb-4 ml-auto grid size-10 place-items-center rounded-lg border border-slate-200 dark:border-slate-700" onClick={() => setMobileOpen(false)} aria-label="Close admin menu"><X className="size-5" /></button>{sidebar}</aside></div> : null}
-      <main className="lg:pl-72">
+      <aside className={cn("fixed inset-y-0 left-0 z-30 hidden border-r border-slate-200/80 bg-white/95 p-5 backdrop-blur transition-[width] duration-200 lg:block dark:border-slate-800 dark:bg-slate-900/95", sidebarCollapsed ? "w-24" : "w-72")}>{sidebar}</aside>
+      {mobileOpen ? <div className="fixed inset-0 z-50 lg:hidden"><div className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onClick={() => setMobileOpen(false)} /><aside className="absolute inset-y-0 left-0 w-80 overflow-hidden bg-white p-5 shadow-2xl dark:bg-slate-900"><button className="mb-4 ml-auto grid size-10 place-items-center rounded-lg border border-slate-200 dark:border-slate-700" onClick={() => setMobileOpen(false)} aria-label="Close admin menu"><X className="size-5" /></button>{mobileSidebar}</aside></div> : null}
+      <main className={cn("transition-[padding] duration-200", sidebarCollapsed ? "lg:pl-24" : "lg:pl-72")}>
         <div className="relative z-40 overflow-visible border-b border-slate-200/80 bg-white/85 shadow-[0_1px_0_rgba(15,23,42,0.03)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/85">
           <div className="container-page flex min-h-20 flex-col justify-center gap-4 py-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="min-w-0">
@@ -63,6 +79,9 @@ export function AdminShell({ children }) {
             <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center xl:w-auto">
               <div className="flex flex-wrap items-center gap-2">
                 <ThemeToggle className="shrink-0 rounded-lg bg-white shadow-sm ring-1 ring-slate-200 hover:bg-slate-50 dark:bg-slate-950 dark:ring-slate-700 dark:hover:bg-slate-800" />
+                <button type="button" onClick={toggleFullscreen} className="grid size-12 shrink-0 place-items-center rounded-lg bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-blue-700 dark:bg-slate-950 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800 dark:hover:text-blue-300" aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"} title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}>
+                  {isFullscreen ? <Minimize2 className="size-5" /> : <Maximize2 className="size-5" />}
+                </button>
                 <button type="button" className="relative grid size-12 shrink-0 place-items-center rounded-lg bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-blue-700 dark:bg-slate-950 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800 dark:hover:text-blue-300" aria-label="Notifications">
                   <Bell className="size-5" />
                   <span className="absolute right-2 top-2 grid size-5 place-items-center rounded-full bg-blue-600 text-[10px] font-extrabold leading-none text-white ring-2 ring-white dark:ring-slate-950">3</span>
@@ -94,16 +113,21 @@ export function AdminShell({ children }) {
   );
 }
 
-function Sidebar({ onNavigate }) {
+function Sidebar({ collapsed, onNavigate, onToggleCollapsed }) {
   const pathname = usePathname();
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <Link href="/admin" className="mb-6 shrink-0 text-2xl font-extrabold tracking-tight"><span className="text-blue-600">Zoe</span>Lit Admin</Link>
+      <div className={cn("mb-6 flex shrink-0 items-center gap-2", collapsed ? "justify-center" : "justify-between")}>
+        <Link href="/admin" className={cn("font-extrabold tracking-tight", collapsed ? "text-xl" : "text-2xl")} aria-label="ZoeLit Admin"><span className="text-blue-600">Zoe</span>{collapsed ? null : "Lit Admin"}</Link>
+        {onToggleCollapsed ? <button type="button" onClick={onToggleCollapsed} className="grid size-10 place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-100 hover:text-blue-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300" aria-label={collapsed ? "Show sidebar" : "Hide sidebar"} title={collapsed ? "Show sidebar" : "Hide sidebar"}>
+          {collapsed ? <PanelLeftOpen className="size-5" /> : <PanelLeftClose className="size-5" />}
+        </button> : null}
+      </div>
       <nav className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
         {items.map((item) => {
           const active = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(`${item.href}/`));
-          return <Link key={item.href} href={item.href} onClick={onNavigate} className={cn("flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition", active ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800")}><item.icon className="size-4" />{item.label}</Link>;
+          return <Link key={item.href} href={item.href} onClick={onNavigate} className={cn("flex items-center rounded-xl py-3 text-sm font-bold transition", collapsed ? "justify-center px-3" : "gap-3 px-4", active ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800")} title={collapsed ? item.label : undefined} aria-label={collapsed ? item.label : undefined}><item.icon className="size-4" />{collapsed ? null : item.label}</Link>;
         })}
       </nav>
     </div>
