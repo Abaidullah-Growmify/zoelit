@@ -2,67 +2,41 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useDeferredValue, useState } from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ArrowRight, ArrowUpRight, Eye, Search } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
-import { AdminTable, AdminTableCell, AdminTableRow } from "@/components/admin-table";
-import { Button, Card, Input, Select } from "@/components/ui";
+import { AdminTable } from "@/components/admin-table";
+import { Card } from "@/components/ui";
 import { money, shortDate } from "@/lib/utils";
 
 export function AdminDashboardContent({ orders, topProducts, lowStock, salesOverview }) {
-  const [query, setQuery] = useState("");
-  const [status, setStatus] = useState("All statuses");
-  const deferredQuery = useDeferredValue(query);
-  const normalizedQuery = deferredQuery.trim().toLowerCase();
-  const statuses = ["All statuses", ...Array.from(new Set(orders.map((order) => order.status)))];
-  const filteredOrders = orders.filter((order) => {
-    const matchesStatus = status === "All statuses" || order.status === status;
-    const matchesQuery = !normalizedQuery || [order.id, order.customer.name, order.payment, order.total].some((value) => String(value).toLowerCase().includes(normalizedQuery));
-    return matchesStatus && matchesQuery;
-  });
-  const visibleOrders = filteredOrders.slice(0, 5);
+  const orderColumns = [
+    { key: "id", header: "Order", sortable: true, accessor: "id", cellClassName: "font-bold tabular-nums text-slate-950 dark:text-white", render: (order) => `#${order.id}` },
+    { key: "customer", header: "Customer", sortable: true, accessor: (order) => order.customer.name, cellClassName: "min-w-0 whitespace-normal font-semibold" },
+    { key: "date", header: "Date", sortable: true, accessor: "date", render: (order) => shortDate(order.date) },
+    { key: "status", header: "Status", accessor: "status", render: (order) => <AdminStatusBadge>{order.status}</AdminStatusBadge> },
+    { key: "payment", header: "Payment", accessor: "payment", render: (order) => <AdminStatusBadge>{order.payment}</AdminStatusBadge> },
+    { key: "total", header: "Total", sortable: true, accessor: "total", cellClassName: "font-bold tabular-nums text-slate-950 dark:text-white", render: (order) => money(order.total) },
+  ];
   const trend = chartTrend(salesOverview);
 
   return (
     <>
       <div className="mt-6 grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-        <Card className="p-0">
-          <div className="border-b border-slate-100 p-5 dark:border-slate-800">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <h2 className="text-xl font-bold">Recent orders</h2>
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Search and filter the latest storefront activity.</p>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_180px] lg:w-[520px]">
-                <div className="relative">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                  <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search order or customer" aria-label="Search recent orders" className="pl-10" />
-                </div>
-                <Select value={status} onChange={(event) => setStatus(event.target.value)} aria-label="Filter recent orders by status" className="w-full">
-                  {statuses.map((option) => <option key={option}>{option}</option>)}
-                </Select>
-              </div>
-            </div>
-          </div>
-          <AdminTable columns={["Order", "Customer", "Date", "Status", "Payment", "Total", ""]} className="rounded-none border-0 shadow-none" wrapperClassName="overflow-visible" tableClassName="table-auto">
-            {visibleOrders.map((order) => (
-              <AdminTableRow key={order.id}>
-                <AdminTableCell className="font-bold tabular-nums text-slate-950 dark:text-white">#{order.id}</AdminTableCell>
-                <AdminTableCell className="min-w-0 whitespace-normal font-semibold">{order.customer.name}</AdminTableCell>
-                <AdminTableCell>{shortDate(order.date)}</AdminTableCell>
-                <AdminTableCell><AdminStatusBadge>{order.status}</AdminStatusBadge></AdminTableCell>
-                <AdminTableCell><AdminStatusBadge>{order.payment}</AdminStatusBadge></AdminTableCell>
-                <AdminTableCell className="font-bold tabular-nums text-slate-950 dark:text-white">{money(order.total)}</AdminTableCell>
-                <AdminTableCell className="text-right"><Link aria-label={`Open order ${order.id}`} className="inline-grid size-9 place-items-center rounded-lg text-blue-600 transition hover:bg-blue-50 hover:text-blue-700 dark:text-blue-300 dark:hover:bg-blue-500/10" href={`/admin/orders/${order.id}`}><Eye className="size-4" /></Link></AdminTableCell>
-              </AdminTableRow>
-            ))}
-          </AdminTable>
-          <div className="flex flex-col gap-3 border-t border-slate-100 px-5 py-4 text-sm sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
-            <p className="font-semibold text-slate-500 dark:text-slate-400">Showing {visibleOrders.length} of {filteredOrders.length} matching orders</p>
-            <Button asChild href="/admin/orders" variant="outline" size="sm" aria-label="Open all orders"><ArrowRight className="size-4" /></Button>
-          </div>
-        </Card>
+        <AdminTable
+          title="Recent orders"
+          description="Search and filter the latest storefront activity."
+          columns={orderColumns}
+          data={orders}
+          searchPlaceholder="Search order or customer"
+          searchKeys={["id", (order) => order.customer.name, "status", "payment", "total"]}
+          filters={[{ key: "status", label: "Filter recent orders by status", allLabel: "All statuses", options: Array.from(new Set(orders.map((order) => order.status))), value: (order) => order.status }]}
+          rowActions={(order) => [
+            { label: "View", href: `/admin/orders/${order.id}` },
+            { label: "Edit", href: `/admin/orders/${order.id}` },
+            { label: "Delete", tone: "danger", onClick: () => console.info(`Delete order ${order.id}`) },
+          ]}
+        />
         <div className="space-y-6">
           <Card className="overflow-hidden">
             <div className="flex items-start justify-between gap-4">

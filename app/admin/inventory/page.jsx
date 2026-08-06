@@ -1,20 +1,71 @@
-import Link from "next/link";
-import { Pencil } from "lucide-react";
+"use client";
+
+import Image from "next/image";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
-import { AdminTable, AdminTableCell, AdminTableRow } from "@/components/admin-table";
-import { Button, Card, Input, Select } from "@/components/ui";
-import { inventory } from "@/lib/admin-data";
-import { shortDate } from "@/lib/utils";
+import { AdminTable } from "@/components/admin-table";
+import { categories, inventory } from "@/lib/admin-data";
+import { cn, shortDate } from "@/lib/utils";
 
 export default function AdminInventoryPage() {
+  const columns = [
+    {
+      key: "productName",
+      header: "Product",
+      sortable: true,
+      accessor: "productName",
+      render: (item) => <InventoryProductCell item={item} />,
+    },
+    { key: "sku", header: "SKU", sortable: true, accessor: "sku" },
+    { key: "category", header: "Category", sortable: true, accessor: "category" },
+    { key: "currentStock", header: "Stock", sortable: true, accessor: "currentStock", render: (item) => <StockLevel item={item} /> },
+    { key: "threshold", header: "Threshold", sortable: true, accessor: "threshold", cellClassName: "tabular-nums" },
+    { key: "status", header: "Status", accessor: "status", render: (item) => <AdminStatusBadge>{item.status}</AdminStatusBadge> },
+    { key: "lastUpdated", header: "Updated", sortable: true, accessor: "lastUpdated", render: (item) => shortDate(item.lastUpdated) },
+  ];
+
   return (
     <div>
       <AdminPageHeader title="Inventory" description="Track stock health, low-stock thresholds, SKU references, and quick adjustment controls." />
-      <Card className="mt-8"><div className="mb-4"><h2 className="text-base font-bold">Inventory controls</h2><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Monitor SKU health and identify products needing replenishment.</p></div><div className="grid gap-3 md:grid-cols-4"><Input placeholder="Search SKU or product" /><Select><option>All stock states</option><option>In Stock</option><option>Low Stock</option><option>Out of Stock</option></Select><Select><option>All categories</option></Select><Button variant="secondary">Reset</Button></div></Card>
-      <AdminTable className="mt-6" columns={["Product", "SKU", "Category", "Stock", "Threshold", "Status", "Updated", ""]}>
-        {inventory.map((item) => <AdminTableRow key={item.productId}><AdminTableCell className="font-bold text-slate-950 dark:text-white">{item.productName}</AdminTableCell><AdminTableCell>{item.sku}</AdminTableCell><AdminTableCell>{item.category}</AdminTableCell><AdminTableCell className="font-bold tabular-nums text-slate-950 dark:text-white">{item.currentStock}</AdminTableCell><AdminTableCell className="tabular-nums">{item.threshold}</AdminTableCell><AdminTableCell><AdminStatusBadge>{item.status}</AdminStatusBadge></AdminTableCell><AdminTableCell>{shortDate(item.lastUpdated)}</AdminTableCell><AdminTableCell><Link aria-label={`Adjust ${item.productName}`} className="inline-grid size-9 place-items-center rounded-lg text-blue-600 transition hover:bg-blue-50 hover:text-blue-700 dark:text-blue-300 dark:hover:bg-blue-500/10" href={`/admin/products/${item.productId}`}><Pencil className="size-4" /></Link></AdminTableCell></AdminTableRow>)}
-      </AdminTable>
+      <AdminTable
+        className="mt-8"
+        columns={columns}
+        data={inventory}
+        searchPlaceholder="Search SKU or product"
+        searchKeys={["productName", "sku", "category", "status"]}
+        filters={[
+          { key: "status", label: "Filter inventory by stock state", allLabel: "All stock states", options: ["In Stock", "Low Stock", "Out of Stock"], value: (item) => item.status },
+          { key: "category", label: "Filter inventory by category", allLabel: "All categories", options: categories.map((category) => category.name), value: (item) => item.category },
+        ]}
+        rowActions={(item) => [
+          { label: "View", href: `/products/${item.productId}` },
+          { label: "Edit", href: `/admin/products/${item.productId}` },
+          { label: "Delete", tone: "danger", onClick: () => console.info(`Delete inventory item ${item.productId}`) },
+        ]}
+      />
+    </div>
+  );
+}
+
+function InventoryProductCell({ item }) {
+  return (
+    <div className="flex items-center gap-3">
+      <Image src={item.image} alt={item.productName} width={48} height={48} className="size-12 rounded-xl object-cover ring-1 ring-slate-200 dark:ring-slate-800" />
+      <p className="font-bold text-slate-950 dark:text-white">{item.productName}</p>
+    </div>
+  );
+}
+
+function StockLevel({ item }) {
+  const ratio = Math.min(100, Math.round((item.currentStock / Math.max(item.threshold, 1)) * 100));
+  const isOut = item.currentStock === 0;
+  const isLow = item.currentStock <= item.threshold && !isOut;
+  return (
+    <div className="flex min-w-32 items-center gap-3">
+      <span className={cn("h-8 w-1.5 overflow-hidden rounded-full bg-emerald-100 dark:bg-emerald-500/15", isLow && "bg-amber-100 dark:bg-amber-500/15", isOut && "bg-rose-100 dark:bg-rose-500/15")} aria-hidden="true">
+        <span className={cn("block w-full rounded-full bg-emerald-500", isLow && "bg-amber-500", isOut && "bg-rose-500")} style={{ height: `${Math.max(ratio, item.currentStock ? 12 : 100)}%`, marginTop: `${100 - Math.max(ratio, item.currentStock ? 12 : 100)}%` }} />
+      </span>
+      <span className={cn("font-bold tabular-nums text-slate-950 dark:text-white", isLow && "text-amber-700 dark:text-amber-300", isOut && "text-rose-700 dark:text-rose-300")}>{item.currentStock}</span>
     </div>
   );
 }
