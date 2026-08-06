@@ -73,3 +73,37 @@ a, button, input, select, textarea {
 @keyframes shimmer {
   100% { transform: translateX(100%); }
 }
+
+.section-fade-up > * {
+  animation: sectionFadeUp 700ms ease both;
+}
+
+.section-fade-up > *:nth-child(2) {
+  animation-delay: 120ms;
+}
+
+.section-fade-up > *:nth-child(2) > * {
+  animation: sectionFadeUp 650ms ease both;
+}
+
+.section-fade-up > *:nth-child(2) > *:nth-child(2) { animation-delay: 80ms; }
+.section-fade-up > *:nth-child(2) > *:nth-child(3) { animation-delay: 160ms; }
+.section-fade-up > *:nth-child(2) > *:nth-child(4) { animation-delay: 240ms; }
+
+@keyframes sectionFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-fade-up > *,
+  .section-fade-up > *:nth-child(2) > * {
+    animation: none;
+  }
+}
