@@ -47,8 +47,8 @@ export default function AdminInventoryPage() {
 function InventoryProductCell({ item }) {
   return (
     <div className="flex items-center gap-3">
-      <Image src={item.image} alt={item.productName} width={48} height={48} className="size-12 rounded-lg object-cover ring-1 ring-slate-200 dark:ring-slate-800" />
-      <p className="font-bold text-slate-950 dark:text-white">{item.productName}</p>
+      <Image src={item.image} alt={item.productName} width={48} height={48} className="size-12 rounded-md object-cover ring-1 ring-slate-200 dark:ring-slate-800" />
+      <p className="text-body font-semibold text-slate-950 dark:text-white">{item.productName}</p>
     </div>
   );
 }
@@ -59,10 +59,10 @@ function StockLevel({ item }) {
   const isLow = item.currentStock <= item.threshold && !isOut;
   return (
     <div className="flex min-w-32 items-center gap-3">
-      <span className={cn("h-8 w-1.5 overflow-hidden rounded-lg bg-emerald-100 dark:bg-emerald-500/15", isLow && "bg-amber-100 dark:bg-amber-500/15", isOut && "bg-rose-100 dark:bg-rose-500/15")} aria-hidden="true">
-        <span className={cn("block w-full rounded-lg bg-emerald-500", isLow && "bg-amber-500", isOut && "bg-rose-500")} style={{ height: `${Math.max(ratio, item.currentStock ? 12 : 100)}%`, marginTop: `${100 - Math.max(ratio, item.currentStock ? 12 : 100)}%` }} />
+      <span className={cn("h-8 w-1.5 overflow-hidden rounded-full bg-emerald-100 dark:bg-emerald-500/15", isLow && "bg-amber-100 dark:bg-amber-500/15", isOut && "bg-rose-100 dark:bg-rose-500/15")} aria-hidden="true">
+        <span className={cn("block w-full rounded-full bg-emerald-500", isLow && "bg-amber-500", isOut && "bg-rose-500")} style={{ height: `${Math.max(ratio, item.currentStock ? 12 : 100)}%`, marginTop: `${100 - Math.max(ratio, item.currentStock ? 12 : 100)}%` }} />
       </span>
-      <span className={cn("font-bold tabular-nums text-slate-950 dark:text-white", isLow && "text-amber-700 dark:text-amber-300", isOut && "text-rose-700 dark:text-rose-300")}>{item.currentStock}</span>
+      <span className={cn("text-body font-semibold tabular-nums text-slate-950 dark:text-white", isLow && "text-amber-700 dark:text-amber-300", isOut && "text-rose-700 dark:text-rose-300")}>{item.currentStock}</span>
     </div>
   );
 }

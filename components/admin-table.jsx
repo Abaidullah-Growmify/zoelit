@@ -29,9 +29,9 @@ export function AdminTable({
     return (
       <Card className={cn("overflow-hidden p-0", className)}>
         <div className={cn("overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", wrapperClassName)}>
-          <table className={cn("w-full text-left text-sm", tableClassName)}>
-            <thead className="sticky top-0 z-10 bg-slate-100/95 text-xs uppercase tracking-[0.14em] text-slate-700 shadow-[0_1px_0_rgba(203,213,225,0.95)] backdrop-blur dark:bg-slate-950/95 dark:text-slate-200 dark:shadow-[0_1px_0_rgba(51,65,85,0.95)]">
-              <tr>{columns.map((column) => <th key={column} className="whitespace-nowrap px-5 py-4 font-bold">{column}</th>)}</tr>
+<table className={cn("w-full text-left text-body", tableClassName)}>
+            <thead className="sticky top-0 z-10 bg-slate-100/95 text-meta uppercase tracking-[0.14em] text-slate-700 shadow-[0_1px_0_rgba(203,213,225,0.95)] backdrop-blur dark:bg-slate-950/95 dark:text-slate-200 dark:shadow-[0_1px_0_rgba(51,65,85,0.95)]">
+              <tr>{columns.map((column) => <th key={column} className="whitespace-nowrap px-5 py-4 font-semibold">{column}</th>)}</tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">{children}</tbody>
           </table>
@@ -109,8 +109,8 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
         {title || description ? (
           <div className="mb-4">
             <div>
-              {title ? <h2 className="font-heading text-2xl font-extrabold tracking-[-0.03em] text-slate-950 dark:text-white">{title}</h2> : null}
-              {description ? <p className="mt-1 text-sm font-semibold text-slate-600 dark:text-slate-300">{description}</p> : null}
+              {title ? <h2 className="font-heading text-h2 font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">{title}</h2> : null}
+              {description ? <p className="mt-1 text-body font-regular text-slate-600 dark:text-slate-300">{description}</p> : null}
             </div>
           </div>
         ) : null}
@@ -130,20 +130,20 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
         </div>
       </div>
       <div className={cn("overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", wrapperClassName)}>
-        <table className={cn("w-full text-left text-sm", tableClassName)}>
-          <thead className="sticky top-0 z-10 bg-slate-100/95 text-xs uppercase tracking-[0.14em] text-slate-700 shadow-[0_1px_0_rgba(203,213,225,0.95)] backdrop-blur dark:bg-slate-950/95 dark:text-slate-200 dark:shadow-[0_1px_0_rgba(51,65,85,0.95)]">
+        <table className={cn("w-full text-left text-body", tableClassName)}>
+          <thead className="sticky top-0 z-10 bg-slate-100/95 text-meta uppercase tracking-[0.14em] text-slate-700 shadow-[0_1px_0_rgba(203,213,225,0.95)] backdrop-blur dark:bg-slate-950/95 dark:text-slate-200 dark:shadow-[0_1px_0_rgba(51,65,85,0.95)]">
             <tr>
               {columns.map((column) => (
                 <th key={column.key} className={cn("whitespace-nowrap px-5 py-4 font-bold", column.className)}>
                   {column.sortable ? (
-                    <button type="button" onClick={() => toggleSort(column)} className="inline-flex items-center gap-1 rounded-lg transition hover:text-slate-950 focus:outline-none focus:ring-4 focus:ring-blue-500/10 dark:hover:text-white">
+                    <button type="button" onClick={() => toggleSort(column)} className="inline-flex items-center gap-1 rounded-sm transition hover:text-slate-950 focus:outline-none focus:ring-4 focus:ring-blue-500/10 dark:hover:text-white">
                       {column.header}
                       {sort?.key === column.key ? sort.direction === "asc" ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" /> : <ChevronDown className="size-3.5 opacity-30" />}
                     </button>
                   ) : column.header}
                 </th>
               ))}
-              {hasActions ? <th className="whitespace-nowrap px-5 py-4 text-right font-bold">Actions</th> : null}
+              {hasActions ? <th className="whitespace-nowrap px-5 py-4 text-right font-semibold">Actions</th> : null}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -155,14 +155,14 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
             ))}
             {!pageItems.length ? (
               <tr>
-                <td colSpan={columns.length + (hasActions ? 1 : 0)} className="px-5 py-12 text-center text-sm font-semibold text-slate-500 dark:text-slate-400">No results match your filters.</td>
+                <td colSpan={columns.length + (hasActions ? 1 : 0)} className="px-5 py-12 text-center text-body font-regular text-slate-500 dark:text-slate-400">No results match your filters.</td>
               </tr>
             ) : null}
           </tbody>
         </table>
       </div>
-      <div className="flex flex-col gap-3 border-t border-slate-100 px-5 py-4 text-sm sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
-        <p className="font-bold text-slate-600 dark:text-slate-300">Showing {showingStart}-{showingEnd} of {sortedData.length} results</p>
+      <div className="flex flex-col gap-3 border-t border-slate-100 px-5 py-4 text-body sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
+        <p className="font-regular text-slate-600 dark:text-slate-300">Showing {showingStart}-{showingEnd} of {sortedData.length} results</p>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="secondary" size="sm" disabled={safePage === 1} onClick={() => setPage((current) => Math.max(1, current - 1))}><ChevronLeft className="size-4" />Previous</Button>
           {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
@@ -180,7 +180,7 @@ export function AdminTableRow({ children, zebra = true, index = 0 }) {
 }
 
 export function AdminTableCell({ children, className }) {
-  return <td className={cn("whitespace-nowrap px-5 py-4 align-middle font-semibold text-slate-700 dark:text-slate-300", className)}>{children}</td>;
+  return <td className={cn("whitespace-nowrap px-5 py-4 align-middle text-body font-regular text-slate-700 dark:text-slate-300", className)}>{children}</td>;
 }
 
 export function AdminTableActions({ actions, label = "Row actions" }) {
@@ -188,14 +188,14 @@ export function AdminTableActions({ actions, label = "Row actions" }) {
   return (
     <div className="relative inline-block text-left">
       <details className="group">
-        <summary className="inline-grid size-9 cursor-pointer list-none place-items-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-950 group-open:bg-slate-100 group-open:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white dark:group-open:bg-slate-800 dark:group-open:text-white" aria-label={label}>
+        <summary className="inline-grid size-9 cursor-pointer list-none place-items-center rounded-sm text-slate-500 transition hover:bg-slate-100 hover:text-slate-950 group-open:bg-slate-100 group-open:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white dark:group-open:bg-slate-800 dark:group-open:text-white" aria-label={label}>
           <MoreVertical className="size-4" />
         </summary>
-        <div className="absolute right-0 z-30 mt-2 w-36 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-xl shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-900">
+        <div className="absolute right-0 z-30 mt-2 w-36 overflow-hidden rounded-md border border-slate-200 bg-white py-1 shadow-xl shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-900">
           {actions.map((action) => action.href ? (
-            <Link key={action.label} href={action.href} className={cn("block px-4 py-2 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800", action.tone === "danger" && "text-rose-600 dark:text-rose-300")}>{action.label}</Link>
+            <Link key={action.label} href={action.href} className={cn("block px-4 py-2 text-left text-body font-regular text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800", action.tone === "danger" && "text-rose-600 dark:text-rose-300")}>{action.label}</Link>
           ) : (
-            <button key={action.label} type="button" onClick={action.onClick} className={cn("block w-full px-4 py-2 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800", action.tone === "danger" && "text-rose-600 dark:text-rose-300")}>{action.label}</button>
+            <button key={action.label} type="button" onClick={action.onClick} className={cn("block w-full px-4 py-2 text-left text-body font-regular text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800", action.tone === "danger" && "text-rose-600 dark:text-rose-300")}>{action.label}</button>
           ))}
         </div>
       </details>

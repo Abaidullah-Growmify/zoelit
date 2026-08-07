@@ -7,13 +7,13 @@ import { money, shortDate } from "@/lib/utils";
 
 export default function AdminOrdersPage() {
   const columns = [
-    { key: "id", header: "Order", sortable: true, accessor: "id", cellClassName: "font-bold tabular-nums text-slate-950 dark:text-white", render: (order) => `#${order.id}` },
+    { key: "id", header: "Order", sortable: true, accessor: "id", cellClassName: "font-semibold tabular-nums text-slate-950 dark:text-white", render: (order) => `#${order.id}` },
     { key: "customer", header: "Customer", sortable: true, accessor: (order) => order.customer.name },
     { key: "date", header: "Date", sortable: true, accessor: "date", render: (order) => shortDate(order.date) },
     { key: "status", header: "Status", accessor: "status", render: (order) => <AdminStatusBadge>{order.status}</AdminStatusBadge> },
     { key: "payment", header: "Payment", accessor: "payment", render: (order) => <AdminStatusBadge>{order.payment}</AdminStatusBadge> },
     { key: "tracking", header: "Tracking", accessor: "tracking", render: (order) => order.tracking || "Not assigned" },
-    { key: "total", header: "Total", sortable: true, accessor: "total", cellClassName: "font-bold tabular-nums text-slate-950 dark:text-white", render: (order) => money(order.total) },
+    { key: "total", header: "Total", sortable: true, accessor: "total", cellClassName: "font-semibold tabular-nums text-slate-950 dark:text-white", render: (order) => money(order.total) },
   ];
 
   return (

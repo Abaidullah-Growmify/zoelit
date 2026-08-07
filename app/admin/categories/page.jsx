@@ -8,7 +8,7 @@ import { categories } from "@/lib/admin-data";
 
 export default function AdminCategoriesPage() {
   const columns = [
-    { key: "name", header: "Name", sortable: true, accessor: "name", cellClassName: "font-bold text-slate-950 dark:text-white" },
+    { key: "name", header: "Name", sortable: true, accessor: "name", cellClassName: "font-semibold text-slate-950 dark:text-white" },
     { key: "slug", header: "Slug", sortable: true, accessor: "slug" },
     { key: "productCount", header: "Products", sortable: true, accessor: "productCount", cellClassName: "tabular-nums" },
     { key: "status", header: "Status", accessor: "status", render: (category) => <AdminStatusBadge>{category.status}</AdminStatusBadge> },

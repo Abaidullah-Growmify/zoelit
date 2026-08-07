@@ -29,8 +29,8 @@ export default async function OrderDetailPage({ params }) {
         <Card>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-bold">Summary</h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Placed {shortDate(order.date)}</p>
+              <h2 className="text-h2 font-semibold">Summary</h2>
+              <p className="text-body font-regular text-slate-500 dark:text-slate-400">Placed {shortDate(order.date)}</p>
             </div>
             <Badge>{order.status}</Badge>
           </div>
@@ -38,17 +38,17 @@ export default async function OrderDetailPage({ params }) {
           <div className="mt-6 space-y-5">
             {orderItems(order).map((item) => (
               <div key={item.productId} className="flex gap-4">
-                <Image src={item.product.image} alt={item.product.name} width={92} height={92} className="size-24 rounded-lg object-cover" />
+                <Image src={item.product.image} alt={item.product.name} width={92} height={92} className="size-24 rounded-md object-cover" />
                 <div className="flex-1">
-                  <h3 className="font-bold">{item.product.name}</h3>
-                  <p className="text-sm tabular-nums text-slate-500 dark:text-slate-400">Qty {item.quantity}</p>
+                  <h3 className="text-h3 font-semibold">{item.product.name}</h3>
+                  <p className="text-body font-regular tabular-nums text-slate-500 dark:text-slate-400">Qty {item.quantity}</p>
                 </div>
                 <strong className="tabular-nums">{money(item.product.price * item.quantity)}</strong>
               </div>
             ))}
           </div>
 
-          <div className="mt-6 border-t border-slate-200 pt-5 text-lg font-bold dark:border-slate-800">
+          <div className="mt-6 border-t border-slate-200 pt-5 text-h2 font-semibold dark:border-slate-800">
             <div className="flex justify-between">
               <span>Total</span>
               <span className="tabular-nums">{money(order.total)}</span>
@@ -58,23 +58,23 @@ export default async function OrderDetailPage({ params }) {
 
         <div className="space-y-6">
           <Card>
-            <h2 className="font-bold">Shipping address</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
+            <h2 className="text-h3 font-semibold">Shipping address</h2>
+            <p className="mt-3 text-body font-regular leading-6 text-slate-600 dark:text-slate-300">
               {addresses[0].name}<br />
               {addresses[0].line1}<br />
               {addresses[0].city}, {addresses[0].region} {addresses[0].postal}
             </p>
           </Card>
           <Card>
-            <h2 className="font-bold">Payment</h2>
+            <h2 className="text-h3 font-semibold">Payment</h2>
             <p className="mt-3"><Badge tone="slate">{order.payment}</Badge></p>
-            <p className="mt-5 text-sm text-slate-500 dark:text-slate-400">Tracking: {order.tracking || "Not available yet"}</p>
+            <p className="mt-5 text-body font-regular text-slate-500 dark:text-slate-400">Tracking: {order.tracking || "Not available yet"}</p>
           </Card>
         </div>
       </div>
 
       <Card className="mt-6">
-        <h2 className="text-xl font-bold">Order timeline</h2>
+        <h2 className="text-h2 font-semibold">Order timeline</h2>
         <div className="mt-6 grid gap-4 md:grid-cols-5">
           {timelineStatuses.map((status, index) => {
             const done = order.status === "Cancelled" ? false : index <= activeIndex;
@@ -84,7 +84,7 @@ export default async function OrderDetailPage({ params }) {
                 <span className={done ? "text-blue-600 dark:text-blue-300" : "text-slate-300 dark:text-slate-600"}>
                   <Icon className="size-5" />
                 </span>
-                <span className={done ? "text-sm font-bold text-slate-950 dark:text-white" : "text-sm font-medium text-slate-500 dark:text-slate-400"}>{status}</span>
+                <span className={done ? "text-body font-semibold text-slate-950 dark:text-white" : "text-body font-regular text-slate-500 dark:text-slate-400"}>{status}</span>
               </div>
             );
           })}

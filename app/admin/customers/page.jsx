@@ -7,11 +7,11 @@ import { money, shortDate } from "@/lib/utils";
 
 export default function AdminCustomersPage() {
   const columns = [
-    { key: "name", header: "Customer", sortable: true, accessor: "name", cellClassName: "font-bold text-slate-950 dark:text-white" },
+    { key: "name", header: "Customer", sortable: true, accessor: "name", cellClassName: "font-semibold text-slate-950 dark:text-white" },
     { key: "email", header: "Email", sortable: true, accessor: "email" },
     { key: "phone", header: "Phone", accessor: "phone" },
     { key: "orders", header: "Orders", sortable: true, accessor: "orders", cellClassName: "tabular-nums" },
-    { key: "totalSpent", header: "Spent", sortable: true, accessor: "totalSpent", cellClassName: "font-bold tabular-nums text-slate-950 dark:text-white", render: (customer) => money(customer.totalSpent) },
+    { key: "totalSpent", header: "Spent", sortable: true, accessor: "totalSpent", cellClassName: "font-semibold tabular-nums text-slate-950 dark:text-white", render: (customer) => money(customer.totalSpent) },
     { key: "status", header: "Status", accessor: "status", render: (customer) => <AdminStatusBadge>{customer.status}</AdminStatusBadge> },
     { key: "joined", header: "Joined", sortable: true, accessor: "joined", render: (customer) => shortDate(customer.joined) },
   ];

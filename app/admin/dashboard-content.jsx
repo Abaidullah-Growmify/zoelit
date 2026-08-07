@@ -11,12 +11,12 @@ import { money, shortDate } from "@/lib/utils";
 
 export function AdminDashboardContent({ orders, topProducts, lowStock, salesOverview }) {
   const orderColumns = [
-    { key: "id", header: "Order", sortable: true, accessor: "id", cellClassName: "font-bold tabular-nums text-slate-950 dark:text-white", render: (order) => `#${order.id}` },
+    { key: "id", header: "Order", sortable: true, accessor: "id", cellClassName: "font-semibold tabular-nums text-slate-950 dark:text-white", render: (order) => `#${order.id}` },
     { key: "customer", header: "Customer", sortable: true, accessor: (order) => order.customer.name, cellClassName: "min-w-0 whitespace-normal font-semibold" },
     { key: "date", header: "Date", sortable: true, accessor: "date", render: (order) => shortDate(order.date) },
     { key: "status", header: "Status", accessor: "status", render: (order) => <AdminStatusBadge>{order.status}</AdminStatusBadge> },
     { key: "payment", header: "Payment", accessor: "payment", render: (order) => <AdminStatusBadge>{order.payment}</AdminStatusBadge> },
-    { key: "total", header: "Total", sortable: true, accessor: "total", cellClassName: "font-bold tabular-nums text-slate-950 dark:text-white", render: (order) => money(order.total) },
+    { key: "total", header: "Total", sortable: true, accessor: "total", cellClassName: "font-semibold tabular-nums text-slate-950 dark:text-white", render: (order) => money(order.total) },
   ];
   const trend = chartTrend(salesOverview);
 
@@ -26,12 +26,12 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
           <Card className="h-full overflow-hidden shadow-sm">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="font-heading text-xl font-extrabold tracking-[-0.03em]">Sales overview</h2>
-                <p className="mt-1 text-sm font-semibold text-slate-600 dark:text-slate-300">Last 7 days performance</p>
+                <h2 className="font-heading text-h2 font-semibold tracking-[-0.03em]">Sales overview</h2>
+                <p className="mt-1 text-body font-regular text-slate-600 dark:text-slate-300">Last 7 days performance</p>
               </div>
-              <span className="rounded-lg bg-emerald-50 px-3 py-1 text-xs font-bold tabular-nums text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">{trend}</span>
+              <span className="rounded-full bg-emerald-50 px-3 py-1 text-meta font-semibold tabular-nums text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">{trend}</span>
             </div>
-            <div className="mt-6 h-60 rounded-lg bg-gradient-to-b from-blue-50 to-slate-50 p-3 ring-1 ring-slate-200 dark:from-blue-500/10 dark:to-slate-950 dark:ring-slate-800">
+            <div className="mt-6 h-60 rounded-md bg-gradient-to-b from-blue-50 to-slate-50 p-3 ring-1 ring-slate-200 dark:from-blue-500/10 dark:to-slate-950 dark:ring-slate-800">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={salesOverview} margin={{ left: 0, right: 10, top: 12, bottom: 0 }}>
                   <defs>
@@ -50,14 +50,14 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
             </div>
           </Card>
           <Card className="h-full shadow-sm">
-            <h2 className="font-heading text-xl font-extrabold tracking-[-0.03em]">Low stock alerts</h2>
-            <p className="mt-1 text-sm font-semibold text-slate-600 dark:text-slate-300">Products that need quick attention.</p>
-            <div className="mt-4 space-y-3">{lowStock.map((item) => <div key={item.productId} className="flex items-center justify-between gap-3 rounded-lg border border-amber-200/70 bg-amber-50 p-3 dark:border-amber-500/20 dark:bg-amber-500/10"><div><p className="font-bold text-amber-950 dark:text-amber-50">{item.productName}</p><p className="text-xs font-bold text-amber-800 dark:text-amber-200">{item.sku}</p></div><strong className="rounded-lg bg-white px-3 py-1 tabular-nums text-amber-700 dark:bg-slate-950 dark:text-amber-300">{item.currentStock}</strong></div>)}</div>
+            <h2 className="font-heading text-h2 font-semibold tracking-[-0.03em]">Low stock alerts</h2>
+            <p className="mt-1 text-body font-regular text-slate-600 dark:text-slate-300">Products that need quick attention.</p>
+            <div className="mt-4 space-y-3">{lowStock.map((item) => <div key={item.productId} className="flex items-center justify-between gap-3 rounded-md border border-amber-200/70 bg-amber-50 p-3 dark:border-amber-500/20 dark:bg-amber-500/10"><div><p className="text-body font-semibold text-amber-950 dark:text-amber-50">{item.productName}</p><p className="text-meta font-semibold text-amber-800 dark:text-amber-200">{item.sku}</p></div><strong className="rounded-full bg-white px-3 py-1 text-meta font-semibold tabular-nums text-amber-700 dark:bg-slate-950 dark:text-amber-300">{item.currentStock}</strong></div>)}</div>
           </Card>
       </div>
       <Card className="mt-6 shadow-sm">
-        <div className="mb-5 flex items-center justify-between gap-4"><div><h2 className="font-heading text-xl font-extrabold tracking-[-0.03em]">Top products</h2><p className="mt-1 text-sm font-semibold text-slate-600 dark:text-slate-300">Best-rated products with real catalog imagery.</p></div><Link href="/admin/products" aria-label="Open products" className="grid size-9 shrink-0 place-items-center rounded-lg text-blue-700 transition hover:bg-slate-100 hover:text-blue-950 dark:text-blue-300 dark:hover:bg-slate-800 dark:hover:text-blue-50"><ArrowUpRight className="size-4" /></Link></div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">{topProducts.map((product) => <div key={product.id} className="overflow-hidden rounded-lg border border-slate-200 bg-slate-50/80 transition duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-xl dark:border-slate-800 dark:bg-slate-950/60 dark:hover:bg-slate-900"><Image src={product.image} alt={product.name} width={420} height={280} className="aspect-[4/3] w-full object-cover" /><div className="p-4"><p className="font-bold text-slate-950 dark:text-white">{product.name}</p><p className="mt-1 text-sm font-semibold text-slate-600 dark:text-slate-300">{product.category}</p><p className="mt-3 font-heading text-lg font-extrabold tabular-nums">{money(product.price)}</p></div></div>)}</div>
+        <div className="mb-5 flex items-center justify-between gap-4"><div><h2 className="font-heading text-h2 font-semibold tracking-[-0.03em]">Top products</h2><p className="mt-1 text-body font-regular text-slate-600 dark:text-slate-300">Best-rated products with real catalog imagery.</p></div><Link href="/admin/products" aria-label="Open products" className="grid size-9 shrink-0 place-items-center rounded-sm text-blue-700 transition hover:bg-slate-100 hover:text-blue-950 dark:text-blue-300 dark:hover:bg-slate-800 dark:hover:text-blue-50"><ArrowUpRight className="size-4" /></Link></div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">{topProducts.map((product) => <div key={product.id} className="overflow-hidden rounded-md border border-slate-200 bg-slate-50/80 transition duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-xl dark:border-slate-800 dark:bg-slate-950/60 dark:hover:bg-slate-900"><Image src={product.image} alt={product.name} width={420} height={280} className="aspect-[4/3] w-full object-cover" /><div className="p-4"><p className="text-h3 font-semibold text-slate-950 dark:text-white">{product.name}</p><p className="mt-1 text-body font-regular text-slate-600 dark:text-slate-300">{product.category}</p><p className="mt-3 font-heading text-h3 font-semibold tabular-nums">{money(product.price)}</p></div></div>)}</div>
       </Card>
       <AdminTable
         className="mt-6"

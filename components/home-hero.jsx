@@ -49,7 +49,7 @@ export function HomeHero({ products }) {
                   <button key={product.id} type="button" className="hero-picker" aria-pressed={isActive} onClick={() => selectProduct(index)}>
                     <span className="hero-picker-count">0{index + 1}</span>
                     <span className="hero-picker-thumb"><Image src={product.image} alt="" width={104} height={104} className="h-full w-full object-cover" /></span>
-                    <span className="min-w-0 text-left"><span className="block truncate font-heading text-sm font-extrabold tracking-[-0.02em]">{product.name}</span><span className="mt-0.5 block text-xs font-extrabold text-blue-700 dark:text-blue-200">${product.price}</span></span>
+                    <span className="min-w-0 text-left"><span className="block truncate font-heading text-h3 font-semibold tracking-[-0.02em]">{product.name}</span><span className="mt-0.5 block text-meta font-semibold text-blue-700 dark:text-blue-200">${product.price}</span></span>
                   </button>
                 );
               })}

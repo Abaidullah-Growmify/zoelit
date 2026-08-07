@@ -7,12 +7,12 @@ import { money, shortDate } from "@/lib/utils";
 
 export default function OrdersPage() {
   const columns = [
-    { key: "id", header: "Order Number", sortable: true, accessor: "id", cellClassName: "font-bold tabular-nums text-slate-950 dark:text-white", render: (order) => `#${order.id}` },
+    { key: "id", header: "Order Number", sortable: true, accessor: "id", cellClassName: "font-semibold tabular-nums text-slate-950 dark:text-white", render: (order) => `#${order.id}` },
     { key: "date", header: "Date", sortable: true, accessor: "date", render: (order) => shortDate(order.date) },
     { key: "status", header: "Status", accessor: "status", render: (order) => <AdminStatusBadge>{order.status}</AdminStatusBadge> },
     { key: "payment", header: "Payment", accessor: "payment", render: (order) => <AdminStatusBadge>{order.payment}</AdminStatusBadge> },
     { key: "tracking", header: "Tracking", accessor: "tracking", render: (order) => order.tracking || "Not available" },
-    { key: "total", header: "Total Amount", sortable: true, accessor: "total", cellClassName: "font-bold tabular-nums text-slate-950 dark:text-white", render: (order) => money(order.total) },
+    { key: "total", header: "Total Amount", sortable: true, accessor: "total", cellClassName: "font-semibold tabular-nums text-slate-950 dark:text-white", render: (order) => money(order.total) },
   ];
 
   return (
