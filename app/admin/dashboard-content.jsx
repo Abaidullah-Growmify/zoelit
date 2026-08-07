@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ArrowUpRight } from "lucide-react";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminTable } from "@/components/admin-table";
+import { ProductCard } from "@/components/product-card";
 import { Card } from "@/components/ui";
 import { money, shortDate } from "@/lib/utils";
 
@@ -57,7 +57,7 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
       </div>
       <Card className="mt-6 shadow-sm">
         <div className="mb-5 flex items-center justify-between gap-4"><div><h2 className="font-heading text-h2 font-semibold tracking-[-0.03em]">Top products</h2><p className="mt-1 text-body font-regular text-slate-600 dark:text-slate-300">Best-rated products with real catalog imagery.</p></div><Link href="/admin/products" aria-label="Open products" className="grid size-9 shrink-0 place-items-center rounded-sm text-blue-700 transition hover:bg-slate-100 hover:text-blue-950 dark:text-blue-300 dark:hover:bg-slate-800 dark:hover:text-blue-50"><ArrowUpRight className="size-4" /></Link></div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">{topProducts.map((product) => <div key={product.id} className="overflow-hidden rounded-md border border-slate-200 bg-slate-50/80 transition duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-xl dark:border-slate-800 dark:bg-slate-950/60 dark:hover:bg-slate-900"><Image src={product.image} alt={product.name} width={420} height={280} className="aspect-[4/3] w-full object-cover" /><div className="p-4"><p className="text-h3 font-semibold text-slate-950 dark:text-white">{product.name}</p><p className="mt-1 text-body font-regular text-slate-600 dark:text-slate-300">{product.category}</p><p className="mt-3 font-heading text-h3 font-semibold tabular-nums">{money(product.price)}</p></div></div>)}</div>
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">{topProducts.map((product) => <ProductCard key={product.id} product={product} />)}</div>
       </Card>
       <AdminTable
         className="mt-6"
