@@ -33,7 +33,7 @@ export function ProductImageZoom({ product }) {
   return (
     <div className="relative">
       <div
-        className="relative overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-900"
+        className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-slate-100 shadow-[0_24px_70px_rgba(15,23,42,0.10)] dark:border-slate-800 dark:bg-slate-900"
         onPointerEnter={handlePointerEnter}
         onPointerMove={handlePointerMove}
         onPointerLeave={handlePointerLeave}

@@ -1,83 +1,13 @@
 import { notFound } from "next/navigation";
-import { PackageCheck, Truck } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Check, CheckCircle2, RotateCcw, ShieldCheck, Star, Truck } from "lucide-react";
 import { getProduct, products } from "@/lib/data";
 import { money } from "@/lib/utils";
-import { AddToCartButton } from "./product-actions";
+import { ProductBuy } from "./product-buy";
+import { ProductTabs } from "./product-tabs";
 import { ProductImageZoom } from "./product-image-zoom";
-import { Badge } from "@/components/ui";
-
-function buildIngramProduct(product) {
-  const ingramPartNumber = product.id.slice(0, 6).replace(/-/g, "").toUpperCase().padEnd(6, "0");
-  const vendorName = product.category === "Tech" ? "DELL" : product.category === "Apparel" ? "Lenovo" : product.category === "Home" ? "Sandisk Mobile" : "Ingram Vendor";
-  const customerPrice = product.price;
-  const totalAvailability = product.stock;
-
-  return {
-    description: product.description,
-    ingramPartNumber,
-    vendorPartNumber: `${ingramPartNumber}-${product.category.slice(0, 3).toUpperCase()}`,
-    upc: `0${String(product.price).padStart(5, "0")}${String(product.stock).padStart(5, "0")}`,
-    vendorName,
-    vendorNumber: `0000${String(product.stock).padStart(4, "0")}`,
-    productCategory: product.category,
-    productSubcategory: product.details?.Material || product.details?.Capacity || product.details?.Battery || "General Catalog",
-    productClass: "B",
-    uom: "EA",
-    productAuthorized: true,
-    returnableProduct: Boolean(product.details?.Warranty),
-    acceptBackOrder: totalAvailability <= 10,
-    endUserInfoRequired: false,
-    govtSpecialPriceAvailable: false,
-    availability: {
-      available: totalAvailability > 0,
-      totalAvailability,
-      availabilityByWarehouse: [
-        { warehouseId: 20, location: "Fort Worth, TX", quantityAvailable: Math.ceil(totalAvailability * 0.4), quantityBackordered: 0 },
-        { warehouseId: 40, location: "Carol Stream, IL", quantityAvailable: Math.floor(totalAvailability * 0.35), quantityBackordered: totalAvailability <= 10 ? 12 : 0 },
-        { warehouseId: 80, location: "Jonestown, PA", quantityAvailable: Math.floor(totalAvailability * 0.25), quantityBackordered: 0 },
-      ],
-    },
-    pricing: {
-      mapPrice: 0,
-      currencyCode: "USD",
-      retailPrice: Math.round(customerPrice * 1.28 * 100) / 100,
-      customerPrice,
-    },
-    discounts: [],
-    indicators: {
-      hasWarranty: Boolean(product.details?.Warranty),
-      isNewProduct: product.stock > 20,
-      hasReturnLimits: false,
-      isBackOrderAllowed: totalAvailability <= 10,
-      isShippedFromPartner: false,
-      isDirectship: false,
-      isDownloadable: product.category === "Tech",
-      isDigitalType: false,
-      isDiscontinuedProduct: false,
-      isRefurbished: false,
-      isReturnableProduct: Boolean(product.details?.Warranty),
-      isIngramShip: true,
-      isEnduserRequired: false,
-      isHeavyWeight: product.category === "Bags",
-      hasLtl: false,
-      isClearanceProduct: false,
-      hasBundle: false,
-      isOversizeProduct: false,
-      isPreorderProduct: false,
-      isLicenseProduct: product.category === "Tech",
-      isDirectshipOrderable: true,
-      isServiceSku: false,
-      isConfigurable: false,
-    },
-    additionalInformation: {
-      productWeight: [{ plantId: "US01", weight: product.category === "Bags" ? 2.4 : 1.2, weightUnit: "KG" }],
-      height: "8",
-      width: "31",
-      length: "50",
-      dimensionUnit: "CM",
-    },
-  };
-}
+import { ProductCard } from "@/components/product-card";
+import { Badge, Card, SectionHeader } from "@/components/ui";
 
 export function generateStaticParams() {
   return products.map((product) => ({ id: product.id }));
@@ -89,65 +19,111 @@ export async function generateMetadata({ params }) {
   return { title: product ? `${product.name} | ZoeLit Commerce` : "Product" };
 }
 
+function TrustTiles({ product }) {
+  const tiles = [
+    { icon: Truck, label: "Shipping shown before checkout" },
+    { icon: ShieldCheck, label: "Secure, validated checkout" },
+    { icon: RotateCcw, label: product.details?.Warranty ? `Includes ${product.details.Warranty} warranty` : "Account and order tracking" },
+  ];
+
+  return (
+    <div className="mt-6 grid gap-3 border-t border-slate-100 pt-5 sm:grid-cols-3 dark:border-slate-800">
+      {tiles.map((tile) => (
+        <div key={tile.label} className="flex items-start gap-2.5">
+          <tile.icon className="mt-0.5 size-4 shrink-0 text-blue-600 dark:text-blue-300" />
+          <span className="text-xs font-semibold leading-5 text-slate-600 dark:text-slate-300">{tile.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function YouMayAlsoLike({ currentId }) {
+  const related = products.filter((product) => product.id !== currentId).slice(0, 4);
+
+  return (
+    <section className="mt-16">
+      <SectionHeader
+        eyebrow="Keep browsing"
+        title="You may also like"
+        action={
+          <Link href="/products" aria-label="Open all products" className="grid size-9 place-items-center rounded-sm text-blue-600 transition hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-blue-500/10">
+            <ArrowRight className="size-4" />
+          </Link>
+        }
+        className="mb-8"
+      />
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{related.map((product) => <ProductCard key={product.id} product={product} />)}</div>
+    </section>
+  );
+}
+
 export default async function ProductDetailPage({ params }) {
   const { id } = await params;
   const product = getProduct(id);
   if (!product) notFound();
-  const ingramProduct = buildIngramProduct(product);
-  const canPurchase = ingramProduct.productAuthorized && ingramProduct.availability.available;
 
   return (
-    <section className="container-page py-12 md:py-16">
-      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-2xl shadow-slate-950/5 md:p-6 lg:p-8 dark:border-slate-800 dark:bg-slate-900">
-        <div className="grid gap-8 lg:grid-cols-[minmax(280px,0.9fr)_minmax(360px,1fr)] lg:items-start">
-          <div>
-            <ProductImageZoom product={product} />
+    <section className="container-page py-10 md:py-14">
+      <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
+        <Link href="/" className="transition hover:text-blue-600 dark:hover:text-blue-300">Home</Link>
+        <span aria-hidden="true">/</span>
+        <Link href="/products" className="transition hover:text-blue-600 dark:hover:text-blue-300">Products</Link>
+        <span aria-hidden="true">/</span>
+        <span className="text-slate-950 dark:text-white">{product.name}</span>
+      </nav>
+
+      <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,0.92fr)_minmax(360px,1.08fr)] lg:gap-14">
+        <div className="self-start lg:sticky lg:top-24">
+          <ProductImageZoom product={product} />
+        </div>
+
+        <div>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <Badge>{product.category}</Badge>
+            <span className="inline-flex items-center gap-1.5">
+              <Star className="size-4 fill-amber-400 text-amber-400" aria-hidden="true" />
+              <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{product.rating}</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-600 dark:text-emerald-400">
+              <CheckCircle2 className="size-4" />
+              {product.stock} in stock
+            </span>
           </div>
 
-          <div className="lg:pt-2">
-            <div className="flex flex-wrap items-center gap-3">
-              <Badge>{ingramProduct.productCategory}</Badge>
-              <span className="inline-flex items-center gap-1 text-sm font-bold text-slate-500 dark:text-slate-400">
-                <PackageCheck className="size-4 text-blue-600" />
-                {ingramProduct.ingramPartNumber}
-              </span>
-            </div>
+          <h1 className="mt-4 max-w-2xl text-balance font-heading text-4xl font-extrabold leading-[1.02] tracking-[-0.035em] text-slate-950 md:text-5xl dark:text-white">
+            {product.name}
+          </h1>
 
-             <h1 className="mt-4 text-balance font-heading text-3xl font-extrabold leading-tight tracking-[-0.035em] text-slate-950 md:text-5xl dark:text-white">{ingramProduct.description}</h1>
-
-            <dl className="mt-6 grid gap-3 text-sm sm:grid-cols-2">
-              <div>
-                <dt className="font-bold text-slate-500 dark:text-slate-400">Vendor</dt>
-                <dd className="mt-1 font-bold text-slate-950 dark:text-white">{ingramProduct.vendorName}</dd>
-              </div>
-              <div>
-                <dt className="font-bold text-slate-500 dark:text-slate-400">Vendor Part Number</dt>
-                <dd className="mt-1 font-bold tabular-nums text-slate-950 dark:text-white">{ingramProduct.vendorPartNumber}</dd>
-              </div>
-              <div>
-                <dt className="font-bold text-slate-500 dark:text-slate-400">UPC</dt>
-                <dd className="mt-1 font-bold tabular-nums text-slate-950 dark:text-white">{ingramProduct.upc}</dd>
-              </div>
-              <div>
-                <dt className="font-bold text-slate-500 dark:text-slate-400">Subcategory</dt>
-                <dd className="mt-1 font-bold text-slate-950 dark:text-white">{ingramProduct.productSubcategory}</dd>
-              </div>
-            </dl>
-
-            <div className="mt-5 border-y border-slate-200 py-5 dark:border-slate-800">
-              <div className="flex items-end justify-between gap-5">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Customer Price</p>
-                  <span className="mt-1 block text-3xl font-extrabold tabular-nums text-slate-950 dark:text-white">{money(ingramProduct.pricing.customerPrice)}</span>
-                </div>
-                <span className="inline-flex items-center gap-2 text-sm font-bold tabular-nums text-emerald-600 dark:text-emerald-400"><Truck className="size-4" />Available ({ingramProduct.availability.totalAvailability})</span>
-              </div>
-
-              {canPurchase ? <AddToCartButton product={product} className="mt-6 h-12 w-full rounded-lg text-base" /> : null}
-            </div>
+          <div className="mt-5 flex items-end gap-4">
+            <span className="font-heading text-4xl font-extrabold tabular-nums tracking-[-0.035em] text-slate-950 dark:text-white">{money(product.price)}</span>
+            <span className="pb-1 text-sm font-semibold text-slate-500 dark:text-slate-400">Tax and shipping at checkout</span>
           </div>
+
+          <p className="mt-6 max-w-xl text-base leading-7 text-slate-600 dark:text-slate-300">{product.description}</p>
+
+          <ul className="mt-7 grid gap-x-6 gap-y-2.5 sm:grid-cols-2">
+            {product.highlights.map((highlight) => (
+              <li key={highlight} className="flex items-start gap-2.5 text-sm font-medium leading-6 text-slate-700 dark:text-slate-300">
+                <Check className="mt-0.5 size-4 shrink-0 text-blue-600 dark:text-blue-300" />
+                {highlight}
+              </li>
+            ))}
+          </ul>
+
+          <Card className="mt-9 p-5 sm:p-6">
+            <ProductBuy product={product} />
+
+            <TrustTiles product={product} />
+          </Card>
         </div>
       </div>
+
+      <div className="mt-14">
+        <ProductTabs product={product} />
+      </div>
+
+      <YouMayAlsoLike currentId={product.id} />
     </section>
   );
 }
