@@ -13,9 +13,9 @@ export default function ProductsPage() {
   const categories = ["All", ...new Set(products.map((product) => product.category))];
   const filtered = products.filter((product) => deferredCategory === "All" || product.category === deferredCategory).sort((a, b) => sort === "price-low" ? a.price - b.price : sort === "price-high" ? b.price - a.price : b.rating - a.rating);
   return (
-    <section className="container-page py-12">
+    <section className="container-page py-12 sm:py-16">
       <PageHeader eyebrow="Collection" title="Shop products" description="Filter, sort, and build your cart with confidence." action={<div className="flex gap-3"><Select value={category} onChange={(e) => setCategory(e.target.value)} aria-label="Filter by category">{categories.map((item) => <option key={item}>{item}</option>)}</Select><Select value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Sort products"><option value="featured">Top rated</option><option value="price-low">Price low</option><option value="price-high">Price high</option></Select></div>} />
-      <div className="mt-8">{filtered.length ? <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{filtered.map((product) => <ProductCard key={product.id} product={product} />)}</div> : <EmptyState title="No products found" description="Try a different category or sorting option." />}</div>
+      <div className="mt-8 rounded-lg border border-slate-200 bg-white/60 p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900/40">{filtered.length ? <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{filtered.map((product) => <ProductCard key={product.id} product={product} />)}</div> : <EmptyState title="No products found" description="Try a different category or sorting option." />}</div>
     </section>
   );
 }

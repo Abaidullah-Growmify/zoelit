@@ -38,7 +38,7 @@ export default async function OrderDetailPage({ params }) {
           <div className="mt-6 space-y-5">
             {orderItems(order).map((item) => (
               <div key={item.productId} className="flex gap-4">
-                <Image src={item.product.image} alt={item.product.name} width={92} height={92} className="size-24 rounded-md object-cover" />
+                <Image src={item.product.image} alt={item.product.name} width={92} height={92} className="size-24 rounded-lg object-cover" />
                 <div className="flex-1">
                   <h3 className="font-bold">{item.product.name}</h3>
                   <p className="text-sm tabular-nums text-slate-500 dark:text-slate-400">Qty {item.quantity}</p>

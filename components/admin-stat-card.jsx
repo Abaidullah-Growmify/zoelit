@@ -45,20 +45,20 @@ export function AdminStatCard({ label, value, icon: Icon, helper, tone = "blue",
   const trendPositive = trend?.direction !== "down";
 
   return (
-    <Card className="relative overflow-hidden transition duration-150 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-200/70 dark:hover:shadow-black/20">
-      <div className={cn("pointer-events-none absolute right-0 top-0 size-24 rounded-full blur-2xl", palette.glow)} />
+    <Card className="relative overflow-hidden p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-200/80 dark:hover:shadow-black/20">
+      <div className={cn("pointer-events-none absolute right-0 top-0 size-24 rounded-lg blur-2xl", palette.glow)} />
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">{label}</p>
-          <p className="mt-2 font-heading text-3xl font-extrabold tabular-nums tracking-[-0.03em] text-slate-950 dark:text-white">{value}</p>
+          <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">{label}</p>
+          <p className="mt-2 font-heading text-3xl font-extrabold tabular-nums tracking-[-0.035em] text-slate-950 dark:text-white">{value}</p>
         </div>
-        <span className={cn("grid size-12 shrink-0 place-items-center rounded-xl ring-1", palette.icon)}>
+        <span className={cn("grid size-12 shrink-0 place-items-center rounded-lg ring-1", palette.icon)}>
           <Icon className="size-5" />
         </span>
       </div>
       {(helper || trend) ? <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 pt-4 text-xs font-semibold dark:border-slate-800">
-        {helper ? <p className="text-slate-500 dark:text-slate-400">{helper}</p> : <span />}
-        {trend ? <span className={cn("inline-flex shrink-0 items-center rounded-full px-2.5 py-1 font-bold tabular-nums", trendPositive ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300")}>
+        {helper ? <p className="font-bold text-slate-600 dark:text-slate-300">{helper}</p> : <span />}
+        {trend ? <span className={cn("inline-flex shrink-0 items-center rounded-lg px-2.5 py-1 font-bold tabular-nums", trendPositive ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300")}>
           {trendPositive ? "↑" : "↓"} {trend.value}
         </span> : null}
       </div> : null}

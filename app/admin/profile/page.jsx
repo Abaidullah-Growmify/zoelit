@@ -35,12 +35,12 @@ function AdminIdentityCard() {
       <h2 className="mt-5 text-2xl font-bold">{adminUser.name}</h2>
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{adminUser.email}</p>
       <div className="mt-4"><AdminStatusBadge>{adminUser.role}</AdminStatusBadge></div>
-      <div className="mt-6 rounded-xl bg-slate-50 p-4 ring-1 ring-slate-100 transition hover:bg-white dark:bg-slate-950 dark:ring-slate-800 dark:hover:bg-slate-900">
+      <div className="mt-6 rounded-lg bg-slate-50 p-4 ring-1 ring-slate-100 transition hover:bg-white dark:bg-slate-950 dark:ring-slate-800 dark:hover:bg-slate-900">
         <ShieldCheck className="size-6 text-blue-600 dark:text-blue-300" />
         <p className="mt-3 text-sm font-bold">Admin permissions</p>
         <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">Full UI access for products, orders, customers, inventory, and settings.</p>
       </div>
-      <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+      <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
         <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Account summary</p>
         <div className="mt-4 space-y-3">
           {accountSummary.map((item) => (
@@ -113,7 +113,7 @@ function AdminSecurityCard() {
 
 function AvatarEditor({ initials, label }) {
   return (
-    <button type="button" aria-label={label} className="group relative grid size-20 place-items-center overflow-hidden rounded-full bg-blue-50 font-heading text-3xl font-extrabold text-blue-600 ring-1 ring-blue-100 transition hover:scale-[1.03] focus-visible:ring-4 focus-visible:ring-blue-500/20 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/20">
+    <button type="button" aria-label={label} className="group relative grid size-20 place-items-center overflow-hidden rounded-lg bg-blue-50 font-heading text-3xl font-extrabold text-blue-600 ring-1 ring-blue-100 transition hover:scale-[1.03] focus-visible:ring-4 focus-visible:ring-blue-500/20 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/20">
       <span>{initials}</span>
       <span className="absolute inset-0 grid place-items-center bg-slate-950/65 text-white opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100"><Camera className="size-5" /></span>
     </button>

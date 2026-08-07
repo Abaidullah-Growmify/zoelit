@@ -36,7 +36,7 @@ export default function DashboardPage() {
     <div>
       <DashboardPageHeader
         title={`Welcome back, ${customer.name.split(" ")[0]}`}
-        description="Track orders, manage addresses, and keep checkout effortless."
+        description="Track purchases, saved addresses, and spending signals without leaving your account workspace."
         action={<Button asChild href="/products">Continue Shopping <ArrowRight className="size-4" /></Button>}
       />
 
@@ -75,14 +75,14 @@ export default function DashboardPage() {
 
 function SpendingChart() {
   return (
-    <Card className="mt-6 overflow-hidden rounded-2xl">
+    <Card className="mt-6 overflow-hidden rounded-lg p-6 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-950 dark:text-white">Spending over last 6 months</h2>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Mock monthly order totals.</p>
+          <h2 className="font-heading text-xl font-extrabold tracking-[-0.03em] text-slate-950 dark:text-white">Spending over last 6 months</h2>
+          <p className="mt-1 text-sm font-semibold text-slate-600 dark:text-slate-300">Monthly order totals from the demo account data.</p>
         </div>
       </div>
-      <div className="mt-6 h-64 rounded-xl bg-gradient-to-b from-blue-50 to-slate-50 p-3 dark:from-blue-500/10 dark:to-slate-950">
+      <div className="mt-6 h-64 rounded-lg bg-gradient-to-b from-blue-50 to-slate-50 p-3 ring-1 ring-slate-200 dark:from-blue-500/10 dark:to-slate-950 dark:ring-slate-800">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={spendingOverview} margin={{ left: 0, right: 10, top: 12, bottom: 0 }}>
             <defs>

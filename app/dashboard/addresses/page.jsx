@@ -45,16 +45,16 @@ export default function AddressesPage() {
 
   return (
     <div className="section-fade-up">
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">Manage saved delivery locations and checkout defaults.</p>
             <div className="mt-3 flex flex-wrap gap-2 text-sm">
-              <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">{items.length} saved</span>
-              <span className="rounded-full bg-blue-50 px-3 py-1 font-semibold text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">Default: {defaultAddress?.label || "Not set"}</span>
+              <span className="rounded-lg bg-slate-100 px-3 py-1 font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">{items.length} saved</span>
+              <span className="rounded-lg bg-blue-50 px-3 py-1 font-semibold text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">Default: {defaultAddress?.label || "Not set"}</span>
             </div>
           </div>
-          <Button onClick={() => setShowForm(true)} className="rounded-xl">
+          <Button onClick={() => setShowForm(true)} className="rounded-lg">
             <Plus className="size-4" /> Add New Address
           </Button>
         </div>
@@ -65,7 +65,7 @@ export default function AddressesPage() {
           <Card key={address.id} className={cn("transition duration-150 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-200/70 dark:hover:shadow-black/20", address.default && "border-blue-200 bg-blue-50/35 dark:border-blue-500/30 dark:bg-blue-500/5")}>
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
-                <span className={cn("grid size-11 place-items-center rounded-xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-200", address.default && "bg-blue-600 text-white dark:bg-blue-500")}>
+                <span className={cn("grid size-11 place-items-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-200", address.default && "bg-blue-600 text-white dark:bg-blue-500")}>
                   {address.label.toLowerCase().includes("home") ? <Home className="size-5" /> : <MapPin className="size-5" />}
                 </span>
                 <div>
@@ -82,9 +82,9 @@ export default function AddressesPage() {
               {address.country}
             </p>
             <div className="mt-6 flex flex-wrap gap-2 border-t border-slate-100 pt-5 dark:border-slate-800">
-              <Button size="sm" variant="secondary" aria-label={`Edit ${address.label} address`} onClick={() => toast.info("Edit address UI ready")} className="rounded-xl"><Pencil className="size-4" /> Edit</Button>
-              <Button size="sm" variant="outline" onClick={() => setDefault(address.id)} disabled={address.default} className="rounded-xl">{address.default ? "Default" : "Set Default"}</Button>
-              <Button size="sm" variant="danger" onClick={() => remove(address.id)} className="rounded-xl"><Trash2 className="size-4" /> Delete</Button>
+              <Button size="sm" variant="secondary" aria-label={`Edit ${address.label} address`} onClick={() => toast.info("Edit address UI ready")} className="rounded-lg"><Pencil className="size-4" /> Edit</Button>
+              <Button size="sm" variant="outline" onClick={() => setDefault(address.id)} disabled={address.default} className="rounded-lg">{address.default ? "Default" : "Set Default"}</Button>
+              <Button size="sm" variant="danger" onClick={() => remove(address.id)} className="rounded-lg"><Trash2 className="size-4" /> Delete</Button>
             </div>
           </Card>
         ))}
@@ -92,10 +92,10 @@ export default function AddressesPage() {
 
       {items.length === 0 ? (
         <Card className="mt-6 flex flex-col items-center justify-center border-dashed py-14 text-center">
-          <span className="grid size-16 place-items-center rounded-2xl bg-blue-50 text-blue-700 ring-1 ring-blue-100 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/20"><MapPin className="size-7" /></span>
+          <span className="grid size-16 place-items-center rounded-lg bg-blue-50 text-blue-700 ring-1 ring-blue-100 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/20"><MapPin className="size-7" /></span>
           <h2 className="mt-5 text-xl font-extrabold text-slate-950 dark:text-white">No saved addresses</h2>
           <p className="mt-2 max-w-md text-sm leading-6 text-slate-500 dark:text-slate-400">Add a delivery location now so checkout only takes a few clicks later.</p>
-          <Button onClick={() => setShowForm(true)} className="mt-6 rounded-xl"><Plus className="size-4" /> Add New Address</Button>
+          <Button onClick={() => setShowForm(true)} className="mt-6 rounded-lg"><Plus className="size-4" /> Add New Address</Button>
         </Card>
       ) : null}
 
@@ -107,7 +107,7 @@ export default function AddressesPage() {
                 <h2 className="text-2xl font-bold text-slate-950 dark:text-white">Add address</h2>
                 <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Save another delivery location for faster checkout.</p>
               </div>
-              <span className="grid size-11 place-items-center rounded-xl bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300"><MapPin className="size-5" /></span>
+              <span className="grid size-11 place-items-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300"><MapPin className="size-5" /></span>
             </div>
             <form onSubmit={add} className="mt-6 grid gap-4 md:grid-cols-2">
               <Field name="label" label="Label" />
@@ -117,8 +117,8 @@ export default function AddressesPage() {
               <Field name="region" label="State" />
               <Field name="postal" label="Postal code" />
               <div className="flex flex-col-reverse gap-2 border-t border-slate-100 pt-5 sm:flex-row md:col-span-2 dark:border-slate-800">
-                <Button type="button" variant="secondary" onClick={() => setShowForm(false)} className="rounded-xl">Cancel</Button>
-                <Button className="rounded-xl"><Plus className="size-4" /> Add Address</Button>
+                <Button type="button" variant="secondary" onClick={() => setShowForm(false)} className="rounded-lg">Cancel</Button>
+                <Button className="rounded-lg"><Plus className="size-4" /> Add Address</Button>
               </div>
             </form>
           </Card>

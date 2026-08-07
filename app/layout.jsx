@@ -1,9 +1,11 @@
-import { Inter } from "next/font/google";
+import { Nunito_Sans, Rubik } from "next/font/google";
+import Script from "next/script";
 import { Toaster } from "sonner";
 import { StoreHydration } from "@/components/store-hydration";
 import "./globals.css";
 
-const inter = Inter({ variable: "--font-inter", subsets: ["latin"], weight: ["400", "500", "600", "700", "800"] });
+const rubik = Rubik({ variable: "--font-display", subsets: ["latin"], weight: ["500", "600", "700", "800"] });
+const nunito = Nunito_Sans({ variable: "--font-body", subsets: ["latin"], weight: ["400", "500", "600", "700", "800"] });
 
 export const metadata = {
   title: "ZoeLit Commerce | Premium Online Store",
@@ -24,12 +26,12 @@ const themeScript = `
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang="en" className={`${rubik.variable} ${nunito.variable}`} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <Script id="theme-bootstrap" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body
-        className="min-h-screen bg-slate-50 font-sans text-slate-950 antialiased dark:bg-slate-950 dark:text-slate-50"
+        className="min-h-screen bg-background font-sans text-foreground antialiased"
         suppressHydrationWarning
       >
         <StoreHydration />

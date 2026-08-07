@@ -21,7 +21,7 @@ export function FAQAccordion({ faqs }) {
               onClick={() => setOpenQuestion(isOpen ? "" : item.question)}
               aria-expanded={isOpen}
             >
-              <span className="grid size-10 shrink-0 place-items-center rounded-md bg-blue-50 text-blue-600 dark:bg-blue-500/10"><HelpCircle className="size-5" /></span>
+              <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-500/10"><HelpCircle className="size-5" /></span>
               <span className="flex-1 font-bold text-slate-950 dark:text-white">{item.question}</span>
               <ChevronDown className={cn("size-5 shrink-0 text-slate-400 transition-transform", isOpen && "rotate-180")} />
             </button>

@@ -65,7 +65,7 @@ export default function ContactPage() {
         <div className="grid gap-4">
           {contactItems.map((item) => (
             <Card key={item.title} className="flex items-start gap-4 shadow-none">
-              <div className="grid size-12 shrink-0 place-items-center rounded-md bg-blue-50 text-blue-600 dark:bg-blue-500/10"><item.icon className="size-5" /></div>
+              <div className="grid size-12 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-500/10"><item.icon className="size-5" /></div>
               <div>
                 <h2 className="font-bold">{item.title}</h2>
                 <div className="mt-1 grid gap-1 text-sm text-slate-500 dark:text-slate-400">
@@ -78,7 +78,7 @@ export default function ContactPage() {
           ))}
           <Card className="shadow-none">
             <div className="flex items-start gap-4">
-              <div className="grid size-12 shrink-0 place-items-center rounded-md bg-blue-50 text-blue-600 dark:bg-blue-500/10"><MessageCircle className="size-5" /></div>
+              <div className="grid size-12 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-500/10"><MessageCircle className="size-5" /></div>
               <div>
                 <h2 className="font-bold">Social Media</h2>
                 <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Follow on social media</p>
@@ -103,10 +103,10 @@ export default function ContactPage() {
             <Field label="Company" name="company" placeholder="Company" form={form} />
             <div className="md:col-span-2">
               <Label>Message</Label>
-              <textarea {...form.register("message")} rows={6} placeholder="Your message" className="w-full rounded-md border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50" />
+              <textarea {...form.register("message")} rows={6} placeholder="Your message" className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50" />
               <ErrorText>{form.formState.errors.message?.message}</ErrorText>
             </div>
-            <div className="md:col-span-2 rounded-md bg-slate-50 p-4 text-sm leading-6 text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+            <div className="md:col-span-2 rounded-lg bg-slate-50 p-4 text-sm leading-6 text-slate-500 dark:bg-slate-900 dark:text-slate-400">
               <label className="flex items-start gap-3 font-medium text-slate-700 dark:text-slate-200">
                 <input type="checkbox" className="mt-1" />
                 I am bound by the terms of the Service I accept Privacy Policy.
@@ -126,7 +126,7 @@ export default function ContactPage() {
           {locations.map((location) => (
             <Card key={location.title} className="shadow-none">
               <div className="flex items-start gap-4">
-                <div className="grid size-12 shrink-0 place-items-center rounded-md bg-blue-50 text-blue-600 dark:bg-blue-500/10"><MapPin className="size-5" /></div>
+                <div className="grid size-12 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-500/10"><MapPin className="size-5" /></div>
                 <div>
                   <h3 className="font-bold">{location.title}</h3>
                   <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{location.address}</p>

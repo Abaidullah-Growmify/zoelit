@@ -25,7 +25,7 @@ export default function CartPage() {
   }
 
   return (
-    <section className="container-page py-10 sm:py-12">
+    <section className="container-page py-12 sm:py-16">
       <PageHeader
         eyebrow="Shopping Cart"
         title="Review your bag"
@@ -33,15 +33,15 @@ export default function CartPage() {
         action={<Button asChild href="/products" variant="outline" className="w-full sm:w-auto">Continue shopping</Button>}
       />
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_390px]">
         <div className="space-y-4">
           {items.map((item) => <CartItemCard key={item.productId} item={item} updateQuantity={updateQuantity} removeItem={removeItem} />)}
         </div>
 
-        <Card className="h-fit overflow-hidden p-0 lg:sticky lg:top-24">
-          <div className="bg-[linear-gradient(135deg,#eff6ff_0%,#ffffff_55%,#dbeafe_100%)] p-6 dark:bg-[linear-gradient(135deg,#0f172a_0%,#020617_58%,#172554_100%)]">
-            <h2 className="text-2xl font-bold tracking-tight text-slate-950 dark:text-white">Order summary</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
+        <Card className="h-fit overflow-hidden rounded-lg p-0 shadow-xl shadow-slate-950/5 lg:sticky lg:top-24">
+          <div className="panel-gradient p-6">
+            <h2 className="font-heading text-2xl font-extrabold tracking-[-0.03em] text-slate-950 dark:text-white">Order summary</h2>
+            <p className="mt-2 text-sm font-semibold leading-6 text-slate-600 dark:text-slate-300">
               {shipping === 0 ? "Free shipping unlocked for this order." : <><span className="tabular-nums">{money(freeShippingRemaining)}</span> away from free shipping.</>}
             </p>
           </div>
@@ -64,7 +64,7 @@ export default function CartPage() {
               </div>
             </div>
 
-            <Button asChild href="/checkout" className="h-12 w-full rounded-lg text-base shadow-xl shadow-blue-600/25">
+            <Button asChild href="/checkout" className="h-12 w-full text-base shadow-xl shadow-blue-600/25">
               Checkout
             </Button>
             <p className="text-center text-xs font-semibold text-slate-500 dark:text-slate-400">Taxes calculated at checkout.</p>

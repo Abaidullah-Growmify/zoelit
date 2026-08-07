@@ -97,8 +97,8 @@ export default async function ProductDetailPage({ params }) {
   const canPurchase = ingramProduct.productAuthorized && ingramProduct.availability.available;
 
   return (
-    <section className="container-page py-10 md:py-14">
-      <div className="rounded-lg border border-slate-200 bg-white p-4 soft-shadow md:p-6 lg:p-8 dark:border-slate-800 dark:bg-slate-900">
+    <section className="container-page py-12 md:py-16">
+      <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-2xl shadow-slate-950/5 md:p-6 lg:p-8 dark:border-slate-800 dark:bg-slate-900">
         <div className="grid gap-8 lg:grid-cols-[minmax(280px,0.9fr)_minmax(360px,1fr)] lg:items-start">
           <div>
             <ProductImageZoom product={product} />
@@ -113,23 +113,23 @@ export default async function ProductDetailPage({ params }) {
               </span>
             </div>
 
-            <h1 className="mt-4 text-3xl font-extrabold leading-tight tracking-tight text-slate-950 md:text-4xl dark:text-white">{ingramProduct.description}</h1>
+             <h1 className="mt-4 text-balance font-heading text-3xl font-extrabold leading-tight tracking-[-0.035em] text-slate-950 md:text-5xl dark:text-white">{ingramProduct.description}</h1>
 
-            <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
+            <dl className="mt-6 grid gap-3 text-sm sm:grid-cols-2">
               <div>
-                <dt className="font-bold text-slate-400">Vendor</dt>
+                <dt className="font-bold text-slate-500 dark:text-slate-400">Vendor</dt>
                 <dd className="mt-1 font-bold text-slate-950 dark:text-white">{ingramProduct.vendorName}</dd>
               </div>
               <div>
-                <dt className="font-bold text-slate-400">Vendor Part Number</dt>
+                <dt className="font-bold text-slate-500 dark:text-slate-400">Vendor Part Number</dt>
                 <dd className="mt-1 font-bold tabular-nums text-slate-950 dark:text-white">{ingramProduct.vendorPartNumber}</dd>
               </div>
               <div>
-                <dt className="font-bold text-slate-400">UPC</dt>
+                <dt className="font-bold text-slate-500 dark:text-slate-400">UPC</dt>
                 <dd className="mt-1 font-bold tabular-nums text-slate-950 dark:text-white">{ingramProduct.upc}</dd>
               </div>
               <div>
-                <dt className="font-bold text-slate-400">Subcategory</dt>
+                <dt className="font-bold text-slate-500 dark:text-slate-400">Subcategory</dt>
                 <dd className="mt-1 font-bold text-slate-950 dark:text-white">{ingramProduct.productSubcategory}</dd>
               </div>
             </dl>

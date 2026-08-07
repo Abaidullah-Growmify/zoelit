@@ -43,13 +43,13 @@ export function SiteHeader() {
           <Link href="/" className="font-heading text-xl font-extrabold tracking-[-0.02em]"><span className="text-blue-600">Zoe</span>Lit</Link>
           <nav className="hidden items-center gap-7 md:flex">{nav.map((item) => <Link key={item.href} href={item.href} className="text-sm font-medium text-slate-600 transition hover:text-blue-600 dark:text-slate-300">{item.label}</Link>)}</nav>
           <div className="flex items-center gap-2">
-            <ThemeToggle className="rounded-md" />
-            <button ref={cartButtonRef} data-cart-target onClick={openCart} className="relative grid size-11 place-items-center rounded-md text-slate-950 transition hover:bg-slate-100 dark:text-slate-50 dark:hover:bg-slate-800" aria-label={`Open cart${cartHydrated ? `, ${count} item${count === 1 ? "" : "s"}` : ""}`}><ShoppingCart className="size-6 stroke-[2.4]" />{cartHydrated && count > 0 ? <span key={count} className="absolute right-0.5 top-0.5 grid size-5 place-items-center rounded-full bg-blue-600 text-xs font-semibold leading-none text-white ring-2 ring-white dark:ring-slate-950">{count}</span> : null}</button>
-            <Link href={accountHref} className="hidden size-11 place-items-center rounded-md text-slate-950 transition hover:bg-slate-100 dark:text-slate-50 dark:hover:bg-slate-800 md:grid" aria-label={accountLabel}><AccountIcon className="size-6 stroke-[2.4]" /></Link>
-            <button className="grid size-11 place-items-center rounded-full bg-slate-100 md:hidden dark:bg-slate-800" onClick={() => setOpen(!open)} aria-label="Toggle menu"><Menu /></button>
+            <ThemeToggle className="rounded-lg" />
+            <button ref={cartButtonRef} data-cart-target onClick={openCart} className="relative grid size-11 place-items-center rounded-lg text-slate-950 transition hover:bg-slate-100 dark:text-slate-50 dark:hover:bg-slate-800" aria-label={`Open cart${cartHydrated ? `, ${count} item${count === 1 ? "" : "s"}` : ""}`}><ShoppingCart className="size-6 stroke-[2.4]" />{cartHydrated && count > 0 ? <span key={count} className="absolute right-0.5 top-0.5 grid size-5 place-items-center rounded-lg bg-blue-600 text-xs font-semibold leading-none text-white ring-2 ring-white dark:ring-slate-950">{count}</span> : null}</button>
+            <Link href={accountHref} className="hidden size-11 place-items-center rounded-lg text-slate-950 transition hover:bg-slate-100 dark:text-slate-50 dark:hover:bg-slate-800 md:grid" aria-label={accountLabel}><AccountIcon className="size-6 stroke-[2.4]" /></Link>
+            <button className="grid size-11 place-items-center rounded-lg bg-slate-100 md:hidden dark:bg-slate-800" onClick={() => setOpen(!open)} aria-label="Toggle menu"><Menu /></button>
           </div>
         </div>
-        {open ? <div className="container-page grid gap-3 pb-4 md:hidden">{nav.map((item) => <Link onClick={() => setOpen(false)} key={item.href} href={item.href} className="rounded-md bg-slate-100 px-4 py-3 text-sm font-medium dark:bg-slate-800">{item.label}</Link>)}<Link href={accountHref} className="rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white">{authHydrated && user ? "Dashboard" : "Login"}</Link></div> : null}
+        {open ? <div className="container-page grid gap-3 pb-4 md:hidden">{nav.map((item) => <Link onClick={() => setOpen(false)} key={item.href} href={item.href} className="rounded-lg bg-slate-100 px-4 py-3 text-sm font-medium dark:bg-slate-800">{item.label}</Link>)}<Link href={accountHref} className="rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white">{authHydrated && user ? "Dashboard" : "Login"}</Link></div> : null}
       </header>
       <CartDrawer />
     </>

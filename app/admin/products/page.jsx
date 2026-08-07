@@ -49,7 +49,7 @@ export default function AdminProductsPage() {
 function ProductCell({ product }) {
   return (
     <div className="flex items-center gap-3">
-      <Image src={product.image} alt={product.name} width={56} height={56} className="size-14 rounded-xl object-cover ring-1 ring-slate-200 dark:ring-slate-800" />
+      <Image src={product.image} alt={product.name} width={56} height={56} className="size-14 rounded-lg object-cover ring-1 ring-slate-200 dark:ring-slate-800" />
       <div>
         <p className="font-bold text-slate-950 dark:text-white">{product.name}</p>
         <p className="text-xs text-slate-500 dark:text-slate-400">{product.sku}</p>

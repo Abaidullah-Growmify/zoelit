@@ -24,11 +24,11 @@ export function CartItemCard({ item, updateQuantity, removeItem }) {
 
           <div className="flex items-center justify-between gap-3">
             <div className="inline-flex shrink-0 items-center gap-3 rounded-lg bg-slate-100 px-3 py-1.5 dark:bg-slate-800">
-              <button className="grid size-7 place-items-center rounded-md text-slate-600 transition hover:bg-white hover:text-blue-600 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-blue-300" onClick={() => updateQuantity(item.productId, item.quantity - 1)} aria-label={`Decrease ${product.name} quantity`}>
+              <button className="grid size-7 place-items-center rounded-lg text-slate-600 transition hover:bg-white hover:text-blue-600 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-blue-300" onClick={() => updateQuantity(item.productId, item.quantity - 1)} aria-label={`Decrease ${product.name} quantity`}>
                 <Minus className="size-4" />
               </button>
               <span className="min-w-5 text-center text-base font-bold tabular-nums text-slate-950 dark:text-white">{item.quantity}</span>
-              <button className="grid size-7 place-items-center rounded-md text-slate-600 transition hover:bg-white hover:text-blue-600 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-blue-300" onClick={() => updateQuantity(item.productId, item.quantity + 1)} aria-label={`Increase ${product.name} quantity`}>
+              <button className="grid size-7 place-items-center rounded-lg text-slate-600 transition hover:bg-white hover:text-blue-600 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-blue-300" onClick={() => updateQuantity(item.productId, item.quantity + 1)} aria-label={`Increase ${product.name} quantity`}>
                 <Plus className="size-4" />
               </button>
             </div>
@@ -36,7 +36,7 @@ export function CartItemCard({ item, updateQuantity, removeItem }) {
           </div>
         </div>
 
-        <button className="absolute right-4 top-4 z-10 grid size-9 place-items-center rounded-full text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 dark:text-slate-500 dark:hover:bg-rose-500/10 dark:hover:text-rose-400" onClick={() => removeItem(item.productId)} aria-label={`Remove ${product.name}`}>
+        <button className="absolute right-4 top-4 z-10 grid size-9 place-items-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 dark:text-slate-500 dark:hover:bg-rose-500/10 dark:hover:text-rose-400" onClick={() => removeItem(item.productId)} aria-label={`Remove ${product.name}`}>
           <Trash2 className="size-5" />
         </button>
       </div>

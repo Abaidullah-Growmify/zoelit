@@ -19,5 +19,5 @@ const tones = {
 };
 
 export function AdminStatusBadge({ children, className }) {
-  return <span className={cn("inline-flex rounded-full px-3 py-1 text-xs font-bold", tones[children] || "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200", className)}>{children}</span>;
+  return <span className={cn("inline-flex rounded-lg px-3 py-1 text-xs font-bold", tones[children] || "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200", className)}>{children}</span>;
 }
