@@ -212,7 +212,7 @@ button, a[href], summary, select {
   align-items: center;
   gap: 0.5rem;
   border: 1px solid rgba(255, 255, 255, 0.7);
-  border-radius: 999px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.82);
   padding: 0.45rem 0.85rem;
   font-size: var(--text-meta);
@@ -227,13 +227,6 @@ button, a[href], summary, select {
   border-color: rgba(255, 255, 255, 0.12);
   background: rgba(2, 6, 23, 0.72);
   color: #f8fafc;
-}
-
-.hero-spotlight-chip .dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 999px;
-  background: #22c55e;
 }
 
 .hero-nav {

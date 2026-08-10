@@ -88,7 +88,7 @@ export function AdminShell({ children }) {
                 </button>
                 <div className="relative">
                   <button type="button" onClick={() => setProfileOpen((open) => !open)} className="flex h-11 items-center gap-2 rounded-sm bg-white px-2 text-left shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:bg-slate-950 dark:ring-slate-700 dark:hover:bg-slate-800" aria-expanded={profileOpen} aria-haspopup="menu">
-                    <span className="grid size-8 place-items-center rounded-full bg-blue-600 text-meta font-semibold text-white shadow-md shadow-blue-600/20">{initials}</span>
+                    <span className="grid size-8 place-items-center rounded-full bg-blue-50 font-heading text-meta font-semibold text-blue-600 ring-1 ring-blue-100 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/20">{initials}</span>
                     <span className="hidden max-w-32 truncate text-body font-semibold text-slate-900 lg:block dark:text-white">{admin?.name || "ZoeLit Admin"}</span>
                     <ChevronDown className="size-4 text-slate-400" />
                   </button>

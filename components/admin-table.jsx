@@ -134,7 +134,7 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
           <thead className="sticky top-0 z-10 bg-slate-100/95 text-meta uppercase tracking-[0.14em] text-slate-700 shadow-[0_1px_0_rgba(203,213,225,0.95)] backdrop-blur dark:bg-slate-950/95 dark:text-slate-200 dark:shadow-[0_1px_0_rgba(51,65,85,0.95)]">
             <tr>
               {columns.map((column) => (
-                <th key={column.key} className={cn("whitespace-nowrap px-5 py-4 font-bold", column.className)}>
+                <th key={column.key} className={cn("whitespace-nowrap px-5 py-4 font-semibold", column.className)}>
                   {column.sortable ? (
                     <button type="button" onClick={() => toggleSort(column)} className="inline-flex items-center gap-1 rounded-sm transition hover:text-slate-950 focus:outline-none focus:ring-4 focus:ring-blue-500/10 dark:hover:text-white">
                       {column.header}

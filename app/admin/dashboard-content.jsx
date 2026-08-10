@@ -52,7 +52,7 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
           <Card className="h-full shadow-sm">
             <h2 className="font-heading text-h2 font-semibold tracking-[-0.03em]">Low stock alerts</h2>
             <p className="mt-1 text-body font-regular text-slate-600 dark:text-slate-300">Products that need quick attention.</p>
-            <div className="mt-4 space-y-3">{lowStock.map((item) => <div key={item.productId} className="flex items-center justify-between gap-3 rounded-md border border-amber-200/70 bg-amber-50 p-3 dark:border-amber-500/20 dark:bg-amber-500/10"><div><p className="text-body font-semibold text-amber-950 dark:text-amber-50">{item.productName}</p><p className="text-meta font-semibold text-amber-800 dark:text-amber-200">{item.sku}</p></div><strong className="rounded-full bg-white px-3 py-1 text-meta font-semibold tabular-nums text-amber-700 dark:bg-slate-950 dark:text-amber-300">{item.currentStock}</strong></div>)}</div>
+            <div className="mt-4 space-y-3">{lowStock.map((item) => <div key={item.productId} className="flex items-center justify-between gap-3 rounded-md border border-amber-200/70 bg-amber-50 p-3 dark:border-amber-500/20 dark:bg-amber-500/10"><div><p className="text-body font-semibold text-amber-900 dark:text-amber-50">{item.productName}</p><p className="text-meta font-semibold text-amber-700 dark:text-amber-200">{item.sku}</p></div><strong className="rounded-full bg-white px-3 py-1 text-meta font-semibold tabular-nums text-amber-800 dark:bg-slate-950 dark:text-amber-300">{item.currentStock}</strong></div>)}</div>
           </Card>
       </div>
       <Card className="mt-6 shadow-sm">

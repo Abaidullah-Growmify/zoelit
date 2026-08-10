@@ -79,13 +79,13 @@ export function DashboardShell({ children }) {
               </button>
               <div className="relative">
                 <button type="button" onClick={() => setProfileOpen((open) => !open)} className="flex h-11 items-center gap-2 rounded-sm bg-white px-2 text-left shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:bg-slate-950 dark:ring-slate-700 dark:hover:bg-slate-800" aria-expanded={profileOpen} aria-haspopup="menu">
-                  <span className="grid size-8 place-items-center rounded-full bg-blue-600 text-meta font-semibold text-white shadow-md shadow-blue-600/20">{initials}</span>
+                  <span className="grid size-8 place-items-center rounded-full bg-blue-50 font-heading text-meta font-semibold text-blue-600 ring-1 ring-blue-100 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/20">{initials}</span>
                   <span className="hidden max-w-32 truncate text-body font-semibold text-slate-900 lg:block dark:text-white">{user?.name || "ZoeLit Customer"}</span>
                   <ChevronDown className="size-4 text-slate-400" />
                 </button>
                 {profileOpen ? <div className="absolute right-0 top-full z-50 mt-2 w-60 overflow-hidden rounded-md border border-slate-200 bg-white p-2 shadow-2xl shadow-slate-950/15 ring-1 ring-slate-950/5 dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/30 dark:ring-white/10" role="menu">
                   <div className="border-b border-slate-100 px-3 pb-3 pt-2 dark:border-slate-800">
-                    <p className="truncate text-body font-semibold text-slate-900 dark:text-white">{user.name || "ZoeLit Customer"}</p>
+                    <p className="truncate text-body font-semibold text-slate-900 dark:text-white">{user?.name || "ZoeLit Customer"}</p>
                     <p className="mt-1 text-meta text-slate-500 dark:text-slate-400">Customer account</p>
                   </div>
                   <div className="mt-2 space-y-1">

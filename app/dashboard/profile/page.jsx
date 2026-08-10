@@ -6,13 +6,18 @@ import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { AdminStatCard } from "@/components/admin-stat-card";
 import { Button, Card, Input, Label } from "@/components/ui";
+import { DashboardPageHeader } from "@/components/dashboard-page-header";
 import { customer, orders } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
 export default function ProfilePage() {
   return (
     <div>
-      <div className="grid gap-4 md:grid-cols-3">
+      <DashboardPageHeader
+        title="My Profile"
+        description="Manage your personal details, password, and saved preferences."
+      />
+      <div className="mt-8 grid gap-4 md:grid-cols-3">
         <AdminStatCard label="Member Since" value="Jan 2026" icon={CalendarDays} helper="ZoeLit account" tone="blue" />
         <AdminStatCard label="Total Orders" value={orders.length} icon={ShoppingBag} helper="Lifetime purchases" tone="green" />
         <AdminStatCard label="Wishlist Items" value="8" icon={Heart} helper="Saved for later" tone="pink" />
@@ -32,7 +37,7 @@ function CustomerIdentityCard() {
   return (
     <Card className="h-full transition duration-150 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-200/70 dark:hover:shadow-black/20">
       <AvatarEditor initials="AS" label="Edit profile photo" />
-      <h2 className="mt-5 text-h2 font-semibold">{customer.name}</h2>
+      <h2 className="mt-5 font-heading text-h2 font-semibold">{customer.name}</h2>
       <p className="mt-1 text-body font-regular text-slate-500 dark:text-slate-400">{customer.email}</p>
       <div className="mt-6 rounded-md bg-gradient-to-br from-blue-50 to-slate-50 p-4 ring-1 ring-blue-100/70 dark:from-blue-500/10 dark:to-slate-950 dark:ring-blue-500/20">
         <p className="text-meta font-semibold uppercase tracking-[0.14em] text-blue-600 dark:text-blue-300">Account status</p>
@@ -56,7 +61,7 @@ function CustomerPersonalInfoCard() {
 
   return (
     <Card className="transition duration-150 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-200/70 dark:hover:shadow-black/20">
-      <div className="flex items-center gap-3"><UserRound className="size-5 text-blue-600" /><h2 className="text-h2 font-semibold">Personal info</h2></div>
+      <div className="flex items-center gap-3"><UserRound className="size-5 text-blue-600" /><h2 className="font-heading text-h2 font-semibold">Personal info</h2></div>
       <form onSubmit={form.handleSubmit(onSubmit)} className="mt-5 grid gap-4 md:grid-cols-2">
         <Field label="Full Name" name="name" form={form} autoComplete="name" />
         <Field label="Email" name="email" type="email" form={form} autoComplete="email" />
@@ -86,7 +91,7 @@ function CustomerSecurityCard() {
 
   return (
     <Card className="transition duration-150 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-200/70 dark:hover:shadow-black/20">
-      <div className="flex items-center gap-3"><KeyRound className="size-5 text-blue-600" /><h2 className="text-h2 font-semibold">Security</h2></div>
+      <div className="flex items-center gap-3"><KeyRound className="size-5 text-blue-600" /><h2 className="font-heading text-h2 font-semibold">Security</h2></div>
       <form onSubmit={form.handleSubmit(onSubmit)} className="mt-5 grid gap-4 md:grid-cols-2">
         <PasswordField label="Current Password" name="currentPassword" form={form} autoComplete="current-password" show={showCurrentPassword} onToggle={() => setShowCurrentPassword((value) => !value)} />
         <div>

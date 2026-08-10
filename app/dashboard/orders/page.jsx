@@ -2,6 +2,7 @@
 
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminTable } from "@/components/admin-table";
+import { DashboardPageHeader } from "@/components/dashboard-page-header";
 import { orders, statuses } from "@/lib/data";
 import { money, shortDate } from "@/lib/utils";
 
@@ -17,7 +18,12 @@ export default function OrdersPage() {
 
   return (
     <div>
+      <DashboardPageHeader
+        title="My Orders"
+        description="Review order history, tracking, and payment details."
+      />
       <AdminTable
+        className="mt-8"
         columns={columns}
         data={orders}
         searchPlaceholder="Search order, status, payment, tracking"

@@ -1,3 +1,4 @@
+import { ArrowDown, ArrowUp } from "lucide-react";
 import { Card } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
@@ -43,6 +44,7 @@ const tones = {
 export function AdminStatCard({ label, value, icon: Icon, helper, tone = "blue", trend }) {
   const palette = tones[tone] || tones.blue;
   const trendPositive = trend?.direction !== "down";
+  const TrendIcon = trendPositive ? ArrowUp : ArrowDown;
 
   return (
     <Card className="relative overflow-hidden p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-200/80 dark:hover:shadow-black/20">
@@ -58,8 +60,8 @@ export function AdminStatCard({ label, value, icon: Icon, helper, tone = "blue",
       </div>
       {(helper || trend) ? <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 pt-4 text-meta font-semibold dark:border-slate-800">
         {helper ? <p className="font-semibold text-slate-600 dark:text-slate-300">{helper}</p> : <span />}
-        {trend ? <span className={cn("inline-flex shrink-0 items-center rounded-full px-2.5 py-1 font-semibold tabular-nums", trendPositive ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300")}>
-          {trendPositive ? "↑" : "↓"} {trend.value}
+        {trend ? <span className={cn("inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 font-semibold tabular-nums", trendPositive ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300")}>
+          <TrendIcon className="size-3" aria-hidden="true" /> {trend.value}
         </span> : null}
       </div> : null}
     </Card>

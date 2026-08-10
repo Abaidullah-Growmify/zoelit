@@ -29,7 +29,7 @@ export default async function OrderDetailPage({ params }) {
         <Card>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-h2 font-semibold">Summary</h2>
+              <h2 className="font-heading text-h2 font-semibold">Summary</h2>
               <p className="text-body font-regular text-slate-500 dark:text-slate-400">Placed {shortDate(order.date)}</p>
             </div>
             <Badge>{order.status}</Badge>
@@ -40,15 +40,15 @@ export default async function OrderDetailPage({ params }) {
               <div key={item.productId} className="flex gap-4">
                 <Image src={item.product.image} alt={item.product.name} width={92} height={92} className="size-24 rounded-md object-cover" />
                 <div className="flex-1">
-                  <h3 className="text-h3 font-semibold">{item.product.name}</h3>
+                  <h3 className="font-heading text-h3 font-semibold">{item.product.name}</h3>
                   <p className="text-body font-regular tabular-nums text-slate-500 dark:text-slate-400">Qty {item.quantity}</p>
                 </div>
-                <strong className="tabular-nums">{money(item.product.price * item.quantity)}</strong>
+                <strong className="font-semibold tabular-nums text-slate-950 dark:text-white">{money(item.product.price * item.quantity)}</strong>
               </div>
             ))}
           </div>
 
-          <div className="mt-6 border-t border-slate-200 pt-5 text-h2 font-semibold dark:border-slate-800">
+          <div className="mt-6 border-t border-slate-200 pt-5 font-heading text-h2 font-semibold dark:border-slate-800">
             <div className="flex justify-between">
               <span>Total</span>
               <span className="tabular-nums">{money(order.total)}</span>
@@ -58,7 +58,7 @@ export default async function OrderDetailPage({ params }) {
 
         <div className="space-y-6">
           <Card>
-            <h2 className="text-h3 font-semibold">Shipping address</h2>
+            <h2 className="font-heading text-h3 font-semibold">Shipping address</h2>
             <p className="mt-3 text-body font-regular leading-6 text-slate-600 dark:text-slate-300">
               {addresses[0].name}<br />
               {addresses[0].line1}<br />
@@ -66,7 +66,7 @@ export default async function OrderDetailPage({ params }) {
             </p>
           </Card>
           <Card>
-            <h2 className="text-h3 font-semibold">Payment</h2>
+            <h2 className="font-heading text-h3 font-semibold">Payment</h2>
             <p className="mt-3"><Badge tone="slate">{order.payment}</Badge></p>
             <p className="mt-5 text-body font-regular text-slate-500 dark:text-slate-400">Tracking: {order.tracking || "Not available yet"}</p>
           </Card>
@@ -74,7 +74,7 @@ export default async function OrderDetailPage({ params }) {
       </div>
 
       <Card className="mt-6">
-        <h2 className="text-h2 font-semibold">Order timeline</h2>
+        <h2 className="font-heading text-h2 font-semibold">Order timeline</h2>
         <div className="mt-6 grid gap-4 md:grid-cols-5">
           {timelineStatuses.map((status, index) => {
             const done = order.status === "Cancelled" ? false : index <= activeIndex;

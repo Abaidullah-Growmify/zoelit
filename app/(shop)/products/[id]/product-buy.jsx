@@ -31,13 +31,13 @@ export function ProductBuy({ product }) {
     <>
       <div className="flex items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Total</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Total</p>
           <span className="mt-1 block font-heading text-3xl font-extrabold tabular-nums tracking-[-0.035em] text-slate-950 dark:text-white">
             {money(product.price * quantity)}
           </span>
           {quantity > 1 ? <p className="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-400">{money(product.price)} each</p> : null}
         </div>
-        <span className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-600 dark:text-emerald-400">
+        <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
           <PackageCheck className="size-4" />
           Ready to ship
         </span>
@@ -54,7 +54,7 @@ export function ProductBuy({ product }) {
           >
             <Minus className="size-4" />
           </button>
-          <span aria-live="polite" className="w-10 text-center font-bold tabular-nums text-slate-950 dark:text-white">{quantity}</span>
+          <span aria-live="polite" className="w-10 text-center font-semibold tabular-nums text-slate-950 dark:text-white">{quantity}</span>
           <button
             type="button"
             onClick={() => change(1)}
@@ -66,7 +66,7 @@ export function ProductBuy({ product }) {
           </button>
         </div>
 
-        <Button onClick={handleAdd} className="h-12 flex-1 rounded-lg text-base">
+        <Button onClick={handleAdd} className="h-12 flex-1 text-base">
           <ShoppingBag className="size-4" />
           {justAdded ? "Added to cart" : "Add to cart"}
         </Button>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function Button({ asChild, className, variant = "primary", size = "md", ...props }) {
@@ -57,16 +58,14 @@ export function Textarea({ className, ...props }) {
 
 export function Select({ className, style, ...props }) {
   return (
-    <select
-      className={cn("h-11 appearance-none rounded-sm border border-slate-300 bg-white bg-no-repeat py-0 pl-4 pr-11 text-sm font-semibold text-slate-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50", className)}
-      style={{
-        backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")",
-        backgroundPosition: "right 1rem center",
-        backgroundSize: "1rem",
-        ...style,
-      }}
-      {...props}
-    />
+    <span className="relative inline-flex">
+      <select
+        className={cn("h-11 appearance-none rounded-sm border border-slate-300 bg-white py-0 pl-4 pr-11 text-sm font-semibold text-slate-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50", className)}
+        style={style}
+        {...props}
+      />
+      <ChevronDown className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-slate-500 dark:text-slate-400" aria-hidden="true" />
+    </span>
   );
 }
 
@@ -79,26 +78,43 @@ export function ErrorText({ children }) {
   return <p className="mt-1 text-sm text-rose-600">{children}</p>;
 }
 
+const badgeTones = {
+  Active: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+  Approved: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+  Delivered: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+  Paid: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+  "In Stock": "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+  Processing: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
+  Shipped: "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300",
+  Pending: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
+  Paused: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
+  "Low Stock": "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
+  Refunded: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
+  Cancelled: "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300",
+  Blocked: "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300",
+  Rejected: "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300",
+  "Out of Stock": "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300",
+  slate: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200",
+};
+
 export function Badge({ children, tone = "slate" }) {
-  const tones = {
-    Pending: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
-    Processing: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
-    Shipped: "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300",
-    Delivered: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
-    Cancelled: "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300",
-    slate: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200",
-  };
-  return <span className={cn("inline-flex rounded-full px-3 py-1 text-meta font-semibold", tones[tone] || tones[children] || tones.slate)}>{children}</span>;
+  return <span className={cn("inline-flex rounded-full px-3 py-1 text-meta font-semibold", badgeTones[tone] || badgeTones[children] || badgeTones.slate)}>{children}</span>;
 }
 
 export function Skeleton({ className }) {
   return <div className={cn("skeleton rounded-lg", className)} />;
 }
 
-export function EmptyState({ title, description, action }) {
+export function EmptyState({ title, description, action, icon: Icon }) {
   return (
     <Card className="flex flex-col items-center justify-center py-14 text-center">
-      <div className="mb-4 size-1.5 rounded-full bg-blue-700 dark:bg-blue-300" />
+      {Icon ? (
+        <div className="mb-5 grid size-14 place-items-center rounded-lg bg-slate-100 text-slate-500 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700">
+          <Icon className="size-6" aria-hidden="true" />
+        </div>
+      ) : (
+        <div className="mb-4 size-1.5 rounded-full bg-blue-700 dark:bg-blue-300" />
+      )}
       <h3 className="font-heading text-h2 font-semibold tracking-[-0.02em]">{title}</h3>
       <p className="mt-2 max-w-md text-body font-regular leading-6 text-slate-600 dark:text-slate-300">{description}</p>
       {action ? <div className="mt-6">{action}</div> : null}

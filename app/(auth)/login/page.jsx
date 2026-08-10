@@ -34,8 +34,8 @@ export default function LoginPage() {
           <Link href="/" className="mb-3 flex size-14 items-center justify-center rounded-lg bg-blue-600/10 text-blue-600 shadow-lg shadow-blue-600/10 dark:bg-blue-500/10 dark:text-blue-300">
             <UserRound className="size-7" />
           </Link>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-950 dark:text-white">ZoeLit Login</h1>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Sign in to your shopping account.</p>
+          <h1 className="font-heading text-h1 font-extrabold tracking-[-0.02em] text-slate-950 dark:text-white">ZoeLit Login</h1>
+          <p className="mt-2 text-body text-slate-500 dark:text-slate-400">Sign in to your shopping account.</p>
         </div>
         <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-4" noValidate>
           <div className="space-y-2">
@@ -46,7 +46,7 @@ export default function LoginPage() {
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-4">
               <Label>Password</Label>
-              <Link href="#" className="text-sm font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400">Forgot password?</Link>
+              <Link href="#" className="text-body font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400">Forgot password?</Link>
             </div>
             <div className="relative">
               <Input type={showPassword ? "text" : "password"} autoComplete="current-password" placeholder="Enter password" className="pr-10" {...form.register("password")} />
@@ -56,14 +56,14 @@ export default function LoginPage() {
             </div>
             <ErrorText>{form.formState.errors.password?.message}</ErrorText>
           </div>
-          <label className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300">
+          <label className="flex items-center gap-2 text-body text-slate-600 dark:text-slate-300">
             <input type="checkbox" className="size-4 rounded border-slate-300" {...form.register("remember")} /> Keep me signed in
           </label>
           <Button className="w-full" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting ? <><Loader2 className="size-4 animate-spin" />Signing in...</> : "Sign in"}
           </Button>
         </form>
-        <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">Need a ZoeLit account? <Link href="/register" className="font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400">Create account</Link></p>
+        <p className="mt-6 text-center text-body text-slate-500 dark:text-slate-400">Need a ZoeLit account? <Link href="/register" className="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400">Create account</Link></p>
       </section>
     </div>
   );

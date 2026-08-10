@@ -70,7 +70,7 @@ export function ProductCard({ product }) {
       <Link href={`/products/${product.id}`} className="block p-2 pb-0 focus-visible:outline-none">
         <div ref={imageRef} className="relative overflow-hidden rounded-lg bg-slate-100 p-2 transition duration-300 dark:bg-slate-900">
           <Image src={product.image} alt={product.name} width={700} height={525} className="aspect-[4/3] w-full rounded-lg object-cover shadow-sm transition duration-500 group-hover:scale-[1.035] group-hover:shadow-md" />
-          <span className="absolute left-5 top-5 rounded-full bg-white/95 px-3 py-1 text-meta font-semibold uppercase tracking-[0.12em] text-blue-700 shadow-sm backdrop-blur dark:bg-slate-950/90 dark:text-blue-300">{product.category}</span>
+          <span className="absolute left-5 top-5 rounded-sm bg-white/95 px-3 py-1 text-meta font-semibold uppercase tracking-[0.12em] text-blue-700 shadow-sm backdrop-blur dark:bg-slate-950/90 dark:text-blue-300">{product.category}</span>
           <span className="absolute bottom-5 right-5 inline-flex translate-y-2 items-center gap-1 rounded-sm bg-slate-950/85 px-3 py-2 text-xs font-semibold text-white opacity-0 shadow-lg backdrop-blur transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
             View details <ArrowUpRight className="size-3.5" />
           </span>

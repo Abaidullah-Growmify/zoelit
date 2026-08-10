@@ -32,7 +32,7 @@ function AdminIdentityCard() {
   return (
     <Card className="h-full transition duration-150 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-200/70 dark:hover:shadow-black/20">
       <AvatarEditor initials={adminUser.name.slice(0, 1)} label="Edit admin photo" />
-      <h2 className="mt-5 text-h2 font-semibold">{adminUser.name}</h2>
+      <h2 className="mt-5 font-heading text-h2 font-semibold">{adminUser.name}</h2>
       <p className="mt-1 text-body font-regular text-slate-500 dark:text-slate-400">{adminUser.email}</p>
       <div className="mt-4"><AdminStatusBadge>{adminUser.role}</AdminStatusBadge></div>
       <div className="mt-6 rounded-md bg-slate-50 p-4 ring-1 ring-slate-100 transition hover:bg-white dark:bg-slate-950 dark:ring-slate-800 dark:hover:bg-slate-900">
@@ -68,7 +68,7 @@ function AdminPersonalInfoCard() {
 
   return (
     <Card className="transition duration-150 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-200/70 dark:hover:shadow-black/20">
-      <div className="flex items-center gap-3"><UserRound className="size-5 text-blue-600" /><h2 className="text-h2 font-semibold">Personal info</h2></div>
+      <div className="flex items-center gap-3"><UserRound className="size-5 text-blue-600" /><h2 className="font-heading text-h2 font-semibold">Personal info</h2></div>
       <form onSubmit={form.handleSubmit(onSubmit)} className="mt-5 grid gap-4 md:grid-cols-2">
         <Field label="Name" name="name" form={form} autoComplete="name" />
         <Field label="Email" name="email" type="email" form={form} autoComplete="email" />
@@ -97,7 +97,7 @@ function AdminSecurityCard() {
 
   return (
     <Card className="transition duration-150 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-200/70 dark:hover:shadow-black/20">
-      <div className="flex items-center gap-3"><KeyRound className="size-5 text-blue-600" /><h2 className="text-h2 font-semibold">Security</h2></div>
+      <div className="flex items-center gap-3"><KeyRound className="size-5 text-blue-600" /><h2 className="font-heading text-h2 font-semibold">Security</h2></div>
       <p className="mt-2 text-body font-regular leading-6 text-slate-500 dark:text-slate-400">Update the mock admin password controls. Real authentication can be connected later.</p>
       <form onSubmit={form.handleSubmit(onSubmit)} className="mt-5 grid gap-4 md:grid-cols-2">
         <PasswordField label="Current password" name="currentPassword" form={form} autoComplete="current-password" placeholder="Current password" show={showCurrentPassword} onToggle={() => setShowCurrentPassword((value) => !value)} />

@@ -18,7 +18,7 @@ export default function PrivacyPolicyPage() {
       <div className="mx-auto mt-10 grid max-w-4xl gap-5">
         {sections.map((section) => (
           <Card key={section.title} className="shadow-none">
-            <h2 className="text-xl font-bold">{section.title}</h2>
+            <h2 className="font-heading text-h2 font-semibold">{section.title}</h2>
             <p className="mt-3 leading-7 text-slate-600 dark:text-slate-300">{section.text}</p>
           </Card>
         ))}

@@ -111,8 +111,7 @@ export function HomeHero({ products }) {
                 className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.045]"
               />
             </div>
-            <div className="hero-spotlight-chip" aria-hidden="true">
-              <span className="dot" />
+            <div className="hero-spotlight-chip rounded-sm" aria-hidden="true">
               Featured pick
             </div>
             <div className="hero-nav">

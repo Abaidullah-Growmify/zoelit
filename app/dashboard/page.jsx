@@ -64,7 +64,7 @@ export default function DashboardPage() {
           pageSize={5}
         />
         <div className="mt-4 flex justify-end">
-          <Link href="/dashboard/orders" aria-label="Open all orders" className="grid size-9 place-items-center rounded-lg text-blue-600 transition hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-blue-500/10">
+          <Link href="/dashboard/orders" aria-label="Open all orders" className="grid size-9 place-items-center rounded-sm text-blue-600 transition hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-blue-500/10">
             <ArrowRight className="size-4" />
           </Link>
         </div>
@@ -78,8 +78,8 @@ function SpendingChart() {
     <Card className="mt-6 overflow-hidden rounded-lg p-6 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="font-heading text-xl font-extrabold tracking-[-0.03em] text-slate-950 dark:text-white">Spending over last 6 months</h2>
-          <p className="mt-1 text-sm font-semibold text-slate-600 dark:text-slate-300">Monthly order totals from the demo account data.</p>
+          <h2 className="font-heading text-h2 font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">Spending over last 6 months</h2>
+          <p className="mt-1 text-body font-regular text-slate-600 dark:text-slate-300">Monthly order totals from the demo account data.</p>
         </div>
       </div>
       <div className="mt-6 h-64 rounded-lg bg-gradient-to-b from-blue-50 to-slate-50 p-3 ring-1 ring-slate-200 dark:from-blue-500/10 dark:to-slate-950 dark:ring-slate-800">

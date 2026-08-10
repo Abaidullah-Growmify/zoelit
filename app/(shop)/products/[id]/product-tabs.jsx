@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { Star } from "lucide-react";
+import { Card } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 function Stars({ rating }) {
@@ -42,7 +43,7 @@ export function ProductTabs({ product }) {
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200/90 bg-white shadow-[0_18px_55px_rgba(15,23,42,0.06)] dark:border-slate-800 dark:bg-slate-900/95">
+    <Card className="overflow-hidden p-0">
       <div role="tablist" aria-label="Product information" onKeyDown={handleKeyDown} className="flex border-b border-slate-200 dark:border-slate-800">
         {tabs.map((tab) => {
           const isActive = active === tab.id;
@@ -57,7 +58,7 @@ export function ProductTabs({ product }) {
               tabIndex={isActive ? 0 : -1}
               onClick={() => activate(tab.id)}
               className={cn(
-                "relative flex-1 px-5 py-4 text-sm font-bold transition dark:text-slate-400",
+                "relative flex-1 px-5 py-4 text-sm font-semibold transition dark:text-slate-400",
                 isActive ? "text-slate-950 dark:text-white" : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
               )}
             >
@@ -74,8 +75,8 @@ export function ProductTabs({ product }) {
             <dl className="divide-y divide-slate-100 dark:divide-slate-800">
               {Object.entries(product.details).map(([key, value]) => (
                 <div key={key} className="flex items-center justify-between gap-6 py-3">
-                  <dt className="text-sm font-bold text-slate-500 dark:text-slate-400">{key}</dt>
-                  <dd className="text-right text-sm font-bold text-slate-950 dark:text-white">{value}</dd>
+                  <dt className="text-sm font-semibold text-slate-500 dark:text-slate-400">{key}</dt>
+                  <dd className="text-right text-sm font-semibold text-slate-950 dark:text-white">{value}</dd>
                 </div>
               ))}
             </dl>
@@ -93,10 +94,10 @@ export function ProductTabs({ product }) {
               {product.reviews.map((review) => (
                 <article key={`${review.name}-${review.title}`} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm font-bold text-slate-950 dark:text-white">{review.name}</span>
+                    <span className="text-sm font-semibold text-slate-950 dark:text-white">{review.name}</span>
                     <Stars rating={review.rating} />
                   </div>
-                  <p className="mt-2 text-sm font-bold leading-5 text-slate-900 dark:text-slate-100">{review.title}</p>
+                  <p className="mt-2 text-sm font-semibold leading-5 text-slate-900 dark:text-slate-100">{review.title}</p>
                   <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">{review.comment}</p>
                 </article>
               ))}
@@ -104,6 +105,6 @@ export function ProductTabs({ product }) {
           </div>
         )}
       </div>
-    </div>
+    </Card>
   );
 }

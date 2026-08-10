@@ -40,8 +40,8 @@ export default function RegisterPage() {
           <Link href="/" className="mb-3 flex size-14 items-center justify-center rounded-lg bg-blue-600/10 text-blue-600 shadow-lg shadow-blue-600/10 dark:bg-blue-500/10 dark:text-blue-300">
             <UserPlus className="size-7" />
           </Link>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-950 dark:text-white">Create ZoeLit Account</h1>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Set up your shopping account.</p>
+          <h1 className="font-heading text-h1 font-extrabold tracking-[-0.02em] text-slate-950 dark:text-white">Create ZoeLit Account</h1>
+          <p className="mt-2 text-body text-slate-500 dark:text-slate-400">Set up your shopping account.</p>
         </div>
         <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-4" noValidate>
           <Field label="Full name" name="name" form={form} autoComplete="name" placeholder="Avery Stone" />
@@ -49,7 +49,7 @@ export default function RegisterPage() {
           <PasswordField label="Password" name="password" form={form} autoComplete="new-password" placeholder="Create password" show={showPassword} onToggle={() => setShowPassword((value) => !value)} />
           <PasswordField label="Confirm password" name="confirmPassword" form={form} autoComplete="new-password" placeholder="Confirm password" show={showConfirmPassword} onToggle={() => setShowConfirmPassword((value) => !value)} />
           <div>
-            <label className="flex items-start gap-2 text-sm font-medium leading-5 text-slate-600 dark:text-slate-300">
+            <label className="flex items-start gap-2 text-body font-regular leading-5 text-slate-600 dark:text-slate-300">
               <input type="checkbox" className="mt-0.5 size-4 rounded border-slate-300" {...form.register("terms")} />
               <span>I agree to the Terms & Conditions and Privacy Policy.</span>
             </label>
@@ -59,7 +59,7 @@ export default function RegisterPage() {
             {form.formState.isSubmitting ? <><Loader2 className="size-4 animate-spin" />Creating account...</> : "Create account"}
           </Button>
         </form>
-        <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">Already registered? <Link href="/login" className="font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400">Sign in</Link></p>
+        <p className="mt-6 text-center text-body text-slate-500 dark:text-slate-400">Already registered? <Link href="/login" className="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400">Sign in</Link></p>
       </section>
     </div>
   );

@@ -8,7 +8,7 @@ import { z } from "zod";
 import { getProduct } from "@/lib/data";
 import { money } from "@/lib/utils";
 import { useCartStore } from "@/store/cart-store";
-import { Button, Card, ErrorText, Input, Label, PageHeader } from "@/components/ui";
+import { Button, Card, ErrorText, Input, Label, PageHeader, Textarea } from "@/components/ui";
 
 const schema = z.object({
   firstName: z.string().min(2, "First name is required"),
@@ -62,7 +62,7 @@ export default function CheckoutPage() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_460px] lg:items-start">
           <Card className="shadow-sm">
             <div className="mb-6 border-b border-slate-200 pb-3 dark:border-slate-800">
-              <h2 className="font-heading text-2xl font-extrabold tracking-[-0.03em] text-slate-950 dark:text-white">Billing details</h2>
+              <h2 className="font-heading text-h2 font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">Billing details</h2>
             </div>
 
             <div className="grid gap-5 md:grid-cols-2">
@@ -77,19 +77,18 @@ export default function CheckoutPage() {
 
               <div className="md:col-span-2">
                 <Label className="font-medium">Order Notes</Label>
-                <textarea
+                <Textarea
                   {...form.register("notes")}
                   rows={7}
                   placeholder="Notes about your order, e.g. special notes for delivery."
-                  className="mt-2 w-full resize-none rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-900 placeholder:text-slate-400 transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:placeholder:text-slate-500"
                 />
                 <ErrorText>{form.formState.errors.notes?.message}</ErrorText>
               </div>
             </div>
           </Card>
 
-          <aside className="rounded-lg border border-slate-200 bg-white p-6 shadow-xl shadow-slate-950/5 lg:sticky lg:top-24 sm:p-8 dark:border-slate-800 dark:bg-slate-900">
-            <h2 className="font-heading text-3xl font-extrabold tracking-[-0.035em] text-slate-950 dark:text-white">Your order</h2>
+          <Card className="shadow-xl shadow-slate-950/5 lg:sticky lg:top-24 sm:p-8">
+            <h2 className="font-heading text-h2 font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">Your order</h2>
 
             <div className="mt-6 divide-y divide-slate-200 border-y border-slate-200 text-sm dark:divide-slate-800 dark:border-slate-800">
               <OrderRow label="Product" value="Total" strong />
@@ -115,7 +114,7 @@ export default function CheckoutPage() {
             </div>
 
             <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <p className="font-bold text-slate-950 dark:text-white">Select Payment method</p>
+              <p className="font-heading text-h3 font-semibold text-slate-950 dark:text-white">Select Payment method</p>
               <div className="flex gap-5 text-sm text-slate-600 dark:text-slate-300">
                 <label className="flex items-center gap-1.5">
                   <input type="radio" value="stripe" {...form.register("paymentMethod")} className="accent-blue-600" />
@@ -132,7 +131,7 @@ export default function CheckoutPage() {
             <Button disabled={form.formState.isSubmitting} className="mt-8 h-12 w-full text-base shadow-xl shadow-blue-600/20">
               {form.formState.isSubmitting ? "Placing order..." : "Place Order"}
             </Button>
-          </aside>
+          </Card>
         </form>
       </section>
   );
@@ -159,7 +158,7 @@ function OrderRow({ label, value, strong, total }) {
   return (
     <div className="flex items-center justify-between gap-4 py-4 text-sm font-semibold text-slate-600 dark:text-slate-300">
       <span className={strong || total ? "font-semibold text-slate-950 dark:text-white" : undefined}>{label}</span>
-      <span className={total ? "text-lg font-extrabold tabular-nums text-blue-700 dark:text-blue-300" : strong ? "font-bold tabular-nums text-slate-950 dark:text-white" : "font-medium tabular-nums text-slate-950 dark:text-white"}>{value}</span>
+      <span className={total ? "text-lg font-extrabold tabular-nums text-blue-700 dark:text-blue-300" : strong ? "font-semibold tabular-nums text-slate-950 dark:text-white" : "font-medium tabular-nums text-slate-950 dark:text-white"}>{value}</span>
     </div>
   );
 }
