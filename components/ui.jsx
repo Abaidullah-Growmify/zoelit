@@ -58,13 +58,13 @@ export function Textarea({ className, ...props }) {
 
 export function Select({ className, style, ...props }) {
   return (
-    <span className="relative inline-flex">
+    <span className="relative flex w-full">
       <select
-        className={cn("h-11 appearance-none rounded-sm border border-slate-300 bg-white py-0 pl-4 pr-11 text-sm font-semibold text-slate-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50", className)}
+        className={cn("h-11 w-full appearance-none rounded-sm border border-slate-300 bg-white py-0 pl-4 pr-11 text-sm font-semibold text-slate-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50", className)}
         style={style}
         {...props}
       />
-      <ChevronDown className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-slate-500 dark:text-slate-400" aria-hidden="true" />
+      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-slate-500 dark:text-slate-400" aria-hidden="true" />
     </span>
   );
 }
