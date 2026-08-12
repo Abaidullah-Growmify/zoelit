@@ -27,25 +27,26 @@ const tabs = [
 export function ProductTabs({ product }) {
   const baseId = useId();
   const [active, setActive] = useState("details");
+  const visibleTabs = product.reviews.length ? tabs : tabs.filter((tab) => tab.id !== "reviews");
 
   function activate(id) {
     setActive(id);
   }
 
   function handleKeyDown(event) {
-    const index = tabs.findIndex((tab) => tab.id === active);
+    const index = visibleTabs.findIndex((tab) => tab.id === active);
     let next = index;
-    if (event.key === "ArrowRight") next = (index + 1) % tabs.length;
-    else if (event.key === "ArrowLeft") next = (index - 1 + tabs.length) % tabs.length;
+    if (event.key === "ArrowRight") next = (index + 1) % visibleTabs.length;
+    else if (event.key === "ArrowLeft") next = (index - 1 + visibleTabs.length) % visibleTabs.length;
     else return;
     event.preventDefault();
-    activate(tabs[next].id);
+    activate(visibleTabs[next].id);
   }
 
   return (
     <Card className="overflow-hidden p-0">
       <div role="tablist" aria-label="Product information" onKeyDown={handleKeyDown} className="flex border-b border-slate-200 dark:border-slate-800">
-        {tabs.map((tab) => {
+        {visibleTabs.map((tab) => {
           const isActive = active === tab.id;
           return (
             <button

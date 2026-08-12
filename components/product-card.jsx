@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRef } from "react";
-import { ArrowUpRight, CheckCircle2, ShoppingBag, Star } from "lucide-react";
+import { ArrowUpRight, CheckCircle2, CircleX, ShoppingBag, Star } from "lucide-react";
 import { toast } from "sonner";
 import { money } from "@/lib/utils";
 import { useCartStore } from "@/store/cart-store";
@@ -78,12 +78,18 @@ export function ProductCard({ product }) {
       </Link>
       <div className="flex flex-1 flex-col p-4">
         <div className="mb-3 flex items-center justify-between gap-3 text-meta font-semibold text-slate-600 dark:text-slate-300">
-          <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400"><CheckCircle2 className="size-3.5" /> {product.stock} in stock</span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-amber-900 dark:bg-amber-500/10 dark:text-amber-100"><Star className="size-3.5 fill-amber-400 text-amber-400" /> {product.rating}</span>
+          {product.stock > 0 ? (
+            <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400"><CheckCircle2 className="size-3.5" /> {product.stock} in stock</span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 text-rose-600 dark:text-rose-400"><CircleX className="size-3.5" /> Out of stock</span>
+          )}
+          {product.rating > 0 ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-amber-900 dark:bg-amber-500/10 dark:text-amber-100"><Star className="size-3.5 fill-amber-400 text-amber-400" /> {product.rating}</span>
+          ) : null}
         </div>
         <div className="flex items-start justify-between gap-4">
-          <Link href={`/products/${product.id}`} className="min-h-10 font-heading text-h3 font-semibold leading-tight tracking-[-0.02em] text-slate-950 transition hover:text-blue-700 focus-visible:outline-none focus-visible:text-blue-700 dark:text-white dark:hover:text-blue-300 dark:focus-visible:text-blue-300">{product.name}</Link>
-          <span className="shrink-0 font-heading text-h3 font-semibold tabular-nums tracking-[-0.02em] text-blue-700 dark:text-blue-300">{money(product.price)}</span>
+          <Link href={`/products/${product.id}`} title={product.name} className="line-clamp-2 min-h-10 font-heading text-h3 font-semibold leading-tight tracking-[-0.02em] text-slate-950 transition hover:text-blue-700 focus-visible:outline-none focus-visible:text-blue-700 dark:text-white dark:hover:text-blue-300 dark:focus-visible:text-blue-300">{product.name}</Link>
+          <span className="shrink-0 font-heading text-h3 font-semibold tabular-nums tracking-[-0.02em] text-blue-700 dark:text-blue-300">{product.price > 0 ? money(product.price) : "On request"}</span>
         </div>
         <p className="mt-2 line-clamp-2 min-h-10 text-body font-regular text-slate-600 dark:text-slate-300">{product.description}</p>
         <div className="mt-auto border-t border-slate-100 pt-4 dark:border-slate-800">

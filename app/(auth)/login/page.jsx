@@ -20,10 +20,13 @@ export default function LoginPage() {
   const login = useAuthStore((state) => state.login);
   const form = useForm({ resolver: zodResolver(schema), defaultValues: { email: "avery@example.com", password: "password123", remember: true } });
   async function onSubmit(values) {
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    login(values.email);
-    toast.success("Welcome back");
-    router.push(params.get("next") || "/dashboard");
+    try {
+      await login(values.email, values.password, values.remember);
+      toast.success("Welcome back");
+      router.push(params.get("next") || "/dashboard");
+    } catch (error) {
+      toast.error(error.message || "Sign in failed");
+    }
   }
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-white p-4 dark:bg-slate-950">

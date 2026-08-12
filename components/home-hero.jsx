@@ -5,11 +5,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui";
+import { money } from "@/lib/utils";
 
 export function HomeHero({ products }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const swipeStart = useRef(null);
+
+  if (!products || products.length === 0) return null;
+
   const activeProduct = products[activeIndex];
 
   const goTo = (index) => {
@@ -130,7 +134,7 @@ export function HomeHero({ products }) {
               <span className="hero-spotlight-action-copy">
                 <span className="text-xs font-extrabold uppercase tracking-[0.2em] text-blue-700 dark:text-blue-200">{activeProduct.category}</span>
                 <span className="mt-1 block font-heading text-xl font-extrabold tracking-[-0.03em] text-slate-950 dark:text-white">{activeProduct.name}</span>
-                <span className="mt-1 block text-sm font-semibold text-slate-600 dark:text-slate-300">${activeProduct.price}</span>
+                <span className="mt-1 block text-sm font-semibold text-slate-600 dark:text-slate-300">{money(activeProduct.price)}</span>
               </span>
               <span className="grid size-10 shrink-0 place-items-center rounded-sm bg-slate-950 text-white transition-transform duration-200 group-hover:translate-x-0.5 dark:bg-blue-600">
                 <ArrowUpRight className="size-5" />
@@ -158,7 +162,7 @@ export function HomeHero({ products }) {
                   <span className="hero-strip-count" aria-hidden="true">0{index + 1}</span>
                   <span className="min-w-0 text-left">
                     <span className="block truncate font-heading text-h3 font-extrabold tracking-[-0.02em] text-slate-950 dark:text-white">{product.name}</span>
-                    <span className="mt-0.5 block text-meta font-semibold text-slate-600 dark:text-slate-300">${product.price}</span>
+                    <span className="mt-0.5 block text-meta font-semibold text-slate-600 dark:text-slate-300">{money(product.price)}</span>
                   </span>
                 </button>
               );

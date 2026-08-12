@@ -1,48 +1,82 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Home, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { addresses as initialAddresses } from "@/lib/data";
+import * as api from "@/lib/api";
+import { useAuthStore } from "@/store/auth-store";
 import { Badge, Button, Card, Input, Label } from "@/components/ui";
 import { DashboardPageHeader } from "@/components/dashboard-page-header";
+import { AddressSkeleton } from "@/components/skeletons";
 import { cn } from "@/lib/utils";
 
 export default function AddressesPage() {
-  const [items, setItems] = useState(initialAddresses);
+  const token = useAuthStore((state) => state.token);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const defaultAddress = items.find((item) => item.default);
 
+  useEffect(() => {
+    let active = true;
+    if (!token) return;
+    api
+      .getAddresses(token)
+      .then((res) => {
+        if (active) {
+          setItems(res.addresses);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [token]);
+
   function setDefault(id) {
-    setItems(items.map((item) => ({ ...item, default: item.id === id })));
-    toast.success("Default address updated");
+    api
+      .setDefaultAddress(id, token)
+      .then(({ address }) => {
+        setItems((current) => current.map((item) => ({ ...item, default: item._id === address._id })));
+        toast.success("Default address updated");
+      })
+      .catch((error) => toast.error(error.message || "Could not update default address"));
   }
 
   function remove(id) {
-    setItems(items.filter((item) => item.id !== id));
-    toast.info("Address deleted");
+    api
+      .deleteAddress(id, token)
+      .then(() => {
+        setItems((current) => current.filter((item) => item._id !== id));
+        toast.info("Address deleted");
+      })
+      .catch((error) => toast.error(error.message || "Could not delete address"));
   }
 
   function add(event) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    setItems([
-      ...items,
-      {
-        id: String(Date.now()),
+    api
+      .createAddress({
         label: form.get("label"),
         name: form.get("name"),
         line1: form.get("line1"),
         city: form.get("city"),
         region: form.get("region"),
         postal: form.get("postal"),
-        country: "United States",
-        default: items.length === 0,
-      },
-    ]);
-    setShowForm(false);
-    toast.success("Address added");
+      }, token)
+      .then(({ address }) => {
+        setItems((current) => [...current, address]);
+        setShowForm(false);
+        toast.success("Address added");
+      })
+      .catch((error) => toast.error(error.message || "Could not add address"));
   }
+
+  if (loading) return <AddressSkeleton />;
 
   return (
     <div className="section-fade-up">
@@ -58,7 +92,7 @@ export default function AddressesPage() {
 
       <div className="mt-5 grid gap-4 md:grid-cols-2">
         {items.map((address) => (
-          <Card key={address.id} className={cn("transition duration-150 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-200/70 dark:hover:shadow-black/20", address.default && "border-blue-200 bg-blue-50/35 dark:border-blue-500/30 dark:bg-blue-500/5")}>
+          <Card key={address._id} className={cn("transition duration-150 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-200/70 dark:hover:shadow-black/20", address.default && "border-blue-200 bg-blue-50/35 dark:border-blue-500/30 dark:bg-blue-500/5")}>
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
                 <span className={cn("grid size-11 place-items-center rounded-sm bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-200", address.default && "bg-blue-600 text-white dark:bg-blue-500")}>
@@ -79,8 +113,8 @@ export default function AddressesPage() {
             </p>
             <div className="mt-6 flex flex-wrap gap-2 border-t border-slate-100 pt-5 dark:border-slate-800">
               <Button size="sm" variant="secondary" aria-label={`Edit ${address.label} address`} onClick={() => toast.info("Edit address UI ready")}><Pencil className="size-4" /> Edit</Button>
-              <Button size="sm" variant="outline" onClick={() => setDefault(address.id)} disabled={address.default}>{address.default ? "Default" : "Set Default"}</Button>
-              <Button size="sm" variant="danger" onClick={() => remove(address.id)}><Trash2 className="size-4" /> Delete</Button>
+              <Button size="sm" variant="outline" onClick={() => setDefault(address._id)} disabled={address.default}>{address.default ? "Default" : "Set Default"}</Button>
+              <Button size="sm" variant="danger" onClick={() => remove(address._id)}><Trash2 className="size-4" /> Delete</Button>
             </div>
           </Card>
         ))}

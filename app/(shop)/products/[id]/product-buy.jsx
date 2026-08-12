@@ -19,8 +19,10 @@ export function ProductBuy({ product }) {
     setQuantity((value) => Math.min(max, Math.max(1, value + delta)));
   }
 
+  const outOfStock = product.stock <= 0;
+
   function handleAdd() {
-    addItem(product.id, quantity);
+    addItem(product.id, quantity, { name: product.name, price: product.price, image: product.image, stock: product.stock });
     setJustAdded(true);
     toast.success(`${quantity} × ${product.name} added to cart`);
     window.setTimeout(() => setJustAdded(false), 1400);
@@ -33,14 +35,18 @@ export function ProductBuy({ product }) {
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Total</p>
           <span className="mt-1 block font-heading text-3xl font-extrabold tabular-nums tracking-[-0.035em] text-slate-950 dark:text-white">
-            {money(product.price * quantity)}
+            {product.price > 0 ? money((Number(product.price) || 0) * quantity) : "On request"}
           </span>
-          {quantity > 1 ? <p className="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-400">{money(product.price)} each</p> : null}
+          {product.price > 0 && quantity > 1 ? <p className="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-400">{money(product.price)} each</p> : null}
         </div>
-        <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-          <PackageCheck className="size-4" />
-          Ready to ship
-        </span>
+        {outOfStock ? (
+          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-rose-600 dark:text-rose-400">Out of stock</span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+            <PackageCheck className="size-4" />
+            Ready to ship
+          </span>
+        )}
       </div>
 
       <div className="mt-5 flex flex-col gap-3 sm:flex-row">
@@ -66,9 +72,9 @@ export function ProductBuy({ product }) {
           </button>
         </div>
 
-        <Button onClick={handleAdd} className="h-12 flex-1 text-base">
+        <Button onClick={handleAdd} disabled={outOfStock} className="h-12 flex-1 text-base">
           <ShoppingBag className="size-4" />
-          {justAdded ? "Added to cart" : "Add to cart"}
+          {outOfStock ? "Out of stock" : justAdded ? "Added to cart" : "Add to cart"}
         </Button>
       </div>
     </>

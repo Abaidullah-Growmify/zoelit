@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, MoreVertical, Search } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Eye, MoreVertical, Search } from "lucide-react";
 import { useDeferredValue, useMemo, useState } from "react";
 import { Button, Card, Input, Select } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -21,6 +21,8 @@ export function AdminTable({
   action,
   pageSize = DEFAULT_PAGE_SIZE,
   zebra = true,
+  hideSearch = false,
+  hidePagination = false,
   className,
   wrapperClassName,
   tableClassName,
@@ -30,7 +32,7 @@ export function AdminTable({
       <Card className={cn("overflow-hidden p-0", className)}>
         <div className={cn("overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", wrapperClassName)}>
 <table className={cn("w-full text-left text-body", tableClassName)}>
-            <thead className="sticky top-0 z-10 bg-slate-100/95 text-meta uppercase tracking-[0.14em] text-slate-700 shadow-[0_1px_0_rgba(203,213,225,0.95)] backdrop-blur dark:bg-slate-950/95 dark:text-slate-200 dark:shadow-[0_1px_0_rgba(51,65,85,0.95)]">
+            <thead className="sticky top-0 z-10 bg-slate-200/95 text-meta uppercase tracking-[0.14em] text-slate-900 shadow-[0_2px_10px_rgba(15,23,42,0.1)] backdrop-blur dark:bg-slate-800/95 dark:text-white dark:shadow-[0_2px_10px_rgba(0,0,0,0.35)]">
               <tr>{columns.map((column) => <th key={column} className="whitespace-nowrap px-5 py-4 font-semibold">{column}</th>)}</tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">{children}</tbody>
@@ -40,10 +42,10 @@ export function AdminTable({
     );
   }
 
-  return <AdminDataTable columns={columns} data={data} filters={filters} searchPlaceholder={searchPlaceholder} searchKeys={searchKeys} rowActions={rowActions} title={title} description={description} action={action} pageSize={pageSize} zebra={zebra} className={className} wrapperClassName={wrapperClassName} tableClassName={tableClassName} />;
+  return <AdminDataTable columns={columns} data={data} filters={filters} searchPlaceholder={searchPlaceholder} searchKeys={searchKeys} rowActions={rowActions} title={title} description={description} action={action} pageSize={pageSize} zebra={zebra} hideSearch={hideSearch} hidePagination={hidePagination} className={className} wrapperClassName={wrapperClassName} tableClassName={tableClassName} />;
 }
 
-function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys, rowActions, title, description, action, pageSize, zebra, className, wrapperClassName, tableClassName }) {
+function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys, rowActions, title, description, action, pageSize, zebra, hideSearch, hidePagination, className, wrapperClassName, tableClassName }) {
   const [query, setQuery] = useState("");
   const [filterValues, setFilterValues] = useState(() => Object.fromEntries(filters.map((filter) => [filter.key, filter.allLabel || "All"])));
   const [sort, setSort] = useState(() => {
@@ -105,6 +107,7 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
 
   return (
     <Card className={cn("overflow-hidden p-0 shadow-sm", className)}>
+      {title || description || !(hideSearch && !filters.length && !action) ? (
       <div className="border-b border-slate-100 p-5 dark:border-slate-800">
         {title || description ? (
           <div className="mb-4">
@@ -114,11 +117,14 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
             </div>
           </div>
         ) : null}
+        {hideSearch && !filters.length && !action ? null : (
         <div className={cn("grid gap-3", action ? "md:grid-cols-[minmax(0,1fr)_repeat(var(--filter-count),minmax(150px,190px))_auto_auto]" : "md:grid-cols-[minmax(0,1fr)_repeat(var(--filter-count),minmax(150px,190px))_auto]")} style={{ "--filter-count": filters.length }}>
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-            <Input value={query} onChange={(event) => updateQuery(event.target.value)} placeholder={searchPlaceholder} aria-label={searchPlaceholder} className="pl-10" />
-          </div>
+          {!hideSearch ? (
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+              <Input value={query} onChange={(event) => updateQuery(event.target.value)} placeholder={searchPlaceholder} aria-label={searchPlaceholder} className="pl-10" />
+            </div>
+          ) : null}
           {filters.map((filter) => (
             <Select key={filter.key} value={filterValues[filter.key]} onChange={(event) => updateFilter(filter.key, event.target.value)} aria-label={filter.label}>
               <option>{filter.allLabel || "All"}</option>
@@ -128,13 +134,15 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
           <Button variant="secondary" onClick={resetControls}>Reset</Button>
           {action ? <div className="flex md:justify-end">{action}</div> : null}
         </div>
+        )}
       </div>
+      ) : null}
       <div className={cn("overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", wrapperClassName)}>
         <table className={cn("w-full text-left text-body", tableClassName)}>
-          <thead className="sticky top-0 z-10 bg-slate-100/95 text-meta uppercase tracking-[0.14em] text-slate-700 shadow-[0_1px_0_rgba(203,213,225,0.95)] backdrop-blur dark:bg-slate-950/95 dark:text-slate-200 dark:shadow-[0_1px_0_rgba(51,65,85,0.95)]">
+          <thead className="sticky top-0 z-10 bg-slate-200/95 text-body font-bold uppercase tracking-[0.14em] text-slate-900 shadow-[0_2px_10px_rgba(15,23,42,0.1)] backdrop-blur dark:bg-slate-800/95 dark:text-white dark:shadow-[0_2px_10px_rgba(0,0,0,0.35)]">
             <tr>
               {columns.map((column) => (
-                <th key={column.key} className={cn("whitespace-nowrap px-5 py-4 font-semibold", column.className)}>
+                <th key={column.key} className={cn("whitespace-nowrap px-5 py-4 font-bold", column.className)}>
                   {column.sortable ? (
                     <button type="button" onClick={() => toggleSort(column)} className="inline-flex items-center gap-1 rounded-sm transition hover:text-slate-950 focus:outline-none focus:ring-4 focus:ring-blue-500/10 dark:hover:text-white">
                       {column.header}
@@ -143,14 +151,14 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
                   ) : column.header}
                 </th>
               ))}
-              {hasActions ? <th className="whitespace-nowrap px-5 py-4 text-right font-semibold">Actions</th> : null}
+              {hasActions ? <th className="whitespace-nowrap px-5 py-4 text-center font-bold">Actions</th> : null}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {pageItems.map((row, rowIndex) => (
-              <AdminTableRow key={row.id || row.productId || row.key} zebra={zebra} index={rowIndex}>
+              <AdminTableRow key={row.id || row.productId || row.key || rowIndex} zebra={zebra} index={rowIndex}>
                 {columns.map((column) => <AdminTableCell key={column.key} className={column.cellClassName}>{column.render ? column.render(row) : getColumnValue(column, row)}</AdminTableCell>)}
-                {hasActions ? <AdminTableCell className="text-right"><AdminTableActions actions={rowActions(row)} label={`Actions for ${row.name || row.productName || row.id || "row"}`} /></AdminTableCell> : null}
+                {hasActions ? <AdminTableCell className="text-center"><AdminTableActions actions={rowActions(row)} label={`Actions for ${row.name || row.productName || row.id || "row"}`} /></AdminTableCell> : null}
               </AdminTableRow>
             ))}
             {!pageItems.length ? (
@@ -161,16 +169,18 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
           </tbody>
         </table>
       </div>
-      <div className="flex flex-col gap-3 border-t border-slate-100 px-5 py-4 text-body sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
-        <p className="font-regular text-slate-600 dark:text-slate-300">Showing {showingStart}-{showingEnd} of {sortedData.length} results</p>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="secondary" size="sm" disabled={safePage === 1} onClick={() => setPage((current) => Math.max(1, current - 1))}><ChevronLeft className="size-4" />Previous</Button>
-          {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
-            <Button key={pageNumber} variant={pageNumber === safePage ? "primary" : "outline"} size="sm" onClick={() => setPage(pageNumber)} aria-current={pageNumber === safePage ? "page" : undefined}>{pageNumber}</Button>
-          ))}
-          <Button variant="secondary" size="sm" disabled={safePage === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))}>Next<ChevronRight className="size-4" /></Button>
+      {!hidePagination ? (
+        <div className="flex flex-col gap-3 border-t border-slate-100 px-5 py-4 text-body sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
+          <p className="font-regular text-slate-600 dark:text-slate-300">Showing {showingStart}-{showingEnd} of {sortedData.length} results</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="secondary" size="sm" disabled={safePage === 1} onClick={() => setPage((current) => Math.max(1, current - 1))}><ChevronLeft className="size-4" />Previous</Button>
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
+              <Button key={pageNumber} variant={pageNumber === safePage ? "primary" : "outline"} size="sm" onClick={() => setPage(pageNumber)} aria-current={pageNumber === safePage ? "page" : undefined}>{pageNumber}</Button>
+            ))}
+            <Button variant="secondary" size="sm" disabled={safePage === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))}>Next<ChevronRight className="size-4" /></Button>
+          </div>
         </div>
-      </div>
+      ) : null}
     </Card>
   );
 }
@@ -185,6 +195,17 @@ export function AdminTableCell({ children, className }) {
 
 export function AdminTableActions({ actions, label = "Row actions" }) {
   if (!actions?.length) return null;
+
+  if (actions.length === 1) {
+    const action = actions[0];
+    const Icon = action.icon || Eye;
+    const className = "inline-grid size-9 place-items-center rounded-sm text-slate-900 transition hover:bg-slate-100 hover:text-blue-700 dark:text-white dark:hover:bg-slate-800 dark:hover:text-blue-300";
+    if (action.href) {
+      return <Link href={action.href} aria-label={action.label} title={action.label} className={className}><Icon className="size-4" /></Link>;
+    }
+    return <button type="button" onClick={action.onClick} aria-label={action.label} title={action.label} className={className}><Icon className="size-4" /></button>;
+  }
+
   return (
     <div className="relative inline-block text-left">
       <details className="group">

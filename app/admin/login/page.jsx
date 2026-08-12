@@ -30,10 +30,13 @@ export default function AdminLoginPage() {
   }, [ready, admin, router]);
 
   async function onSubmit(values) {
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    login(values.email);
-    toast.success("Admin access granted");
-    router.push("/admin");
+    try {
+      await login(values.email, values.password, values.remember);
+      toast.success("Admin access granted");
+      router.push("/admin");
+    } catch (error) {
+      toast.error(error.message || "Admin sign in failed");
+    }
   }
 
   return (

@@ -2,12 +2,16 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { getProduct } from "@/lib/data";
+import { Minus, Plus } from "lucide-react";
+import { validateCheckoutPrices } from "@/lib/api";
 import { money } from "@/lib/utils";
+import { useAuthStore } from "@/store/auth-store";
 import { useCartStore } from "@/store/cart-store";
+import { useProductStore } from "@/store/product-store";
 import { Button, Card, ErrorText, Input, Label, PageHeader, Textarea } from "@/components/ui";
 
 const schema = z.object({
@@ -25,12 +29,55 @@ const schema = z.object({
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, subtotal, clearCart } = useCartStore();
-  const cartSubtotal = subtotal();
+  const token = useAuthStore((state) => state.token);
+  const getById = useProductStore((state) => state.getById);
+  const fetchProducts = useProductStore((state) => state.fetchProducts);
+  const { items, clearCart, updateQuantity } = useCartStore();
+  const [validatedPrices, setValidatedPrices] = useState({});
+  const [priceNote, setPriceNote] = useState("");
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  const cartItems = items.map((item) => ({ ...item, quantity: Math.floor(Number(item.quantity)) || 0, product: item.name ? item : getById(item.productId) })).filter((item) => item.product);
+  const priceOf = (item) => Number(validatedPrices[item.productId] ?? item.price ?? item.product.price ?? 0) || 0;
+  const cartSubtotal = cartItems.reduce((sum, item) => sum + priceOf(item) * (item.quantity || 1), 0);
   const shipping = cartSubtotal > 150 || cartSubtotal === 0 ? 0 : 12;
   const discount = 0;
   const total = cartSubtotal + shipping - discount;
-  const cartItems = items.map((item) => ({ ...item, product: getProduct(item.productId) })).filter((item) => item.product);
+
+  useEffect(() => {
+    let active = true;
+
+    async function validate() {
+      if (!items.length) return;
+
+      try {
+        const data = await validateCheckoutPrices(
+          items.map((item) => ({ ingramPartNumber: item.productId, quantity: Math.floor(Number(item.quantity)) || 1 })),
+          token
+        );
+
+        if (!active) return;
+
+        const map = {};
+        for (const line of data.items || []) map[line.ingramPartNumber] = line.price;
+        setValidatedPrices(map);
+
+        if (data.changed) {
+          setPriceNote("Some prices were updated to the latest distributor prices.");
+        }
+      } catch {
+        // Fall back to catalog prices when real-time validation is unavailable.
+      }
+    }
+
+    validate();
+    return () => {
+      active = false;
+    };
+  }, [items, token]);
 
   const form = useForm({
     resolver: zodResolver(schema),
@@ -93,13 +140,24 @@ export default function CheckoutPage() {
             <div className="mt-6 divide-y divide-slate-200 border-y border-slate-200 text-sm dark:divide-slate-800 dark:border-slate-800">
               <OrderRow label="Product" value="Total" strong />
               {cartItems.length ? cartItems.map((item) => (
-                <OrderRow
-                  key={item.productId}
-                  label={`${item.product.name} × ${item.quantity}`}
-                  value={money(item.product.price * item.quantity)}
-                />
+                <div key={item.productId} className="flex items-center justify-between gap-4 py-4">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-950 dark:text-white">{item.product.name}</p>
+                    <div className="mt-1.5 inline-flex shrink-0 items-center gap-2 rounded-lg bg-slate-100 px-2 py-1 dark:bg-slate-800">
+                      <button type="button" onClick={() => updateQuantity(item.productId, item.quantity - 1)} className="grid size-6 place-items-center rounded text-slate-600 transition hover:bg-white hover:text-blue-600 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-blue-300" aria-label={`Decrease ${item.product.name} quantity`}>
+                        <Minus className="size-3.5" />
+                      </button>
+                      <span className="min-w-4 text-center text-sm font-semibold tabular-nums text-slate-950 dark:text-white">{item.quantity}</span>
+                      <button type="button" onClick={() => updateQuantity(item.productId, item.quantity + 1)} disabled={item.quantity >= Math.max(Number(item.product.stock ?? item.stock ?? 0) || 0, 1)} className="grid size-6 place-items-center rounded text-slate-600 transition hover:bg-white hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-blue-300" aria-label={`Increase ${item.product.name} quantity`}>
+                        <Plus className="size-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                  <span className="shrink-0 text-sm font-semibold tabular-nums text-slate-950 dark:text-white">{money(priceOf(item) * (item.quantity || 1))}</span>
+                </div>
               )) : <OrderRow label="No products in cart" value={money(0)} />}
               <OrderRow label="Cart Subtotal" value={money(cartSubtotal)} />
+              {priceNote ? <p className="py-3 text-xs font-semibold text-amber-600 dark:text-amber-400">{priceNote}</p> : null}
               <div className="flex items-center justify-between gap-4 py-4 text-slate-600 dark:text-slate-300">
                 <span>Shipping</span>
                 <label className="flex items-center gap-2 text-right">

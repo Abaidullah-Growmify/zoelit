@@ -26,10 +26,13 @@ export default function RegisterPage() {
   const registerUser = useAuthStore((state) => state.register);
   const form = useForm({ resolver: zodResolver(schema), defaultValues: { name: "", email: "", password: "", confirmPassword: "", terms: false } });
   async function onSubmit(values) {
-    await new Promise((resolve) => setTimeout(resolve, 700));
-    registerUser(values.name, values.email);
-    toast.success("Account created successfully");
-    router.push("/dashboard");
+    try {
+      await registerUser({ name: values.name, email: values.email, password: values.password, confirmPassword: values.confirmPassword, terms: values.terms });
+      toast.success("Account created successfully");
+      router.push("/dashboard");
+    } catch (error) {
+      toast.error(error.message || "Registration failed");
+    }
   }
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-white p-4 dark:bg-slate-950">

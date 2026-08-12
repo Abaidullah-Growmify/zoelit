@@ -20,6 +20,7 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const cartButtonRef = useRef(null);
+  const headerRef = useRef(null);
   const user = useAuthStore((state) => state.user);
   const authHydrated = useAuthStore((state) => state.hasHydrated);
   const cartHydrated = useCartStore((state) => state.hasHydrated);
@@ -39,9 +40,18 @@ export function SiteHeader() {
     ], { duration: 260, easing: "cubic-bezier(.22,1,.36,1)" });
   }, [cartHydrated, count]);
 
+  useEffect(() => {
+    if (!open) return;
+    const handlePointerDown = (event) => {
+      if (headerRef.current && !headerRef.current.contains(event.target)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [open]);
+
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-blue-100 bg-slate-50/95 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/95">
+      <header ref={headerRef} className="sticky top-0 z-40 border-b border-blue-100 bg-slate-50/95 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/95">
         <div className="container-page grid h-16 grid-cols-[1fr_auto] items-center gap-4 md:grid-cols-[1fr_auto_1fr]">
           <Link href="/" className="text-2xl font-extrabold tracking-[-0.03em] text-blue-700 dark:text-blue-400">ZoeLit</Link>
           <nav className="hidden items-center gap-8 md:flex">

@@ -1,16 +1,49 @@
 "use client";
 
 import { CalendarDays, Camera, Check, Eye, EyeOff, Heart, KeyRound, ShoppingBag, UserRound } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
+import * as api from "@/lib/api";
+import { useAuthStore } from "@/store/auth-store";
 import { AdminStatCard } from "@/components/admin-stat-card";
 import { Button, Card, Input, Label } from "@/components/ui";
 import { DashboardPageHeader } from "@/components/dashboard-page-header";
-import { customer, orders } from "@/lib/data";
+import { ProfileSkeleton } from "@/components/skeletons";
 import { cn } from "@/lib/utils";
 
 export default function ProfilePage() {
+  const token = useAuthStore((state) => state.token);
+  const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
+  const [ordersCount, setOrdersCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    if (!token) return;
+    Promise.all([
+      api.getProfile(token),
+      api.getOrders(token).catch(() => ({ orders: [] })),
+    ])
+      .then(([profileRes, ordersRes]) => {
+        if (!active) return;
+        setUser(profileRes.user);
+        setOrdersCount(ordersRes.orders.length);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [token, setUser]);
+
+  if (loading) return <ProfileSkeleton />;
+
+  const profileUser = user || { name: "", email: "", phone: "" };
+
   return (
     <div>
       <DashboardPageHeader
@@ -18,14 +51,14 @@ export default function ProfilePage() {
         description="Manage your personal details, password, and saved preferences."
       />
       <div className="mt-8 grid gap-4 md:grid-cols-3">
-        <AdminStatCard label="Member Since" value="Jan 2026" icon={CalendarDays} helper="ZoeLit account" tone="blue" />
-        <AdminStatCard label="Total Orders" value={orders.length} icon={ShoppingBag} helper="Lifetime purchases" tone="green" />
+        <AdminStatCard label="Member Since" value="ZoeLit member" icon={CalendarDays} helper="Registered account" tone="blue" />
+        <AdminStatCard label="Total Orders" value={ordersCount} icon={ShoppingBag} helper="Lifetime purchases" tone="green" />
         <AdminStatCard label="Wishlist Items" value="8" icon={Heart} helper="Saved for later" tone="pink" />
       </div>
       <div className="mt-6 grid items-stretch gap-6 xl:grid-cols-[320px_1fr]">
-        <CustomerIdentityCard />
+        <CustomerIdentityCard user={profileUser} />
         <div className="space-y-6">
-          <CustomerPersonalInfoCard />
+          <CustomerPersonalInfoCard user={profileUser} />
           <CustomerSecurityCard />
         </div>
       </div>
@@ -33,30 +66,42 @@ export default function ProfilePage() {
   );
 }
 
-function CustomerIdentityCard() {
+function CustomerIdentityCard({ user }) {
   return (
     <Card className="h-full transition duration-150 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-200/70 dark:hover:shadow-black/20">
-      <AvatarEditor initials="AS" label="Edit profile photo" />
-      <h2 className="mt-5 font-heading text-h2 font-semibold">{customer.name}</h2>
-      <p className="mt-1 text-body font-regular text-slate-500 dark:text-slate-400">{customer.email}</p>
+      <AvatarEditor initials={getInitials(user.name)} label="Edit profile photo" />
+      <h2 className="mt-5 font-heading text-h2 font-semibold">{user.name}</h2>
+      <p className="mt-1 text-body font-regular text-slate-500 dark:text-slate-400">{user.email}</p>
       <div className="mt-6 rounded-md bg-gradient-to-br from-blue-50 to-slate-50 p-4 ring-1 ring-blue-100/70 dark:from-blue-500/10 dark:to-slate-950 dark:ring-blue-500/20">
         <p className="text-meta font-semibold uppercase tracking-[0.14em] text-blue-600 dark:text-blue-300">Account status</p>
         <p className="mt-2 text-body font-semibold text-slate-950 dark:text-white">Active customer</p>
-        <p className="mt-1 text-meta font-regular leading-5 text-slate-500 dark:text-slate-400">Mock account details stay local until real authentication is connected.</p>
+        <p className="mt-1 text-meta font-regular leading-5 text-slate-500 dark:text-slate-400">Signed in with your ZoeLit account.</p>
       </div>
     </Card>
   );
 }
 
-function CustomerPersonalInfoCard() {
+function CustomerPersonalInfoCard({ user }) {
+  const token = useAuthStore((state) => state.token);
+  const setUser = useAuthStore((state) => state.setUser);
   const [saved, setSaved] = useState(false);
-  const form = useForm({ defaultValues: { name: customer.name, email: customer.email, phone: customer.phone } });
+  const form = useForm({ defaultValues: { name: user.name, email: user.email, phone: user.phone } });
 
-  function onSubmit(values) {
-    setSaved(true);
-    toast.success("Profile changes saved");
-    form.reset(values);
-    window.setTimeout(() => setSaved(false), 1800);
+  useEffect(() => {
+    form.reset({ name: user.name, email: user.email, phone: user.phone });
+  }, [user.name, user.email, user.phone, form]);
+
+  async function onSubmit(values) {
+    try {
+      const res = await api.updateProfile(values, token);
+      setUser(res.user);
+      setSaved(true);
+      toast.success("Profile changes saved");
+      form.reset(values);
+      window.setTimeout(() => setSaved(false), 1800);
+    } catch (error) {
+      toast.error(error.message || "Could not save profile");
+    }
   }
 
   return (
@@ -76,17 +121,23 @@ function CustomerPersonalInfoCard() {
 }
 
 function CustomerSecurityCard() {
+  const token = useAuthStore((state) => state.token);
   const [saved, setSaved] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const form = useForm({ defaultValues: { currentPassword: "", newPassword: "" } });
   const newPassword = useWatch({ control: form.control, name: "newPassword" });
 
-  function onSubmit() {
-    setSaved(true);
-    toast.success("Password updated");
-    form.reset({ currentPassword: "", newPassword: "" });
-    window.setTimeout(() => setSaved(false), 1800);
+  async function onSubmit() {
+    try {
+      await api.updatePassword({ currentPassword: form.getValues("currentPassword"), newPassword: form.getValues("newPassword") }, token);
+      setSaved(true);
+      toast.success("Password updated");
+      form.reset({ currentPassword: "", newPassword: "" });
+      window.setTimeout(() => setSaved(false), 1800);
+    } catch (error) {
+      toast.error(error.message || "Could not update password");
+    }
   }
 
   return (
@@ -145,4 +196,8 @@ function PasswordStrength({ password = "" }) {
 function SavedState({ show, label }) {
   if (!show) return null;
   return <span className="inline-flex items-center gap-1.5 text-body font-semibold text-emerald-600 dark:text-emerald-300"><Check className="size-4" />{label}</span>;
+}
+
+function getInitials(name = "ZoeLit Customer") {
+  return name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
 }

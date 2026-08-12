@@ -5,6 +5,22 @@ const nextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      {
+        protocol: "https",
+        hostname: "images.icecat.biz",
+      },
+      {
+        protocol: "https",
+        hostname: "pics.icecat.io",
+      },
+      {
+        protocol: "https",
+        hostname: "**.icecat.biz",
+      },
+      {
+        protocol: "https",
+        hostname: "dummyimage.com",
+      },
     ],
   },
 };

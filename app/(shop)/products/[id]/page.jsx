@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, Check, CheckCircle2, RotateCcw, ShieldCheck, Star, Truck } from "lucide-react";
-import { getProduct, products } from "@/lib/data";
+import { getFeaturedProducts, getServerProduct } from "@/lib/server-catalog";
 import { money } from "@/lib/utils";
 import { ProductBuy } from "./product-buy";
 import { ProductTabs } from "./product-tabs";
@@ -9,13 +9,11 @@ import { ProductImageZoom } from "./product-image-zoom";
 import { ProductCard } from "@/components/product-card";
 import { Badge, Card, SectionHeader } from "@/components/ui";
 
-export function generateStaticParams() {
-  return products.map((product) => ({ id: product.id }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }) {
   const { id } = await params;
-  const product = getProduct(id);
+  const product = await getServerProduct(id);
   return { title: product ? `${product.name} | ZoeLit Commerce` : "Product" };
 }
 
@@ -38,7 +36,7 @@ function TrustTiles({ product }) {
   );
 }
 
-function YouMayAlsoLike({ currentId }) {
+function YouMayAlsoLike({ currentId, products }) {
   const related = products.filter((product) => product.id !== currentId).slice(0, 4);
 
   return (
@@ -60,8 +58,10 @@ function YouMayAlsoLike({ currentId }) {
 
 export default async function ProductDetailPage({ params }) {
   const { id } = await params;
-  const product = getProduct(id);
+  const product = await getServerProduct(id);
   if (!product) notFound();
+
+  const featured = await getFeaturedProducts();
 
   return (
     <section className="container-page py-10 md:py-14">
@@ -81,10 +81,12 @@ export default async function ProductDetailPage({ params }) {
         <div>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <Badge>{product.category}</Badge>
-            <span className="inline-flex items-center gap-1.5">
-              <Star className="size-4 fill-amber-400 text-amber-400" aria-hidden="true" />
-              <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{product.rating}</span>
-            </span>
+            {product.rating > 0 ? (
+              <span className="inline-flex items-center gap-1.5">
+                <Star className="size-4 fill-amber-400 text-amber-400" aria-hidden="true" />
+                <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{product.rating}</span>
+              </span>
+            ) : null}
             <span className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-600 dark:text-emerald-400">
               <CheckCircle2 className="size-4" />
               {product.stock} in stock
@@ -123,7 +125,7 @@ export default async function ProductDetailPage({ params }) {
         <ProductTabs product={product} />
       </div>
 
-      <YouMayAlsoLike currentId={product.id} />
+      <YouMayAlsoLike currentId={product.id} products={featured} />
     </section>
   );
 }

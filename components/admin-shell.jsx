@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Bell, Boxes, ChevronDown, LayoutDashboard, Maximize2, Minimize2, Package, PanelLeftClose, PanelLeftOpen, Settings, ShoppingBag, Tags, Users, Menu, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Bell, ChevronDown, LayoutDashboard, Maximize2, Minimize2, Package, PanelLeftClose, PanelLeftOpen, Settings, ShoppingBag, Tags, Users, Menu, X } from "lucide-react";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AdminPageSkeleton } from "@/components/skeletons";
@@ -16,7 +16,6 @@ const items = [
   { href: "/admin/categories", label: "Categories", icon: Tags },
   { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
   { href: "/admin/customers", label: "Customers", icon: Users },
-  { href: "/admin/inventory", label: "Inventory", icon: Boxes },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
@@ -25,6 +24,7 @@ export function AdminShell({ children }) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const profileRef = useRef(null);
   const pathname = usePathname();
   const router = useRouter();
   const admin = useAdminAuthStore((state) => state.admin);
@@ -41,10 +41,19 @@ export function AdminShell({ children }) {
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
+  useEffect(() => {
+    if (!profileOpen) return;
+    const handlePointerDown = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) setProfileOpen(false);
+    };
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [profileOpen]);
+
   if (pathname === "/admin/login") return children;
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     toast.info("Admin signed out");
     router.push("/admin/login");
   };
@@ -86,7 +95,7 @@ export function AdminShell({ children }) {
                   <Bell className="size-5" />
                   <span className="absolute right-1.5 top-1.5 grid size-4 place-items-center rounded-full bg-blue-600 text-[9px] font-semibold leading-none text-white ring-2 ring-white dark:ring-slate-950">3</span>
                 </button>
-                <div className="relative">
+                <div className="relative" ref={profileRef}>
                   <button type="button" onClick={() => setProfileOpen((open) => !open)} className="flex h-11 items-center gap-2 rounded-sm bg-white px-2 text-left shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:bg-slate-950 dark:ring-slate-700 dark:hover:bg-slate-800" aria-expanded={profileOpen} aria-haspopup="menu">
                     <span className="grid size-8 place-items-center rounded-full bg-blue-50 font-heading text-meta font-semibold text-blue-600 ring-1 ring-blue-100 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/20">{initials}</span>
                     <span className="hidden max-w-32 truncate text-body font-semibold text-slate-900 lg:block dark:text-white">{admin?.name || "ZoeLit Admin"}</span>

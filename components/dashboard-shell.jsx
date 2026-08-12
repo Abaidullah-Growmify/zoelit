@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Bell, ChevronDown, Heart, Home, MapPin, Maximize2, Menu, Minimize2, PanelLeftClose, PanelLeftOpen, ShoppingBag, User, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,7 @@ export function DashboardShell({ children }) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const profileRef = useRef(null);
   const user = useAuthStore((state) => state.user);
   const ready = useAuthStore((state) => state.hasHydrated);
   const logout = useAuthStore((state) => state.logout);
@@ -35,8 +36,16 @@ export function DashboardShell({ children }) {
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
-  const handleLogout = () => {
-    logout();
+  useEffect(() => {
+    if (!profileOpen) return;
+    const handlePointerDown = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) setProfileOpen(false);
+    };
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [profileOpen]);
+  const handleLogout = async () => {
+    await logout();
     toast.info("Signed out");
     router.push("/login");
   };
@@ -77,7 +86,7 @@ export function DashboardShell({ children }) {
                 <Bell className="size-5" />
                 <span className="absolute right-1.5 top-1.5 grid size-4 place-items-center rounded-full bg-blue-600 text-[9px] font-semibold leading-none text-white ring-2 ring-white dark:ring-slate-950">2</span>
               </button>
-              <div className="relative">
+              <div className="relative" ref={profileRef}>
                 <button type="button" onClick={() => setProfileOpen((open) => !open)} className="flex h-11 items-center gap-2 rounded-sm bg-white px-2 text-left shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 dark:bg-slate-950 dark:ring-slate-700 dark:hover:bg-slate-800" aria-expanded={profileOpen} aria-haspopup="menu">
                   <span className="grid size-8 place-items-center rounded-full bg-blue-50 font-heading text-meta font-semibold text-blue-600 ring-1 ring-blue-100 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/20">{initials}</span>
                   <span className="hidden max-w-32 truncate text-body font-semibold text-slate-900 lg:block dark:text-white">{user?.name || "ZoeLit Customer"}</span>
