@@ -53,7 +53,7 @@ export default function LoginPage() {
               <button type="button" tabIndex={-1} onClick={() => setShowPassword((value) => !value)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 transition hover:text-slate-700 dark:hover:text-slate-200" aria-label={showPassword ? "Hide password" : "Show password"}>
                 {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
-            </div>
+            </div> 
             <ErrorText>{form.formState.errors.password?.message}</ErrorText>
           </div>
           <label className="flex items-center gap-2 text-body text-slate-600 dark:text-slate-300">
