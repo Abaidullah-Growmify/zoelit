@@ -12,10 +12,6 @@ export function HomeHero({ products }) {
   const [isPaused, setIsPaused] = useState(false);
   const swipeStart = useRef(null);
 
-  if (!products || products.length === 0) return null;
-
-  const activeProduct = products[activeIndex];
-
   const goTo = (index) => {
     setIsPaused(true);
     startTransition(() => setActiveIndex(((index % products.length) + products.length) % products.length));
@@ -24,7 +20,7 @@ export function HomeHero({ products }) {
   const prev = () => goTo(activeIndex - 1);
 
   useEffect(() => {
-    if (isPaused || products.length < 2) return undefined;
+    if (isPaused || !products || products.length < 2) return undefined;
 
     const interval = window.setInterval(() => {
       startTransition(() => {
@@ -33,7 +29,11 @@ export function HomeHero({ products }) {
     }, 4600);
 
     return () => window.clearInterval(interval);
-  }, [isPaused, products.length]);
+  }, [isPaused, products]);
+
+  if (!products || products.length === 0) return null;
+
+  const activeProduct = products[activeIndex];
 
   const pause = () => setIsPaused(true);
   const resume = () => setIsPaused(false);

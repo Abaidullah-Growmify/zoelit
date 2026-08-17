@@ -1,43 +1,25 @@
 "use client";
 
-import { create } from "zustand";
-import { getPublicProducts } from "@/lib/api";
-import { mapProduct } from "@/lib/product-mapper";
+import { useMemo } from "react";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { fetchProducts as fetchProductsThunk } from "@/store/slices/product-slice";
 
-export const useProductStore = create((set, get) => ({
-  products: [],
-  loading: false,
-  loaded: false,
-  fetchProducts: async (force = false) => {
-    if (get().loaded && !force) return;
+export function useProductStore(selector) {
+  const productsState = useAppSelector((state) => state.products);
+  const dispatch = useAppDispatch();
 
-    set({ loading: true });
+  const store = useMemo(
+    () => ({
+      ...productsState,
+      fetchProducts: (force = false) => {
+        if (productsState.loaded && !force) return Promise.resolve(productsState.products);
+        if (productsState.loading) return Promise.resolve();
+        return dispatch(fetchProductsThunk()).unwrap();
+      },
+      getById: (id) => productsState.products.find((product) => product.id === id) || null,
+    }),
+    [productsState, dispatch]
+  );
 
-    try {
-      const limit = 200;
-      let page = 1;
-      let all = [];
-      let total = Infinity;
-
-      while (all.length < total && all.length < 2000) {
-        const data = await getPublicProducts({ page, limit });
-        const items = data.products || [];
-        all = all.concat(items);
-        total = data.pagination?.total ?? all.length;
-        if (items.length < limit) break;
-        page += 1;
-      }
-
-      const mapped = all.map(mapProduct).filter(Boolean);
-
-      set({
-        products: mapped,
-        loaded: true,
-        loading: false,
-      });
-    } catch {
-      set({ products: [], loaded: true, loading: false });
-    }
-  },
-  getById: (id) => get().products.find((product) => product.id === id) || null,
-}));
+  return selector ? selector(store) : store;
+}

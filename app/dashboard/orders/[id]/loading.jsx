@@ -1,5 +1,5 @@
-import { OrdersSkeleton } from "@/components/skeletons";
+import { OrderDetailSkeleton } from "@/components/skeletons";
 
 export default function Loading() {
-  return <OrdersSkeleton />;
+  return <OrderDetailSkeleton />;
 }

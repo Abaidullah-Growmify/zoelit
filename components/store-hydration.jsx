@@ -1,33 +1,35 @@
 "use client";
 
 import { useEffect } from "react";
-import { useAdminAuthStore } from "@/store/admin-auth-store";
-import { useAuthStore } from "@/store/auth-store";
-import { useCartStore } from "@/store/cart-store";
+import { useAppDispatch } from "@/store/hooks";
+import { hydrateAuth } from "@/store/slices/auth-slice";
+import { hydrateAdminAuth } from "@/store/slices/admin-auth-slice";
+import { hydrateCart } from "@/store/slices/cart-slice";
+
+function readStorage(key) {
+  if (typeof localStorage === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed?.state ? parsed.state : parsed;
+  } catch {
+    return null;
+  }
+}
 
 export function StoreHydration() {
+  const dispatch = useAppDispatch();
+
   useEffect(() => {
-    let active = true;
+    const auth = readStorage("zoelit-auth");
+    const adminAuth = readStorage("zoelit-admin-auth");
+    const cart = readStorage("zoelit-cart");
 
-    async function hydrateStores() {
-      await Promise.all([
-        useAdminAuthStore.persist.rehydrate(),
-        useAuthStore.persist.rehydrate(),
-        useCartStore.persist.rehydrate(),
-      ]);
-
-      if (!active) return;
-      useAdminAuthStore.getState().setHasHydrated(true);
-      useAuthStore.getState().setHasHydrated(true);
-      useCartStore.getState().setHasHydrated(true);
-    }
-
-    hydrateStores();
-
-    return () => {
-      active = false;
-    };
-  }, []);
+    dispatch(hydrateAuth(auth));
+    dispatch(hydrateAdminAuth(adminAuth));
+    dispatch(hydrateCart(cart?.items ? { items: cart.items } : cart));
+  }, [dispatch]);
 
   return null;
 }

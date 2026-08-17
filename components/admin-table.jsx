@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Eye, MoreVertical, Search } from "lucide-react";
+import { ChevronDown, ChevronUp, Eye, MoreVertical, Search } from "lucide-react";
 import { useDeferredValue, useMemo, useState } from "react";
 import { Button, Card, Input, Select } from "@/components/ui";
+import Pagination from "@/components/pagination";
 import { cn } from "@/lib/utils";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -23,6 +24,7 @@ export function AdminTable({
   zebra = true,
   hideSearch = false,
   hidePagination = false,
+  disableInitialSort = false,
   className,
   wrapperClassName,
   tableClassName,
@@ -42,13 +44,14 @@ export function AdminTable({
     );
   }
 
-  return <AdminDataTable columns={columns} data={data} filters={filters} searchPlaceholder={searchPlaceholder} searchKeys={searchKeys} rowActions={rowActions} title={title} description={description} action={action} pageSize={pageSize} zebra={zebra} hideSearch={hideSearch} hidePagination={hidePagination} className={className} wrapperClassName={wrapperClassName} tableClassName={tableClassName} />;
+  return <AdminDataTable columns={columns} data={data} filters={filters} searchPlaceholder={searchPlaceholder} searchKeys={searchKeys} rowActions={rowActions} title={title} description={description} action={action} pageSize={pageSize} zebra={zebra} hideSearch={hideSearch} hidePagination={hidePagination} disableInitialSort={disableInitialSort} className={className} wrapperClassName={wrapperClassName} tableClassName={tableClassName} />;
 }
 
-function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys, rowActions, title, description, action, pageSize, zebra, hideSearch, hidePagination, className, wrapperClassName, tableClassName }) {
+function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys, rowActions, title, description, action, pageSize, zebra, hideSearch, hidePagination, disableInitialSort, className, wrapperClassName, tableClassName }) {
   const [query, setQuery] = useState("");
   const [filterValues, setFilterValues] = useState(() => Object.fromEntries(filters.map((filter) => [filter.key, filter.allLabel || "All"])));
   const [sort, setSort] = useState(() => {
+    if (disableInitialSort) return null;
     const firstSortable = columns.find((column) => column.sortable);
     return firstSortable ? { key: firstSortable.key, direction: "asc" } : null;
   });
@@ -172,13 +175,7 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
       {!hidePagination ? (
         <div className="flex flex-col gap-3 border-t border-slate-100 px-5 py-4 text-body sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
           <p className="font-regular text-slate-600 dark:text-slate-300">Showing {showingStart}-{showingEnd} of {sortedData.length} results</p>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button variant="secondary" size="sm" disabled={safePage === 1} onClick={() => setPage((current) => Math.max(1, current - 1))}><ChevronLeft className="size-4" />Previous</Button>
-            {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
-              <Button key={pageNumber} variant={pageNumber === safePage ? "primary" : "outline"} size="sm" onClick={() => setPage(pageNumber)} aria-current={pageNumber === safePage ? "page" : undefined}>{pageNumber}</Button>
-            ))}
-            <Button variant="secondary" size="sm" disabled={safePage === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))}>Next<ChevronRight className="size-4" /></Button>
-          </div>
+          <Pagination page={safePage} totalPages={totalPages} onPageChange={setPage} />
         </div>
       ) : null}
     </Card>

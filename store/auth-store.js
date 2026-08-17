@@ -1,36 +1,23 @@
 "use client";
 
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import * as api from "@/lib/api";
+import { useMemo } from "react";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { authLogin as loginThunk, authRegister as registerThunk, authLogout as logoutThunk, setUser } from "@/store/slices/auth-slice";
 
-export const useAuthStore = create(
-  persist(
-    (set, get) => ({
-      user: null,
-      token: null,
-      hasHydrated: false,
-      setHasHydrated: (value) => set({ hasHydrated: value }),
-      login: async (email, password, remember) => {
-        const data = await api.authLogin({ email, password, remember });
-        set({ user: data.user, token: data.token });
-        return data;
-      },
-      register: async (values) => {
-        const data = await api.authRegister(values);
-        set({ user: data.user, token: data.token });
-        return data;
-      },
-      setUser: (user) => set({ user }),
-      logout: async () => {
-        try {
-          await api.authLogout(get().token);
-        } catch {
-          // Ignore network errors; always clear the local session.
-        }
-        set({ user: null, token: null });
-      },
+export function useAuthStore(selector) {
+  const auth = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
+
+  const store = useMemo(
+    () => ({
+      ...auth,
+      login: (email, password, remember) => dispatch(loginThunk({ email, password, remember })).unwrap(),
+      register: (values) => dispatch(registerThunk(values)).unwrap(),
+      setUser: (user) => dispatch(setUser(user)),
+      logout: () => dispatch(logoutThunk()).unwrap(),
     }),
-    { name: "zoelit-auth", skipHydration: true }
-  )
-);
+    [auth, dispatch]
+  );
+
+  return selector ? selector(store) : store;
+}

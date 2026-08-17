@@ -6,21 +6,19 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { Button, Card, Input, Label } from "@/components/ui";
-import { adminUser } from "@/lib/admin-data";
-
-const accountSummary = [
-  { label: "Member since", value: "Jan 12, 2026" },
-  { label: "Last login", value: "Today, 9:42 AM" },
-  { label: "Active sessions", value: "3 devices" },
-];
+import { useAdminAuthStore } from "@/store/admin-auth-store";
 
 export default function AdminProfilePage() {
+  const admin = useAdminAuthStore((state) => state.admin);
+  const fallback = { name: "ZoeLit Admin", email: "admin@zoelit.com", role: "admin", phone: "" };
+  const adminInfo = { ...fallback, ...(admin || {}) };
+
   return (
     <div>
       <div className="grid items-stretch gap-6 xl:grid-cols-[360px_1fr]">
-        <AdminIdentityCard />
+        <AdminIdentityCard admin={adminInfo} />
         <div className="space-y-6">
-          <AdminPersonalInfoCard />
+          <AdminPersonalInfoCard admin={adminInfo} />
           <AdminSecurityCard />
         </div>
       </div>
@@ -28,13 +26,17 @@ export default function AdminProfilePage() {
   );
 }
 
-function AdminIdentityCard() {
+function AdminIdentityCard({ admin }) {
+  const accountSummary = [
+    { label: "Role", value: "Store admin" },
+    { label: "Email", value: admin.email || "—" },
+  ];
   return (
     <Card className="h-full transition duration-150 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-200/70 dark:hover:shadow-black/20">
-      <AvatarEditor initials={adminUser.name.slice(0, 1)} label="Edit admin photo" />
-      <h2 className="mt-5 font-heading text-h2 font-semibold">{adminUser.name}</h2>
-      <p className="mt-1 text-body font-regular text-slate-500 dark:text-slate-400">{adminUser.email}</p>
-      <div className="mt-4"><AdminStatusBadge>{adminUser.role}</AdminStatusBadge></div>
+      <AvatarEditor initials={admin.name.slice(0, 1)} label="Edit admin photo" />
+      <h2 className="mt-5 font-heading text-h2 font-semibold">{admin.name}</h2>
+      <p className="mt-1 text-body font-regular text-slate-500 dark:text-slate-400">{admin.email}</p>
+      <div className="mt-4"><AdminStatusBadge>{admin.role}</AdminStatusBadge></div>
       <div className="mt-6 rounded-md bg-slate-50 p-4 ring-1 ring-slate-100 transition hover:bg-white dark:bg-slate-950 dark:ring-slate-800 dark:hover:bg-slate-900">
         <ShieldCheck className="size-6 text-blue-600 dark:text-blue-300" />
         <p className="mt-3 text-body font-semibold">Admin permissions</p>
@@ -55,9 +57,9 @@ function AdminIdentityCard() {
   );
 }
 
-function AdminPersonalInfoCard() {
+function AdminPersonalInfoCard({ admin }) {
   const [saved, setSaved] = useState(false);
-  const form = useForm({ defaultValues: { name: adminUser.name, email: adminUser.email, phone: adminUser.phone } });
+  const form = useForm({ defaultValues: { name: admin.name, email: admin.email, phone: admin.phone || "" } });
 
   function onSubmit(values) {
     setSaved(true);
@@ -98,7 +100,7 @@ function AdminSecurityCard() {
   return (
     <Card className="transition duration-150 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-200/70 dark:hover:shadow-black/20">
       <div className="flex items-center gap-3"><KeyRound className="size-5 text-blue-600" /><h2 className="font-heading text-h2 font-semibold">Security</h2></div>
-      <p className="mt-2 text-body font-regular leading-6 text-slate-500 dark:text-slate-400">Update the mock admin password controls. Real authentication can be connected later.</p>
+      <p className="mt-2 text-body font-regular leading-6 text-slate-500 dark:text-slate-400">Change the password used to sign in to the admin panel.</p>
       <form onSubmit={form.handleSubmit(onSubmit)} className="mt-5 grid gap-4 md:grid-cols-2">
         <PasswordField label="Current password" name="currentPassword" form={form} autoComplete="current-password" placeholder="Current password" show={showCurrentPassword} onToggle={() => setShowCurrentPassword((value) => !value)} />
         <PasswordField label="New password" name="newPassword" form={form} autoComplete="new-password" placeholder="New password" show={showNewPassword} onToggle={() => setShowNewPassword((value) => !value)} />

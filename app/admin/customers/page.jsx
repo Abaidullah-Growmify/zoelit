@@ -1,10 +1,11 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { Search } from "lucide-react";
+import { useEffect, useState } from "react";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminTable } from "@/components/admin-table";
-import { Button, Card, Input, Skeleton } from "@/components/ui";
+import Pagination from "@/components/pagination";
+import { Card, Input, Skeleton } from "@/components/ui";
 import { getAdminCustomers } from "@/lib/api";
 import { money, shortDate } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
@@ -15,11 +16,9 @@ export default function AdminCustomersPage() {
   const token = useAdminAuthStore((state) => state.token);
   const [rows, setRows] = useState(null);
   const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [keyword, setKeyword] = useState("");
   const [debouncedKeyword, setDebouncedKeyword] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -28,29 +27,29 @@ export default function AdminCustomersPage() {
   }, [keyword]);
 
   useEffect(() => {
-    setPage(1);
-  }, [debouncedKeyword]);
-
-  const load = useCallback(async () => {
+    let active = true;
     if (!token) return;
-    setLoading(true);
-    try {
-      const data = await getAdminCustomers({ page, limit: PAGE_SIZE, keyword: debouncedKeyword || undefined }, token);
-      setRows(data.customers || []);
-      setTotal(data.pagination?.total ?? 0);
-      setTotalPages(data.pagination?.totalPages ?? 1);
-      setError("");
-    } catch (loadError) {
-      setError(loadError.message || "Could not load customers.");
-      setRows([]);
-    } finally {
-      setLoading(false);
-    }
+    getAdminCustomers({ page, limit: PAGE_SIZE, keyword: debouncedKeyword || undefined }, token)
+      .then((data) => {
+        if (!active) return;
+        setRows(data.customers || []);
+        setTotalPages(data.pagination?.totalPages ?? 1);
+        setError("");
+      })
+      .catch((loadError) => {
+        if (!active) return;
+        setError(loadError.message || "Could not load customers.");
+        setRows([]);
+      });
+    return () => {
+      active = false;
+    };
   }, [token, page, debouncedKeyword]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  function handleSearchChange(value) {
+    setKeyword(value);
+    setPage(1);
+  }
 
   const columns = [
     { key: "name", header: "Customer", sortable: true, accessor: "name", cellClassName: "font-semibold text-slate-950 dark:text-white", render: (customer) => <CustomerCell customer={customer} /> },
@@ -61,16 +60,13 @@ export default function AdminCustomersPage() {
     { key: "joined", header: "Joined", sortable: true, accessor: "joined", render: (customer) => shortDate(customer.joined) },
   ];
 
-  const showingStart = rows?.length ? (page - 1) * PAGE_SIZE + 1 : 0;
-  const showingEnd = Math.min(page * PAGE_SIZE, total);
-
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-xl text-body font-regular text-slate-600 dark:text-slate-300">All registered customers with their order history and lifetime spend.</p>
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-          <Input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="Search customers" aria-label="Search customers" className="w-64 pl-10" />
+          <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search customers" aria-label="Search customers" className="w-64 pl-10" />
         </div>
       </div>
 
@@ -95,14 +91,12 @@ export default function AdminCustomersPage() {
             hideSearch
             hidePagination
           />
-          <div className="flex flex-col gap-3 text-body sm:flex-row sm:items-center sm:justify-between">
-            <p className="font-regular text-slate-600 dark:text-slate-300">Showing {showingStart}-{showingEnd} of {total.toLocaleString()} customers</p>
-            <div className="flex items-center gap-2">
-              <Button variant="secondary" size="sm" disabled={page <= 1 || loading} onClick={() => setPage((current) => Math.max(1, current - 1))}><ChevronLeft className="size-4" />Previous</Button>
-              <span className="px-2 text-slate-600 dark:text-slate-300">Page {loading ? "…" : page} of {Math.max(1, totalPages)}</span>
-              <Button variant="secondary" size="sm" disabled={page >= totalPages || loading} onClick={() => setPage((current) => Math.min(totalPages, current + 1))}>Next<ChevronRight className="size-4" /></Button>
-            </div>
-          </div>
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={(p) => setPage(p)}
+            className="mt-6"
+          />
         </>
       )}
     </div>

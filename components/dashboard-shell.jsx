@@ -64,14 +64,14 @@ export function DashboardShell({ children }) {
 
   return (
     <div className="min-h-screen bg-slate-100 bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,0.10),transparent_32rem)] dark:bg-slate-950 dark:bg-[radial-gradient(circle_at_top_right,rgba(96,165,250,0.14),transparent_30rem)]">
-      <div className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/90 px-4 backdrop-blur lg:hidden dark:border-slate-800 dark:bg-slate-900/90">
+      <div className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/90 px-4 backdrop-blur lg:hidden print:hidden dark:border-slate-800 dark:bg-slate-900/90">
         <Link href="/dashboard" className="font-extrabold tracking-tight"><span className="text-blue-600">Zoe</span>Lit</Link>
         <button className="grid size-10 place-items-center rounded-sm border border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" onClick={() => setMobileOpen(true)} aria-label="Open dashboard menu"><Menu className="size-5" /></button>
       </div>
-      <aside className={cn("fixed inset-y-0 left-0 z-30 hidden border-r border-slate-200/80 bg-white/95 shadow-[12px_0_50px_rgba(15,23,42,0.04)] backdrop-blur transition-[width] duration-200 lg:block dark:border-slate-800 dark:bg-slate-900/95", sidebarCollapsed ? "w-32 p-3" : "w-72 p-5")}>{sidebar}</aside>
-      {mobileOpen ? <div className="fixed inset-0 z-50 lg:hidden"><div className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onClick={() => setMobileOpen(false)} /><aside className="absolute inset-y-0 left-0 w-80 overflow-hidden bg-white p-5 shadow-2xl dark:bg-slate-900"><button className="mb-4 ml-auto grid size-10 place-items-center rounded-sm border border-slate-200 dark:border-slate-700" onClick={() => setMobileOpen(false)} aria-label="Close dashboard menu"><X className="size-5" /></button>{mobileSidebar}</aside></div> : null}
+      <aside className={cn("fixed inset-y-0 left-0 z-30 hidden border-r border-slate-200/80 bg-white/95 shadow-[12px_0_50px_rgba(15,23,42,0.04)] backdrop-blur transition-[width] duration-200 lg:block print:hidden dark:border-slate-800 dark:bg-slate-900/95", sidebarCollapsed ? "w-32 p-3" : "w-72 p-5")}>{sidebar}</aside>
+      {mobileOpen ? <div className="fixed inset-0 z-50 lg:hidden print:hidden"><div className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onClick={() => setMobileOpen(false)} /><aside className="absolute inset-y-0 left-0 w-80 overflow-hidden bg-white p-5 shadow-2xl dark:bg-slate-900"><button className="mb-4 ml-auto grid size-10 place-items-center rounded-sm border border-slate-200 dark:border-slate-700" onClick={() => setMobileOpen(false)} aria-label="Close dashboard menu"><X className="size-5" /></button>{mobileSidebar}</aside></div> : null}
       <main className={cn("transition-[padding] duration-200", sidebarCollapsed ? "lg:pl-32" : "lg:pl-72")}>
-        <div className="relative z-40 overflow-visible border-b border-slate-200/80 bg-white/90 shadow-[0_1px_0_rgba(15,23,42,0.03)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/90">
+        <div className="relative z-40 overflow-visible border-b border-slate-200/80 bg-white/90 shadow-[0_1px_0_rgba(15,23,42,0.03)] backdrop-blur-xl print:hidden dark:border-slate-800 dark:bg-slate-900/90">
           <div className="container-page flex min-h-20 flex-col justify-center gap-4 py-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="min-w-0">
               <p className="text-meta font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">Account / {activeItem.label}</p>

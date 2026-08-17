@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import * as api from "@/lib/api";
 import { useAuthStore } from "@/store/auth-store";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
@@ -9,30 +9,29 @@ import { DashboardPageHeader } from "@/components/dashboard-page-header";
 import { statuses } from "@/lib/data";
 import { money, shortDate } from "@/lib/utils";
 import { OrdersSkeleton } from "@/components/skeletons";
+import { usePolling } from "@/lib/use-polling";
 
 export default function OrdersPage() {
   const token = useAuthStore((state) => state.token);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let active = true;
+  const load = useCallback(() => {
     if (!token) return;
     api
       .getOrders(token)
       .then((res) => {
-        if (active) {
-          setOrders(res.orders.map((order) => ({ ...order, id: order._id })));
-          setLoading(false);
-        }
+        setOrders(res.orders.map((order) => ({ ...order, id: order._id })));
+        setLoading(false);
       })
-      .catch(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
+      .catch(() => setLoading(false));
   }, [token]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  usePolling(load, [token], 30000, !loading);
 
   const columns = [
     { key: "orderNumber", header: "Order Number", sortable: true, accessor: "orderNumber", cellClassName: "font-semibold tabular-nums text-slate-950 dark:text-white", render: (order) => `#${order.orderNumber}` },

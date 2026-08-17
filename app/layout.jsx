@@ -2,6 +2,7 @@ import { Inter, Sora } from "next/font/google";
 import Script from "next/script";
 import { Toaster } from "sonner";
 import { StoreHydration } from "@/components/store-hydration";
+import { ReduxProvider } from "@/store/provider";
 import "./globals.css";
 
 const sora = Sora({ variable: "--font-display", subsets: ["latin"], weight: ["400", "500", "600", "700", "800"] });
@@ -34,9 +35,11 @@ export default function RootLayout({ children }) {
         className="min-h-screen bg-background font-sans text-foreground antialiased"
         suppressHydrationWarning
       >
-        <StoreHydration />
-        {children}
-        <Toaster closeButton richColors position="top-right" />
+        <ReduxProvider>
+          <StoreHydration />
+          {children}
+          <Toaster closeButton richColors position="top-right" />
+        </ReduxProvider>
       </body>
     </html>
   );
