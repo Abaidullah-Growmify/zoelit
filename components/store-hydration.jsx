@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import * as api from "@/lib/api";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { hydrateAuth } from "@/store/slices/auth-slice";
+import { forceLogout, hydrateAuth, setSessionChecked } from "@/store/slices/auth-slice";
 import { hydrateAdminAuth } from "@/store/slices/admin-auth-slice";
 import { hydrateCart } from "@/store/slices/cart-slice";
 import { clearWishlist, fetchWishlist, hydrateWishlist } from "@/store/slices/wishlist-slice";
@@ -41,13 +42,43 @@ export function StoreHydration() {
 
     if (!token) {
       dispatch(hydrateWishlist({ items: [] }));
+      dispatch(setSessionChecked(true));
       return;
     }
 
-    dispatch(fetchWishlist(token)).catch(() => {
-      dispatch(hydrateWishlist({ items: [] }));
-    });
+    dispatch(fetchWishlist(token))
+      .catch(() => {
+        dispatch(hydrateWishlist({ items: [] }));
+      })
+      .finally(() => {
+        dispatch(setSessionChecked(true));
+      });
   }, [dispatch, hasHydratedAuth, token]);
+
+  useEffect(() => {
+    if (!hasHydratedAuth || !token) return;
+
+    api.getProfile(token).catch(() => {
+      // 401 is handled globally via the API layer event.
+    });
+  }, [hasHydratedAuth, token]);
+
+  useEffect(() => {
+    const handleAuthExpired = () => {
+      dispatch(forceLogout());
+      dispatch(clearWishlist());
+      dispatch(hydrateWishlist({ items: [] }));
+      dispatch(setSessionChecked(true));
+
+      if (typeof window !== "undefined") {
+        const next = encodeURIComponent(`${window.location.pathname}${window.location.search}`);
+        window.location.assign(`/login?next=${next}`);
+      }
+    };
+
+    window.addEventListener("zoelit-auth-expired", handleAuthExpired);
+    return () => window.removeEventListener("zoelit-auth-expired", handleAuthExpired);
+  }, [dispatch]);
 
   return null;
 }

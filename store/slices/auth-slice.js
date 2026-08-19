@@ -7,6 +7,7 @@ const initialState = {
   user: null,
   token: null,
   hasHydrated: false,
+  sessionChecked: false,
   status: "idle",
   error: null,
 };
@@ -38,12 +39,23 @@ const authSlice = createSlice({
     setUser: (state, action) => {
       state.user = action.payload;
     },
+    forceLogout: (state) => {
+      state.user = null;
+      state.token = null;
+      state.sessionChecked = false;
+      state.status = "idle";
+      state.error = null;
+    },
+    setSessionChecked: (state, action) => {
+      state.sessionChecked = Boolean(action.payload);
+    },
     hydrateAuth: (state, action) => {
       const stored = action.payload;
       if (stored && stored.user && stored.token) {
         state.user = stored.user;
         state.token = stored.token;
       }
+      state.sessionChecked = false;
       state.hasHydrated = true;
     },
   },
@@ -81,5 +93,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser, hydrateAuth } = authSlice.actions;
+export const { setUser, hydrateAuth, forceLogout, setSessionChecked } = authSlice.actions;
 export default authSlice.reducer;

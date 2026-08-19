@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Minus, PackageCheck, Plus, ShoppingBag } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui";
 import { money } from "@/lib/utils";
 import { useCartStore } from "@/store/cart-store";
@@ -24,7 +23,6 @@ export function ProductBuy({ product }) {
   function handleAdd() {
     addItem(product.id, quantity, { name: product.name, price: product.price, image: product.image, stock: product.stock });
     setJustAdded(true);
-    toast.success(`${quantity} × ${product.name} added to cart`);
     window.setTimeout(() => setJustAdded(false), 1400);
     openCart();
   }

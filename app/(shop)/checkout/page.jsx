@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Home, Loader2, MapPin, Minus, Plus } from "lucide-react";
 import { createCheckoutSession, getAddresses, validateCheckoutPrices } from "@/lib/api";
@@ -12,7 +13,9 @@ import { useProductStore } from "@/store/product-store";
 import { Button, Card, ErrorText, Input, Label, PageHeader, Textarea } from "@/components/ui";
 
 export default function CheckoutPage() {
+  const router = useRouter();
   const token = useAuthStore((state) => state.token);
+  const authReady = useAuthStore((state) => state.hasHydrated);
   const user = useAuthStore((state) => state.user);
   const getById = useProductStore((state) => state.getById);
   const fetchProducts = useProductStore((state) => state.fetchProducts);
@@ -46,6 +49,11 @@ export default function CheckoutPage() {
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!authReady) return;
+    if (!token) router.replace(`/login?next=${encodeURIComponent("/checkout")}`);
+  }, [authReady, token, router]);
 
   useEffect(() => {
     fetchProducts();

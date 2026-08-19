@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRef } from "react";
 import { ArrowUpRight, CheckCircle2, CircleX, Heart, ShoppingBag, Star } from "lucide-react";
-import { toast } from "sonner";
 import { money } from "@/lib/utils";
 import { useCartStore } from "@/store/cart-store";
 import { useAuthStore } from "@/store/auth-store";
@@ -67,20 +66,16 @@ export function ProductCard({ product }) {
   async function handleAddToCart() {
     await animateToCart();
     addItem(product.id);
-    toast.success(`${product.name} added to cart`);
   }
 
   function handleWishlistToggle(event) {
     event.preventDefault();
     event.stopPropagation();
     if (!token) {
-      toast.error("Please login to save wishlist items");
       return;
     }
 
-    toggleWishlist(product, token)
-      .then(() => toast.success(isWishlisted ? "Removed from wishlist" : "Saved to wishlist"))
-      .catch((error) => toast.error(error.message || "Could not update wishlist"));
+    toggleWishlist(product, token).catch(() => {});
   }
 
   return (
