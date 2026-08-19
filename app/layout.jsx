@@ -1,6 +1,5 @@
 import { Inter, Sora } from "next/font/google";
 import { Toaster } from "sonner";
-import { AuthGate } from "@/components/auth-gate";
 import { StoreHydration } from "@/components/store-hydration";
 import { ReduxProvider } from "@/store/provider";
 import "./globals.css";
@@ -22,7 +21,7 @@ export default function RootLayout({ children }) {
       >
         <ReduxProvider>
           <StoreHydration />
-          <AuthGate>{children}</AuthGate>
+          {children}
           <Toaster closeButton richColors position="top-right" />
         </ReduxProvider>
       </body>
