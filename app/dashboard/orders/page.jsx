@@ -6,6 +6,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminTable } from "@/components/admin-table";
 import { DashboardPageHeader } from "@/components/dashboard-page-header";
+import Pagination from "@/components/pagination";
 import { statuses } from "@/lib/data";
 import { money, shortDate } from "@/lib/utils";
 import { OrdersSkeleton } from "@/components/skeletons";
@@ -15,6 +16,24 @@ export default function OrdersPage() {
   const token = useAuthStore((state) => state.token);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ totalPages: 1 });
+
+  const handlePaginationChange = useCallback((next) => {
+    setPagination((current) => {
+      if (
+        current.page === next.page
+        && current.totalPages === next.totalPages
+        && current.totalItems === next.totalItems
+        && current.showingStart === next.showingStart
+        && current.showingEnd === next.showingEnd
+      ) {
+        return current;
+      }
+
+      return next;
+    });
+  }, []);
 
   const load = useCallback(() => {
     if (!token) return;
@@ -30,6 +49,10 @@ export default function OrdersPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (page > pagination.totalPages) setPage(pagination.totalPages);
+  }, [page, pagination.totalPages]);
 
   usePolling(load, [token], 30000, !loading);
 
@@ -58,8 +81,18 @@ export default function OrdersPage() {
         searchKeys={["orderNumber", "status", "payment", "tracking", "total"]}
         filters={[{ key: "status", label: "Filter orders by status", allLabel: "All statuses", options: statuses, value: (order) => order.status }]}
         rowActions={(order) => [{ label: "Details", href: `/dashboard/orders/${order.id}` }]}
-        pageSize={4}
+        pageSize={10}
+        page={page}
+        onPageChange={setPage}
+        onPaginationChange={handlePaginationChange}
+        hidePagination
+        disableInitialSort
       />
+      {pagination.totalPages > 1 ? (
+        <div className="mt-8 flex justify-center">
+          <Pagination page={page} totalPages={pagination.totalPages} onPageChange={setPage} />
+        </div>
+      ) : null}
     </div>
   );
 }

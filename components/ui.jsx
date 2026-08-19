@@ -49,7 +49,16 @@ export function SectionHeader({ eyebrow, title, action, align = "left", classNam
 }
 
 export function Input({ className, ...props }) {
-  return <input className={cn("h-11 w-full rounded-sm border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:placeholder:text-slate-500", className)} {...props} />;
+  return (
+    <input
+      className={cn(
+        "h-11 w-full rounded-sm border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 dark:placeholder:text-slate-500",
+        "aria-[invalid=true]:border-rose-500 aria-[invalid=true]:ring-1 aria-[invalid=true]:ring-rose-500/30 aria-[invalid=true]:shadow-[0_0_0_1px_rgba(244,63,94,0.12)] aria-[invalid=true]:text-slate-900 aria-[invalid=true]:focus:border-rose-500 aria-[invalid=true]:focus:ring-4 aria-[invalid=true]:focus:ring-rose-500/10 aria-[invalid=true]:focus:shadow-[0_0_0_4px_rgba(244,63,94,0.12)]",
+        className
+      )}
+      {...props}
+    />
+  );
 }
 
 export function Textarea({ className, ...props }) {

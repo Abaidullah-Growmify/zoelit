@@ -14,7 +14,7 @@ const items = [
   { href: "/dashboard/orders", label: "My Orders", icon: ShoppingBag },
   { href: "/dashboard/profile", label: "Profile", icon: User },
   { href: "/dashboard/addresses", label: "Addresses", icon: MapPin },
-  { href: "/products", label: "Wishlist", icon: Heart },
+  { href: "/dashboard/wishlist", label: "Wishlist", icon: Heart },
 ];
 
 const sidebarItems = items.filter((item) => item.href !== "/dashboard/profile");

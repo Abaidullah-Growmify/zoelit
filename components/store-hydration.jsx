@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import { useAppDispatch } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { hydrateAuth } from "@/store/slices/auth-slice";
 import { hydrateAdminAuth } from "@/store/slices/admin-auth-slice";
 import { hydrateCart } from "@/store/slices/cart-slice";
+import { clearWishlist, fetchWishlist, hydrateWishlist } from "@/store/slices/wishlist-slice";
 
 function readStorage(key) {
   if (typeof localStorage === "undefined") return null;
@@ -20,6 +21,8 @@ function readStorage(key) {
 
 export function StoreHydration() {
   const dispatch = useAppDispatch();
+  const token = useAppSelector((state) => state.auth.token);
+  const hasHydratedAuth = useAppSelector((state) => state.auth.hasHydrated);
 
   useEffect(() => {
     const auth = readStorage("zoelit-auth");
@@ -30,6 +33,21 @@ export function StoreHydration() {
     dispatch(hydrateAdminAuth(adminAuth));
     dispatch(hydrateCart(cart?.items ? { items: cart.items } : cart));
   }, [dispatch]);
+
+  useEffect(() => {
+    if (!hasHydratedAuth) return;
+
+    dispatch(clearWishlist());
+
+    if (!token) {
+      dispatch(hydrateWishlist({ items: [] }));
+      return;
+    }
+
+    dispatch(fetchWishlist(token)).catch(() => {
+      dispatch(hydrateWishlist({ items: [] }));
+    });
+  }, [dispatch, hasHydratedAuth, token]);
 
   return null;
 }

@@ -3,15 +3,20 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRef } from "react";
-import { ArrowUpRight, CheckCircle2, CircleX, ShoppingBag, Star } from "lucide-react";
+import { ArrowUpRight, CheckCircle2, CircleX, Heart, ShoppingBag, Star } from "lucide-react";
 import { toast } from "sonner";
 import { money } from "@/lib/utils";
 import { useCartStore } from "@/store/cart-store";
+import { useAuthStore } from "@/store/auth-store";
+import { useWishlistStore } from "@/store/wishlist-store";
 import { Button, Card } from "@/components/ui";
 
 export function ProductCard({ product }) {
   const imageRef = useRef(null);
   const addItem = useCartStore((state) => state.addItem);
+  const token = useAuthStore((state) => state.token);
+  const toggleWishlist = useWishlistStore((state) => state.toggleItem);
+  const isWishlisted = useWishlistStore((state) => state.hasItem(product.id));
 
   async function animateToCart() {
     const source = imageRef.current;
@@ -65,8 +70,30 @@ export function ProductCard({ product }) {
     toast.success(`${product.name} added to cart`);
   }
 
+  function handleWishlistToggle(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!token) {
+      toast.error("Please login to save wishlist items");
+      return;
+    }
+
+    toggleWishlist(product, token)
+      .then(() => toast.success(isWishlisted ? "Removed from wishlist" : "Saved to wishlist"))
+      .catch((error) => toast.error(error.message || "Could not update wishlist"));
+  }
+
   return (
-    <Card className="group flex h-full flex-col overflow-hidden rounded-lg border-slate-200 bg-white p-0 shadow-sm ring-1 ring-transparent transition duration-300 hover:-translate-y-1 hover:border-blue-300 hover:shadow-2xl hover:shadow-slate-950/10 hover:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:hover:border-blue-500/50 dark:hover:ring-blue-500/10">
+    <Card className="group relative flex h-full flex-col overflow-hidden rounded-lg border-slate-200 bg-white p-0 shadow-sm ring-1 ring-transparent transition duration-300 hover:-translate-y-1 hover:border-blue-300 hover:shadow-2xl hover:shadow-slate-950/10 hover:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:hover:border-blue-500/50 dark:hover:ring-blue-500/10">
+      <button
+        type="button"
+        onClick={handleWishlistToggle}
+        aria-pressed={isWishlisted}
+        aria-label={isWishlisted ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`}
+        className={`absolute right-5 top-5 z-20 grid size-10 place-items-center rounded-full border shadow-sm transition ${isWishlisted ? "border-rose-200 bg-rose-50 text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300" : "border-white/80 bg-white/95 text-slate-500 hover:border-rose-200 hover:text-rose-600 dark:border-slate-700 dark:bg-slate-950/95 dark:text-slate-300 dark:hover:border-rose-500/30 dark:hover:text-rose-300"}`}
+      >
+        <Heart className="size-4" fill={isWishlisted ? "currentColor" : "none"} />
+      </button>
       <Link href={`/products/${product.id}`} className="block p-2 pb-0 focus-visible:outline-none">
         <div ref={imageRef} className="relative overflow-hidden rounded-lg bg-slate-100 p-2 transition duration-300 dark:bg-slate-900">
           <Image src={product.image} alt={product.name} width={700} height={525} className="aspect-[4/3] w-full rounded-lg object-cover shadow-sm transition duration-500 group-hover:scale-[1.035] group-hover:shadow-md" />
@@ -88,7 +115,7 @@ export function ProductCard({ product }) {
           ) : null}
         </div>
         <div className="flex items-start justify-between gap-4">
-          <Link href={`/products/${product.id}`} title={product.name} className="line-clamp-2 min-h-10 font-heading text-h3 font-semibold leading-tight tracking-[-0.02em] text-slate-950 transition hover:text-blue-700 focus-visible:outline-none focus-visible:text-blue-700 dark:text-white dark:hover:text-blue-300 dark:focus-visible:text-blue-300">{product.name}</Link>
+          <Link href={`/products/${product.id}`} title={product.name} className="min-w-0 line-clamp-2 min-h-10 font-heading text-h3 font-semibold leading-tight tracking-[-0.02em] text-slate-950 transition hover:text-blue-700 focus-visible:outline-none focus-visible:text-blue-700 dark:text-white dark:hover:text-blue-300 dark:focus-visible:text-blue-300">{product.name}</Link>
           <span className="shrink-0 font-heading text-h3 font-semibold tabular-nums tracking-[-0.02em] text-blue-700 dark:text-blue-300">{product.price > 0 ? money(product.price) : "On request"}</span>
         </div>
         <p className="mt-2 line-clamp-2 min-h-10 text-body font-regular text-slate-600 dark:text-slate-300">{product.description}</p>

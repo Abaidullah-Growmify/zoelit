@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ChevronDown, ChevronUp, Eye, MoreVertical, Search } from "lucide-react";
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Button, Card, Input, Select } from "@/components/ui";
 import Pagination from "@/components/pagination";
 import { cn } from "@/lib/utils";
@@ -25,6 +25,9 @@ export function AdminTable({
   hideSearch = false,
   hidePagination = false,
   disableInitialSort = false,
+  page: controlledPage,
+  onPageChange,
+  onPaginationChange,
   className,
   wrapperClassName,
   tableClassName,
@@ -44,10 +47,10 @@ export function AdminTable({
     );
   }
 
-  return <AdminDataTable columns={columns} data={data} filters={filters} searchPlaceholder={searchPlaceholder} searchKeys={searchKeys} rowActions={rowActions} title={title} description={description} action={action} pageSize={pageSize} zebra={zebra} hideSearch={hideSearch} hidePagination={hidePagination} disableInitialSort={disableInitialSort} className={className} wrapperClassName={wrapperClassName} tableClassName={tableClassName} />;
+  return <AdminDataTable columns={columns} data={data} filters={filters} searchPlaceholder={searchPlaceholder} searchKeys={searchKeys} rowActions={rowActions} title={title} description={description} action={action} pageSize={pageSize} zebra={zebra} hideSearch={hideSearch} hidePagination={hidePagination} disableInitialSort={disableInitialSort} page={controlledPage} onPageChange={onPageChange} onPaginationChange={onPaginationChange} className={className} wrapperClassName={wrapperClassName} tableClassName={tableClassName} />;
 }
 
-function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys, rowActions, title, description, action, pageSize, zebra, hideSearch, hidePagination, disableInitialSort, className, wrapperClassName, tableClassName }) {
+function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys, rowActions, title, description, action, pageSize, zebra, hideSearch, hidePagination, disableInitialSort, page: controlledPage, onPageChange, onPaginationChange, className, wrapperClassName, tableClassName }) {
   const [query, setQuery] = useState("");
   const [filterValues, setFilterValues] = useState(() => Object.fromEntries(filters.map((filter) => [filter.key, filter.allLabel || "All"])));
   const [sort, setSort] = useState(() => {
@@ -55,8 +58,10 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
     const firstSortable = columns.find((column) => column.sortable);
     return firstSortable ? { key: firstSortable.key, direction: "asc" } : null;
   });
-  const [page, setPage] = useState(1);
+  const [internalPage, setInternalPage] = useState(1);
   const deferredQuery = useDeferredValue(query);
+  const page = controlledPage ?? internalPage;
+  const setPage = onPageChange || setInternalPage;
 
   const filteredData = useMemo(() => {
     const normalizedQuery = deferredQuery.trim().toLowerCase();
@@ -85,6 +90,17 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
   const showingStart = sortedData.length ? pageStart + 1 : 0;
   const showingEnd = Math.min(pageStart + pageSize, sortedData.length);
   const hasActions = typeof rowActions === "function";
+
+  useEffect(() => {
+    if (!onPaginationChange) return;
+    onPaginationChange({
+      page: safePage,
+      totalPages,
+      totalItems: sortedData.length,
+      showingStart,
+      showingEnd,
+    });
+  }, [onPaginationChange, safePage, totalPages, sortedData.length, showingStart, showingEnd]);
 
   function updateQuery(value) {
     setQuery(value);

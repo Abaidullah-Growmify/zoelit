@@ -5,6 +5,7 @@ import authReducer from "./slices/auth-slice";
 import adminAuthReducer from "./slices/admin-auth-slice";
 import cartReducer from "./slices/cart-slice";
 import productReducer from "./slices/product-slice";
+import wishlistReducer from "./slices/wishlist-slice";
 
 const STORAGE_KEYS = {
   auth: "zoelit-auth",
@@ -28,6 +29,7 @@ export function makeStore() {
       adminAuth: adminAuthReducer,
       cart: cartReducer,
       products: productReducer,
+      wishlist: wishlistReducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware().concat((store) => (next) => (action) => {

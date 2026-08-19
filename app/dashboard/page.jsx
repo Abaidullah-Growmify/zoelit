@@ -1,15 +1,15 @@
 "use client";
 
-import Link from "next/link";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ArrowRight, Calculator, Clock, MapPin, Package, PackageCheck, Wallet } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import * as api from "@/lib/api";
 import { money, shortDate } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminStatCard } from "@/components/admin-stat-card";
 import { AdminTable } from "@/components/admin-table";
+import Pagination from "@/components/pagination";
 import { Button, Card } from "@/components/ui";
 import { DashboardPageHeader } from "@/components/dashboard-page-header";
 import { DashboardSkeleton } from "@/components/skeletons";
@@ -18,6 +18,24 @@ export default function DashboardPage() {
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
   const [data, setData] = useState(null);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ totalPages: 1 });
+
+  const handlePaginationChange = useCallback((next) => {
+    setPagination((current) => {
+      if (
+        current.page === next.page
+        && current.totalPages === next.totalPages
+        && current.totalItems === next.totalItems
+        && current.showingStart === next.showingStart
+        && current.showingEnd === next.showingEnd
+      ) {
+        return current;
+      }
+
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -32,6 +50,10 @@ export default function DashboardPage() {
       active = false;
     };
   }, [token]);
+
+  useEffect(() => {
+    if (page > pagination.totalPages) setPage(pagination.totalPages);
+  }, [page, pagination.totalPages]);
 
   if (!data) return <DashboardSkeleton />;
 
@@ -72,14 +94,18 @@ export default function DashboardPage() {
           searchPlaceholder="Search recent orders"
           searchKeys={["id", "status", "total"]}
           filters={[{ key: "status", label: "Filter recent orders by status", allLabel: "All statuses", options: Array.from(new Set(recentOrders.map((order) => order.status))), value: (order) => order.status }]}
-          rowActions={(order) => [{ label: "View", href: `/dashboard/orders/${order._id}` }]}
           pageSize={5}
+          page={page}
+          onPageChange={setPage}
+          onPaginationChange={handlePaginationChange}
+          hidePagination
+          disableInitialSort
         />
-        <div className="mt-4 flex justify-end">
-          <Link href="/dashboard/orders" aria-label="Open all orders" className="grid size-9 place-items-center rounded-sm text-blue-600 transition hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-blue-500/10">
-            <ArrowRight className="size-4" />
-          </Link>
-        </div>
+        {pagination.totalPages > 1 ? (
+          <div className="mt-6 flex justify-center">
+            <Pagination page={page} totalPages={pagination.totalPages} onPageChange={setPage} />
+          </div>
+        ) : null}
       </div>
     </div>
   );

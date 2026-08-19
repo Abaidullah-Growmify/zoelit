@@ -6,6 +6,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import * as api from "@/lib/api";
 import { useAuthStore } from "@/store/auth-store";
+import { useWishlistStore } from "@/store/wishlist-store";
 import { AdminStatCard } from "@/components/admin-stat-card";
 import { Button, Card, Input, Label } from "@/components/ui";
 import { DashboardPageHeader } from "@/components/dashboard-page-header";
@@ -16,6 +17,7 @@ export default function ProfilePage() {
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
+  const wishlistCount = useWishlistStore((state) => state.count());
   const [ordersCount, setOrdersCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -53,7 +55,7 @@ export default function ProfilePage() {
       <div className="mt-8 grid gap-4 md:grid-cols-3">
         <AdminStatCard label="Member Since" value="ZoeLit member" icon={CalendarDays} helper="Registered account" tone="blue" />
         <AdminStatCard label="Total Orders" value={ordersCount} icon={ShoppingBag} helper="Lifetime purchases" tone="green" />
-        <AdminStatCard label="Wishlist Items" value="8" icon={Heart} helper="Saved for later" tone="pink" />
+        <AdminStatCard label="Wishlist Items" value={wishlistCount} icon={Heart} helper="Saved for later" tone="pink" />
       </div>
       <div className="mt-6 grid items-stretch gap-6 xl:grid-cols-[320px_1fr]">
         <CustomerIdentityCard user={profileUser} />
