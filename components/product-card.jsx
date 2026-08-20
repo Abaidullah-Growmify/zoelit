@@ -13,9 +13,11 @@ import { Button, Card } from "@/components/ui";
 export function ProductCard({ product }) {
   const imageRef = useRef(null);
   const addItem = useCartStore((state) => state.addItem);
+  const cartQuantity = useCartStore((state) => state.getItemQuantity(product.id));
   const token = useAuthStore((state) => state.token);
   const toggleWishlist = useWishlistStore((state) => state.toggleItem);
   const isWishlisted = useWishlistStore((state) => state.hasItem(product.id));
+  const remainingStock = Math.max((Number(product.stock) || 0) - cartQuantity, 0);
 
   async function animateToCart() {
     const source = imageRef.current;
@@ -64,8 +66,9 @@ export function ProductCard({ product }) {
   }
 
   async function handleAddToCart() {
+    if (remainingStock <= 0) return;
     await animateToCart();
-    addItem(product.id);
+    addItem(product.id, 1, product);
   }
 
   function handleWishlistToggle(event) {
@@ -115,7 +118,7 @@ export function ProductCard({ product }) {
         </div>
         <p className="mt-2 line-clamp-2 min-h-10 text-body font-regular text-slate-600 dark:text-slate-300">{product.description}</p>
         <div className="mt-auto border-t border-slate-100 pt-4 dark:border-slate-800">
-          <Button className="w-full rounded-sm shadow-lg shadow-blue-600/20 active:translate-y-0" onClick={handleAddToCart} aria-label={`Add ${product.name} to cart`}>
+          <Button className="w-full rounded-sm shadow-lg shadow-blue-600/20 active:translate-y-0" onClick={handleAddToCart} aria-label={`Add ${product.name} to cart`} disabled={remainingStock <= 0}>
             <ShoppingBag className="size-4" /> Add to cart
           </Button>
         </div>

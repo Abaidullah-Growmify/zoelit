@@ -33,6 +33,7 @@ export function useCartStore(selector) {
       removeItem: (productId) => dispatch(removeItem(productId)),
       clearCart: () => dispatch(clearCart()),
       count: () => cart.items.reduce((sum, item) => sum + (Math.floor(Number(item.quantity)) || 0), 0),
+      getItemQuantity: (productId) => Math.floor(Number(cart.items.find((item) => item.productId === productId)?.quantity) || 0),
       subtotal,
     };
   }, [cart, products, dispatch]);

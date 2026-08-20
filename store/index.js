@@ -10,8 +10,26 @@ import wishlistReducer from "./slices/wishlist-slice";
 const STORAGE_KEYS = {
   auth: "zoelit-auth",
   adminAuth: "zoelit-admin-auth",
-  cart: "zoelit-cart",
+  cart: "zoelit-cart-guest",
+  cartLegacy: "zoelit-cart",
 };
+
+function getCartStorageKey(userId) {
+  const safeUserId = String(userId || "").trim();
+  return safeUserId ? `zoelit-cart-user:${safeUserId}` : STORAGE_KEYS.cart;
+}
+
+function readStorage(key) {
+  if (typeof localStorage === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed?.state ? parsed.state : parsed;
+  } catch {
+    return null;
+  }
+}
 
 function persistSlice(key, payload) {
   if (typeof localStorage === "undefined") return;
@@ -37,7 +55,19 @@ export function makeStore() {
         const state = store.getState();
         persistSlice(STORAGE_KEYS.auth, { user: state.auth.user, token: state.auth.token });
         persistSlice(STORAGE_KEYS.adminAuth, { admin: state.adminAuth.admin, token: state.adminAuth.token });
-        persistSlice(STORAGE_KEYS.cart, { items: state.cart.items });
+
+        if (String(action.type || "").startsWith("cart/")) {
+          const userId = state.auth.user?.id || state.auth.user?._id || "";
+          const cartKey = getCartStorageKey(userId);
+          const cartPayload = { items: state.cart.items };
+
+          persistSlice(cartKey, cartPayload);
+
+          if (!userId) {
+            persistSlice(STORAGE_KEYS.cartLegacy, cartPayload);
+          }
+        }
+
         return result;
       }),
   });
@@ -50,4 +80,4 @@ export function getStore() {
   return singletonStore;
 }
 
-export { STORAGE_KEYS };
+export { STORAGE_KEYS, getCartStorageKey, readStorage };

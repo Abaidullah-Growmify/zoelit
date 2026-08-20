@@ -316,6 +316,24 @@ export function OrderDetailSkeleton() {
   );
 }
 
+export function AuthGateSkeleton({ title = "Loading access...", description = "Checking your session and redirecting if needed." }) {
+  return (
+    <div className="grid min-h-screen place-items-center bg-white px-4 dark:bg-slate-950">
+      <Card className="w-full max-w-md p-6 shadow-sm">
+        <Skeleton className="mx-auto h-10 w-10 rounded-full" />
+        <Skeleton className="mx-auto mt-5 h-7 w-48 rounded-sm" />
+        <Skeleton className="mx-auto mt-3 h-4 w-72 max-w-full rounded-sm" />
+        <div className="mt-6 space-y-3">
+          <Skeleton className="h-11 w-full rounded-sm" />
+          <Skeleton className="h-11 w-full rounded-sm" />
+          <Skeleton className="h-11 w-2/3 rounded-sm" />
+        </div>
+        <p className="mt-5 text-center text-body font-regular text-slate-500 dark:text-slate-400">{title}<br />{description}</p>
+      </Card>
+    </div>
+  );
+}
+
 export function AddressSkeleton() {
   return (
     <div>

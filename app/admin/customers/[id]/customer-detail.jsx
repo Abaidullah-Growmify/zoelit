@@ -7,6 +7,7 @@ import { AdminPageHeader } from "@/components/admin-page-header";
 import { AdminStatCard } from "@/components/admin-stat-card";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminTable, AdminTableCell, AdminTableRow } from "@/components/admin-table";
+import { OrderNotesDialog } from "@/components/order-notes-dialog";
 import { Button, Card } from "@/components/ui";
 import { getAdminCustomer } from "@/lib/api";
 import { money, shortDate } from "@/lib/utils";
@@ -88,13 +89,14 @@ export function AdminCustomerDetail({ id }) {
               )}
             </div>
           </Card>
-          <AdminTable columns={["Order", "Date", "Status", "Payment", "Total", ""]}>
+          <AdminTable columns={["Order", "Date", "Status", "Payment", "Notes", "Total", ""]}>
             {orders.map((order) => (
               <AdminTableRow key={order.id}>
                 <AdminTableCell className="font-semibold tabular-nums text-slate-950 dark:text-white">{order.orderNumber ? `#${order.orderNumber}` : `#${order.id}`}</AdminTableCell>
                 <AdminTableCell>{shortDate(order.date)}</AdminTableCell>
                 <AdminTableCell><AdminStatusBadge>{order.status}</AdminStatusBadge></AdminTableCell>
                 <AdminTableCell><AdminStatusBadge>{order.payment}</AdminStatusBadge></AdminTableCell>
+                <AdminTableCell><OrderNotesDialog notes={order.notes} label={`View notes for order ${order.orderNumber || order.id}`} /></AdminTableCell>
                 <AdminTableCell className="font-semibold tabular-nums text-slate-950 dark:text-white">{money(order.total)}</AdminTableCell>
                 <AdminTableCell>
                   <Link aria-label={`Open order ${order.orderNumber || order.id}`} className="inline-grid size-9 place-items-center rounded-sm text-blue-600 transition hover:bg-blue-50 hover:text-blue-700 dark:text-blue-300 dark:hover:bg-blue-500/10" href={`/admin/orders/${order.id}`}><Eye className="size-4" /></Link>

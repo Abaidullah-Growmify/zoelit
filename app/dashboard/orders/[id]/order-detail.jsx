@@ -11,6 +11,7 @@ import { DashboardPageHeader } from "@/components/dashboard-page-header";
 import { Badge, Button, Card } from "@/components/ui";
 import { usePolling } from "@/lib/use-polling";
 import { InvoicePrint } from "@/components/invoice-print";
+import { BulletNotes } from "@/components/bullet-notes";
 
 export function OrderDetail({ id }) {
   const token = useAuthStore((state) => state.token);
@@ -121,6 +122,10 @@ export function OrderDetail({ id }) {
               <h2 className="font-heading text-h3 font-semibold">Payment</h2>
               <p className="mt-3"><Badge tone="slate">{order.payment}</Badge></p>
               <p className="mt-5 text-body font-regular text-slate-500 dark:text-slate-400">Tracking: {order.tracking || "Not available yet"}</p>
+            </Card>
+            <Card>
+              <h2 className="font-heading text-h3 font-semibold">Order notes</h2>
+              <div className="mt-3"><BulletNotes notes={order.notes} /></div>
             </Card>
             <Card>
               <h2 className="font-heading text-h3 font-semibold">Shipment</h2>

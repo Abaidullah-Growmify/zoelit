@@ -7,6 +7,7 @@ import { Bell, ChevronDown, Heart, Home, MapPin, Maximize2, Menu, Minimize2, Pan
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
+import { AuthGateSkeleton } from "@/components/skeletons";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 const items = [
@@ -60,7 +61,10 @@ export function DashboardShell({ children }) {
   const initials = getInitials(user?.name);
   const sidebar = <Sidebar collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} onToggleCollapsed={() => setSidebarCollapsed((collapsed) => !collapsed)} />;
   const mobileSidebar = <Sidebar collapsed={false} onNavigate={() => setMobileOpen(false)} />;
-  const loadingContent = !ready || !user;
+
+  if (!ready || !user) {
+    return <AuthGateSkeleton title="Checking customer access..." description="Redirecting to login if your session is missing or expired." />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-100 bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,0.10),transparent_32rem)] dark:bg-slate-950 dark:bg-[radial-gradient(circle_at_top_right,rgba(96,165,250,0.14),transparent_30rem)]">
@@ -106,7 +110,7 @@ export function DashboardShell({ children }) {
             </div>
           </div>
         </div>
-        <div className="container-page py-8 lg:py-10">{loadingContent ? null : children}</div>
+        <div className="container-page py-8 lg:py-10">{children}</div>
       </main>
     </div>
   );

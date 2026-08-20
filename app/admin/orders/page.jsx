@@ -4,6 +4,7 @@ import { Eye, Search } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminTable } from "@/components/admin-table";
+import { OrderNotesDialog } from "@/components/order-notes-dialog";
 import Pagination from "@/components/pagination";
 import { Card, Input, Select, Skeleton } from "@/components/ui";
 import { getAdminOrders } from "@/lib/api";
@@ -88,6 +89,7 @@ export default function AdminOrdersPage() {
     { key: "date", header: "Date", sortable: true, accessor: "date", render: (order) => shortDate(order.date) },
     { key: "status", header: "Status", accessor: "status", render: (order) => <AdminStatusBadge>{order.status}</AdminStatusBadge> },
     { key: "payment", header: "Payment", accessor: "payment", render: (order) => <AdminStatusBadge>{order.payment}</AdminStatusBadge> },
+    { key: "notes", header: "Notes", accessor: "notes", render: (order) => <OrderNotesDialog notes={order.notes} label={`View notes for order ${order.orderNumber || order.id}`} /> },
     { key: "tracking", header: "Tracking", accessor: "tracking", render: (order) => order.tracking || "Not assigned" },
     { key: "total", header: "Total", sortable: true, accessor: "total", cellClassName: "font-semibold tabular-nums text-slate-950 dark:text-white", render: (order) => money(order.total) },
   ];
@@ -125,6 +127,7 @@ export default function AdminOrdersPage() {
             pageSize={PAGE_SIZE}
             hideSearch
             hidePagination
+            disableInitialSort
             rowActions={(order) => [
               { label: `View order ${order.orderNumber}`, href: `/admin/orders/${order.id}`, icon: Eye },
             ]}

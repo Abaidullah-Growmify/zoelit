@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { Bell, ChevronDown, LayoutDashboard, Maximize2, Minimize2, Package, PanelLeftClose, PanelLeftOpen, Settings, ShoppingBag, Tags, Users, Menu, X } from "lucide-react";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { AdminPageSkeleton } from "@/components/skeletons";
+import { AuthGateSkeleton } from "@/components/skeletons";
 import { cn } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
 
@@ -68,7 +68,10 @@ export function AdminShell({ children }) {
   const initials = getInitials(admin?.name);
   const sidebar = <Sidebar collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} onToggleCollapsed={() => setSidebarCollapsed((collapsed) => !collapsed)} />;
   const mobileSidebar = <Sidebar collapsed={false} onNavigate={() => setMobileOpen(false)} />;
-  const loadingContent = !ready || !admin;
+
+  if (!ready || !admin) {
+    return <AuthGateSkeleton title="Checking admin access..." description="Redirecting to admin login if your session is missing or expired." />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-100 bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,0.10),transparent_32rem)] dark:bg-slate-950 dark:bg-[radial-gradient(circle_at_top_right,rgba(96,165,250,0.14),transparent_30rem)]">
@@ -116,7 +119,7 @@ export function AdminShell({ children }) {
             </div>
           </div>
         </div>
-        <div className="container-page py-8 lg:py-10">{loadingContent ? <AdminPageSkeleton variant="dashboard" /> : children}</div>
+        <div className="container-page py-8 lg:py-10">{children}</div>
       </main>
     </div>
   );

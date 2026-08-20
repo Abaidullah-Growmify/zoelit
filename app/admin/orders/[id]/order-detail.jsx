@@ -6,12 +6,13 @@ import { CheckCircle2, Loader2, Printer, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
-import { Button, Card, Input, Label, Select, Textarea } from "@/components/ui";
+import { Button, Card, Input, Label, Select } from "@/components/ui";
 import { cancelAdminOrder, getAdminOrder, updateAdminOrderStatus } from "@/lib/api";
 import { money, shortDate } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
 import { usePolling } from "@/lib/use-polling";
 import { InvoicePrint } from "@/components/invoice-print";
+import { BulletNotes, BulletTextarea } from "@/components/bullet-notes";
 
 const STATUS_OPTIONS = [
   "Pending",
@@ -167,6 +168,13 @@ export function AdminOrderDetail({ id }) {
                 <div className="mt-2"><AdminStatusBadge>{order.ingramSync === "submitted" ? "Synced" : order.ingramSync === "failed" ? "Failed" : order.ingramSync === "cancelled" ? "Cancelled" : "Not synced"}</AdminStatusBadge></div>
               </div>
             </Card>
+
+            <Card>
+              <h2 className="font-heading text-h2 font-semibold">Order notes</h2>
+              <div className="mt-3">
+                <BulletNotes notes={order.notes} />
+              </div>
+            </Card>
           </div>
 
           <div className="space-y-6">
@@ -186,7 +194,7 @@ export function AdminOrderDetail({ id }) {
                   <Input value={carrier} onChange={(event) => { setCarrier(event.target.value); dirtyRef.current = true; }} placeholder="DHL Express" />
                 </Field>
                 <Field label="Internal note">
-                  <Textarea className="min-h-24" value={note} onChange={(event) => { setNote(event.target.value); dirtyRef.current = true; }} placeholder="Optional note for the status update" />
+                  <BulletTextarea className="min-h-24" value={note} onChange={(event) => { setNote(event.target.value); dirtyRef.current = true; }} placeholder="Optional note for the status update" />
                 </Field>
                 <Button className="w-full" onClick={handleUpdate} disabled={saving}>
                   {saving ? <Loader2 className="size-4 animate-spin" /> : null} Update order

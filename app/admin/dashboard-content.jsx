@@ -6,6 +6,7 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 import { ArrowUpRight } from "lucide-react";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminTable } from "@/components/admin-table";
+import { OrderNotesDialog } from "@/components/order-notes-dialog";
 import { Card } from "@/components/ui";
 import { statuses } from "@/lib/data";
 import { money, shortDate } from "@/lib/utils";
@@ -17,6 +18,7 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
     { key: "date", header: "Date", sortable: true, accessor: "date", render: (order) => shortDate(order.date) },
     { key: "status", header: "Status", accessor: "status", render: (order) => <AdminStatusBadge>{order.status}</AdminStatusBadge> },
     { key: "payment", header: "Payment", accessor: "payment", render: (order) => <AdminStatusBadge>{order.payment}</AdminStatusBadge> },
+    { key: "notes", header: "Notes", accessor: "notes", render: (order) => <OrderNotesDialog notes={order.notes} label={`View notes for order ${order.orderNumber || order.id}`} /> },
     { key: "total", header: "Total", sortable: true, accessor: "total", cellClassName: "font-semibold tabular-nums text-slate-950 dark:text-white", render: (order) => money(order.total) },
   ];
   const trend = chartTrend(salesOverview);
@@ -115,6 +117,7 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
         rowActions={(order) => [
           { label: "View", href: `/admin/orders/${order.id}` },
         ]}
+        disableInitialSort
       />
     </>
   );

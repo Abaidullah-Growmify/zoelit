@@ -13,6 +13,7 @@ import Pagination from "@/components/pagination";
 import { Button, Card } from "@/components/ui";
 import { DashboardPageHeader } from "@/components/dashboard-page-header";
 import { DashboardSkeleton } from "@/components/skeletons";
+import { OrderNotesDialog } from "@/components/order-notes-dialog";
 
 export default function DashboardPage() {
   const token = useAuthStore((state) => state.token);
@@ -64,6 +65,7 @@ export default function DashboardPage() {
     { key: "date", header: "Date", sortable: true, accessor: "date", render: (order) => shortDate(order.date) },
     { key: "status", header: "Status", accessor: "status", render: (order) => <AdminStatusBadge>{order.status}</AdminStatusBadge> },
     { key: "total", header: "Total", sortable: true, accessor: "total", cellClassName: "font-semibold tabular-nums text-slate-950 dark:text-white", render: (order) => money(order.total) },
+    { key: "notes", header: "Notes", accessor: "notes", render: (order) => <OrderNotesDialog notes={order.notes} label={`View notes for order ${order.id}`} /> },
   ];
 
   return (

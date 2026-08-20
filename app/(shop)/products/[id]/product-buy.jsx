@@ -11,8 +11,10 @@ export function ProductBuy({ product }) {
   const [justAdded, setJustAdded] = useState(false);
   const addItem = useCartStore((state) => state.addItem);
   const openCart = useCartStore((state) => state.openCart);
+  const cartQuantity = useCartStore((state) => state.getItemQuantity(product.id));
 
-  const max = Math.max(product.stock, 1);
+  const remainingStock = Math.max((Number(product.stock) || 0) - cartQuantity, 0);
+  const max = Math.max(remainingStock, 1);
 
   function change(delta) {
     setQuantity((value) => Math.min(max, Math.max(1, value + delta)));
@@ -21,6 +23,7 @@ export function ProductBuy({ product }) {
   const outOfStock = product.stock <= 0;
 
   function handleAdd() {
+    if (remainingStock <= 0) return;
     addItem(product.id, quantity, { name: product.name, price: product.price, image: product.image, stock: product.stock });
     setJustAdded(true);
     window.setTimeout(() => setJustAdded(false), 1400);
@@ -70,9 +73,9 @@ export function ProductBuy({ product }) {
           </button>
         </div>
 
-        <Button onClick={handleAdd} disabled={outOfStock} className="h-12 flex-1 text-base">
+        <Button onClick={handleAdd} disabled={outOfStock || remainingStock <= 0} className="h-12 flex-1 text-base">
           <ShoppingBag className="size-4" />
-          {outOfStock ? "Out of stock" : justAdded ? "Added to cart" : "Add to cart"}
+          {outOfStock || remainingStock <= 0 ? "Limit reached" : justAdded ? "Added to cart" : "Add to cart"}
         </Button>
       </div>
     </>

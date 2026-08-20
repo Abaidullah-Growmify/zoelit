@@ -33,6 +33,12 @@ const adminAuthSlice = createSlice({
     setAdmin: (state, action) => {
       state.admin = action.payload;
     },
+    forceLogout: (state) => {
+      state.admin = null;
+      state.token = null;
+      state.status = "idle";
+      state.error = null;
+    },
     hydrateAdminAuth: (state, action) => {
       const stored = action.payload;
       if (stored && stored.admin && stored.token) {
@@ -64,5 +70,5 @@ const adminAuthSlice = createSlice({
   },
 });
 
-export const { setAdmin, hydrateAdminAuth } = adminAuthSlice.actions;
+export const { setAdmin, hydrateAdminAuth, forceLogout } = adminAuthSlice.actions;
 export default adminAuthSlice.reducer;

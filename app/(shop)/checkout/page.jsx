@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Home, Loader2, MapPin, Minus, Plus } from "lucide-react";
 import { createCheckoutSession, getAddresses, validateCheckoutPrices } from "@/lib/api";
@@ -10,12 +9,11 @@ import { money } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
 import { useCartStore } from "@/store/cart-store";
 import { useProductStore } from "@/store/product-store";
-import { Button, Card, ErrorText, Input, Label, PageHeader, Textarea } from "@/components/ui";
+import { Button, Card, ErrorText, Input, Label, PageHeader } from "@/components/ui";
+import { BulletTextarea } from "@/components/bullet-notes";
 
 export default function CheckoutPage() {
-  const router = useRouter();
   const token = useAuthStore((state) => state.token);
-  const authReady = useAuthStore((state) => state.hasHydrated);
   const user = useAuthStore((state) => state.user);
   const getById = useProductStore((state) => state.getById);
   const fetchProducts = useProductStore((state) => state.fetchProducts);
@@ -27,6 +25,54 @@ export default function CheckoutPage() {
   const [checkoutSessionKey, setCheckoutSessionKey] = useState("");
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [isMounted, setIsMounted] = useState(false);
+
+  const draftStorageKey = token ? `zoelit-checkout-draft:${user?.id || user?._id || "guest"}` : "zoelit-checkout-draft:guest";
+
+  function readDraft() {
+    if (typeof localStorage === "undefined") return null;
+    try {
+      const raw = localStorage.getItem(draftStorageKey);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function saveDraft(values, sessionKey = checkoutSessionKey) {
+    if (typeof localStorage === "undefined") return;
+    try {
+      localStorage.setItem(
+        draftStorageKey,
+        JSON.stringify({
+          sessionKey: sessionKey || "",
+          values: {
+            firstName: String(values.firstName || ""),
+            lastName: String(values.lastName || ""),
+            address: String(values.address || ""),
+            city: String(values.city || ""),
+            state: String(values.state || ""),
+            postal: String(values.postal || ""),
+            email: String(values.email || ""),
+            phone: String(values.phone || ""),
+            notes: String(values.notes || ""),
+          },
+        })
+      );
+    } catch {
+      // Ignore storage failures.
+    }
+  }
+
+  function clearDraft() {
+    if (typeof localStorage === "undefined") return;
+    try {
+      localStorage.removeItem(draftStorageKey);
+    } catch {
+      // Ignore storage failures.
+    }
+  }
 
   const form = useForm({
     defaultValues: {
@@ -51,9 +97,37 @@ export default function CheckoutPage() {
   }, []);
 
   useEffect(() => {
-    if (!authReady) return;
-    if (!token) router.replace(`/login?next=${encodeURIComponent("/checkout")}`);
-  }, [authReady, token, router]);
+    if (!isMounted) return;
+
+    const draft = readDraft();
+    if (!draft?.values) return;
+
+    form.reset({
+      firstName: draft.values.firstName || "",
+      lastName: draft.values.lastName || "",
+      address: draft.values.address || "",
+      city: draft.values.city || "",
+      state: draft.values.state || "",
+      postal: draft.values.postal || "",
+      email: draft.values.email || "",
+      phone: draft.values.phone || "",
+      notes: draft.values.notes || "",
+    });
+
+    if (draft.sessionKey) {
+      setCheckoutSessionKey(draft.sessionKey);
+    }
+  }, [form, isMounted]);
+
+  useEffect(() => {
+    if (!isMounted) return;
+
+    const subscription = form.watch((values) => {
+      saveDraft(values, checkoutSessionKey);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [checkoutSessionKey, form, isMounted]);
 
   useEffect(() => {
     fetchProducts();
@@ -129,6 +203,7 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (!user) return;
+    if (readDraft()?.values) return;
     if (user.email) form.setValue("email", user.email || "");
     if (user.phone) form.setValue("phone", user.phone || "");
     if (!token) return;
@@ -155,6 +230,7 @@ export default function CheckoutPage() {
       const billing = form.getValues();
       const sessionKey = checkoutSessionKey || globalThis.crypto.randomUUID();
       setCheckoutSessionKey(sessionKey);
+      saveDraft(billing, sessionKey);
 
       const products = items.map((item) => ({
         ingramPartNumber: item.productId,
@@ -267,7 +343,7 @@ export default function CheckoutPage() {
             <Field label="Postcode / Zip" name="postal" required form={form} error={errors.postal?.message} placeholder="Postcode / Zip" />
             <div className="md:col-span-2">
               <Label className="font-medium">Order Notes</Label>
-              <Textarea {...form.register("notes")} rows={4} placeholder="Notes about your order, e.g. delivery instructions." />
+              <BulletTextarea {...form.register("notes")} rows={4} placeholder="Notes about your order, e.g. delivery instructions." />
             </div>
           </div>
         </Card>

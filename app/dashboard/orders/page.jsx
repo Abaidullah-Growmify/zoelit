@@ -7,6 +7,7 @@ import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminTable } from "@/components/admin-table";
 import { DashboardPageHeader } from "@/components/dashboard-page-header";
 import Pagination from "@/components/pagination";
+import { OrderNotesDialog } from "@/components/order-notes-dialog";
 import { statuses } from "@/lib/data";
 import { money, shortDate } from "@/lib/utils";
 import { OrdersSkeleton } from "@/components/skeletons";
@@ -61,6 +62,7 @@ export default function OrdersPage() {
     { key: "date", header: "Date", sortable: true, accessor: "date", render: (order) => shortDate(order.date) },
     { key: "status", header: "Status", accessor: "status", render: (order) => <AdminStatusBadge>{order.status}</AdminStatusBadge> },
     { key: "payment", header: "Payment", accessor: "payment", render: (order) => <AdminStatusBadge>{order.payment}</AdminStatusBadge> },
+    { key: "notes", header: "Notes", accessor: "notes", render: (order) => <OrderNotesDialog notes={order.notes} label={`View notes for order ${order.orderNumber}`} /> },
     { key: "tracking", header: "Tracking", accessor: "tracking", render: (order) => order.tracking || "Not available" },
     { key: "total", header: "Total Amount", sortable: true, accessor: "total", cellClassName: "font-semibold tabular-nums text-slate-950 dark:text-white", render: (order) => money(order.total) },
   ];

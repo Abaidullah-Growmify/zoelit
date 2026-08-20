@@ -42,6 +42,7 @@ const cartSlice = createSlice({
     addItem: (state, action) => {
       const { productId, quantity = 1, product = null } = action.payload;
       const qty = Math.floor(Number(quantity)) || 1;
+      const requestedStock = Math.floor(Number(product?.stock) || 0);
       const snapshot = product
         ? {
             productId,
@@ -49,10 +50,33 @@ const cartSlice = createSlice({
             quantity: qty,
             price: Number(product.price) || 0,
             image: product.image || "",
-            stock: Number(product.stock) || 0,
+            stock: requestedStock,
           }
         : null;
       const existing = state.items.find((item) => item.productId === productId);
+      const currentQuantity = Math.floor(Number(existing?.quantity) || 0);
+      const stock = Number.isFinite(requestedStock) && requestedStock > 0
+        ? requestedStock
+        : Math.floor(Number(existing?.stock) || 0);
+
+      if (Number.isFinite(stock) && stock > 0) {
+        const remaining = Math.max(stock - currentQuantity, 0);
+        if (remaining <= 0) return;
+        const appliedQty = Math.min(qty, remaining);
+
+        if (existing) {
+          state.items = state.items.map((item) =>
+            item.productId === productId
+              ? { ...item, ...(snapshot || {}), quantity: currentQuantity + appliedQty, stock }
+              : item
+          );
+        } else {
+          state.items = [...state.items, { ...(snapshot || { productId }), quantity: appliedQty, stock }];
+        }
+
+        return;
+      }
+
       if (existing) {
         state.items = state.items.map((item) =>
           item.productId === productId
@@ -69,8 +93,11 @@ const cartSlice = createSlice({
       if (!Number.isFinite(qty) || qty <= 0) {
         state.items = state.items.filter((item) => item.productId !== productId);
       } else {
+        const existing = state.items.find((item) => item.productId === productId);
+        const stock = Math.floor(Number(existing?.stock) || 0);
+        const nextQty = stock > 0 ? Math.min(Math.floor(qty) || 1, stock) : Math.floor(qty) || 1;
         state.items = state.items.map((item) =>
-          item.productId === productId ? { ...item, quantity: Math.floor(qty) || 1 } : item
+          item.productId === productId ? { ...item, quantity: nextQty } : item
         );
       }
     },
