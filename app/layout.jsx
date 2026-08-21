@@ -1,11 +1,11 @@
-import { Inter, Sora } from "next/font/google";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { Toaster } from "sonner";
 import { StoreHydration } from "@/components/store-hydration";
 import { ReduxProvider } from "@/store/provider";
 import "./globals.css";
 
-const sora = Sora({ variable: "--font-display", subsets: ["latin"], weight: ["400", "500", "600", "700", "800"] });
-const inter = Inter({ variable: "--font-body", subsets: ["latin"], weight: ["400", "500", "600", "700", "800"] });
+const plusJakartaSans = Plus_Jakarta_Sans({ variable: "--font-display", subsets: ["latin"], weight: ["400", "600", "700"] });
+const inter = Inter({ variable: "--font-body", subsets: ["latin"], weight: ["400", "500", "600"] });
 
 export const metadata = {
   title: "ZoeLit Commerce | Premium Online Store",
@@ -14,7 +14,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${sora.variable} ${inter.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${plusJakartaSans.variable} ${inter.variable}`} suppressHydrationWarning>
       <head>
         <link
           rel="stylesheet"
@@ -22,7 +22,7 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body
-        className="min-h-screen bg-background font-sans text-foreground antialiased"
+        className="min-h-screen bg-background font-sans text-body-md text-on-surface antialiased"
         suppressHydrationWarning
       >
         <ReduxProvider>

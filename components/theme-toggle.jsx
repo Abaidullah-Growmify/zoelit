@@ -13,7 +13,7 @@ export function ThemeToggle({ className = "" }) {
     <button
       type="button"
       onClick={toggleTheme}
-      className={`grid size-11 place-items-center rounded-sm bg-slate-100 text-slate-700 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700 ${className}`}
+      className={`grid size-11 place-items-center rounded-sm bg-surface-container-low text-on-surface-variant transition hover:bg-surface-container dark:bg-surface-container dark:text-on-surface ${className}`}
       aria-label="Toggle color mode"
       title="Toggle color mode"
     >

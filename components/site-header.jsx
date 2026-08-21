@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Heart, LogIn, Menu, ShoppingBag, User, X } from "lucide-react";
 import { useCartStore } from "@/store/cart-store";
 import { useAuthStore } from "@/store/auth-store";
 
@@ -16,10 +17,12 @@ const nav = [
 export function SiteHeader() {
   const pathname = usePathname();
   const cartButtonRef = useRef(null);
+  const mobileNavRef = useRef(null);
   const cartHydrated = useCartStore((state) => state.hasHydrated);
   const count = useCartStore((state) => state.count());
   const openCart = useCartStore((state) => state.openCart);
   const user = useAuthStore((state) => state.user);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     if (!cartHydrated || count === 0 || !cartButtonRef.current) return;
@@ -29,10 +32,23 @@ export function SiteHeader() {
     );
   }, [cartHydrated, count]);
 
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+
+    const handlePointerDown = (event) => {
+      if (mobileNavRef.current && !mobileNavRef.current.contains(event.target)) {
+        setMobileNavOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [mobileNavOpen]);
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-white/80 shadow-sm backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-950/80">
+    <header className="sticky top-0 z-50 w-full border-b border-outline-variant/80 bg-surface-container-lowest/80 shadow-primary-elevated backdrop-blur-md dark:bg-surface/80">
       <div className="mx-auto flex w-full max-w-[1280px] items-center justify-between px-5 py-4 md:px-16">
-        <Link href="/" className="text-2xl font-bold tracking-[-0.02em] text-blue-700 dark:text-blue-300">
+        <Link href="/" className="font-heading text-headline-md font-bold tracking-[-0.02em] text-primary">
           ZoelLit
         </Link>
         <nav className="hidden items-center gap-2 md:flex">
@@ -43,7 +59,7 @@ export function SiteHeader() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`rounded-sm px-3 py-2 text-sm font-semibold tracking-[0.05em] transition-colors hover:bg-slate-100 hover:text-blue-700 dark:hover:bg-slate-800 dark:hover:text-blue-300 ${active ? "text-blue-700 dark:text-blue-300" : "text-slate-600 dark:text-slate-300"}`}
+                className={`rounded-sm px-3 py-2 text-label-md font-semibold tracking-[0.05em] transition-colors hover:bg-surface-container-low hover:text-primary ${active ? "text-primary" : "text-on-surface-variant"}`}
               >
                 {item.label}
               </Link>
@@ -51,32 +67,59 @@ export function SiteHeader() {
           })}
         </nav>
         <div className="flex items-center gap-2">
-          <button type="button" aria-label="Favorites" className="flex h-10 w-10 items-center justify-center rounded-full text-slate-600 transition-colors hover:bg-slate-100 hover:text-blue-700 active:scale-95 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300">
-            <span className="material-symbols-outlined">favorite</span>
+          <button type="button" aria-label="Favorites" className="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant transition duration-200 ease-out hover:bg-surface-container-low hover:text-primary active:scale-95 motion-reduce:transition-colors">
+            <Heart className="size-5" />
           </button>
           <button
             ref={cartButtonRef}
             type="button"
             aria-label="Open cart"
             onClick={openCart}
-            className="relative flex h-10 w-10 items-center justify-center rounded-full text-slate-600 transition-colors hover:bg-slate-100 hover:text-blue-700 active:scale-95 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300"
+            className="relative flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant transition duration-200 ease-out hover:bg-surface-container-low hover:text-primary active:scale-95 motion-reduce:transition-colors"
           >
-            <span className="material-symbols-outlined">shopping_cart</span>
+            <ShoppingBag className="size-5" />
             {count > 0 ? (
-              <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-700 text-[10px] font-bold leading-none text-white dark:bg-blue-500">
+              <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold leading-none text-white">
                 {count}
               </span>
             ) : null}
           </button>
           <Link
-            href={user ? "/dashboard/profile" : `/login?next=${encodeURIComponent(pathname || "/")}`}
-            aria-label={user ? "Open profile" : "Log in"}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-slate-600 transition-colors hover:bg-slate-100 hover:text-blue-700 active:scale-95 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300"
+            href={user ? "/dashboard" : "/login?next=%2Fdashboard"}
+            aria-label={user ? "Open user dashboard" : "Log in to user dashboard"}
+            className="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant transition duration-200 ease-out hover:bg-surface-container-low hover:text-primary active:scale-95 motion-reduce:transition-colors"
           >
-            <span className="material-symbols-outlined">{user ? "account_circle" : "login"}</span>
+            {user ? <User className="size-5" /> : <LogIn className="size-5" />}
           </Link>
+          <button
+            type="button"
+            aria-label={mobileNavOpen ? "Close menu" : "Open menu"}
+            onClick={() => setMobileNavOpen((open) => !open)}
+            className="grid h-10 w-10 place-items-center rounded-full text-on-surface-variant transition duration-200 ease-out hover:bg-surface-container-low hover:text-primary active:scale-95 md:hidden"
+          >
+            {mobileNavOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+          </button>
         </div>
       </div>
+      {mobileNavOpen ? (
+        <div className="border-t border-outline-variant/80 bg-surface-container-lowest md:hidden" ref={mobileNavRef}>
+          <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-2 px-5 py-4">
+            {nav.map((item) => {
+              const active = item.href === "/" ? pathname === item.href : pathname.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileNavOpen(false)}
+                  className={`rounded-sm px-3 py-2 text-label-md font-semibold transition duration-200 ease-out hover:bg-surface-container-low hover:text-primary ${active ? "text-primary" : "text-on-surface-variant"}`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
     </header>
   );
 }

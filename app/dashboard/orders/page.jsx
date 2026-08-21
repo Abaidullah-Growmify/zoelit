@@ -53,13 +53,13 @@ export default function OrdersPage() {
   usePolling(load, [token], 30000, !loading);
 
   const columns = [
-    { key: "orderNumber", header: "Order Number", sortable: true, accessor: "orderNumber", cellClassName: "font-semibold tabular-nums text-slate-950 dark:text-white", render: (order) => `#${order.orderNumber}` },
+    { key: "orderNumber", header: "Order Number", sortable: true, accessor: "orderNumber", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => `#${order.orderNumber}` },
     { key: "date", header: "Date", sortable: true, accessor: "date", render: (order) => shortDate(order.date) },
-    { key: "status", header: "Status", accessor: "status", render: (order) => <AdminStatusBadge>{order.status}</AdminStatusBadge> },
-    { key: "payment", header: "Payment", accessor: "payment", render: (order) => <AdminStatusBadge>{order.payment}</AdminStatusBadge> },
+    { key: "status", header: "Status", accessor: "status", render: (order) => <AdminStatusBadge className="text-label-md font-normal text-on-surface-variant">{order.status}</AdminStatusBadge> },
+    { key: "payment", header: "Payment", accessor: "payment", render: (order) => <AdminStatusBadge className="text-label-md font-normal text-on-surface-variant">{order.payment}</AdminStatusBadge> },
     { key: "notes", header: "Notes", accessor: "notes", render: (order) => <OrderNotesDialog notes={order.notes} label={`View notes for order ${order.orderNumber}`} /> },
     { key: "tracking", header: "Tracking", accessor: "tracking", render: (order) => order.tracking || "Not available" },
-    { key: "total", header: "Total Amount", sortable: true, accessor: "total", cellClassName: "font-semibold tabular-nums text-slate-950 dark:text-white", render: (order) => money(order.total) },
+    { key: "total", header: "Total Amount", sortable: true, accessor: "total", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => money(order.total) },
   ];
 
   if (loading) return <OrdersSkeleton />;

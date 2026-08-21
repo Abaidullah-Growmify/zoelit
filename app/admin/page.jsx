@@ -49,10 +49,10 @@ export default function AdminDashboardPage() {
   return (
     <div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <AdminStatCard label="Total Revenue" value={money(stats.totalRevenue || 0)} icon={Wallet} helper="Excludes cancelled orders" tone="green" />
+        <AdminStatCard label="Total Revenue" value={money(stats.totalRevenue || 0)} icon={Wallet} helper="Excludes cancelled orders" tone="blue" />
         <AdminStatCard label="Total Orders" value={stats.totalOrders ?? 0} icon={ShoppingBag} helper={`${stats.pendingOrders ?? 0} require attention`} tone="blue" />
-        <AdminStatCard label="Customers" value={stats.totalCustomers ?? 0} icon={Users} helper="Registered customer accounts" tone="purple" />
-        <AdminStatCard label="Low Stock" value={stats.lowStockProducts ?? 0} icon={AlertTriangle} helper="At or below threshold" tone="amber" />
+        <AdminStatCard label="Customers" value={stats.totalCustomers ?? 0} icon={Users} helper="Registered customer accounts" tone="blue" />
+        <AdminStatCard label="Low Stock" value={stats.lowStockProducts ?? 0} icon={AlertTriangle} helper="At or below threshold" tone="blue" />
       </div>
       <AdminDashboardContent
         orders={summary.recentOrders || []}

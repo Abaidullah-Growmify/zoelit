@@ -85,14 +85,14 @@ export default function AdminOrdersPage() {
   }
 
   const columns = [
-    { key: "orderNumber", header: "Order", sortable: true, accessor: "orderNumber", cellClassName: "font-semibold tabular-nums text-slate-950 dark:text-white", render: (order) => `#${order.orderNumber || order.ingramOrderNumber || order.id}` },
+    { key: "orderNumber", header: "Order", sortable: true, accessor: "orderNumber", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => `#${order.orderNumber || order.ingramOrderNumber || order.id}` },
     { key: "customer", header: "Customer", sortable: true, accessor: (order) => order.customer?.name || "—", cellClassName: "min-w-0 whitespace-normal font-semibold" },
     { key: "date", header: "Date", sortable: true, accessor: "date", render: (order) => shortDate(order.date) },
-    { key: "status", header: "Status", accessor: "status", render: (order) => <AdminStatusBadge>{order.status}</AdminStatusBadge> },
-    { key: "payment", header: "Payment", accessor: "payment", render: (order) => <AdminStatusBadge>{order.payment}</AdminStatusBadge> },
+    { key: "status", header: "Status", accessor: "status", render: (order) => <AdminStatusBadge className="text-label-md font-normal text-on-surface-variant">{order.status}</AdminStatusBadge> },
+    { key: "payment", header: "Payment", accessor: "payment", render: (order) => <AdminStatusBadge className="text-label-md font-normal text-on-surface-variant">{order.payment}</AdminStatusBadge> },
     { key: "notes", header: "Notes", accessor: "notes", render: (order) => <OrderNotesDialog notes={order.notes} label={`View notes for order ${order.orderNumber || order.id}`} /> },
     { key: "tracking", header: "Tracking", accessor: "tracking", render: (order) => order.tracking || "Not assigned" },
-    { key: "total", header: "Total", sortable: true, accessor: "total", cellClassName: "font-semibold tabular-nums text-slate-950 dark:text-white", render: (order) => money(order.total) },
+    { key: "total", header: "Total", sortable: true, accessor: "total", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => money(order.total) },
   ];
 
   return (
@@ -112,11 +112,11 @@ export default function AdminOrdersPage() {
             toolbar={(
               <>
                 <div className="relative min-w-[16rem] flex-1 sm:max-w-md lg:max-w-xl">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                  <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search order, customer or tracking" aria-label="Search orders" className="h-10 border-slate-200 bg-white pl-10 shadow-sm dark:border-slate-700 dark:bg-slate-950" />
+                  <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
+                  <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search order, customer or tracking" aria-label="Search orders" className="h-10 pl-10 shadow-sm" />
                 </div>
                 <div className="w-full shrink-0 sm:w-56">
-                  <Select value={status} onChange={(event) => handleStatusChange(event.target.value)} aria-label="Filter orders by status" className="h-10 border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-950">
+                  <Select value={status} onChange={(event) => handleStatusChange(event.target.value)} aria-label="Filter orders by status" className="h-10 shadow-sm">
                     {STATUS_OPTIONS.map((option) => <option key={option}>{option}</option>)}
                   </Select>
                 </div>

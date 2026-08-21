@@ -113,18 +113,18 @@ export default function AddressesPage() {
       <div className="mt-4">
         {items.length ? (
           <Card className="overflow-hidden p-0 shadow-sm">
-            <div className="border-b border-slate-200/80 bg-slate-50/60 p-5 dark:border-slate-800 dark:bg-slate-950/40">
+            <div className="border-b border-outline-variant/80 bg-surface-container-lowest/60 p-5">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                  <h2 className="font-heading text-h2 font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">Address table</h2>
-                  <p className="mt-1 text-body font-regular text-slate-600 dark:text-slate-300">Review each delivery location, set the default, or edit details inline.</p>
+                  <h2 className="font-heading text-headline-md font-semibold tracking-[-0.02em] text-on-surface">Address table</h2>
+                  <p className="mt-1 text-body-md font-normal text-on-surface-variant">Review each delivery location, set the default, or edit details inline.</p>
                 </div>
                 <Button onClick={openAdd} className="shrink-0"><Plus className="size-4" /> Add New Address</Button>
               </div>
             </div>
             <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <table className="w-full text-left text-body">
-                <thead className="border-b border-slate-200/80 bg-slate-50/95 text-body font-semibold uppercase tracking-[0.16em] text-slate-500 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 dark:text-slate-400">
+              <table className="w-full text-left text-label-md">
+                <thead className="border-b border-outline-variant/80 bg-surface-container-lowest/95 text-label-sm font-semibold uppercase tracking-[0.16em] text-on-surface-variant backdrop-blur">
                   <tr>
                     <th className="whitespace-nowrap px-6 py-4 font-semibold">Label</th>
                     <th className="whitespace-nowrap px-6 py-4 font-semibold">Recipient</th>
@@ -142,20 +142,20 @@ export default function AddressesPage() {
                             {address.label.toLowerCase().includes("home") ? <Home className="size-5" /> : <MapPin className="size-5" />}
                           </span>
                           <div>
-                            <p className="font-semibold text-slate-950 dark:text-white">{address.label}</p>
-                            <p className="mt-1 text-meta font-regular text-slate-500 dark:text-slate-400">{address.line1}</p>
+                            <p className="font-semibold text-on-surface">{address.label}</p>
+                            <p className="mt-1 text-meta font-normal text-on-surface-variant">{address.line1}</p>
                           </div>
                         </div>
                       </AdminTableCell>
                       <AdminTableCell className="whitespace-normal">
-                        <p className="font-semibold text-slate-950 dark:text-white">{address.name}</p>
-                        <p className="mt-1 text-meta font-regular text-slate-500 dark:text-slate-400">{address.country}</p>
+                        <p className="font-semibold text-on-surface">{address.name}</p>
+                        <p className="mt-1 text-meta font-normal text-on-surface-variant">{address.country}</p>
                       </AdminTableCell>
                       <AdminTableCell className="whitespace-normal">
-                        <p className="font-medium text-slate-700 dark:text-slate-300">{formatLocation(address)}</p>
+                        <p className="font-medium text-on-surface">{formatLocation(address)}</p>
                       </AdminTableCell>
                       <AdminTableCell>
-                        {address.default ? <Badge tone="slate">Default</Badge> : <span className="text-meta font-medium text-slate-500 dark:text-slate-400">Saved</span>}
+                         {address.default ? <Badge tone="slate">Default</Badge> : <span className="text-meta font-medium text-on-surface-variant">Saved</span>}
                       </AdminTableCell>
                       <AdminTableCell className="text-center">
                         <AdminTableActions
@@ -178,21 +178,21 @@ export default function AddressesPage() {
           </Card>
         ) : (
           <Card className="flex flex-col items-center justify-center border-dashed py-14 text-center shadow-sm">
-            <span className="grid size-16 place-items-center rounded-full bg-blue-50 text-blue-700 ring-1 ring-blue-100 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/20"><MapPin className="size-7" /></span>
-            <h2 className="mt-5 font-heading text-h2 font-semibold text-slate-950 dark:text-white">No saved addresses</h2>
-            <p className="mt-2 max-w-md text-body font-regular leading-6 text-slate-500 dark:text-slate-400">Add a delivery location now so checkout only takes a few clicks later.</p>
+            <span className="grid size-16 place-items-center rounded-full bg-primary-fixed/60 text-primary ring-1 ring-primary/10"><MapPin className="size-7" /></span>
+            <h2 className="mt-5 font-heading text-headline-md font-semibold tracking-[-0.02em] text-on-surface">No saved addresses</h2>
+            <p className="mt-2 max-w-md text-body-md font-normal leading-6 text-on-surface-variant">Add a delivery location now so checkout only takes a few clicks later.</p>
             <Button onClick={openAdd} className="mt-6"><Plus className="size-4" /> Add New Address</Button>
           </Card>
         )}
       </div>
 
       {showForm ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 grid place-items-center bg-inverse-surface/60 p-4 backdrop-blur-sm">
           <Card className="w-full max-w-xl shadow-2xl shadow-slate-950/25">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="font-heading text-h2 font-semibold text-slate-950 dark:text-white">{editing ? "Edit address" : "Add address"}</h2>
-                <p className="mt-1 text-body font-regular text-slate-500 dark:text-slate-400">{editing ? "Update the details for this delivery location." : "Save another delivery location for faster checkout."}</p>
+                <h2 className="font-heading text-headline-md font-semibold tracking-[-0.02em] text-on-surface">{editing ? "Edit address" : "Add address"}</h2>
+                <p className="mt-1 text-body-md font-normal text-on-surface-variant">{editing ? "Update the details for this delivery location." : "Save another delivery location for faster checkout."}</p>
               </div>
             </div>
             <form onSubmit={submit} className="mt-6 grid gap-4 md:grid-cols-2">
@@ -212,11 +212,11 @@ export default function AddressesPage() {
       ) : null}
 
       {confirming ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 grid place-items-center bg-inverse-surface/60 p-4 backdrop-blur-sm">
           <Card className="w-full max-w-md p-6 shadow-2xl shadow-slate-950/25">
-            <h2 className="font-heading text-h2 font-semibold text-slate-950 dark:text-white">Delete address?</h2>
-            <p className="mt-2 text-body font-regular leading-6 text-slate-500 dark:text-slate-400">
-              Are you sure you want to delete <strong className="font-semibold text-slate-900 dark:text-white">{confirming.label}</strong>? This action cannot be undone.
+            <h2 className="font-heading text-headline-md font-semibold tracking-[-0.02em] text-on-surface">Delete address?</h2>
+            <p className="mt-2 text-body-md font-normal leading-6 text-on-surface-variant">
+              Are you sure you want to delete <strong className="font-semibold text-on-surface">{confirming.label}</strong>? This action cannot be undone.
             </p>
             <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button type="button" variant="secondary" onClick={() => setConfirming(null)}>Cancel</Button>
@@ -249,8 +249,8 @@ function formatLocation(address) {
 
 function getAddressIconClass(isDefault) {
   if (isDefault) {
-    return "grid size-11 shrink-0 place-items-center rounded-full bg-blue-600 text-white dark:bg-blue-500 dark:text-white";
+    return "grid size-11 shrink-0 place-items-center rounded-full bg-primary text-white";
   }
 
-  return "grid size-11 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-200";
+  return "grid size-11 shrink-0 place-items-center rounded-full bg-surface-container-low text-on-surface-variant";
 }

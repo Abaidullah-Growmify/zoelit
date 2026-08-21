@@ -53,11 +53,11 @@ export default function AdminCustomersPage() {
   }
 
   const columns = [
-    { key: "name", header: "Customer", sortable: true, accessor: "name", cellClassName: "font-semibold text-slate-950 dark:text-white", render: (customer) => <CustomerCell customer={customer} /> },
+    { key: "name", header: "Customer", sortable: true, accessor: "name", cellClassName: "font-semibold text-on-surface", render: (customer) => <CustomerCell customer={customer} /> },
     { key: "phone", header: "Phone", accessor: "phone", render: (customer) => customer.phone || "—" },
     { key: "orders", header: "Orders", sortable: true, accessor: "orders", cellClassName: "tabular-nums" },
-    { key: "totalSpent", header: "Spent", sortable: true, accessor: "totalSpent", cellClassName: "font-semibold tabular-nums text-slate-950 dark:text-white", render: (customer) => money(customer.totalSpent) },
-    { key: "status", header: "Status", accessor: "status", render: (customer) => <AdminStatusBadge>{customer.status}</AdminStatusBadge> },
+    { key: "totalSpent", header: "Spent", sortable: true, accessor: "totalSpent", cellClassName: "font-semibold tabular-nums text-on-surface", render: (customer) => money(customer.totalSpent) },
+    { key: "status", header: "Status", accessor: "status", render: (customer) => <AdminStatusBadge className="text-label-md font-normal text-on-surface-variant">{customer.status}</AdminStatusBadge> },
     { key: "joined", header: "Joined", sortable: true, accessor: "joined", render: (customer) => shortDate(customer.joined) },
   ];
 
@@ -77,8 +77,8 @@ export default function AdminCustomersPage() {
             pageSize={PAGE_SIZE}
             toolbar={(
               <div className="relative min-w-[16rem] flex-1 sm:max-w-md lg:max-w-xl">
-                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search customers" aria-label="Search customers" className="h-10 border-slate-200 bg-white pl-10 shadow-sm dark:border-slate-700 dark:bg-slate-950" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
+                <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search customers" aria-label="Search customers" className="h-10 pl-10 shadow-sm" />
               </div>
             )}
             action={(
@@ -104,8 +104,8 @@ export default function AdminCustomersPage() {
 function CustomerCell({ customer }) {
   return (
     <div>
-      <p className="font-semibold text-slate-950 dark:text-white">{customer.name}</p>
-      <p className="text-meta font-regular text-slate-500 dark:text-slate-400">{customer.email}</p>
+      <p className="font-semibold text-on-surface">{customer.name}</p>
+      <p className="text-meta font-normal text-on-surface-variant">{customer.email}</p>
     </div>
   );
 }

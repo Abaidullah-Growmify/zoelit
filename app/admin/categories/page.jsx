@@ -82,10 +82,10 @@ export default function AdminCategoriesPage() {
   const pageItems = filteredRows.slice(pageStart, pageStart + PAGE_SIZE);
 
   const columns = [
-    { key: "name", header: "Name", sortable: true, accessor: "name", cellClassName: "font-semibold text-slate-950 dark:text-white", render: (category) => (
+    { key: "name", header: "Name", sortable: true, accessor: "name", cellClassName: "font-semibold text-on-surface", render: (category) => (
       <div className="max-w-72">
-        <p title={category.name} className="line-clamp-2 whitespace-normal font-semibold text-slate-950 dark:text-white">{category.name}</p>
-        <p className="truncate text-meta font-regular text-slate-500 dark:text-slate-400">{category.slug}</p>
+        <p title={category.name} className="line-clamp-2 whitespace-normal font-semibold text-on-surface">{category.name}</p>
+        <p className="truncate text-meta font-normal text-on-surface-variant">{category.slug}</p>
       </div>
     ) },
     { key: "count", header: "Products", sortable: true, accessor: "count", cellClassName: "tabular-nums" },
@@ -107,8 +107,8 @@ export default function AdminCategoriesPage() {
             pageSize={PAGE_SIZE}
             toolbar={(
               <div className="relative min-w-[16rem] flex-1 sm:max-w-md lg:max-w-xl">
-                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search categories" aria-label="Search categories" className="h-10 border-slate-200 bg-white pl-10 shadow-sm dark:border-slate-700 dark:bg-slate-950" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
+                <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search categories" aria-label="Search categories" className="h-10 pl-10 shadow-sm" />
               </div>
             )}
             action={(

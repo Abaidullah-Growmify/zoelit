@@ -35,16 +35,16 @@ export default function RegisterPage() {
     }
   }
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-white p-4 dark:bg-slate-950">
-      <div className="pointer-events-none absolute inset-0 opacity-40 [background-image:linear-gradient(to_right,rgba(37,99,235,.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(37,99,235,.12)_1px,transparent_1px)] [background-size:34px_34px] dark:opacity-20" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(37,99,235,.16),transparent_34%),radial-gradient(circle_at_20%_80%,rgba(14,165,233,.12),transparent_28%)]" />
-      <section className="relative z-10 w-full max-w-md rounded-lg border border-slate-200/70 bg-white/85 p-6 soft-shadow backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-900/80">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background p-4">
+      <div className="pointer-events-none absolute inset-0 opacity-40 [background-image:linear-gradient(to_right,rgb(0_63_177_/_0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgb(0_63_177_/_0.12)_1px,transparent_1px)] [background-size:34px_34px]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgb(0_63_177_/_0.16),transparent_34%),radial-gradient(circle_at_20%_80%,rgb(26_86_219_/_0.12),transparent_28%)]" />
+      <section className="relative z-10 w-full max-w-md rounded-lg border border-outline-variant bg-surface-container-lowest/85 p-6 soft-shadow backdrop-blur-xl">
         <div className="flex flex-col items-center pb-2 text-center">
-          <Link href="/" className="mb-3 flex size-14 items-center justify-center rounded-lg bg-blue-600/10 text-blue-600 shadow-lg shadow-blue-600/10 dark:bg-blue-500/10 dark:text-blue-300">
+          <Link href="/" className="mb-3 flex size-14 items-center justify-center rounded-lg bg-primary-container/10 text-primary shadow-primary-elevated">
             <UserPlus className="size-7" />
           </Link>
-          <h1 className="font-heading text-h1 font-extrabold tracking-[-0.02em] text-slate-950 dark:text-white">Create ZoeLit Account</h1>
-          <p className="mt-2 text-body text-slate-500 dark:text-slate-400">Set up your shopping account.</p>
+          <h1 className="font-heading text-headline-md font-extrabold tracking-[-0.02em] text-on-surface">Create ZoeLit Account</h1>
+          <p className="mt-2 text-body-md text-on-surface-variant">Set up your shopping account.</p>
         </div>
         <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-4" noValidate>
           <Field label="Full name" name="name" form={form} autoComplete="name" placeholder="Avery Stone" />
@@ -52,8 +52,8 @@ export default function RegisterPage() {
           <PasswordField label="Password" name="password" form={form} autoComplete="new-password" placeholder="Create password" show={showPassword} onToggle={() => setShowPassword((value) => !value)} />
           <PasswordField label="Confirm password" name="confirmPassword" form={form} autoComplete="new-password" placeholder="Confirm password" show={showConfirmPassword} onToggle={() => setShowConfirmPassword((value) => !value)} />
           <div>
-            <label className="flex items-start gap-2 text-body font-regular leading-5 text-slate-600 dark:text-slate-300">
-              <input type="checkbox" className="mt-0.5 size-4 rounded border-slate-300" {...form.register("terms")} />
+            <label className="flex items-start gap-2 text-body-md font-normal leading-5 text-on-surface-variant">
+              <input type="checkbox" className="mt-0.5 size-4 rounded border-outline-variant" {...form.register("terms")} />
               <span>I agree to the Terms & Conditions and Privacy Policy.</span>
             </label>
             <ErrorText>{form.formState.errors.terms?.message}</ErrorText>
@@ -62,7 +62,7 @@ export default function RegisterPage() {
             {form.formState.isSubmitting ? <><Loader2 className="size-4 animate-spin" />Creating account...</> : "Create account"}
           </Button>
         </form>
-        <p className="mt-6 text-center text-body text-slate-500 dark:text-slate-400">Already registered? <Link href="/login" className="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400">Sign in</Link></p>
+        <p className="mt-6 text-center text-body-md text-on-surface-variant">Already registered? <Link href="/login" className="font-semibold text-primary hover:text-primary-container">Sign in</Link></p>
       </section>
     </div>
   );

@@ -22,20 +22,13 @@ function OrderSuccessContent() {
   const token = useAuthStore((state) => state.token);
   const sessionId = params.get("session_id");
   const clearCart = useCartStore((state) => state.clearCart);
-  const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(Boolean(sessionId));
   const [orderNumber, setOrderNumber] = useState(params.get("order") || "");
   const [ingramOrderNumber, setIngramOrderNumber] = useState(params.get("ingram") || "");
+  const mounted = true;
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!sessionId) {
-      setLoading(false);
-      return;
-    }
+    if (!sessionId) return;
 
     let active = true;
 
@@ -62,12 +55,12 @@ function OrderSuccessContent() {
   return (
     <section className="container-page grid min-h-[70vh] place-items-center py-12">
       <Card className="max-w-xl text-center">
-        <CheckCircle2 className="mx-auto size-16 text-emerald-500" />
-        <h1 className="mt-6 font-heading text-4xl font-extrabold">Order confirmed</h1>
-        <p className="mt-4 text-slate-500 dark:text-slate-400">Payment successful. Your order is being processed.</p>
-        {loading ? <p className="mt-4 text-body font-medium text-slate-600 dark:text-slate-300">Finalizing order...</p> : null}
-        {orderNumber ? <p className="mt-2 text-body font-semibold text-slate-900 dark:text-white">Order #{orderNumber}</p> : null}
-        {ingramOrderNumber ? <p className="mt-1 text-body font-regular text-slate-500 dark:text-slate-400">Ingram order: {ingramOrderNumber}</p> : null}
+        <CheckCircle2 className="mx-auto size-16 text-tertiary" />
+        <h1 className="mt-6 font-heading text-display-xl font-extrabold">Order confirmed</h1>
+        <p className="mt-4 text-on-surface-variant">Payment successful. Your order is being processed.</p>
+        {loading ? <p className="mt-4 text-body-md font-medium text-on-surface-variant">Finalizing order...</p> : null}
+        {orderNumber ? <p className="mt-2 text-body-md font-semibold text-on-surface">Order #{orderNumber}</p> : null}
+        {ingramOrderNumber ? <p className="mt-1 text-body-md font-normal text-on-surface-variant">Ingram order: {ingramOrderNumber}</p> : null}
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           {mounted && token ? <Button asChild href="/dashboard/orders" aria-label="View orders"><Eye className="size-4" /></Button> : null}
           <Button asChild href="/products" variant="outline">Continue Shopping</Button>

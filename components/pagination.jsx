@@ -81,10 +81,10 @@ export default function Pagination({
         disabled={page <= 1}
         onClick={() => onPageChange(page - 1)}
         className={cn(
-          "inline-flex h-10 items-center gap-1.5 rounded-md border px-3 text-sm font-medium transition",
-          page <= 1
-            ? "cursor-not-allowed border-slate-200 bg-white text-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-600"
-            : "border-slate-200 bg-white text-slate-600 shadow-sm hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-white"
+           "inline-flex h-10 items-center gap-1.5 rounded-md border border-outline-variant bg-surface-container-lowest px-3 text-label-sm font-medium transition",
+           page <= 1
+             ? "cursor-not-allowed text-on-surface-variant opacity-40"
+             : "text-on-surface-variant shadow-sm hover:-translate-y-0.5 hover:border-primary hover:bg-surface-container-low hover:text-primary"
         )}
       >
         <ChevronLeft className="size-3.5" />
@@ -96,7 +96,7 @@ export default function Pagination({
           return (
             <span
               key={`ellipsis-${index}`}
-              className="inline-flex h-10 w-8 items-center justify-center text-sm text-slate-400"
+              className="inline-flex h-10 w-8 items-center justify-center text-label-sm text-on-surface-variant"
             >
               ...
             </span>
@@ -112,10 +112,10 @@ export default function Pagination({
             onClick={() => onPageChange(item)}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "inline-flex h-10 min-w-10 items-center justify-center rounded-md border px-3 text-sm font-medium transition",
+              "inline-flex h-10 min-w-10 items-center justify-center rounded-md border border-outline-variant bg-surface-container-lowest px-3 text-label-sm font-medium transition",
               isActive
-                ? "border-blue-600 bg-blue-600 text-white shadow-sm shadow-blue-600/20"
-                : "border-slate-200 bg-white text-slate-600 shadow-sm hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-white"
+                ? "border-primary bg-primary text-white shadow-primary-elevated"
+                : "text-on-surface-variant shadow-sm hover:-translate-y-0.5 hover:border-primary hover:bg-surface-container-low hover:text-primary"
             )}
           >
             {item}
@@ -128,10 +128,10 @@ export default function Pagination({
         disabled={page >= totalPages}
         onClick={() => onPageChange(page + 1)}
         className={cn(
-          "inline-flex h-10 items-center gap-1.5 rounded-md border px-3 text-sm font-medium transition",
-          page >= totalPages
-            ? "cursor-not-allowed border-slate-200 bg-white text-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-600"
-            : "border-slate-200 bg-white text-slate-600 shadow-sm hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-white"
+           "inline-flex h-10 items-center gap-1.5 rounded-md border border-outline-variant bg-surface-container-lowest px-3 text-label-sm font-medium transition",
+           page >= totalPages
+             ? "cursor-not-allowed text-on-surface-variant opacity-40"
+             : "text-on-surface-variant shadow-sm hover:-translate-y-0.5 hover:border-primary hover:bg-surface-container-low hover:text-primary"
         )}
       >
         <span className="hidden sm:inline">Next</span>

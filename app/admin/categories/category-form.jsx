@@ -7,7 +7,7 @@ export function CategoryForm({ category, mode }) {
       <div className="space-y-6">
         <Card>
           <h2 className="font-heading text-h2 font-semibold">Basic information</h2>
-          <p className="mt-1 text-body font-regular text-slate-500 dark:text-slate-400">Create the storefront grouping, URL slug, and admin-facing status.</p>
+          <p className="mt-1 text-body-md font-normal text-on-surface-variant">Create the storefront grouping, URL slug, and admin-facing status.</p>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             <Field label="Category name"><Input defaultValue={category?.name || ""} placeholder="Footwear" /></Field>
             <Field label="Slug"><Input defaultValue={category?.slug || ""} placeholder="footwear" /></Field>
@@ -18,7 +18,7 @@ export function CategoryForm({ category, mode }) {
         </Card>
         <Card>
           <h2 className="font-heading text-h2 font-semibold">Merchandising</h2>
-          <p className="mt-1 text-body font-regular text-slate-500 dark:text-slate-400">Optional content for collection pages and navigation placement.</p>
+          <p className="mt-1 text-body-md font-normal text-on-surface-variant">Optional content for collection pages and navigation placement.</p>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             <Field label="Navigation label"><Input defaultValue={category?.name || ""} placeholder="Shop footwear" /></Field>
             <Field label="Hero image URL"><Input placeholder="https://..." /></Field>
@@ -28,7 +28,7 @@ export function CategoryForm({ category, mode }) {
       </div>
       <Card className="sticky top-24 h-fit">
         <h2 className="font-heading text-h2 font-semibold">Actions</h2>
-        <p className="mt-2 text-body font-regular text-slate-500 dark:text-slate-400">{mode === "create" ? "Add" : "Update"} category UI only. No backend request will run.</p>
+        <p className="mt-2 text-body-md font-normal text-on-surface-variant">{mode === "create" ? "Add" : "Update"} category UI only. No backend request will run.</p>
         <Button className="mt-5 w-full"><Save className="size-4" />{mode === "create" ? "Save category" : "Update category"}</Button>
         <Button asChild href="/admin/categories" className="mt-3 w-full" variant="outline">Back to categories</Button>
       </Card>

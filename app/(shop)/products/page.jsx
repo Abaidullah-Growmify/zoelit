@@ -89,10 +89,10 @@ export default function ProductsPage() {
     <section className="container-page py-12 sm:py-16">
       <PageHeader eyebrow="Collection" title="Shop products" description="Filter, sort, and build your cart with confidence." action={<div className="flex gap-3"><Select value={category} onChange={(e) => changeCategory(e.target.value)} aria-label="Filter by category">{categories.map((item) => <option key={item}>{item}</option>)}</Select><Select value={sort} onChange={(e) => changeSort(e.target.value)} aria-label="Sort products"><option value="featured">Top rated</option><option value="price-low">Price low</option><option value="price-high">Price high</option></Select></div>} />
       <div className="relative mt-6 max-w-xl">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
         <Input value={keyword} onChange={(event) => { setKeyword(event.target.value); setLoading(true); setPage(1); }} placeholder="Search products by name, SKU or keyword..." aria-label="Search products" className="h-12 pl-10" />
       </div>
-      <div className="mt-8 rounded-lg border border-slate-200 bg-white/60 p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900/40">{loading ? <ProductGridSkeleton count={8} /> : products.length ? <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{products.map((product) => <ProductCard key={product.id} product={product} />)}</div> : <EmptyState title="No products found" description="No products match your search. Try a different keyword or category." />}</div>
+      <div className="mt-8 rounded-lg border border-outline-variant/80 bg-surface-container-lowest/60 p-3 shadow-sm">{loading ? <ProductGridSkeleton count={8} /> : products.length ? <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{products.map((product) => <ProductCard key={product.id} product={product} />)}</div> : <EmptyState title="No products found" description="No products match your search. Try a different keyword or category." />}</div>
       {!loading && products.length ? (
         <Pagination
           page={page}

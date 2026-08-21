@@ -89,7 +89,7 @@ export default function AdminProductsPage() {
       render: (product) => <ProductCell product={product} />,
     },
     { key: "category", header: "Category", sortable: true, accessor: "category" },
-    { key: "price", header: "Price", sortable: true, accessor: "price", cellClassName: "font-semibold tabular-nums text-slate-950 dark:text-white", render: (product) => money(product.price) },
+    { key: "price", header: "Price", sortable: true, accessor: "price", cellClassName: "font-semibold tabular-nums text-on-surface", render: (product) => money(product.price) },
     { key: "stock", header: "Stock", sortable: true, accessor: "stock", cellClassName: "tabular-nums" },
     { key: "status", header: "Status", accessor: "status", render: (product) => <AdminStatusBadge>{product.status}</AdminStatusBadge> },
   ];
@@ -110,8 +110,8 @@ export default function AdminProductsPage() {
             pageSize={PAGE_SIZE}
             toolbar={(
               <div className="relative min-w-[16rem] flex-1 sm:max-w-md lg:max-w-xl">
-                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search products, SKU or category" aria-label="Search products" className="h-10 border-slate-200 bg-white pl-10 shadow-sm dark:border-slate-700 dark:bg-slate-950" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
+                <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search products, SKU or category" aria-label="Search products" className="h-10 pl-10 shadow-sm" />
               </div>
             )}
             hideSearch
@@ -169,8 +169,8 @@ function ProductCell({ product }) {
     <div className="flex max-w-64 items-center gap-3">
       <Image src={product.image} alt={product.name} width={48} height={48} className="size-12 shrink-0 rounded-md object-cover ring-1 ring-slate-200 dark:ring-slate-800" />
       <div className="min-w-0">
-        <p title={product.name} className="truncate font-semibold text-slate-950 dark:text-white">{product.name}</p>
-        <p className="mt-0.5 truncate text-meta font-regular text-slate-500 dark:text-slate-400">{product.sku}</p>
+        <p title={product.name} className="truncate font-semibold text-on-surface">{product.name}</p>
+        <p className="mt-0.5 truncate text-meta font-normal text-on-surface-variant">{product.sku}</p>
       </div>
     </div>
   );
