@@ -1,87 +1,80 @@
 import Link from "next/link";
-import { Mail, MapPin, Phone } from "lucide-react";
-import { Button } from "@/components/ui";
-
-const columns = [
-  {
-    title: "Company",
-    links: [
-      { href: "/", label: "About us" },
-      { href: "#", label: "Careers" },
-      { href: "#", label: "Store Locations" },
-      { href: "#", label: "Our Blog" },
-      { href: "#", label: "Reviews" },
-    ],
-  },
-  {
-    title: "Shop",
-    links: [
-      { href: "/products", label: "Game & Video" },
-      { href: "/products", label: "Phone & Tablets" },
-      { href: "/products", label: "Computers & Laptop" },
-      { href: "/products", label: "Sport Watches" },
-      { href: "/products", label: "Discounts" },
-    ],
-  },
-  {
-    title: "Support",
-    links: [
-      { href: "/faq", label: "FAQs" },
-      { href: "/privacy-policy", label: "Privacy & Policy" },
-      { href: "#", label: "Terms & Conditions" },
-      { href: "/contact", label: "Contact us" },
-    ],
-  },
-];
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
-      <section className="container-page py-12">
-        <div className="rounded-xl bg-blue-600 p-8 text-white shadow-2xl shadow-blue-600/20 md:p-10">
-          <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-blue-100">Premium commerce support</p>
-              <h2 className="mt-3 font-heading text-3xl font-extrabold tracking-[-0.02em] md:text-4xl">Have a project in mind? Let&apos;s talk.</h2>
-              <p className="mt-3 max-w-2xl text-body font-regular text-blue-50">Reach Zoel IT for product questions, project enquiries, office information, and customer support.</p>
-            </div>
-            <Button asChild href="/contact" variant="outline" className="border-white/30 bg-white text-blue-700 hover:bg-blue-50">Contact Support</Button>
+    <footer className="w-full border-t border-slate-200 bg-white pt-16 pb-6 dark:border-slate-800 dark:bg-slate-950">
+      <div className="mx-auto mb-16 grid max-w-[1280px] grid-cols-1 gap-6 px-5 md:grid-cols-4 md:px-16">
+        <div className="flex flex-col gap-4">
+          <Link href="/" className="text-2xl font-bold tracking-[-0.02em] text-blue-700 dark:text-blue-300">
+            ZoelLit
+          </Link>
+          <p className="max-w-xs text-sm leading-6 text-slate-600 dark:text-slate-300">
+            Curated network and connectivity solutions for professionals and businesses.
+          </p>
+          <div className="mt-1 flex gap-2 opacity-80 transition-opacity hover:opacity-100">
+            <a className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition-colors hover:border-blue-300 hover:text-blue-700 dark:border-slate-700 dark:text-slate-300 dark:hover:border-blue-500/60 dark:hover:text-blue-300" href="#" aria-label="Social link">
+              <span className="material-symbols-outlined text-[18px]">link</span>
+            </a>
+            <a className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition-colors hover:border-blue-300 hover:text-blue-700 dark:border-slate-700 dark:text-slate-300 dark:hover:border-blue-500/60 dark:hover:text-blue-300" href="#" aria-label="Call us">
+              <span className="material-symbols-outlined text-[18px]">call</span>
+            </a>
+            <a className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition-colors hover:border-blue-300 hover:text-blue-700 dark:border-slate-700 dark:text-slate-300 dark:hover:border-blue-500/60 dark:hover:text-blue-300" href="#" aria-label="Email us">
+              <span className="material-symbols-outlined text-[18px]">mail</span>
+            </a>
           </div>
         </div>
-      </section>
 
-      <section className="container-page grid gap-10 border-t border-slate-200 py-12 md:grid-cols-2 lg:grid-cols-[1.2fr_.8fr_.8fr_.8fr] dark:border-slate-800">
         <div>
-          <Link href="/" className="font-heading text-2xl font-extrabold tracking-[-0.02em]"><span className="text-blue-600">Zoe</span>Lit</Link>
-          <p className="mt-4 max-w-sm text-body font-regular leading-6 text-slate-500 dark:text-slate-400">The home and elements needed to create beautiful products.</p>
-          <div className="mt-6 space-y-3 text-body font-regular leading-6 text-slate-600 dark:text-slate-300">
-            <p className="flex items-center gap-3"><Mail className="size-4 text-blue-600" /> info@zoelit.com</p>
-            <p className="flex items-center gap-3"><Phone className="size-4 text-blue-600" /> +44 749637 9004</p>
-            <p className="flex items-center gap-3"><Phone className="size-4 text-blue-600" /> +44 161 791 5621</p>
-            <p className="flex items-center gap-3"><Phone className="size-4 text-blue-600" /> +92 3007404044</p>
-            <p className="flex items-start gap-3"><MapPin className="mt-0.5 size-4 text-blue-600" /> 66 Seymour Grove, Old Trafford, Manchester, M16 0LN, England</p>
-            <p className="flex items-start gap-3"><MapPin className="mt-0.5 size-4 text-blue-600" /> 123 - CC - Citi Housing Society, Gujranwala, 52310, Pakistan</p>
-          </div>
+          <h4 className="mb-4 text-sm font-semibold tracking-[0.05em] text-slate-900 dark:text-white">Shop</h4>
+          <ul className="flex flex-col gap-2">
+            <li><a className="text-sm leading-6 text-slate-600 transition-colors hover:text-blue-700 hover:underline dark:text-slate-300 dark:hover:text-blue-300" href="#">All Products</a></li>
+            <li><a className="text-sm leading-6 text-slate-600 transition-colors hover:text-blue-700 hover:underline dark:text-slate-300 dark:hover:text-blue-300" href="#">New Arrivals</a></li>
+            <li><a className="text-sm leading-6 text-slate-600 transition-colors hover:text-blue-700 hover:underline dark:text-slate-300 dark:hover:text-blue-300" href="#">Best Sellers</a></li>
+            <li><a className="text-sm leading-6 text-slate-600 transition-colors hover:text-blue-700 hover:underline dark:text-slate-300 dark:hover:text-blue-300" href="#">Deals</a></li>
+          </ul>
         </div>
 
-        {columns.map((column) => (
-          <div key={column.title}>
-            <h3 className="font-heading text-h3 font-semibold tracking-[-0.01em] text-slate-950 dark:text-white">{column.title}</h3>
-            <nav className="mt-4 grid gap-3">
-              {column.links.map((link) => (
-                <Link key={`${column.title}-${link.label}`} href={link.href} className="text-body font-regular text-slate-500 transition hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300">{link.label}</Link>
-              ))}
-            </nav>
-          </div>
-        ))}
-      </section>
-
-      <section className="border-t border-slate-200 py-5 dark:border-slate-800">
-        <div className="container-page flex flex-col justify-between gap-3 text-body font-regular text-slate-500 md:flex-row dark:text-slate-400">
-          <p>Copyright © 2026 by Zoel IT All rights reserved</p>
-          <p>Company Registration Number: 15458184</p>
+        <div>
+          <h4 className="mb-4 text-sm font-semibold tracking-[0.05em] text-slate-900 dark:text-white">Company</h4>
+          <ul className="flex flex-col gap-2">
+            <li><a className="text-sm leading-6 text-slate-600 transition-colors hover:text-blue-700 hover:underline dark:text-slate-300 dark:hover:text-blue-300" href="#">About Us</a></li>
+            <li><a className="text-sm leading-6 text-slate-600 transition-colors hover:text-blue-700 hover:underline dark:text-slate-300 dark:hover:text-blue-300" href="#">Careers</a></li>
+            <li><a className="text-sm leading-6 text-slate-600 transition-colors hover:text-blue-700 hover:underline dark:text-slate-300 dark:hover:text-blue-300" href="#">News &amp; Updates</a></li>
+            <li><a className="text-sm leading-6 text-slate-600 transition-colors hover:text-blue-700 hover:underline dark:text-slate-300 dark:hover:text-blue-300" href="#">Contact Us</a></li>
+          </ul>
         </div>
-      </section>
+
+        <div>
+          <h4 className="mb-4 text-sm font-semibold tracking-[0.05em] text-slate-900 dark:text-white">Contact</h4>
+          <ul className="flex flex-col gap-2">
+            <li className="flex items-start gap-2 text-slate-600 dark:text-slate-300">
+              <span className="material-symbols-outlined mt-0.5 text-[20px] text-blue-700 dark:text-blue-300">call</span>
+              <span className="text-sm leading-6">+1 (917) 937 0201</span>
+            </li>
+            <li className="flex items-start gap-2 text-slate-600 dark:text-slate-300">
+              <span className="material-symbols-outlined mt-0.5 text-[20px] text-blue-700 dark:text-blue-300">mail</span>
+              <span className="text-sm leading-6">info@zoelit.com</span>
+            </li>
+            <li className="flex items-start gap-2 text-slate-600 dark:text-slate-300">
+              <span className="material-symbols-outlined mt-0.5 text-[20px] text-blue-700 dark:text-blue-300">location_on</span>
+              <span className="text-sm leading-6">
+                681 Business Blvd, 6th<br />
+                Floor, Northcrest, NY 12345
+              </span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="mx-auto flex max-w-[1280px] flex-col items-center justify-between gap-4 border-t border-slate-200 px-5 pt-6 text-center md:flex-row md:px-16 md:text-left dark:border-slate-800">
+        <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">© 2024 ZoelLit. All rights reserved.</p>
+        <div className="flex flex-wrap justify-center gap-6 md:justify-end">
+          <a className="text-sm leading-6 text-slate-600 transition-colors hover:text-blue-700 hover:underline dark:text-slate-300 dark:hover:text-blue-300" href="#">Privacy Policy</a>
+          <a className="text-sm leading-6 text-slate-600 transition-colors hover:text-blue-700 hover:underline dark:text-slate-300 dark:hover:text-blue-300" href="#">Terms of Service</a>
+          <a className="text-sm leading-6 text-slate-600 transition-colors hover:text-blue-700 hover:underline dark:text-slate-300 dark:hover:text-blue-300" href="#">Shipping Policy</a>
+          <a className="text-sm leading-6 text-slate-600 transition-colors hover:text-blue-700 hover:underline dark:text-slate-300 dark:hover:text-blue-300" href="#">Return Center</a>
+        </div>
+      </div>
     </footer>
   );
 }

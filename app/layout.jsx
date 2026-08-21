@@ -15,6 +15,12 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${sora.variable} ${inter.variable}`} suppressHydrationWarning>
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL,GRAD@400,0,0&display=swap"
+        />
+      </head>
       <body
         className="min-h-screen bg-background font-sans text-foreground antialiased"
         suppressHydrationWarning
