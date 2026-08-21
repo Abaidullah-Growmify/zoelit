@@ -7,7 +7,6 @@ import * as api from "@/lib/api";
 import { useAuthStore } from "@/store/auth-store";
 import { AdminTableActions, AdminTableCell, AdminTableRow } from "@/components/admin-table";
 import { Badge, Button, Card, Input, Label } from "@/components/ui";
-import { DashboardPageHeader } from "@/components/dashboard-page-header";
 import { AddressSkeleton } from "@/components/skeletons";
 import { cn } from "@/lib/utils";
 
@@ -111,11 +110,7 @@ export default function AddressesPage() {
 
   return (
     <div>
-      <DashboardPageHeader
-        title="Saved Addresses"
-        description="Manage saved delivery locations and checkout defaults."
-      />
-      <div className="mt-8">
+      <div className="mt-4">
         {items.length ? (
           <Card className="overflow-hidden p-0 shadow-sm">
             <div className="border-b border-slate-200/80 bg-slate-50/60 p-5 dark:border-slate-800 dark:bg-slate-950/40">

@@ -3,7 +3,6 @@
 import { Heart } from "lucide-react";
 import { useWishlistStore } from "@/store/wishlist-store";
 import { ProductCard } from "@/components/product-card";
-import { DashboardPageHeader } from "@/components/dashboard-page-header";
 import { EmptyState } from "@/components/ui";
 
 export default function WishlistPage() {
@@ -11,12 +10,7 @@ export default function WishlistPage() {
 
   return (
     <div>
-      <DashboardPageHeader
-        title="My Wishlist"
-        description="Products you saved with the heart icon appear here."
-      />
-
-      <div className="mt-8">
+      <div className="mt-4">
         {items.length ? (
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {items.map((product) => (

@@ -1,7 +1,7 @@
 "use client";
 
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ArrowRight, Calculator, Clock, MapPin, Package, PackageCheck, Wallet } from "lucide-react";
+import { Calculator, Clock, MapPin, Package, PackageCheck, Wallet } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import * as api from "@/lib/api";
 import { money, shortDate } from "@/lib/utils";
@@ -10,14 +10,12 @@ import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminStatCard } from "@/components/admin-stat-card";
 import { AdminTable } from "@/components/admin-table";
 import Pagination from "@/components/pagination";
-import { Button, Card } from "@/components/ui";
-import { DashboardPageHeader } from "@/components/dashboard-page-header";
+import { Card } from "@/components/ui";
 import { DashboardSkeleton } from "@/components/skeletons";
 import { OrderNotesDialog } from "@/components/order-notes-dialog";
 
 export default function DashboardPage() {
   const token = useAuthStore((state) => state.token);
-  const user = useAuthStore((state) => state.user);
   const [data, setData] = useState(null);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ totalPages: 1 });
@@ -56,7 +54,6 @@ export default function DashboardPage() {
   if (!data) return <DashboardSkeleton />;
 
   const { stats, spendingOverview, recentOrders } = data;
-  const customerName = data.customer?.name || user?.name || "Customer";
   const recentOrderColumns = [
     { key: "id", header: "Order", sortable: true, accessor: "id", cellClassName: "font-semibold tabular-nums text-slate-950 dark:text-white", render: (order) => `#${order.id}` },
     { key: "date", header: "Date", sortable: true, accessor: "date", render: (order) => shortDate(order.date) },
@@ -67,13 +64,7 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <DashboardPageHeader
-        title={`Welcome back, ${customerName.split(" ")[0]}`}
-        description="Track purchases, saved addresses, and spending signals without leaving your account workspace."
-        action={<Button asChild href="/products">Continue Shopping <ArrowRight className="size-4" /></Button>}
-      />
-
-      <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <AdminStatCard label="Total Orders" value={stats.totalOrders} icon={Package} helper="Lifetime order count" tone="blue" />
         <AdminStatCard label="Pending Orders" value={stats.pendingOrders} icon={Clock} helper="Pending or processing" tone="amber" />
         <AdminStatCard label="Total Spent" value={money(stats.totalSpent)} icon={Wallet} helper="Excluding cancelled orders" tone="green" />
@@ -84,7 +75,7 @@ export default function DashboardPage() {
 
       <SpendingChart data={spendingOverview} />
 
-      <div className="mt-8">
+      <div className="mt-6">
         <AdminTable
           title="Recent orders"
           description="Search, sort, and open your latest purchases."

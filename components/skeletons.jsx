@@ -310,8 +310,7 @@ export function AdminProductEditSkeleton() {
 export function WishlistSkeleton() {
   return (
     <div>
-      <HeaderPanelSkeleton titleWidth="w-56" descWidth="w-[28rem]" />
-      <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+      <div className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <Card key={i} className="overflow-hidden rounded-lg p-0 shadow-sm">
             <Skeleton className="aspect-[4/5] w-full rounded-none" />
@@ -434,9 +433,7 @@ export function AdminCustomerDetailSkeleton() {
 export function DashboardSkeleton() {
   return (
     <div>
-      <HeaderPanelSkeleton titleWidth="w-80" descWidth="w-[30rem]" withAction />
-
-      <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => <StatCardSkeleton key={i} />)}
       </div>
 
@@ -452,7 +449,7 @@ export function DashboardSkeleton() {
         </div>
       </Card>
 
-      <div className="mt-8">
+      <div className="mt-6">
         <TableFrameSkeleton rows={5} columns={5} titleWidth="w-40" descWidth="w-72" />
         <div className="mt-4 flex justify-end">
           <Skeleton className="size-9 rounded-sm" />
@@ -465,8 +462,7 @@ export function DashboardSkeleton() {
 export function OrdersSkeleton() {
   return (
     <div>
-      <HeaderPanelSkeleton titleWidth="w-56" descWidth="w-80" />
-      <div className="mt-8">
+      <div className="pt-4 lg:pt-6">
         <TableFrameSkeleton rows={4} columns={7} />
       </div>
     </div>
@@ -579,9 +575,7 @@ export function AuthGateSkeleton({ title = "Loading access...", description = "C
 export function AddressSkeleton() {
   return (
     <div>
-      <HeaderPanelSkeleton titleWidth="w-64" descWidth="w-96" withAction />
-
-      <Card className="mt-8 overflow-hidden p-0 shadow-sm">
+      <Card className="mt-4 overflow-hidden p-0 shadow-sm">
           <div className="border-b border-slate-200/80 bg-slate-50/60 p-5 dark:border-slate-800 dark:bg-slate-950/40">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>

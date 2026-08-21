@@ -85,8 +85,7 @@ export function AdminShell({ children }) {
         <div className="relative z-40 overflow-visible border-b border-slate-200/80 bg-white/90 shadow-[0_1px_0_rgba(15,23,42,0.03)] backdrop-blur-xl print:hidden dark:border-slate-800 dark:bg-slate-900/90">
           <div className="container-page flex min-h-20 flex-col justify-center gap-4 py-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="min-w-0">
-              <p className="text-meta font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">Admin / {activeItem.label}</p>
-              <h2 className="mt-1 truncate font-heading text-h2 font-semibold tracking-[-0.02em] text-slate-950 dark:text-white">{activeItem.label}</h2>
+              <h2 className="truncate font-heading text-h2 font-semibold tracking-[-0.02em] text-slate-950 dark:text-white">Welcome back, Admin</h2>
             </div>
             <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center xl:w-auto">
               <div className="flex flex-wrap items-center gap-2">

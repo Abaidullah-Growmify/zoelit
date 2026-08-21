@@ -5,7 +5,6 @@ import * as api from "@/lib/api";
 import { useAuthStore } from "@/store/auth-store";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminTable } from "@/components/admin-table";
-import { DashboardPageHeader } from "@/components/dashboard-page-header";
 import Pagination from "@/components/pagination";
 import { OrderNotesDialog } from "@/components/order-notes-dialog";
 import { money, shortDate } from "@/lib/utils";
@@ -67,11 +66,7 @@ export default function OrdersPage() {
 
   return (
     <div>
-      <DashboardPageHeader
-        title="My Orders"
-        description="Review order history, tracking, and payment details."
-      />
-      <div className="mt-8">
+      <div className="pt-4 lg:pt-6">
         <AdminTable
           title="Orders"
           description="Search, sort, and open your latest purchases."
@@ -90,7 +85,7 @@ export default function OrdersPage() {
         />
       </div>
       {pagination.totalPages > 1 ? (
-        <div className="mt-8 flex justify-center">
+        <div className="mt-6 flex justify-center">
           <Pagination page={safePage} totalPages={pagination.totalPages} onPageChange={setPage} />
         </div>
       ) : null}
