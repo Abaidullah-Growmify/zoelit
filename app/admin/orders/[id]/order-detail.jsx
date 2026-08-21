@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { Button, Card, Input, Label, Select } from "@/components/ui";
+import { AdminOrderDetailSkeleton } from "@/components/skeletons";
 import { cancelAdminOrder, getAdminOrder, updateAdminOrderStatus } from "@/lib/api";
 import { money, shortDate } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
@@ -99,11 +100,7 @@ export function AdminOrderDetail({ id }) {
   }
 
   if (loading) {
-    return (
-      <div className="grid min-h-64 place-items-center text-slate-500 dark:text-slate-400">
-        <div className="flex items-center gap-2"><Loader2 className="size-5 animate-spin" />Loading order...</div>
-      </div>
-    );
+    return <AdminOrderDetailSkeleton />;
   }
 
   if (notFound || !order) {

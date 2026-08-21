@@ -5,6 +5,7 @@ import { Home, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import * as api from "@/lib/api";
 import { useAuthStore } from "@/store/auth-store";
+import { AdminTableActions, AdminTableCell, AdminTableRow } from "@/components/admin-table";
 import { Badge, Button, Card, Input, Label } from "@/components/ui";
 import { DashboardPageHeader } from "@/components/dashboard-page-header";
 import { AddressSkeleton } from "@/components/skeletons";
@@ -17,7 +18,6 @@ export default function AddressesPage() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [confirming, setConfirming] = useState(null);
-  const defaultAddress = items.find((item) => item.default);
 
   useEffect(() => {
     let active = true;
@@ -110,55 +110,86 @@ export default function AddressesPage() {
   if (loading) return <AddressSkeleton />;
 
   return (
-    <div className="section-fade-up">
+    <div>
       <DashboardPageHeader
         title="Saved Addresses"
         description="Manage saved delivery locations and checkout defaults."
-        action={<Button onClick={openAdd}><Plus className="size-4" /> Add New Address</Button>}
       />
-      <div className="mt-6 flex flex-wrap gap-2 text-meta">
-        <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">{items.length} saved</span>
-        <span className="rounded-full bg-blue-50 px-3 py-1 font-semibold text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">Default: {defaultAddress?.label || "Not set"}</span>
-      </div>
-
-      <div className="mt-5 grid gap-4 md:grid-cols-2">
-        {items.map((address) => (
-          <Card key={address._id} className={cn("transition duration-150 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-200/70 dark:hover:shadow-black/20", address.default && "border-blue-200 bg-blue-50/35 dark:border-blue-500/30 dark:bg-blue-500/5")}>
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <span className={cn("grid size-11 place-items-center rounded-sm bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-200", address.default && "bg-blue-600 text-white dark:bg-blue-500")}>
-                  {address.label.toLowerCase().includes("home") ? <Home className="size-5" /> : <MapPin className="size-5" />}
-                </span>
+      <div className="mt-8">
+        {items.length ? (
+          <Card className="overflow-hidden p-0 shadow-sm">
+            <div className="border-b border-slate-200/80 bg-slate-50/60 p-5 dark:border-slate-800 dark:bg-slate-950/40">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                  <h2 className="font-heading text-h2 font-semibold text-slate-950 dark:text-white">{address.label}</h2>
-                  <p className="mt-1 text-meta font-semibold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">{address.default ? "Primary shipping address" : "Saved address"}</p>
+                  <h2 className="font-heading text-h2 font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">Address table</h2>
+                  <p className="mt-1 text-body font-regular text-slate-600 dark:text-slate-300">Review each delivery location, set the default, or edit details inline.</p>
                 </div>
+                <Button onClick={openAdd} className="shrink-0"><Plus className="size-4" /> Add New Address</Button>
               </div>
-              {address.default ? <Badge tone="slate">Default</Badge> : null}
             </div>
-            <p className="mt-5 text-body font-regular leading-6 text-slate-600 dark:text-slate-300">
-              <span className="font-semibold text-slate-900 dark:text-white">{address.name}</span><br />
-              {address.line1}<br />
-              {address.city}, {address.region} {address.postal}<br />
-              {address.country}
-            </p>
-            <div className="mt-6 flex flex-wrap gap-2 border-t border-slate-100 pt-5 dark:border-slate-800">
-              <Button size="sm" variant="secondary" aria-label={`Edit ${address.label} address`} onClick={() => openEdit(address)}><Pencil className="size-4" /> Edit</Button>
-              <Button size="sm" variant="outline" onClick={() => setDefault(address._id)} disabled={address.default}>{address.default ? "Default" : "Set Default"}</Button>
-              <Button size="sm" variant="danger" onClick={() => setConfirming(address)}><Trash2 className="size-4" /> Delete</Button>
+            <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <table className="w-full text-left text-body">
+                <thead className="border-b border-slate-200/80 bg-slate-50/95 text-body font-semibold uppercase tracking-[0.16em] text-slate-500 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 dark:text-slate-400">
+                  <tr>
+                    <th className="whitespace-nowrap px-6 py-4 font-semibold">Label</th>
+                    <th className="whitespace-nowrap px-6 py-4 font-semibold">Recipient</th>
+                    <th className="whitespace-nowrap px-6 py-4 font-semibold">Location</th>
+                    <th className="whitespace-nowrap px-6 py-4 font-semibold">Status</th>
+                    <th className="whitespace-nowrap px-6 py-4 text-center font-semibold">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {items.map((address, index) => (
+                    <AdminTableRow key={address._id} zebra index={index}>
+                      <AdminTableCell className="whitespace-normal">
+                        <div className="flex items-center gap-3">
+                          <span className={getAddressIconClass(address.default)}>
+                            {address.label.toLowerCase().includes("home") ? <Home className="size-5" /> : <MapPin className="size-5" />}
+                          </span>
+                          <div>
+                            <p className="font-semibold text-slate-950 dark:text-white">{address.label}</p>
+                            <p className="mt-1 text-meta font-regular text-slate-500 dark:text-slate-400">{address.line1}</p>
+                          </div>
+                        </div>
+                      </AdminTableCell>
+                      <AdminTableCell className="whitespace-normal">
+                        <p className="font-semibold text-slate-950 dark:text-white">{address.name}</p>
+                        <p className="mt-1 text-meta font-regular text-slate-500 dark:text-slate-400">{address.country}</p>
+                      </AdminTableCell>
+                      <AdminTableCell className="whitespace-normal">
+                        <p className="font-medium text-slate-700 dark:text-slate-300">{formatLocation(address)}</p>
+                      </AdminTableCell>
+                      <AdminTableCell>
+                        {address.default ? <Badge tone="slate">Default</Badge> : <span className="text-meta font-medium text-slate-500 dark:text-slate-400">Saved</span>}
+                      </AdminTableCell>
+                      <AdminTableCell className="text-center">
+                        <AdminTableActions
+                          label={`Actions for ${address.label}`}
+                          actions={address.default ? [
+                            { label: "Edit", onClick: () => openEdit(address), icon: Pencil },
+                            { label: "Delete", onClick: () => setConfirming(address), icon: Trash2, tone: "danger" },
+                          ] : [
+                            { label: "Edit", onClick: () => openEdit(address), icon: Pencil },
+                            { label: "Set default", onClick: () => setDefault(address._id), icon: Home },
+                            { label: "Delete", onClick: () => setConfirming(address), icon: Trash2, tone: "danger" },
+                          ]}
+                        />
+                      </AdminTableCell>
+                    </AdminTableRow>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </Card>
-        ))}
+        ) : (
+          <Card className="flex flex-col items-center justify-center border-dashed py-14 text-center shadow-sm">
+            <span className="grid size-16 place-items-center rounded-full bg-blue-50 text-blue-700 ring-1 ring-blue-100 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/20"><MapPin className="size-7" /></span>
+            <h2 className="mt-5 font-heading text-h2 font-semibold text-slate-950 dark:text-white">No saved addresses</h2>
+            <p className="mt-2 max-w-md text-body font-regular leading-6 text-slate-500 dark:text-slate-400">Add a delivery location now so checkout only takes a few clicks later.</p>
+            <Button onClick={openAdd} className="mt-6"><Plus className="size-4" /> Add New Address</Button>
+          </Card>
+        )}
       </div>
-
-      {items.length === 0 ? (
-        <Card className="mt-6 flex flex-col items-center justify-center border-dashed py-14 text-center">
-          <span className="grid size-16 place-items-center rounded-sm bg-blue-50 text-blue-700 ring-1 ring-blue-100 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/20"><MapPin className="size-7" /></span>
-          <h2 className="mt-5 font-heading text-h2 font-semibold text-slate-950 dark:text-white">No saved addresses</h2>
-          <p className="mt-2 max-w-md text-body font-regular leading-6 text-slate-500 dark:text-slate-400">Add a delivery location now so checkout only takes a few clicks later.</p>
-          <Button onClick={openAdd} className="mt-6"><Plus className="size-4" /> Add New Address</Button>
-        </Card>
-      ) : null}
 
       {showForm ? (
         <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm">
@@ -210,4 +241,21 @@ function Field({ name, label, className, defaultValue }) {
       <Input name={name} required defaultValue={defaultValue} />
     </div>
   );
+}
+
+function formatLocation(address) {
+  return [
+    address.city,
+    address.region,
+    address.postal,
+    address.country,
+  ].filter(Boolean).join(", ");
+}
+
+function getAddressIconClass(isDefault) {
+  if (isDefault) {
+    return "grid size-11 shrink-0 place-items-center rounded-full bg-blue-600 text-white dark:bg-blue-500 dark:text-white";
+  }
+
+  return "grid size-11 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-200";
 }

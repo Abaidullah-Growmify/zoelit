@@ -1,11 +1,12 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminTable } from "@/components/admin-table";
 import Pagination from "@/components/pagination";
-import { Card, Input, Skeleton } from "@/components/ui";
+import { Button, Card, Input } from "@/components/ui";
+import { AdminCustomersSkeleton } from "@/components/skeletons";
 import { getAdminCustomers } from "@/lib/api";
 import { money, shortDate } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
@@ -62,32 +63,29 @@ export default function AdminCustomersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="max-w-xl text-body font-regular text-slate-600 dark:text-slate-300">All registered customers with their order history and lifetime spend.</p>
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-          <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search customers" aria-label="Search customers" className="w-64 pl-10" />
-        </div>
-      </div>
-
       {rows === null && !error ? (
-        <Card className="p-5">
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="mt-2 h-4 w-72" />
-          <div className="mt-6 space-y-3">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <Skeleton key={index} className="h-14 w-full" />
-            ))}
-          </div>
-        </Card>
+        <AdminCustomersSkeleton />
       ) : error ? (
         <Card className="p-8 text-center text-body font-regular text-rose-600">{error}</Card>
       ) : (
         <>
           <AdminTable
+            title="Customers"
+            description="All registered customers with their order history and lifetime spend."
             columns={columns}
             data={rows}
             pageSize={PAGE_SIZE}
+            toolbar={(
+              <div className="relative min-w-[16rem] flex-1 sm:max-w-md lg:max-w-xl">
+                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search customers" aria-label="Search customers" className="h-10 border-slate-200 bg-white pl-10 shadow-sm dark:border-slate-700 dark:bg-slate-950" />
+              </div>
+            )}
+            action={(
+              <Button asChild href="/admin/customers/new">
+                <Plus className="size-4" /> New customer
+              </Button>
+            )}
             hideSearch
             hidePagination
           />

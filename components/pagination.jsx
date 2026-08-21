@@ -76,28 +76,22 @@ export default function Pagination({
         className
       )}
     >
-      {/* Previous Button */}
       <button
         type="button"
         disabled={page <= 1}
         onClick={() => onPageChange(page - 1)}
         className={cn(
-          "inline-flex h-10 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition",
+          "inline-flex h-10 items-center gap-1.5 rounded-md border px-3 text-sm font-medium transition",
           page <= 1
             ? "cursor-not-allowed border-slate-200 bg-white text-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-600"
-            : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-white"
+            : "border-slate-200 bg-white text-slate-600 shadow-sm hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-white"
         )}
       >
         <ChevronLeft className="size-3.5" />
-
-        <span className="hidden sm:inline">
-          Previous
-        </span>
+        <span className="hidden sm:inline">Previous</span>
       </button>
 
-      {/* Page Numbers */}
       {pages.map((item, index) => {
-        // Dots
         if (item === "...") {
           return (
             <span
@@ -118,15 +112,10 @@ export default function Pagination({
             onClick={() => onPageChange(item)}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              // Rounded rectangle
-              "inline-flex h-10 min-w-10 items-center justify-center rounded-lg border px-3 text-sm font-medium transition",
-
-              // Active page
+              "inline-flex h-10 min-w-10 items-center justify-center rounded-md border px-3 text-sm font-medium transition",
               isActive
                 ? "border-blue-600 bg-blue-600 text-white shadow-sm shadow-blue-600/20"
-
-                // Normal pages
-                : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-white"
+                : "border-slate-200 bg-white text-slate-600 shadow-sm hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-white"
             )}
           >
             {item}
@@ -134,22 +123,18 @@ export default function Pagination({
         );
       })}
 
-      {/* Next Button */}
       <button
         type="button"
         disabled={page >= totalPages}
         onClick={() => onPageChange(page + 1)}
         className={cn(
-          "inline-flex h-10 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition",
+          "inline-flex h-10 items-center gap-1.5 rounded-md border px-3 text-sm font-medium transition",
           page >= totalPages
             ? "cursor-not-allowed border-slate-200 bg-white text-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-600"
-            : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-white"
+            : "border-slate-200 bg-white text-slate-600 shadow-sm hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-white"
         )}
       >
-        <span className="hidden sm:inline">
-          Next
-        </span>
-
+        <span className="hidden sm:inline">Next</span>
         <ChevronRight className="size-3.5" />
       </button>
     </nav>

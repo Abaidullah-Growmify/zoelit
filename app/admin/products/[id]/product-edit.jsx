@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin-page-header";
+import { AdminProductEditSkeleton } from "@/components/skeletons";
 import { getAdminProduct } from "@/lib/api";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
 import { ProductForm } from "../product-form";
@@ -33,11 +33,7 @@ export function AdminProductEdit({ id }) {
   }, [id, token]);
 
   if (loading) {
-    return (
-      <div className="grid min-h-64 place-items-center text-slate-500 dark:text-slate-400">
-        <div className="flex items-center gap-2"><Loader2 className="size-5 animate-spin" />Loading product...</div>
-      </div>
-    );
+    return <AdminProductEditSkeleton />;
   }
 
   if (notFound || !product) {

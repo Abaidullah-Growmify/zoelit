@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { CheckCircle2, Circle, Loader2, Printer } from "lucide-react";
+import { CheckCircle2, Circle, Printer } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import * as api from "@/lib/api";
 import { statuses } from "@/lib/data";
@@ -9,6 +9,7 @@ import { money, shortDate } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
 import { DashboardPageHeader } from "@/components/dashboard-page-header";
 import { Badge, Button, Card } from "@/components/ui";
+import { OrderDetailSkeleton } from "@/components/skeletons";
 import { usePolling } from "@/lib/use-polling";
 import { InvoicePrint } from "@/components/invoice-print";
 import { BulletNotes } from "@/components/bullet-notes";
@@ -40,11 +41,7 @@ export function OrderDetail({ id }) {
   usePolling(load, [id, token], 30000, !loading);
 
   if (loading) {
-    return (
-      <div className="grid min-h-64 place-items-center text-slate-500 dark:text-slate-400">
-        <div className="flex items-center gap-2"><Loader2 className="size-5 animate-spin" />Loading order...</div>
-      </div>
-    );
+    return <OrderDetailSkeleton />;
   }
 
   if (!order) {

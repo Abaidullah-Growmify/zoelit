@@ -1,10 +1,12 @@
 "use client";
 
-import { Search } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { RefreshCw, Search } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { AdminTable } from "@/components/admin-table";
 import Pagination from "@/components/pagination";
-import { Card, Input, Skeleton } from "@/components/ui";
+import { Button, Card, Input } from "@/components/ui";
+import { AdminCategoriesSkeleton } from "@/components/skeletons";
 import { getProductCategories } from "@/lib/api";
 
 const PAGE_SIZE = 10;
@@ -14,8 +16,9 @@ export default function AdminCategoriesPage() {
   const [error, setError] = useState("");
   const [keyword, setKeyword] = useState("");
   const [page, setPage] = useState(1);
+  const [syncing, setSyncing] = useState(false);
 
-  useEffect(() => {
+  const loadCategories = useCallback(() => {
     let active = true;
     getProductCategories()
       .then((data) => {
@@ -37,9 +40,32 @@ export default function AdminCategoriesPage() {
     };
   }, []);
 
+  useEffect(() => {
+    const cleanup = loadCategories();
+    return cleanup;
+  }, [loadCategories]);
+
   function handleSearchChange(value) {
     setKeyword(value);
     setPage(1);
+  }
+
+  async function handleSync() {
+    setSyncing(true);
+    try {
+      const data = await getProductCategories();
+      setRows((data.categories || []).map((category) => ({
+        name: category.name,
+        slug: category.name.toLowerCase().replaceAll(" ", "-"),
+        count: category.count,
+      })));
+      setError("");
+      toast.success("Categories refreshed");
+    } catch (loadError) {
+      toast.error(loadError.message || "Could not refresh categories.");
+    } finally {
+      setSyncing(false);
+    }
   }
 
   const filteredRows = useMemo(() => {
@@ -67,32 +93,29 @@ export default function AdminCategoriesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="max-w-xl text-body font-regular text-slate-600 dark:text-slate-300">Categories are grouped automatically from your product catalog, with live product counts.</p>
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-          <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search categories" aria-label="Search categories" className="w-64 pl-10" />
-        </div>
-      </div>
-
       {rows === null && !error ? (
-        <Card className="p-5">
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="mt-2 h-4 w-72" />
-          <div className="mt-6 space-y-3">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <Skeleton key={index} className="h-14 w-full" />
-            ))}
-          </div>
-        </Card>
+        <AdminCategoriesSkeleton />
       ) : error ? (
         <Card className="p-8 text-center text-body font-regular text-rose-600">{error}</Card>
       ) : (
         <>
           <AdminTable
+            title="Categories"
+            description="Categories are grouped automatically from your product catalog, with live product counts."
             columns={columns}
             data={pageItems}
             pageSize={PAGE_SIZE}
+            toolbar={(
+              <div className="relative min-w-[16rem] flex-1 sm:max-w-md lg:max-w-xl">
+                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search categories" aria-label="Search categories" className="h-10 border-slate-200 bg-white pl-10 shadow-sm dark:border-slate-700 dark:bg-slate-950" />
+              </div>
+            )}
+            action={(
+              <Button onClick={handleSync} disabled={syncing}>
+                <RefreshCw className={`size-4 ${syncing ? "animate-spin" : ""}`} /> Sync categories
+              </Button>
+            )}
             hideSearch
             hidePagination
           />

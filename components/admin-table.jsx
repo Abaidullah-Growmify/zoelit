@@ -19,6 +19,7 @@ export function AdminTable({
   rowActions,
   title,
   description,
+  toolbar,
   action,
   pageSize = DEFAULT_PAGE_SIZE,
   zebra = true,
@@ -34,11 +35,11 @@ export function AdminTable({
 }) {
   if (!data) {
     return (
-      <Card className={cn("overflow-hidden p-0", className)}>
+      <Card className={cn("overflow-hidden p-0 shadow-sm", className)}>
         <div className={cn("overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", wrapperClassName)}>
-<table className={cn("w-full text-left text-body", tableClassName)}>
-            <thead className="sticky top-0 z-10 bg-slate-200/95 text-meta uppercase tracking-[0.14em] text-slate-900 shadow-[0_2px_10px_rgba(15,23,42,0.1)] backdrop-blur dark:bg-slate-800/95 dark:text-white dark:shadow-[0_2px_10px_rgba(0,0,0,0.35)]">
-              <tr>{columns.map((column) => <th key={column} className="whitespace-nowrap px-5 py-4 font-semibold">{column}</th>)}</tr>
+          <table className={cn("w-full text-left text-body", tableClassName)}>
+            <thead className="sticky top-0 z-10 border-b border-slate-200/80 bg-slate-50/95 text-meta uppercase tracking-[0.16em] text-slate-500 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 dark:text-slate-400">
+              <tr>{columns.map((column) => <th key={column} className="whitespace-nowrap px-6 py-4 font-semibold">{column}</th>)}</tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">{children}</tbody>
           </table>
@@ -47,10 +48,10 @@ export function AdminTable({
     );
   }
 
-  return <AdminDataTable columns={columns} data={data} filters={filters} searchPlaceholder={searchPlaceholder} searchKeys={searchKeys} rowActions={rowActions} title={title} description={description} action={action} pageSize={pageSize} zebra={zebra} hideSearch={hideSearch} hidePagination={hidePagination} disableInitialSort={disableInitialSort} page={controlledPage} onPageChange={onPageChange} onPaginationChange={onPaginationChange} className={className} wrapperClassName={wrapperClassName} tableClassName={tableClassName} />;
+  return <AdminDataTable columns={columns} data={data} filters={filters} searchPlaceholder={searchPlaceholder} searchKeys={searchKeys} rowActions={rowActions} title={title} description={description} toolbar={toolbar} action={action} pageSize={pageSize} zebra={zebra} hideSearch={hideSearch} hidePagination={hidePagination} disableInitialSort={disableInitialSort} page={controlledPage} onPageChange={onPageChange} onPaginationChange={onPaginationChange} className={className} wrapperClassName={wrapperClassName} tableClassName={tableClassName} />;
 }
 
-function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys, rowActions, title, description, action, pageSize, zebra, hideSearch, hidePagination, disableInitialSort, page: controlledPage, onPageChange, onPaginationChange, className, wrapperClassName, tableClassName }) {
+function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys, rowActions, title, description, toolbar, action, pageSize, zebra, hideSearch, hidePagination, disableInitialSort, page: controlledPage, onPageChange, onPaginationChange, className, wrapperClassName, tableClassName }) {
   const [query, setQuery] = useState("");
   const [filterValues, setFilterValues] = useState(() => Object.fromEntries(filters.map((filter) => [filter.key, filter.allLabel || "All"])));
   const [sort, setSort] = useState(() => {
@@ -90,6 +91,8 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
   const showingStart = sortedData.length ? pageStart + 1 : 0;
   const showingEnd = Math.min(pageStart + pageSize, sortedData.length);
   const hasActions = typeof rowActions === "function";
+  const hasToolbar = !!toolbar || !hideSearch || filters.length > 0 || !!action;
+  const columnCount = columns.length + (hasActions ? 1 : 0);
 
   useEffect(() => {
     if (!onPaginationChange) return;
@@ -126,51 +129,58 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
 
   return (
     <Card className={cn("overflow-hidden p-0 shadow-sm", className)}>
-      {title || description || !(hideSearch && !filters.length && !action) ? (
-      <div className="border-b border-slate-100 p-5 dark:border-slate-800">
-        {title || description ? (
-          <div className="mb-4">
-            <div>
-              {title ? <h2 className="font-heading text-h2 font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">{title}</h2> : null}
-              {description ? <p className="mt-1 text-body font-regular text-slate-600 dark:text-slate-300">{description}</p> : null}
-            </div>
-          </div>
-        ) : null}
-        {hideSearch && !filters.length && !action ? null : (
-        <div className={cn("grid gap-3", action ? "md:grid-cols-[minmax(0,1fr)_repeat(var(--filter-count),minmax(150px,190px))_auto_auto]" : "md:grid-cols-[minmax(0,1fr)_repeat(var(--filter-count),minmax(150px,190px))_auto]")} style={{ "--filter-count": filters.length }}>
-          {!hideSearch ? (
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-              <Input value={query} onChange={(event) => updateQuery(event.target.value)} placeholder={searchPlaceholder} aria-label={searchPlaceholder} className="pl-10" />
+      {title || description ? (
+        <div className="border-b border-slate-200/80 bg-slate-50/60 p-5 dark:border-slate-800 dark:bg-slate-950/40">
+          {title || description ? (
+            <div className="mb-4">
+              <div>
+                {title ? <h2 className="font-heading text-h2 font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">{title}</h2> : null}
+                {description ? <p className="mt-1 text-body font-regular text-slate-600 dark:text-slate-300">{description}</p> : null}
+              </div>
             </div>
           ) : null}
-          {filters.map((filter) => (
-            <Select key={filter.key} value={filterValues[filter.key]} onChange={(event) => updateFilter(filter.key, event.target.value)} aria-label={filter.label}>
-              <option>{filter.allLabel || "All"}</option>
-              {filter.options.map((option) => <option key={option}>{option}</option>)}
-            </Select>
-          ))}
-          <Button variant="secondary" onClick={resetControls}>Reset</Button>
-          {action ? <div className="flex md:justify-end">{action}</div> : null}
         </div>
-        )}
-      </div>
       ) : null}
       <div className={cn("overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", wrapperClassName)}>
         <table className={cn("w-full text-left text-body", tableClassName)}>
-          <thead className="sticky top-0 z-10 bg-slate-200/95 text-body font-bold uppercase tracking-[0.14em] text-slate-900 shadow-[0_2px_10px_rgba(15,23,42,0.1)] backdrop-blur dark:bg-slate-800/95 dark:text-white dark:shadow-[0_2px_10px_rgba(0,0,0,0.35)]">
+          <thead className="sticky top-0 z-10 border-b border-slate-200/80 bg-slate-50/95 text-body font-semibold uppercase tracking-[0.16em] text-slate-500 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 dark:text-slate-400">
+            {hasToolbar ? (
+              <tr>
+                <th colSpan={columnCount} className="border-b border-slate-200/80 p-4 normal-case tracking-normal text-slate-700 dark:border-slate-800 dark:text-slate-300">
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-3 overflow-x-auto">
+                      {toolbar}
+                      {!hideSearch ? (
+                        <div className="relative min-w-[16rem] flex-1 shrink-0 sm:max-w-md lg:max-w-xl">
+                          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                          <Input value={query} onChange={(event) => updateQuery(event.target.value)} placeholder={searchPlaceholder} aria-label={searchPlaceholder} className="h-10 border-slate-200 bg-white pl-10 shadow-sm dark:border-slate-700 dark:bg-slate-950" />
+                        </div>
+                      ) : null}
+                      {filters.map((filter) => (
+                        <Select key={filter.key} value={filterValues[filter.key]} onChange={(event) => updateFilter(filter.key, event.target.value)} aria-label={filter.label} className="h-10 shrink-0 border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-950">
+                          <option>{filter.allLabel || "All"}</option>
+                          {filter.options.map((option) => <option key={option}>{option}</option>)}
+                        </Select>
+                      ))}
+                      {filters.length > 0 ? <Button variant="secondary" size="sm" onClick={resetControls} className="h-10 shrink-0 shadow-sm">Reset</Button> : null}
+                    </div>
+                    {action ? <div className="flex flex-wrap items-center gap-3 lg:justify-end">{action}</div> : null}
+                  </div>
+                </th>
+              </tr>
+            ) : null}
             <tr>
               {columns.map((column) => (
-                <th key={column.key} className={cn("whitespace-nowrap px-5 py-4 font-bold", column.className)}>
+                <th key={column.key} className={cn("whitespace-nowrap px-6 py-4 font-semibold", column.className)}>
                   {column.sortable ? (
-                    <button type="button" onClick={() => toggleSort(column)} className="inline-flex items-center gap-1 rounded-sm transition hover:text-slate-950 focus:outline-none focus:ring-4 focus:ring-blue-500/10 dark:hover:text-white">
+                    <button type="button" onClick={() => toggleSort(column)} className="inline-flex items-center gap-1.5 rounded-md transition hover:text-slate-950 focus:outline-none focus:ring-4 focus:ring-blue-500/10 dark:hover:text-white">
                       {column.header}
                       {sort?.key === column.key ? sort.direction === "asc" ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" /> : <ChevronDown className="size-3.5 opacity-30" />}
                     </button>
                   ) : column.header}
                 </th>
               ))}
-              {hasActions ? <th className="whitespace-nowrap px-5 py-4 text-center font-bold">Actions</th> : null}
+              {hasActions ? <th className="whitespace-nowrap px-6 py-4 text-center font-semibold">Actions</th> : null}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -182,28 +192,34 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
             ))}
             {!pageItems.length ? (
               <tr>
-                <td colSpan={columns.length + (hasActions ? 1 : 0)} className="px-5 py-12 text-center text-body font-regular text-slate-500 dark:text-slate-400">No results match your filters.</td>
+                <td colSpan={columnCount} className="px-6 py-12 text-center text-body font-regular text-slate-500 dark:text-slate-400">No results match your filters.</td>
               </tr>
             ) : null}
           </tbody>
+          {!hidePagination ? (
+            <tfoot>
+              <tr>
+                <th colSpan={columnCount} className="border-t border-slate-200/80 bg-slate-50/60 px-5 py-4 text-body font-normal normal-case tracking-normal dark:border-slate-800 dark:bg-slate-950/40">
+                  <div className="flex flex-col gap-3 text-body sm:flex-row sm:items-center sm:justify-between">
+                    <p className="font-regular text-slate-600 dark:text-slate-300">Showing {showingStart}-{showingEnd} of {sortedData.length} results</p>
+                    <Pagination page={safePage} totalPages={totalPages} onPageChange={setPage} />
+                  </div>
+                </th>
+              </tr>
+            </tfoot>
+          ) : null}
         </table>
       </div>
-      {!hidePagination ? (
-        <div className="flex flex-col gap-3 border-t border-slate-100 px-5 py-4 text-body sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
-          <p className="font-regular text-slate-600 dark:text-slate-300">Showing {showingStart}-{showingEnd} of {sortedData.length} results</p>
-          <Pagination page={safePage} totalPages={totalPages} onPageChange={setPage} />
-        </div>
-      ) : null}
     </Card>
   );
 }
 
 export function AdminTableRow({ children, zebra = true, index = 0 }) {
-  return <tr className={cn("transition hover:bg-blue-50/70 dark:hover:bg-slate-950/80", zebra && index % 2 === 1 && "bg-slate-50/55 dark:bg-slate-950/35")}>{children}</tr>;
+  return <tr className={cn("transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60", zebra && index % 2 === 1 && "bg-slate-50/60 dark:bg-slate-950/35")}>{children}</tr>;
 }
 
 export function AdminTableCell({ children, className }) {
-  return <td className={cn("whitespace-nowrap px-5 py-4 align-middle text-body font-regular text-slate-700 dark:text-slate-300", className)}>{children}</td>;
+  return <td className={cn("whitespace-nowrap px-6 py-4 align-middle text-body font-regular text-slate-700 dark:text-slate-300", className)}>{children}</td>;
 }
 
 export function AdminTableActions({ actions, label = "Row actions" }) {
@@ -212,7 +228,7 @@ export function AdminTableActions({ actions, label = "Row actions" }) {
   if (actions.length === 1) {
     const action = actions[0];
     const Icon = action.icon || Eye;
-    const className = "inline-grid size-9 place-items-center rounded-sm text-slate-900 transition hover:bg-slate-100 hover:text-blue-700 dark:text-white dark:hover:bg-slate-800 dark:hover:text-blue-300";
+    const className = "inline-grid size-9 place-items-center rounded-md border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:text-blue-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:text-blue-300";
     if (action.href) {
       return <Link href={action.href} aria-label={action.label} title={action.label} className={className}><Icon className="size-4" /></Link>;
     }
@@ -222,14 +238,14 @@ export function AdminTableActions({ actions, label = "Row actions" }) {
   return (
     <div className="relative inline-block text-left">
       <details className="group">
-        <summary className="inline-grid size-9 cursor-pointer list-none place-items-center rounded-sm text-slate-500 transition hover:bg-slate-100 hover:text-slate-950 group-open:bg-slate-100 group-open:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white dark:group-open:bg-slate-800 dark:group-open:text-white" aria-label={label}>
+        <summary className="inline-grid size-9 cursor-pointer list-none place-items-center rounded-md border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:text-slate-950 group-open:border-slate-300 group-open:text-slate-950 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:text-white dark:group-open:border-slate-600 dark:group-open:text-white" aria-label={label}>
           <MoreVertical className="size-4" />
         </summary>
-        <div className="absolute right-0 z-30 mt-2 w-36 overflow-hidden rounded-md border border-slate-200 bg-white py-1 shadow-xl shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-900">
+        <div className="absolute right-0 z-30 mt-2 w-40 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-[0_18px_55px_rgba(15,23,42,0.12)] dark:border-slate-800 dark:bg-slate-900">
           {actions.map((action) => action.href ? (
-            <Link key={action.label} href={action.href} className={cn("block px-4 py-2 text-left text-body font-regular text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800", action.tone === "danger" && "text-rose-600 dark:text-rose-300")}>{action.label}</Link>
+            <Link key={action.label} href={action.href} className={cn("block px-4 py-2.5 text-left text-body font-regular text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800", action.tone === "danger" && "text-rose-600 dark:text-rose-300")}>{action.label}</Link>
           ) : (
-            <button key={action.label} type="button" onClick={action.onClick} className={cn("block w-full px-4 py-2 text-left text-body font-regular text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800", action.tone === "danger" && "text-rose-600 dark:text-rose-300")}>{action.label}</button>
+            <button key={action.label} type="button" onClick={action.onClick} className={cn("block w-full px-4 py-2.5 text-left text-body font-regular text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800", action.tone === "danger" && "text-rose-600 dark:text-rose-300")}>{action.label}</button>
           ))}
         </div>
       </details>

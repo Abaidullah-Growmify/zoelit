@@ -21,6 +21,7 @@ export default function DashboardPage() {
   const [data, setData] = useState(null);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ totalPages: 1 });
+  const safePage = Math.min(page, pagination.totalPages);
 
   const handlePaginationChange = useCallback((next) => {
     setPagination((current) => {
@@ -51,10 +52,6 @@ export default function DashboardPage() {
       active = false;
     };
   }, [token]);
-
-  useEffect(() => {
-    if (page > pagination.totalPages) setPage(pagination.totalPages);
-  }, [page, pagination.totalPages]);
 
   if (!data) return <DashboardSkeleton />;
 
@@ -97,7 +94,7 @@ export default function DashboardPage() {
           searchKeys={["id", "status", "total"]}
           filters={[{ key: "status", label: "Filter recent orders by status", allLabel: "All statuses", options: Array.from(new Set(recentOrders.map((order) => order.status))), value: (order) => order.status }]}
           pageSize={5}
-          page={page}
+          page={safePage}
           onPageChange={setPage}
           onPaginationChange={handlePaginationChange}
           hidePagination
@@ -105,7 +102,7 @@ export default function DashboardPage() {
         />
         {pagination.totalPages > 1 ? (
           <div className="mt-6 flex justify-center">
-            <Pagination page={page} totalPages={pagination.totalPages} onPageChange={setPage} />
+            <Pagination page={safePage} totalPages={pagination.totalPages} onPageChange={setPage} />
           </div>
         ) : null}
       </div>

@@ -6,7 +6,8 @@ import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminTable } from "@/components/admin-table";
 import { OrderNotesDialog } from "@/components/order-notes-dialog";
 import Pagination from "@/components/pagination";
-import { Card, Input, Select, Skeleton } from "@/components/ui";
+import { Card, Input, Select } from "@/components/ui";
+import { AdminOrdersSkeleton } from "@/components/skeletons";
 import { getAdminOrders } from "@/lib/api";
 import { money, shortDate } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
@@ -96,35 +97,31 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-          <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search order, customer or tracking" aria-label="Search orders" className="w-64 pl-10" />
-        </div>
-        <div className="w-48 shrink-0">
-          <Select value={status} onChange={(event) => handleStatusChange(event.target.value)} aria-label="Filter orders by status">
-            {STATUS_OPTIONS.map((option) => <option key={option}>{option}</option>)}
-          </Select>
-        </div>
-      </div>
-
       {orders === null && !error ? (
-        <Card className="p-5">
-          <Skeleton className="h-6 w-48" />
-          <div className="mt-6 space-y-3">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <Skeleton key={index} className="h-14 w-full" />
-            ))}
-          </div>
-        </Card>
+        <AdminOrdersSkeleton />
       ) : error ? (
         <Card className="p-8 text-center text-body font-regular text-rose-600">{error}</Card>
       ) : (
         <>
           <AdminTable
+            title="Orders"
+            description="Review order history, tracking, and payment details."
             columns={columns}
             data={orders}
             pageSize={PAGE_SIZE}
+            toolbar={(
+              <>
+                <div className="relative min-w-[16rem] flex-1 sm:max-w-md lg:max-w-xl">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                  <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search order, customer or tracking" aria-label="Search orders" className="h-10 border-slate-200 bg-white pl-10 shadow-sm dark:border-slate-700 dark:bg-slate-950" />
+                </div>
+                <div className="w-full shrink-0 sm:w-56">
+                  <Select value={status} onChange={(event) => handleStatusChange(event.target.value)} aria-label="Filter orders by status" className="h-10 border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-950">
+                    {STATUS_OPTIONS.map((option) => <option key={option}>{option}</option>)}
+                  </Select>
+                </div>
+              </>
+            )}
             hideSearch
             hidePagination
             disableInitialSort

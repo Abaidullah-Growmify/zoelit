@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Eye, Loader2, Mail, MapPin, Pencil, Phone, ShoppingBag, Wallet } from "lucide-react";
+import { Eye, Mail, MapPin, Pencil, Phone, ShoppingBag, Wallet } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { AdminStatCard } from "@/components/admin-stat-card";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminTable, AdminTableCell, AdminTableRow } from "@/components/admin-table";
 import { OrderNotesDialog } from "@/components/order-notes-dialog";
 import { Button, Card } from "@/components/ui";
+import { AdminCustomerDetailSkeleton } from "@/components/skeletons";
 import { getAdminCustomer } from "@/lib/api";
 import { money, shortDate } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
@@ -41,11 +42,7 @@ export function AdminCustomerDetail({ id }) {
   }, [id, token]);
 
   if (loading) {
-    return (
-      <div className="grid min-h-64 place-items-center text-slate-500 dark:text-slate-400">
-        <div className="flex items-center gap-2"><Loader2 className="size-5 animate-spin" />Loading customer...</div>
-      </div>
-    );
+    return <AdminCustomerDetailSkeleton />;
   }
 
   if (notFound || !customer) {

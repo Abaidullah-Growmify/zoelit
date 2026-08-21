@@ -23,13 +23,13 @@ export function Card({ className, ...props }) {
   return <div className={cn("rounded-lg border border-slate-200/90 bg-white p-6 shadow-[0_18px_55px_rgba(15,23,42,0.06)] dark:border-slate-800 dark:bg-slate-900/95", className)} {...props} />;
 }
 
-export function PageHeader({ eyebrow, title, description, action, align = "left", className }) {
+export function PageHeader({ eyebrow, title, description, action, align = "left", className, titleClassName, descriptionClassName }) {
   const centered = align === "center";
   return (
     <div className={cn(centered ? "mx-auto max-w-3xl text-center" : "flex flex-col justify-between gap-5 md:flex-row md:items-end", className)}>
       <div className={cn(centered ? "mx-auto" : "")}>
-        <h1 aria-label={eyebrow ? `${eyebrow}: ${title}` : undefined} className="max-w-4xl text-balance font-heading text-4xl font-extrabold tracking-[-0.035em] text-slate-950 sm:text-5xl dark:text-white">{title}</h1>
-        {description ? <p className={cn("mt-4 text-body font-regular leading-7 text-slate-600 dark:text-slate-300", centered ? "mx-auto max-w-2xl" : "max-w-2xl")}>{description}</p> : null}
+        <h1 aria-label={eyebrow ? `${eyebrow}: ${title}` : undefined} className={cn("max-w-4xl text-balance font-heading text-4xl font-extrabold tracking-[-0.035em] text-slate-950 sm:text-5xl dark:text-white", titleClassName)}>{title}</h1>
+        {description ? <p className={cn("mt-4 text-body font-regular leading-7 text-slate-600 dark:text-slate-300", centered ? "mx-auto max-w-2xl" : "max-w-2xl", descriptionClassName)}>{description}</p> : null}
       </div>
       {action ? <div className={cn(centered ? "mt-6" : "shrink-0")}>{action}</div> : null}
     </div>

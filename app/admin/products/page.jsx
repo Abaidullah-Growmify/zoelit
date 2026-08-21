@@ -7,7 +7,8 @@ import { toast } from "sonner";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminTable } from "@/components/admin-table";
 import Pagination from "@/components/pagination";
-import { Button, Card, Input, Skeleton } from "@/components/ui";
+import { Button, Card, Input } from "@/components/ui";
+import { AdminProductsSkeleton } from "@/components/skeletons";
 import { getAdminProducts, startPriceSync, startProductSync } from "@/lib/api";
 import { FALLBACK_IMAGE } from "@/lib/product-mapper";
 import { money } from "@/lib/utils";
@@ -95,45 +96,37 @@ export default function AdminProductsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="max-w-xl text-body font-regular text-slate-600 dark:text-slate-300">Browse and manage your product catalog. Products with photos and stock appear first.</p>
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-            <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search products, SKU or category" aria-label="Search products" className="w-64 pl-10" />
-          </div>
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={handlePriceSync} disabled={syncing}>
-              <RefreshCw className={`size-4 ${syncing ? "animate-spin" : ""}`} /> Sync prices
-            </Button>
-            <Button onClick={handleSync} disabled={syncing}>
-              <RefreshCw className={`size-4 ${syncing ? "animate-spin" : ""}`} /> Sync products
-            </Button>
-          </div>
-        </div>
-      </div>
-
       {rows === null && !error ? (
-        <Card className="p-5">
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="mt-2 h-4 w-72" />
-          <div className="mt-6 space-y-3">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <Skeleton key={index} className="h-14 w-full" />
-            ))}
-          </div>
-        </Card>
+        <AdminProductsSkeleton />
       ) : error ? (
         <Card className="p-8 text-center text-body font-regular text-rose-600">{error}</Card>
       ) : (
         <>
           <AdminTable
+            title="Products"
+            description="Browse and manage your product catalog. Products with photos and stock appear first."
             columns={columns}
             data={rows}
             pageSize={PAGE_SIZE}
+            toolbar={(
+              <div className="relative min-w-[16rem] flex-1 sm:max-w-md lg:max-w-xl">
+                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search products, SKU or category" aria-label="Search products" className="h-10 border-slate-200 bg-white pl-10 shadow-sm dark:border-slate-700 dark:bg-slate-950" />
+              </div>
+            )}
             hideSearch
             hidePagination
             disableInitialSort
+            action={(
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={handlePriceSync} disabled={syncing}>
+                  <RefreshCw className={`size-4 ${syncing ? "animate-spin" : ""}`} /> Sync prices
+                </Button>
+                <Button onClick={handleSync} disabled={syncing}>
+                  <RefreshCw className={`size-4 ${syncing ? "animate-spin" : ""}`} /> Sync products
+                </Button>
+              </div>
+            )}
             rowActions={(product) => [
               { label: `View ${product.name}`, href: `/products/${product.id}`, icon: Eye },
             ]}
