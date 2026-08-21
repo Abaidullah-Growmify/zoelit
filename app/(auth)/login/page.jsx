@@ -4,7 +4,7 @@ import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Loader2, UserRound } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -14,6 +14,14 @@ import { Button, ErrorText, Input, Label } from "@/components/ui";
 const schema = z.object({ email: z.string().email("Enter a valid email address"), password: z.string().min(6, "Password must be at least 6 characters"), remember: z.boolean().optional() });
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+function LoginContent() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const params = useSearchParams();

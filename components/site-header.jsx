@@ -25,6 +25,7 @@ export function SiteHeader() {
   const authHydrated = useAuthStore((state) => state.hasHydrated);
   const cartHydrated = useCartStore((state) => state.hasHydrated);
   const count = useCartStore((state) => state.count());
+  const cartReady = authHydrated && cartHydrated;
   const openCart = useCartStore((state) => state.openCart);
   const accountHref = authHydrated && user ? "/dashboard" : "/login";
   const AccountIcon = authHydrated && user ? User : LogIn;
@@ -32,13 +33,13 @@ export function SiteHeader() {
   const isActive = (href) => href === "/" ? pathname === href : pathname.startsWith(href);
 
   useEffect(() => {
-    if (!cartHydrated || count === 0 || !cartButtonRef.current) return;
+    if (!cartReady || count === 0 || !cartButtonRef.current) return;
     cartButtonRef.current.animate([
       { transform: "scale(1)" },
       { transform: "scale(1.12)" },
       { transform: "scale(1)" },
     ], { duration: 260, easing: "cubic-bezier(.22,1,.36,1)" });
-  }, [cartHydrated, count]);
+  }, [cartReady, count]);
 
   useEffect(() => {
     if (!open) return;
@@ -77,10 +78,10 @@ export function SiteHeader() {
               data-cart-target
               onClick={openCart}
               className="relative grid size-11 place-items-center rounded-sm text-slate-950 transition hover:bg-slate-100 dark:text-slate-50 dark:hover:bg-slate-800"
-              aria-label={`Open cart${cartHydrated ? `, ${count} item${count === 1 ? "" : "s"}` : ""}`}
+              aria-label={`Open cart${cartReady ? `, ${count} item${count === 1 ? "" : "s"}` : ""}`}
             >
               <ShoppingBag className="size-5" />
-              {cartHydrated && count > 0 ? (
+              {cartReady && count > 0 ? (
                 <span key={count} className="absolute right-0.5 top-0.5 grid size-5 place-items-center rounded-sm bg-blue-600 text-xs font-semibold leading-none text-white ring-2 ring-white dark:ring-slate-950">
                   {count}
                 </span>

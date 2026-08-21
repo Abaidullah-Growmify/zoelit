@@ -62,7 +62,7 @@ export function OrderDetail({ id }) {
     <>
       <div className="print:hidden">
         <DashboardPageHeader
-          title={`Order #${order.orderNumber}`}
+          title={`Order #${order.customerOrderNumber || order.orderNumber}`}
           description={`Placed ${shortDate(order.date)}. Review shipment progress, items, payment, and delivery information.`}
           action={<Button variant="outline" onClick={() => window.print()}><Printer className="size-4" />Print invoice</Button>}
         />

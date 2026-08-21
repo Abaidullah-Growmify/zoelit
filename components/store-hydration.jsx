@@ -39,6 +39,7 @@ export function StoreHydration() {
   const hasHydratedAdmin = useAppSelector((state) => state.adminAuth.hasHydrated);
   const customerTimerRef = useRef(null);
   const adminTimerRef = useRef(null);
+  const hydratedCartScopeRef = useRef(null);
 
   useEffect(() => {
     const auth = readStorage("zoelit-auth");
@@ -50,6 +51,10 @@ export function StoreHydration() {
 
   useEffect(() => {
     if (!hasHydratedAuth) return;
+
+    const scope = userId || "guest";
+    if (hydratedCartScopeRef.current === scope) return;
+    hydratedCartScopeRef.current = scope;
 
     const cart = userId
       ? readStorage(getCartStorageKey(userId))
