@@ -28,9 +28,11 @@ export default function CheckoutPage() {
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [isMounted, setIsMounted] = useState(false);
 
-  const draftStorageKey = token ? `zoelit-checkout-draft:${user?.id || user?._id || "guest"}` : "zoelit-checkout-draft:guest";
+  const scopedUserId = String(user?.id || user?._id || "").trim();
+  const draftStorageKey = token && scopedUserId ? `zoelit-checkout-draft:${scopedUserId}` : null;
 
   function readDraft() {
+    if (!draftStorageKey) return null;
     if (typeof localStorage === "undefined") return null;
     try {
       const raw = localStorage.getItem(draftStorageKey);
@@ -43,6 +45,7 @@ export default function CheckoutPage() {
   }
 
   function saveDraft(values, sessionKey = checkoutSessionKey, lastSubmittedSignature = null) {
+    if (!draftStorageKey) return;
     if (typeof localStorage === "undefined") return;
     try {
       const existing = readDraft();
@@ -93,6 +96,7 @@ export default function CheckoutPage() {
   }
 
   function clearDraft() {
+    if (!draftStorageKey) return;
     if (typeof localStorage === "undefined") return;
     try {
       localStorage.removeItem(draftStorageKey);
@@ -126,6 +130,15 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (!isMounted) return;
 
+    if (!draftStorageKey) {
+      try {
+        localStorage.removeItem("zoelit-checkout-draft:guest");
+      } catch {
+        // Ignore storage failures.
+      }
+      return;
+    }
+
     const draft = readDraft();
     if (!draft?.values) return;
 
@@ -144,7 +157,7 @@ export default function CheckoutPage() {
     if (draft.sessionKey) {
       setCheckoutSessionKey(draft.sessionKey);
     }
-  }, [form, isMounted]);
+  }, [draftStorageKey, form, isMounted]);
 
   const cartItems = items
     .map((item) => ({
