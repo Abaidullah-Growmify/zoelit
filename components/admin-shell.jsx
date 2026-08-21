@@ -82,7 +82,7 @@ export function AdminShell({ children }) {
       <aside className={cn("fixed inset-y-0 left-0 z-30 hidden border-r border-slate-200/80 bg-white/95 shadow-[12px_0_50px_rgba(15,23,42,0.04)] backdrop-blur transition-[width] duration-200 lg:block print:hidden dark:border-slate-800 dark:bg-slate-900/95", sidebarCollapsed ? "w-32 p-3" : "w-72 p-5")}>{sidebar}</aside>
       {mobileOpen ? <div className="fixed inset-0 z-50 lg:hidden print:hidden"><div className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onClick={() => setMobileOpen(false)} /><aside className="absolute inset-y-0 left-0 w-80 overflow-hidden bg-white p-5 shadow-2xl dark:bg-slate-900"><button className="mb-4 ml-auto grid size-10 place-items-center rounded-sm border border-slate-200 dark:border-slate-700" onClick={() => setMobileOpen(false)} aria-label="Close admin menu"><X className="size-5" /></button>{mobileSidebar}</aside></div> : null}
       <main className={cn("transition-[padding] duration-200", sidebarCollapsed ? "lg:pl-32" : "lg:pl-72")}>
-        <div className="relative z-40 overflow-visible border-b border-slate-200/80 bg-white/90 shadow-[0_1px_0_rgba(15,23,42,0.03)] backdrop-blur-xl print:hidden dark:border-slate-800 dark:bg-slate-900/90">
+        <div className="sticky top-0 z-40 overflow-visible border-b border-slate-200/80 bg-white/90 shadow-[0_1px_0_rgba(15,23,42,0.03)] backdrop-blur-xl print:hidden dark:border-slate-800 dark:bg-slate-900/90">
           <div className="container-page flex min-h-20 flex-col justify-center gap-4 py-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="min-w-0">
               <h2 className="truncate font-heading text-h2 font-semibold tracking-[-0.02em] text-slate-950 dark:text-white">Welcome back, Admin</h2>
