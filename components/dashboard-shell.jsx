@@ -25,13 +25,23 @@ export function DashboardShell({ children }) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [hydrationTimedOut, setHydrationTimedOut] = useState(false);
   const profileRef = useRef(null);
   const user = useAuthStore((state) => state.user);
   const ready = useAuthStore((state) => state.hasHydrated);
   const logout = useAuthStore((state) => state.logout);
   const pathname = usePathname();
   const router = useRouter();
-  useEffect(() => { if (ready && !user) router.replace(`/login?next=${encodeURIComponent(window.location.pathname)}`); }, [ready, user, router]);
+  useEffect(() => {
+    if (ready) {
+      setHydrationTimedOut(false);
+      return;
+    }
+
+    const timer = window.setTimeout(() => setHydrationTimedOut(true), 2500);
+    return () => window.clearTimeout(timer);
+  }, [ready]);
+  useEffect(() => { if ((ready || hydrationTimedOut) && !user) router.replace(`/login?next=${encodeURIComponent(window.location.pathname)}`); }, [ready, hydrationTimedOut, user, router]);
   useEffect(() => {
     const handleFullscreenChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
     document.addEventListener("fullscreenchange", handleFullscreenChange);
@@ -61,7 +71,11 @@ export function DashboardShell({ children }) {
   const sidebar = <Sidebar collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} onToggleCollapsed={() => setSidebarCollapsed((collapsed) => !collapsed)} />;
   const mobileSidebar = <Sidebar collapsed={false} onNavigate={() => setMobileOpen(false)} />;
 
-  if (!ready || !user) {
+  if (!ready && !hydrationTimedOut) {
+    return <AuthGateSkeleton title="Checking customer access..." description="Redirecting to login if your session is missing or expired." />;
+  }
+
+  if (!user) {
     return <AuthGateSkeleton title="Checking customer access..." description="Redirecting to login if your session is missing or expired." />;
   }
 

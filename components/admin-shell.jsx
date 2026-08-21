@@ -24,6 +24,7 @@ export function AdminShell({ children }) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [hydrationTimedOut, setHydrationTimedOut] = useState(false);
   const profileRef = useRef(null);
   const pathname = usePathname();
   const router = useRouter();
@@ -32,8 +33,18 @@ export function AdminShell({ children }) {
   const logout = useAdminAuthStore((state) => state.logout);
 
   useEffect(() => {
-    if (pathname !== "/admin/login" && ready && !admin) router.replace(`/admin/login?next=${encodeURIComponent(pathname)}`);
-  }, [ready, admin, router, pathname]);
+    if (ready) {
+      setHydrationTimedOut(false);
+      return;
+    }
+
+    const timer = window.setTimeout(() => setHydrationTimedOut(true), 2500);
+    return () => window.clearTimeout(timer);
+  }, [ready]);
+
+  useEffect(() => {
+    if (pathname !== "/admin/login" && (ready || hydrationTimedOut) && !admin) router.replace(`/admin/login?next=${encodeURIComponent(pathname)}`);
+  }, [ready, hydrationTimedOut, admin, router, pathname]);
 
   useEffect(() => {
     const handleFullscreenChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
@@ -69,7 +80,11 @@ export function AdminShell({ children }) {
   const sidebar = <Sidebar collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} onToggleCollapsed={() => setSidebarCollapsed((collapsed) => !collapsed)} />;
   const mobileSidebar = <Sidebar collapsed={false} onNavigate={() => setMobileOpen(false)} />;
 
-  if (!ready || !admin) {
+  if (!ready && !hydrationTimedOut) {
+    return <AuthGateSkeleton title="Checking admin access..." description="Redirecting to admin login if your session is missing or expired." />;
+  }
+
+  if (!admin && pathname !== "/admin/login") {
     return <AuthGateSkeleton title="Checking admin access..." description="Redirecting to admin login if your session is missing or expired." />;
   }
 
