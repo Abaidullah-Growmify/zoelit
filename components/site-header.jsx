@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Heart, LogIn, Menu, ShoppingBag, User, X } from "lucide-react";
 import { useCartStore } from "@/store/cart-store";
 import { useAuthStore } from "@/store/auth-store";
@@ -23,6 +23,12 @@ export function SiteHeader() {
   const openCart = useCartStore((state) => state.openCart);
   const user = useAuthStore((state) => state.user);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const isClientReady = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+  const canOpenWishlist = isClientReady && Boolean(user);
 
   useEffect(() => {
     if (!cartHydrated || count === 0 || !cartButtonRef.current) return;
@@ -67,9 +73,15 @@ export function SiteHeader() {
           })}
         </nav>
         <div className="flex items-center gap-2">
-          <button type="button" aria-label="Favorites" className="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant transition duration-200 ease-out hover:bg-surface-container-low hover:text-primary active:scale-95 motion-reduce:transition-colors">
-            <Heart className="size-5" />
-          </button>
+          {canOpenWishlist ? (
+            <Link href="/dashboard/wishlist" aria-label="Open wishlist" className="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant transition duration-200 ease-out hover:bg-surface-container-low hover:text-primary active:scale-95 motion-reduce:transition-colors">
+              <Heart className="size-5" />
+            </Link>
+          ) : (
+            <button type="button" aria-label="Wishlist is available after login" disabled className="flex h-10 w-10 cursor-default items-center justify-center rounded-full text-on-surface-variant opacity-70 motion-reduce:transition-colors">
+              <Heart className="size-5" />
+            </button>
+          )}
           <button
             ref={cartButtonRef}
             type="button"

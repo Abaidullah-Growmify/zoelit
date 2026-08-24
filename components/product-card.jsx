@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef } from "react";
+import { useRef, useSyncExternalStore } from "react";
 import { Heart, ShoppingBag, Star } from "lucide-react";
 import { cn, money } from "@/lib/utils";
 import { useCartStore } from "@/store/cart-store";
@@ -31,9 +31,15 @@ export function ProductCard({
   const token = useAuthStore((state) => state.token);
   const toggleWishlist = useWishlistStore((state) => state.toggleItem);
   const storedWishlisted = useWishlistStore((state) => (productId ? state.hasItem(productId) : false));
+  const isClientReady = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
-  const isWishlisted = controlledWishlisted ?? storedWishlisted;
-  const remainingStock = Math.max((Number(stockCount) || 0) - cartQuantity, 0);
+  const isWishlisted = isClientReady && (controlledWishlisted ?? storedWishlisted);
+  const effectiveCartQuantity = isClientReady ? cartQuantity : 0;
+  const remainingStock = Math.max((Number(stockCount) || 0) - effectiveCartQuantity, 0);
   const hasDetailLink = Boolean(productId);
   const detailHref = hasDetailLink ? `/products/${productId}` : undefined;
 

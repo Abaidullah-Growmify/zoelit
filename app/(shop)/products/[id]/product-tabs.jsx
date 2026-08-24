@@ -75,9 +75,9 @@ export function ProductTabs({ product }) {
           <div id={`${baseId}-details-panel`} role="tabpanel" aria-labelledby={`${baseId}-details-tab`} className="tab-reveal" key="details">
             <dl className="divide-y divide-outline-variant/40">
               {Object.entries(product.details).map(([key, value]) => (
-                <div key={key} className="flex items-center justify-between gap-6 py-3">
-                  <dt className="text-label-sm font-semibold text-on-surface-variant">{key}</dt>
-                  <dd className="text-right text-label-sm font-semibold text-on-surface">{value}</dd>
+                <div key={key} className="flex min-w-0 items-center justify-between gap-6 py-3">
+                  <dt className="shrink-0 text-label-sm font-semibold text-on-surface-variant">{key}</dt>
+                  <dd className="min-w-0 break-words text-right text-label-sm font-semibold text-on-surface [overflow-wrap:anywhere]">{value}</dd>
                 </div>
               ))}
             </dl>
@@ -93,13 +93,13 @@ export function ProductTabs({ product }) {
             </div>
             <div className="mt-4 space-y-4">
               {product.reviews.map((review) => (
-                <article key={`${review.name}-${review.title}`} className="rounded-xl border border-outline-variant/70 bg-surface-container-lowest p-4 shadow-sm">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-label-md font-semibold text-on-surface">{review.name}</span>
+                <article key={`${review.name}-${review.title}`} className="min-w-0 overflow-hidden rounded-xl border border-outline-variant/70 bg-surface-container-lowest p-4 shadow-sm">
+                  <div className="flex min-w-0 items-center justify-between gap-3">
+                    <span className="min-w-0 break-words text-label-md font-semibold text-on-surface [overflow-wrap:anywhere]">{review.name}</span>
                     <Stars rating={review.rating} />
                   </div>
-                  <p className="mt-2 text-label-md font-semibold leading-5 text-on-surface">{review.title}</p>
-                  <p className="mt-1 text-body-md leading-6 text-on-surface-variant">{review.comment}</p>
+                  <p className="mt-2 min-w-0 break-words text-label-md font-semibold leading-5 text-on-surface [overflow-wrap:anywhere]">{review.title}</p>
+                  <p className="mt-1 min-w-0 break-words text-body-md leading-6 text-on-surface-variant [overflow-wrap:anywhere]">{review.comment}</p>
                 </article>
               ))}
             </div>

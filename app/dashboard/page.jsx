@@ -1,14 +1,14 @@
 "use client";
 
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { Calculator, Clock, MapPin, Package, PackageCheck, Wallet } from "lucide-react";
+import { Calculator, Clock, MapPin, Package, PackageCheck, ShoppingBag, Wallet } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import * as api from "@/lib/api";
 import { money, shortDate } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
 import { AdminStatCard } from "@/components/admin-stat-card";
 import { AdminTable } from "@/components/admin-table";
-import { Badge } from "@/components/ui";
+import { Badge, Button } from "@/components/ui";
 import Pagination from "@/components/pagination";
 import { Card } from "@/components/ui";
 import { DashboardSkeleton } from "@/components/skeletons";
@@ -76,6 +76,11 @@ export default function DashboardPage() {
       <SpendingChart data={spendingOverview} />
 
       <div className="mt-6">
+        <div className="mb-4 flex justify-end">
+          <Button asChild href="/products" className="h-12 w-full shrink-0 sm:w-auto">
+            <ShoppingBag className="size-4" /> Continue Shopping
+          </Button>
+        </div>
         <AdminTable
           title="Recent orders"
           description="Search, sort, and open your latest purchases."

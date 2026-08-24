@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import * as api from "@/lib/api";
-import { STORAGE_KEYS, getCartStorageKey, readStorage } from "@/store";
+import { STORAGE_KEYS, clearCompletedCheckoutStorage, getCartStorageKey, hasCompletedCheckoutCleanup, readStorage } from "@/store";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { forceLogout, hydrateAuth, setSessionChecked } from "@/store/slices/auth-slice";
 import { forceLogout as forceAdminLogout, hydrateAdminAuth } from "@/store/slices/admin-auth-slice";
@@ -55,6 +55,12 @@ export function StoreHydration() {
     const scope = userId || "guest";
     if (hydratedCartScopeRef.current === scope) return;
     hydratedCartScopeRef.current = scope;
+
+    if (hasCompletedCheckoutCleanup()) {
+      clearCompletedCheckoutStorage();
+      dispatch(hydrateCart({ items: [] }));
+      return;
+    }
 
     const cart = userId
       ? readStorage(getCartStorageKey(userId))

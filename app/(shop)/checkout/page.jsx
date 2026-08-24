@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Home, Loader2, MapPin, Minus, Plus } from "lucide-react";
@@ -19,7 +19,6 @@ export default function CheckoutPage() {
   const fetchProducts = useProductStore((state) => state.fetchProducts);
   const items = useCartStore((state) => state.items);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
-  const clearCart = useCartStore((state) => state.clearCart);
   const restoreCart = useCartStore((state) => state.restoreCart);
   const [validatedPrices, setValidatedPrices] = useState({});
   const [priceNote, setPriceNote] = useState("");
@@ -93,16 +92,6 @@ export default function CheckoutPage() {
       },
       notes: String(values.notes || ""),
     });
-  }
-
-  function clearDraft() {
-    if (!draftStorageKey) return;
-    if (typeof localStorage === "undefined") return;
-    try {
-      localStorage.removeItem(draftStorageKey);
-    } catch {
-      // Ignore storage failures.
-    }
   }
 
   const form = useForm({
@@ -360,7 +349,6 @@ export default function CheckoutPage() {
         // Ignore storage failures.
       }
 
-      clearCart();
       window.location.assign(data.url);
     } catch (error) {
       toast.error(error.message || "Failed to create Stripe checkout");

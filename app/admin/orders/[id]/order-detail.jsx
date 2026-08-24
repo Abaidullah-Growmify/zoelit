@@ -168,7 +168,7 @@ export function AdminOrderDetail({ id }) {
 
             <Card>
               <h2 className="font-heading text-h2 font-semibold">Order notes</h2>
-              <div className="mt-3">
+              <div className="mt-3 min-w-0 overflow-hidden">
                 <BulletNotes notes={order.notes} />
               </div>
             </Card>
@@ -209,7 +209,7 @@ export function AdminOrderDetail({ id }) {
             </Card>
             <Card>
               <h2 className="font-heading text-h2 font-semibold">Shipping address</h2>
-              <p className="mt-4 text-body font-regular leading-6 text-slate-600 dark:text-slate-300">
+              <p className="mt-4 min-w-0 break-words text-body font-regular leading-6 text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
                 {billing.firstName} {billing.lastName}<br />
                 {billing.address || "—"}<br />
                 {billing.city}, {billing.state} {billing.postal}<br />
@@ -223,12 +223,12 @@ export function AdminOrderDetail({ id }) {
           <h2 className="font-heading text-h2 font-semibold">Timeline</h2>
           <div className="mt-5 grid gap-4 md:grid-cols-3">
             {(order.statusHistory && order.statusHistory.length ? order.statusHistory : [{ status: "Pending", date: order.date }]).map((event, index) => (
-              <div key={`${event.status}-${index}`} className="flex gap-3 rounded-md bg-slate-50 p-4 ring-1 ring-slate-100 dark:bg-slate-950 dark:ring-slate-800">
+              <div key={`${event.status}-${index}`} className="flex min-w-0 gap-3 rounded-md bg-slate-50 p-4 ring-1 ring-slate-100 dark:bg-slate-950 dark:ring-slate-800">
                 <CheckCircle2 className="size-5 shrink-0 text-blue-600 dark:text-blue-300" />
-                <div>
-                  <p className="text-body font-semibold text-slate-950 dark:text-white">{event.status}</p>
-                  <p className="mt-0.5 text-meta font-regular text-slate-500 dark:text-slate-400">{event.eventType || "event"} · {shortDate(event.date)}</p>
-                  {event.note ? <p className="mt-1 text-meta font-regular text-slate-500 dark:text-slate-400">{event.note}</p> : null}
+                <div className="min-w-0">
+                  <p className="break-words text-body font-semibold text-slate-950 [overflow-wrap:anywhere] dark:text-white">{event.status}</p>
+                  <p className="mt-0.5 break-words text-meta font-regular text-slate-500 [overflow-wrap:anywhere] dark:text-slate-400">{event.eventType || "event"} · {shortDate(event.date)}</p>
+                  {event.note ? <p className="mt-1 break-words text-meta font-regular text-slate-500 [overflow-wrap:anywhere] dark:text-slate-400">{event.note}</p> : null}
                 </div>
               </div>
             ))}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useSyncExternalStore } from "react";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle2, Eye } from "lucide-react";
 import { toast } from "sonner";
@@ -9,6 +9,7 @@ import { Button, Card } from "@/components/ui";
 import { useCartStore } from "@/store/cart-store";
 import { useAuthStore } from "@/store/auth-store";
 import { useProductStore } from "@/store/product-store";
+import { clearCompletedCheckoutStorage, markCompletedCheckoutCleanup } from "@/store";
 
 export default function OrderSuccessPage() {
   return (
@@ -16,29 +17,6 @@ export default function OrderSuccessPage() {
       <OrderSuccessContent />
     </Suspense>
   );
-}
-
-function purgeCheckoutStorage() {
-  if (typeof localStorage === "undefined") return;
-  try {
-    const removable = [];
-    for (let index = 0; index < localStorage.length; index += 1) {
-      const key = localStorage.key(index);
-      if (!key) continue;
-      if (
-        key === "zoelit-cart-guest"
-        || key === "zoelit-cart"
-        || key === "zoelit-cart-backup"
-        || key.startsWith("zoelit-cart-user:")
-        || key.startsWith("zoelit-checkout-draft:")
-      ) {
-        removable.push(key);
-      }
-    }
-    removable.forEach((key) => localStorage.removeItem(key));
-  } catch {
-    // Ignore storage failures.
-  }
 }
 
 function OrderSuccessContent() {
@@ -50,26 +28,27 @@ function OrderSuccessContent() {
   const [loading, setLoading] = useState(Boolean(sessionId));
   const [orderNumber, setOrderNumber] = useState(params.get("order") || "");
   const [ingramOrderNumber, setIngramOrderNumber] = useState(params.get("ingram") || "");
-  // Keep first paint identical to SSR; Redux auth may already be hydrated on the client.
-  const [showOrdersLink, setShowOrdersLink] = useState(false);
-
-  useEffect(() => {
-    setShowOrdersLink(Boolean(token));
-  }, [token]);
+  const isClientReady = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+  const showOrdersLink = isClientReady && Boolean(token);
 
   useEffect(() => {
     if (!sessionId) return;
 
     let active = true;
 
-    api.confirmCheckoutSession(sessionId)
+    api.confirmCheckoutSession(sessionId, token)
       .then((res) => {
         if (!active) return;
         if (res?.order?.customerOrderNumber || res?.order?.orderNumber) setOrderNumber(res.order.customerOrderNumber || res.order.orderNumber);
         if (res?.ingram?.ingramOrderNumber) setIngramOrderNumber(res.ingram.ingramOrderNumber);
         if (res?.success || res?.order) {
+          markCompletedCheckoutCleanup();
+          clearCompletedCheckoutStorage();
           clearCart();
-          purgeCheckoutStorage();
           fetchProducts().catch(() => {});
         }
       })
@@ -84,7 +63,7 @@ function OrderSuccessContent() {
     return () => {
       active = false;
     };
-  }, [clearCart, fetchProducts, sessionId]);
+  }, [clearCart, fetchProducts, sessionId, token]);
 
   return (
     <section className="container-page grid min-h-[70vh] place-items-center py-12">
