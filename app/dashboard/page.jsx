@@ -1,14 +1,14 @@
 "use client";
 
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { Calculator, Clock, MapPin, Package, PackageCheck, Wallet } from "lucide-react";
+import { Calculator, Clock, MapPin, Package, PackageCheck, ShoppingBag, Wallet } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import * as api from "@/lib/api";
 import { money, shortDate } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
-import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminStatCard } from "@/components/admin-stat-card";
 import { AdminTable } from "@/components/admin-table";
+import { Badge, Button } from "@/components/ui";
 import Pagination from "@/components/pagination";
 import { Card } from "@/components/ui";
 import { DashboardSkeleton } from "@/components/skeletons";
@@ -57,7 +57,7 @@ export default function DashboardPage() {
   const recentOrderColumns = [
     { key: "id", header: "Order", sortable: true, accessor: "id", cellClassName: "font-semibold tabular-nums text-slate-950 dark:text-white", render: (order) => `#${order.customerOrderNumber || order.id}` },
     { key: "date", header: "Date", sortable: true, accessor: "date", render: (order) => shortDate(order.date) },
-    { key: "status", header: "Status", accessor: "status", render: (order) => <AdminStatusBadge>{order.status}</AdminStatusBadge> },
+    { key: "status", header: "Status", accessor: "status", render: (order) => <Badge>{order.status}</Badge> },
     { key: "total", header: "Total", sortable: true, accessor: "total", cellClassName: "font-semibold tabular-nums text-slate-950 dark:text-white", render: (order) => money(order.total) },
     { key: "notes", header: "Notes", accessor: "notes", render: (order) => <OrderNotesDialog notes={order.notes} label={`View notes for order ${order.customerOrderNumber || order.id}`} /> },
   ];
@@ -66,16 +66,21 @@ export default function DashboardPage() {
     <div>
       <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <AdminStatCard label="Total Orders" value={stats.totalOrders} icon={Package} helper="Lifetime order count" tone="blue" />
-        <AdminStatCard label="Pending Orders" value={stats.pendingOrders} icon={Clock} helper="Pending or processing" tone="amber" />
-        <AdminStatCard label="Total Spent" value={money(stats.totalSpent)} icon={Wallet} helper="Excluding cancelled orders" tone="green" />
-        <AdminStatCard label="Delivered Orders" value={stats.deliveredOrders} icon={PackageCheck} helper="Completed deliveries" tone="emerald" />
+        <AdminStatCard label="Pending Orders" value={stats.pendingOrders} icon={Clock} helper="Pending or processing" tone="blue" />
+        <AdminStatCard label="Total Spent" value={money(stats.totalSpent)} icon={Wallet} helper="Excluding cancelled orders" tone="blue" />
+        <AdminStatCard label="Delivered Orders" value={stats.deliveredOrders} icon={PackageCheck} helper="Completed deliveries" tone="blue" />
         <AdminStatCard label="Average Order Value" value={money(stats.averageOrderValue)} icon={Calculator} helper="Based on lifetime orders" tone="indigo" />
-        <AdminStatCard label="Saved Addresses" value={stats.savedAddresses} icon={MapPin} helper="Ready for checkout" tone="teal" />
+        <AdminStatCard label="Saved Addresses" value={stats.savedAddresses} icon={MapPin} helper="Ready for checkout" tone="blue" />
       </div>
 
       <SpendingChart data={spendingOverview} />
 
       <div className="mt-6">
+        <div className="mb-4 flex justify-end">
+          <Button asChild href="/products" className="h-12 w-full shrink-0 sm:w-auto">
+            <ShoppingBag className="size-4" /> Continue Shopping
+          </Button>
+        </div>
         <AdminTable
           title="Recent orders"
           description="Search, sort, and open your latest purchases."
@@ -103,27 +108,27 @@ export default function DashboardPage() {
 
 function SpendingChart({ data }) {
   return (
-    <Card className="mt-6 overflow-hidden rounded-lg p-6 shadow-sm">
+      <Card className="mt-6 overflow-hidden rounded-lg p-6 shadow-primary-elevated">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="font-heading text-h2 font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">Spending over last 6 months</h2>
-          <p className="mt-1 text-body font-regular text-slate-600 dark:text-slate-300">Monthly order totals from your account data.</p>
+          <h2 className="font-heading text-headline-md font-semibold tracking-[-0.03em] text-on-surface">Spending over last 6 months</h2>
+          <p className="mt-1 text-body-md font-normal text-on-surface-variant">Monthly order totals from your account data.</p>
         </div>
       </div>
-      <div className="mt-6 h-64 rounded-lg bg-gradient-to-b from-blue-50 to-slate-50 p-3 ring-1 ring-slate-200 dark:from-blue-500/10 dark:to-slate-950 dark:ring-slate-800">
+      <div className="mt-6 h-64 rounded-lg bg-gradient-to-b from-primary-fixed/60 to-surface-container-low p-3 ring-1 ring-outline-variant">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ left: 0, right: 10, top: 12, bottom: 0 }}>
             <defs>
               <linearGradient id="customerSpending" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#2563eb" stopOpacity={0.35} />
-                <stop offset="95%" stopColor="#2563eb" stopOpacity={0.03} />
+                <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.35} />
+                <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0.03} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.35)" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgb(var(--color-outline) / 0.35)" vertical={false} />
             <XAxis dataKey="month" axisLine={false} tickLine={false} tickMargin={10} fontSize={12} />
             <YAxis tickFormatter={(value) => `$${value}`} axisLine={false} tickLine={false} tickMargin={8} width={44} fontSize={12} />
-            <Tooltip formatter={(value) => [money(value), "Spent"]} contentStyle={{ borderRadius: 12, border: "1px solid rgb(226 232 240)", boxShadow: "0 18px 55px rgba(15, 23, 42, 0.12)" }} />
-            <Area type="monotone" dataKey="amount" stroke="#2563eb" strokeWidth={3} fill="url(#customerSpending)" dot={{ r: 3, strokeWidth: 2, fill: "#ffffff" }} activeDot={{ r: 5 }} />
+            <Tooltip formatter={(value) => [money(value), "Spent"]} contentStyle={{ borderRadius: 12, border: "1px solid rgb(var(--color-outline-variant))", boxShadow: "0 18px 55px rgb(15 23 42 / 0.12)", background: "var(--color-surface-container-lowest)" }} />
+            <Area type="monotone" dataKey="amount" stroke="var(--color-primary)" strokeWidth={3} fill="url(#customerSpending)" dot={{ r: 3, strokeWidth: 2, fill: "var(--color-surface-container-lowest)" }} activeDot={{ r: 5 }} />
           </AreaChart>
         </ResponsiveContainer>
       </div>

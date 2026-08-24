@@ -52,7 +52,7 @@ export const BulletTextarea = forwardRef(function BulletTextarea(
     [onBlur]
   );
 
-  return <Textarea ref={ref} className={className} onFocus={handleFocus} onBlur={handleBlur} onKeyDown={handleKeyDown} {...props} />;
+  return <Textarea ref={ref} className={`break-words ${className || ""}`} onFocus={handleFocus} onBlur={handleBlur} onKeyDown={handleKeyDown} {...props} />;
 });
 
 export function BulletNotes({ notes, emptyText = "No notes were added to this order." }) {
@@ -64,13 +64,13 @@ export function BulletNotes({ notes, emptyText = "No notes were added to this or
   }, [notes]);
 
   if (!items.length) {
-    return <p className="text-body font-regular leading-6 text-slate-600 dark:text-slate-300">{emptyText}</p>;
+    return <p className="min-w-0 break-words text-body font-regular leading-6 text-slate-600 dark:text-slate-300">{emptyText}</p>;
   }
 
   return (
-    <ul className="list-disc space-y-2 pl-5 text-body font-regular leading-6 text-slate-600 dark:text-slate-300">
+    <ul className="min-w-0 list-disc space-y-2 overflow-hidden break-words pl-5 text-body font-regular leading-6 text-slate-600 dark:text-slate-300">
       {items.map((item, index) => (
-        <li key={`${item}-${index}`}>{item}</li>
+        <li key={`${item}-${index}`} className="min-w-0 break-words [overflow-wrap:anywhere]">{item}</li>
       ))}
     </ul>
   );

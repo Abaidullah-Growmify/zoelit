@@ -12,6 +12,8 @@ const STORAGE_KEYS = {
   adminAuth: "zoelit-admin-auth",
   cart: "zoelit-cart-guest",
   cartLegacy: "zoelit-cart",
+  cartBackup: "zoelit-cart-backup",
+  checkoutCompleted: "zoelit-checkout-completed",
 };
 
 function getCartStorageKey(userId) {
@@ -40,6 +42,61 @@ function persistSlice(key, payload) {
   }
 }
 
+function clearCompletedCheckoutStorage() {
+  try {
+    if (typeof localStorage !== "undefined") {
+      const removable = [];
+      for (let index = 0; index < localStorage.length; index += 1) {
+        const key = localStorage.key(index);
+        if (!key) continue;
+        if (
+          key === STORAGE_KEYS.cart ||
+          key === STORAGE_KEYS.cartLegacy ||
+          key.startsWith("zoelit-cart-user:") ||
+          key.startsWith("zoelit-checkout-draft:")
+        ) {
+          removable.push(key);
+        }
+      }
+      removable.forEach((key) => localStorage.removeItem(key));
+    }
+
+    if (typeof sessionStorage !== "undefined") {
+      sessionStorage.removeItem(STORAGE_KEYS.cartBackup);
+    }
+  } catch {
+    // Storage may be unavailable. Ignore.
+  }
+}
+
+function markCompletedCheckoutCleanup() {
+  try {
+    if (typeof sessionStorage !== "undefined") {
+      sessionStorage.setItem(STORAGE_KEYS.checkoutCompleted, "1");
+    }
+  } catch {
+    // Storage may be unavailable. Ignore.
+  }
+}
+
+function hasCompletedCheckoutCleanup() {
+  try {
+    return typeof sessionStorage !== "undefined" && sessionStorage.getItem(STORAGE_KEYS.checkoutCompleted) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function clearCompletedCheckoutCleanupMarker() {
+  try {
+    if (typeof sessionStorage !== "undefined") {
+      sessionStorage.removeItem(STORAGE_KEYS.checkoutCompleted);
+    }
+  } catch {
+    // Storage may be unavailable. Ignore.
+  }
+}
+
 export function makeStore() {
   return configureStore({
     reducer: {
@@ -56,7 +113,15 @@ export function makeStore() {
         persistSlice(STORAGE_KEYS.auth, { user: state.auth.user, token: state.auth.token });
         persistSlice(STORAGE_KEYS.adminAuth, { admin: state.adminAuth.admin, token: state.adminAuth.token });
 
-        if (String(action.type || "").startsWith("cart/")) {
+        const actionType = String(action.type || "");
+
+        if (actionType === "cart/addItem") {
+          clearCompletedCheckoutCleanupMarker();
+        }
+
+        if (actionType === "cart/clearCart") {
+          clearCompletedCheckoutStorage();
+        } else if (actionType.startsWith("cart/")) {
           const userId = state.auth.user?.id || state.auth.user?._id || "";
           const cartKey = getCartStorageKey(userId);
           const cartPayload = { items: state.cart.items };
@@ -80,4 +145,12 @@ export function getStore() {
   return singletonStore;
 }
 
-export { STORAGE_KEYS, getCartStorageKey, readStorage };
+export {
+  STORAGE_KEYS,
+  clearCompletedCheckoutCleanupMarker,
+  clearCompletedCheckoutStorage,
+  getCartStorageKey,
+  hasCompletedCheckoutCleanup,
+  markCompletedCheckoutCleanup,
+  readStorage,
+};

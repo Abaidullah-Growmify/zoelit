@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Home, Loader2, MapPin, Minus, Plus } from "lucide-react";
@@ -19,7 +19,6 @@ export default function CheckoutPage() {
   const fetchProducts = useProductStore((state) => state.fetchProducts);
   const items = useCartStore((state) => state.items);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
-  const clearCart = useCartStore((state) => state.clearCart);
   const restoreCart = useCartStore((state) => state.restoreCart);
   const [validatedPrices, setValidatedPrices] = useState({});
   const [priceNote, setPriceNote] = useState("");
@@ -28,9 +27,11 @@ export default function CheckoutPage() {
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [isMounted, setIsMounted] = useState(false);
 
-  const draftStorageKey = token ? `zoelit-checkout-draft:${user?.id || user?._id || "guest"}` : "zoelit-checkout-draft:guest";
+  const scopedUserId = String(user?.id || user?._id || "").trim();
+  const draftStorageKey = token && scopedUserId ? `zoelit-checkout-draft:${scopedUserId}` : null;
 
   function readDraft() {
+    if (!draftStorageKey) return null;
     if (typeof localStorage === "undefined") return null;
     try {
       const raw = localStorage.getItem(draftStorageKey);
@@ -43,6 +44,7 @@ export default function CheckoutPage() {
   }
 
   function saveDraft(values, sessionKey = checkoutSessionKey, lastSubmittedSignature = null) {
+    if (!draftStorageKey) return;
     if (typeof localStorage === "undefined") return;
     try {
       const existing = readDraft();
@@ -92,15 +94,6 @@ export default function CheckoutPage() {
     });
   }
 
-  function clearDraft() {
-    if (typeof localStorage === "undefined") return;
-    try {
-      localStorage.removeItem(draftStorageKey);
-    } catch {
-      // Ignore storage failures.
-    }
-  }
-
   const form = useForm({
     defaultValues: {
       firstName: "",
@@ -126,6 +119,15 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (!isMounted) return;
 
+    if (!draftStorageKey) {
+      try {
+        localStorage.removeItem("zoelit-checkout-draft:guest");
+      } catch {
+        // Ignore storage failures.
+      }
+      return;
+    }
+
     const draft = readDraft();
     if (!draft?.values) return;
 
@@ -144,7 +146,7 @@ export default function CheckoutPage() {
     if (draft.sessionKey) {
       setCheckoutSessionKey(draft.sessionKey);
     }
-  }, [form, isMounted]);
+  }, [draftStorageKey, form, isMounted]);
 
   const cartItems = items
     .map((item) => ({
@@ -347,7 +349,6 @@ export default function CheckoutPage() {
         // Ignore storage failures.
       }
 
-      clearCart();
       window.location.assign(data.url);
     } catch (error) {
       toast.error(error.message || "Failed to create Stripe checkout");
@@ -389,7 +390,7 @@ export default function CheckoutPage() {
         <Card className="p-6 shadow-sm sm:p-8">
           <div className="mb-6 flex items-center justify-between gap-4">
             <div>
-              <h2 className="font-heading text-h2 font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
+              <h2 className="font-heading text-headline-md font-semibold tracking-[-0.02em] text-on-surface">
                 Billing details
               </h2>
             </div>
@@ -402,14 +403,14 @@ export default function CheckoutPage() {
                   key={address._id}
                   type="button"
                   onClick={() => applyAddress(address)}
-                  className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-slate-300 hover:bg-white"
+                  className="flex items-start gap-3 rounded-lg border border-outline-variant/80 bg-surface-container-low p-4 text-left transition duration-200 ease-out hover:border-primary/20 hover:bg-surface-container-lowest"
                 >
-                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-white text-slate-600 shadow-sm ring-1 ring-slate-200">
+                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-surface-container-lowest text-on-surface-variant shadow-sm ring-1 ring-outline-variant">
                     {address.label.toLowerCase().includes("home") ? <Home className="size-4" /> : <MapPin className="size-4" />}
                   </span>
                   <span className="min-w-0">
-                    <span className="block text-sm font-semibold text-slate-950">{address.label}</span>
-                    <span className="mt-1 block text-xs leading-5 text-slate-500">
+                    <span className="block text-label-sm font-semibold text-on-surface">{address.label}</span>
+                    <span className="mt-1 block text-label-sm leading-5 text-on-surface-variant">
                       {address.name}
                       <br />
                       {address.line1}
@@ -438,8 +439,8 @@ export default function CheckoutPage() {
 
         <Card className="h-fit p-6 shadow-sm sm:p-8 lg:sticky lg:top-24">
           <div className="mb-4">
-            <h3 className="text-lg font-semibold tracking-[-0.02em] text-slate-950 dark:text-white">Your order</h3>
-            <div className="mt-4 grid grid-cols-[1fr_auto] gap-4 border-b border-slate-200 pb-3 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-700 dark:border-slate-800 dark:text-slate-300">
+            <h3 className="text-headline-md font-semibold tracking-[-0.02em] text-on-surface">Your order</h3>
+            <div className="mt-4 grid grid-cols-[1fr_auto] gap-4 border-b border-outline-variant/40 pb-3 text-label-sm font-bold uppercase tracking-[0.14em] text-on-surface-variant">
               <span>Product</span>
               <span className="text-right">Total</span>
             </div>
@@ -482,7 +483,7 @@ export default function CheckoutPage() {
           </Button>
 
           {priceNote ? (
-            <p className="mt-4 text-xs font-semibold text-amber-600 dark:text-amber-400">{priceNote}</p>
+            <p className="mt-4 text-label-sm font-semibold text-tertiary">{priceNote}</p>
           ) : null}
         </Card>
       </form>
@@ -494,7 +495,7 @@ function Field({ label, name, form, error, type = "text", placeholder, required,
   return (
     <div className={className}>
       <Label className="font-medium">
-        {label} {required ? <span className="text-rose-500">*</span> : null}
+        {label} {required ? <span className="text-error">*</span> : null}
       </Label>
       <Input
         type={type}

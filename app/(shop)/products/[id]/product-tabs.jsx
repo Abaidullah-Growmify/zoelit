@@ -11,7 +11,7 @@ function Stars({ rating }) {
       {[1, 2, 3, 4, 5].map((step) => (
         <Star
           key={step}
-          className={cn("size-4", step <= Math.round(rating) ? "fill-amber-400 text-amber-400" : "text-slate-300 dark:text-slate-600")}
+          className={cn("size-4", step <= Math.round(rating) ? "fill-secondary text-secondary" : "text-on-surface-variant")}
           aria-hidden="true"
         />
       ))}
@@ -45,7 +45,7 @@ export function ProductTabs({ product }) {
 
   return (
     <Card className="overflow-hidden p-0">
-      <div role="tablist" aria-label="Product information" onKeyDown={handleKeyDown} className="flex border-b border-slate-200 dark:border-slate-800">
+      <div role="tablist" aria-label="Product information" onKeyDown={handleKeyDown} className="flex border-b border-outline-variant/80">
         {visibleTabs.map((tab) => {
           const isActive = active === tab.id;
           return (
@@ -59,12 +59,12 @@ export function ProductTabs({ product }) {
               tabIndex={isActive ? 0 : -1}
               onClick={() => activate(tab.id)}
               className={cn(
-                "relative flex-1 px-5 py-4 text-sm font-semibold transition dark:text-slate-400",
-                isActive ? "text-slate-950 dark:text-white" : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                "relative flex-1 px-5 py-4 text-label-md font-semibold transition",
+                isActive ? "text-on-surface" : "text-on-surface-variant hover:text-primary"
               )}
             >
               {tab.id === "reviews" ? `${tab.label} (${product.reviews.length})` : tab.label}
-              <span className={cn("absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-blue-600 transition-opacity duration-200", isActive ? "opacity-100" : "opacity-0")} />
+              <span className={cn("absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-primary transition-opacity duration-200", isActive ? "opacity-100" : "opacity-0")} />
             </button>
           );
         })}
@@ -73,33 +73,33 @@ export function ProductTabs({ product }) {
       <div className="p-5 sm:p-6">
         {active === "details" ? (
           <div id={`${baseId}-details-panel`} role="tabpanel" aria-labelledby={`${baseId}-details-tab`} className="tab-reveal" key="details">
-            <dl className="divide-y divide-slate-100 dark:divide-slate-800">
+            <dl className="divide-y divide-outline-variant/40">
               {Object.entries(product.details).map(([key, value]) => (
-                <div key={key} className="flex items-center justify-between gap-6 py-3">
-                  <dt className="text-sm font-semibold text-slate-500 dark:text-slate-400">{key}</dt>
-                  <dd className="text-right text-sm font-semibold text-slate-950 dark:text-white">{value}</dd>
+                <div key={key} className="flex min-w-0 items-center justify-between gap-6 py-3">
+                  <dt className="shrink-0 text-label-sm font-semibold text-on-surface-variant">{key}</dt>
+                  <dd className="min-w-0 break-words text-right text-label-sm font-semibold text-on-surface [overflow-wrap:anywhere]">{value}</dd>
                 </div>
               ))}
             </dl>
           </div>
         ) : (
           <div id={`${baseId}-reviews-panel`} role="tabpanel" aria-labelledby={`${baseId}-reviews-tab`} className="tab-reveal" key="reviews">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4 dark:border-slate-800">
-              <span className="font-heading text-3xl font-extrabold tabular-nums text-slate-950 dark:text-white">{product.rating}</span>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/40 pb-4">
+              <span className="font-heading text-headline-lg font-extrabold tabular-nums text-on-surface">{product.rating}</span>
               <div className="text-right">
                 <Stars rating={product.rating} />
-                <p className="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-400">{product.reviews.length} verified {product.reviews.length === 1 ? "review" : "reviews"}</p>
+                <p className="mt-1 text-label-sm font-semibold text-on-surface-variant">{product.reviews.length} verified {product.reviews.length === 1 ? "review" : "reviews"}</p>
               </div>
             </div>
             <div className="mt-4 space-y-4">
               {product.reviews.map((review) => (
-                <article key={`${review.name}-${review.title}`} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm font-semibold text-slate-950 dark:text-white">{review.name}</span>
+                <article key={`${review.name}-${review.title}`} className="min-w-0 overflow-hidden rounded-xl border border-outline-variant/70 bg-surface-container-lowest p-4 shadow-sm">
+                  <div className="flex min-w-0 items-center justify-between gap-3">
+                    <span className="min-w-0 break-words text-label-md font-semibold text-on-surface [overflow-wrap:anywhere]">{review.name}</span>
                     <Stars rating={review.rating} />
                   </div>
-                  <p className="mt-2 text-sm font-semibold leading-5 text-slate-900 dark:text-slate-100">{review.title}</p>
-                  <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">{review.comment}</p>
+                  <p className="mt-2 min-w-0 break-words text-label-md font-semibold leading-5 text-on-surface [overflow-wrap:anywhere]">{review.title}</p>
+                  <p className="mt-1 min-w-0 break-words text-body-md leading-6 text-on-surface-variant [overflow-wrap:anywhere]">{review.comment}</p>
                 </article>
               ))}
             </div>
