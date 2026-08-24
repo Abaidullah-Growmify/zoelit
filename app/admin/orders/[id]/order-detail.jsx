@@ -6,36 +6,22 @@ import { CheckCircle2, Loader2, Printer, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
-import { Button, Card, Input, Label, Select } from "@/components/ui";
+import { Button, Card, Input, Label } from "@/components/ui";
 import { AdminOrderDetailSkeleton } from "@/components/skeletons";
 import { cancelAdminOrder, getAdminOrder, updateAdminOrderStatus } from "@/lib/api";
 import { money, shortDate } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
 import { usePolling } from "@/lib/use-polling";
 import { InvoicePrint } from "@/components/invoice-print";
-import { BulletNotes, BulletTextarea } from "@/components/bullet-notes";
-
-const STATUS_OPTIONS = [
-  "Pending",
-  "Processing",
-  "Invoiced",
-  "On Hold",
-  "Backordered",
-  "Shipped",
-  "Delivered",
-  "Voided",
-  "Cancelled",
-];
+import { BulletNotes } from "@/components/bullet-notes";
 
 export function AdminOrderDetail({ id }) {
   const token = useAdminAuthStore((state) => state.token);
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [status, setStatus] = useState("");
   const [tracking, setTracking] = useState("");
   const [carrier, setCarrier] = useState("");
-  const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const dirtyRef = useRef(false);
@@ -46,7 +32,6 @@ export function AdminOrderDetail({ id }) {
     getAdminOrder(id, token)
       .then((data) => {
         setOrder(data.order);
-        setStatus(data.order.status);
         setTracking(data.order.tracking || "");
         setCarrier(data.order.carrierName || "");
         setLoading(false);
@@ -68,13 +53,12 @@ export function AdminOrderDetail({ id }) {
     if (!token) return;
     setSaving(true);
     try {
-      const data = await updateAdminOrderStatus(id, { status, tracking, carrierName: carrier, note }, token);
+      const data = await updateAdminOrderStatus(id, { tracking, carrierName: carrier }, token);
       setOrder(data.order);
-      setStatus(data.order.status);
       setTracking(data.order.tracking || "");
       setCarrier(data.order.carrierName || "");
       dirtyRef.current = false;
-      toast.success("Order updated");
+      toast.success("Shipment details updated");
     } catch (error) {
       toast.error(error.message || "Could not update order");
     } finally {
@@ -89,7 +73,6 @@ export function AdminOrderDetail({ id }) {
     try {
       const data = await cancelAdminOrder(id, token);
       setOrder(data.order);
-      setStatus(data.order.status);
       dirtyRef.current = false;
       toast.success("Order cancelled");
     } catch (error) {
@@ -113,7 +96,7 @@ export function AdminOrderDetail({ id }) {
   return (
     <>
       <div className="print:hidden">
-        <AdminPageHeader title={`Order #${order.orderNumber}`} description={`Placed by ${customer.name || "Unknown"} on ${shortDate(order.date)}. Live status and fulfilment controls.`} action={<Button variant="outline" onClick={() => window.print()}><Printer className="size-4" />Print invoice</Button>} />
+        <AdminPageHeader title={`Order #${order.orderNumber}`} description={`Placed by ${customer.name || "Unknown"} on ${shortDate(order.date)}. Review fulfilment details and print the invoice.`} action={<Button variant="outline" onClick={() => window.print()}><Printer className="size-4" />Print invoice</Button>} />
 
         <div className="mt-8 grid gap-6 xl:grid-cols-[1fr_380px]">
           <div className="space-y-6">
@@ -176,25 +159,17 @@ export function AdminOrderDetail({ id }) {
 
           <div className="space-y-6">
             <Card>
-              <h2 className="font-heading text-h2 font-semibold">Admin controls</h2>
-              <p className="mt-1 text-body font-regular text-slate-500 dark:text-slate-400">Update fulfilment state and shipment details.</p>
+              <h2 className="font-heading text-h2 font-semibold">Shipment controls</h2>
+              <p className="mt-1 text-body font-regular text-slate-500 dark:text-slate-400">Update shipment details. Order status is changed from the orders table.</p>
               <div className="mt-5 space-y-4">
-                <Field label="Order status">
-                  <Select value={status} onChange={(event) => { setStatus(event.target.value); dirtyRef.current = true; }}>
-                    {STATUS_OPTIONS.map((option) => <option key={option}>{option}</option>)}
-                  </Select>
-                </Field>
                 <Field label="Tracking number">
                   <Input value={tracking} onChange={(event) => { setTracking(event.target.value); dirtyRef.current = true; }} placeholder="ZX-000000" />
                 </Field>
                 <Field label="Carrier name">
                   <Input value={carrier} onChange={(event) => { setCarrier(event.target.value); dirtyRef.current = true; }} placeholder="DHL Express" />
                 </Field>
-                <Field label="Internal note">
-                  <BulletTextarea className="min-h-24" value={note} onChange={(event) => { setNote(event.target.value); dirtyRef.current = true; }} placeholder="Optional note for the status update" />
-                </Field>
                 <Button className="w-full" onClick={handleUpdate} disabled={saving}>
-                  {saving ? <Loader2 className="size-4 animate-spin" /> : null} Update order
+                  {saving ? <Loader2 className="size-4 animate-spin" /> : null} Update shipment
                 </Button>
                 <Button className="w-full" variant="outline" onClick={handleCancel} disabled={cancelling || order.status === "Cancelled"}>
                   <XCircle className="size-4" /> {cancelling ? "Cancelling..." : order.status === "Cancelled" ? "Order cancelled" : "Cancel order"}

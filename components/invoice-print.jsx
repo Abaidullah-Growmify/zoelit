@@ -6,6 +6,12 @@ export function InvoicePrint({ order }) {
   const billing = order?.billing || {};
   const items = order?.lineItems || order?.items || [];
 
+  const invoiceNumber =
+    order?.customerOrderNumber || order?.orderNumber || "—";
+
+  const orderDate = order?.date ? shortDate(order.date) : "—";
+  const dueDate = order?.date ? shortDate(addDays(order.date, 7)) : "—";
+
   const customerName =
     order?.customer?.name ||
     [billing.firstName, billing.lastName].filter(Boolean).join(" ") ||
@@ -14,7 +20,6 @@ export function InvoicePrint({ order }) {
   const subtotal = Number(order?.subtotal) || 0;
   const shipping = Number(order?.shippingFee || order?.shipping) || 0;
   const discount = Number(order?.discount) || 0;
-
   const total =
     Number(order?.total) || subtotal + shipping - discount;
 
@@ -46,235 +51,262 @@ export function InvoicePrint({ order }) {
     item?.ingramPartNumber ||
     "Product";
 
-  const itemSku =
-    (item) =>
-      item?.productId ||
-      item?.ingramPartNumber ||
-      item?.sku ||
-      item?.partNumber ||
-      "—";
+  const itemDescription = (item) =>
+    item?.description ||
+    item?.category ||
+    item?.productType ||
+    item?.brand ||
+    "";
+
+  const itemSku = (item) =>
+    item?.productId ||
+    item?.ingramPartNumber ||
+    item?.sku ||
+    item?.partNumber ||
+    "—";
+
+  const addressLine = [
+    billing.city,
+    billing.state,
+    billing.postal,
+  ]
+    .filter(Boolean)
+    .join(", ");
 
   return (
-    <div className="invoice-print-root hidden print:block">
+    <div className="invoice-print-root">
       <div className="invoice-print-page">
-        {/* =========================
-            HEADER
-        ========================== */}
+
+        {/* HEADER */}
         <header className="invoice-header">
-          <div className="invoice-brand">
-            <div className="brand-content">
-              <div className="brand-wordmark">
-                ZoeLit
+          <div className="brand-area">
+
+            <div className="brand-row">
+              <div className="brand-mark">
+                <span />
+                <span />
+                <span />
               </div>
 
-              <div className="brand-name">
-                <span>Commerce</span> Invoice
-              </div>
+              <div>
+                <div className="brand-name">
+                  Zoe<span>Lit</span>
+                </div>
 
-              <div className="company-contact">support@zoelit.com</div>
-              <div className="company-contact company-line">ZoeLit Commerce</div>
+                <div className="brand-subtitle">
+                  COMMERCE
+                </div>
+              </div>
             </div>
+
+            <div className="company-list">
+              <InfoLine icon="mail">
+                support@zoelit.com
+              </InfoLine>
+
+              <InfoLine icon="globe">
+                www.zoelit.com
+              </InfoLine>
+
+              <InfoLine icon="pin">
+                123 Commerce St., Business City,
+                <br />
+                CA 90210, USA
+              </InfoLine>
+            </div>
+
           </div>
 
-          <div className="invoice-heading">
+          <div className="invoice-title-area">
+
             <div className="invoice-title">
               INVOICE
             </div>
 
             <div className="invoice-number">
-              #{order?.customerOrderNumber || order?.orderNumber || "—"}
+              #{invoiceNumber}
             </div>
 
-            <div className="invoice-meta invoice-meta-grid">
-              <div>
-                <span>Invoice Number</span>
-                <strong>#{order?.customerOrderNumber || order?.orderNumber || "—"}</strong>
-              </div>
+            <div className="invoice-meta">
+              <MetaRow
+                label="Date"
+                value={orderDate}
+              />
 
-              <div>
-                <span>Invoice Date</span>
-                <strong>{order?.date ? shortDate(order.date) : "—"}</strong>
-              </div>
+              <MetaRow
+                label="Currency"
+                value={currencyCode}
+              />
 
-              <div>
-                <span>Order Status</span>
-                <strong>{order?.status || "Processing"}</strong>
-              </div>
-
-              <div>
-                <span>Payment Status</span>
-                <strong>{order?.payment || "Paid"}</strong>
-              </div>
+              <MetaRow
+                label="Due Date"
+                value={dueDate}
+              />
             </div>
+
           </div>
         </header>
 
-        {/* =========================
-            STATUS BAR
-        ========================== */}
-        <section className="status-bar">
-          <div className="status-item">
-            <span>Status</span>
-            <strong>{order?.status || "Processing"}</strong>
-          </div>
 
-          <div className="status-item">
-            <span>Payment</span>
-            <strong>{order?.payment || "Paid"}</strong>
-          </div>
+        {/* STATUS */}
+        <section className="status-strip">
 
-          <div className="status-item">
-            <span>Tracking</span>
-            <strong>{order?.tracking || "—"}</strong>
-          </div>
+          <StatusItem
+            icon="clipboard"
+            label="Status"
+            value={order?.status || "Processing"}
+          />
 
-          <div className="status-item">
-            <span>Carrier</span>
-            <strong>{order?.carrierName || "—"}</strong>
-          </div>
+          <StatusItem
+            icon="card"
+            label="Payment"
+            value={order?.payment || "Paid"}
+            accent="green"
+          />
+
+          <StatusItem
+            icon="truck"
+            label="Tracking"
+            value={order?.tracking || "Not assigned"}
+          />
+
+          <StatusItem
+            icon="box"
+            label="Carrier"
+            value={order?.carrierName || "—"}
+          />
+
         </section>
 
-        {/* =========================
-            INFORMATION
-        ========================== */}
-        <section className="information-section">
-          {/* Billing */}
-          <div className="information-column">
+
+        {/* BILLING + ORDER */}
+        <section className="details-grid">
+
+          <div>
             <div className="section-label">
               BILLING INFORMATION
             </div>
 
-            <div className="customer-name">
-              {customerName}
-            </div>
+            <div className="info-card-line">
 
-            <div className="address">
-              {billing.address && (
-                <div>{billing.address}</div>
-              )}
+              <div className="circle-icon">
+                <SvgIcon name="user" />
+              </div>
 
-              {[
-                billing.city,
-                billing.state,
-                billing.postal,
-              ].filter(Boolean).length > 0 && (
-                <div>
-                  {[
-                    billing.city,
-                    billing.state,
-                    billing.postal,
-                  ]
-                    .filter(Boolean)
-                    .join(", ")}
+              <div className="billing-copy">
+
+                <div className="customer-name">
+                  {customerName}
                 </div>
-              )}
 
-              {billing.country && (
-                <div>{billing.country}</div>
-              )}
-            </div>
+                {billing.address && (
+                  <div>{billing.address}</div>
+                )}
 
-            {(billing.email || billing.phone) && (
-              <div className="contact-details">
+                {addressLine && (
+                  <div>{addressLine}</div>
+                )}
+
+                {billing.country && (
+                  <div>{billing.country}</div>
+                )}
+
                 {billing.email && (
-                  <div>{billing.email}</div>
+                  <div className="spaced-line">
+                    {billing.email}
+                  </div>
                 )}
 
                 {billing.phone && (
                   <div>{billing.phone}</div>
                 )}
+
               </div>
-            )}
+            </div>
           </div>
 
-          {/* Order */}
-          <div className="information-column order-column">
+
+          <div>
+
             <div className="section-label">
               ORDER INFORMATION
             </div>
 
-            <div className="order-details">
-              <div>
-                <span>Ordered</span>
-                <strong>
-                  {order?.date
-                    ? shortDate(order.date)
-                    : "—"}
-                </strong>
+            <div className="info-card-line order-info-line">
+
+              <div className="circle-icon">
+                <SvgIcon name="document" />
               </div>
 
-              {order?.ingramOrderNumber && (
-                <div>
-                  <span>Ingram Ref</span>
-                  <strong>
-                    {order.ingramOrderNumber}
-                  </strong>
-                </div>
-              )}
+              <div className="order-info-table">
 
-              {order?.invoiceNumber && (
-                <div>
-                  <span>Invoice #</span>
-                  <strong>
-                    {order.invoiceNumber}
-                  </strong>
-                </div>
-              )}
+                <MetaRow
+                  label="Order Date"
+                  value={orderDate}
+                />
 
-              {order?.tracking && (
-                <div>
-                  <span>Tracking</span>
-                  <strong>{order.tracking}</strong>
-                </div>
-              )}
+                <MetaRow
+                  label="Order Number"
+                  value={`#${invoiceNumber}`}
+                />
 
-              {order?.carrierName && (
-                <div>
-                  <span>Carrier</span>
-                  <strong>{order.carrierName}</strong>
-                </div>
-              )}
+                <MetaRow
+                  label="Customer ID"
+                  value={
+                    order?.customerId ||
+                    order?.customer?._id ||
+                    "—"
+                  }
+                />
+
+                <MetaRow
+                  label="Sales Channel"
+                  value={
+                    order?.salesChannel ||
+                    "Online Store"
+                  }
+                />
+
+              </div>
+
             </div>
           </div>
+
         </section>
 
-        {/* =========================
-            PRODUCTS
-        ========================== */}
-        <section className="products-section">
-          <div className="products-heading">
-            <div className="product-heading-name">
-              PRODUCT
-            </div>
 
-            <div className="product-heading-sku">
-              SKU
-            </div>
+        {/* PRODUCTS */}
+        <section className="items-section">
 
-            <div className="product-heading-qty">
-              QTY
-            </div>
-
-            <div className="product-heading-price">
-              UNIT PRICE
-            </div>
-
-            <div className="product-heading-total">
-              TOTAL
-            </div>
+          <div className="section-label">
+            ORDER ITEMS
           </div>
 
-          <div className="products-body">
+          <div className="items-heading">
+
+            <div>PRODUCT</div>
+            <div>SKU</div>
+            <div>QTY</div>
+            <div>UNIT PRICE</div>
+            <div>TOTAL</div>
+
+          </div>
+
+
+          <div className="items-body">
+
             {items.length > 0 ? (
               items.map((item, index) => {
+
                 const image = itemImage(item);
                 const quantity = qty(item);
                 const price = Number(item?.price) || 0;
                 const lineTotal = price * quantity;
+                const description = itemDescription(item);
 
                 return (
                   <div
-                    className="product-row"
+                    className="item-row"
                     key={
                       item?.productId ||
                       item?._id ||
@@ -282,51 +314,57 @@ export function InvoicePrint({ order }) {
                       index
                     }
                   >
-                    {/* Product */}
-                    <div className="product-info">
+
+                    <div className="product-cell">
+
                       <div className="product-image">
+
                         {image ? (
                           <img
                             src={image}
                             alt={itemName(item)}
-                            loading="eager"
-                            decoding="async"
-                            referrerPolicy="no-referrer"
-                            className="product-image-element"
                           />
                         ) : (
                           <div className="no-image">
                             Z
                           </div>
                         )}
+
                       </div>
 
-                      <div className="product-name-wrapper">
+                      <div>
+
                         <div className="product-name">
                           {itemName(item)}
                         </div>
+
+                        {description && (
+                          <div className="product-description">
+                            {description}
+                          </div>
+                        )}
+
                       </div>
+
                     </div>
 
-                    {/* SKU */}
-                    <div className="product-sku">
+
+                    <div className="muted-cell">
                       {itemSku(item)}
                     </div>
 
-                    {/* Quantity */}
-                    <div className="product-qty">
+                    <div className="center-cell">
                       {quantity}
                     </div>
 
-                    {/* Unit */}
-                    <div className="product-price">
+                    <div className="money-cell">
                       {formatMoney(price)}
                     </div>
 
-                    {/* Total */}
-                    <div className="product-total">
+                    <div className="money-cell">
                       {formatMoney(lineTotal)}
                     </div>
+
                   </div>
                 );
               })
@@ -335,681 +373,1314 @@ export function InvoicePrint({ order }) {
                 No products found
               </div>
             )}
+
           </div>
+
         </section>
 
-        {/* =========================
-            BOTTOM AREA
-        ========================== */}
-        <section className="bottom-section">
-          <div className="thank-you-area">
-            <div className="thank-you-title">
-              Thank you for your order
-            </div>
 
-            <div className="thank-you-text">
-              We appreciate your business with ZoeLit.
-              Your order has been received and is being
-              processed.
-            </div>
-          </div>
+        {/* TOTALS */}
+        <section className="totals-wrap">
 
-          {/* Totals */}
-          <div className="totals-section">
-            <div className="total-row">
-              <span>Cart Subtotal</span>
-              <strong>
-                {formatMoney(subtotal)}
-              </strong>
-            </div>
+          <div className="totals-box">
 
-            <div className="total-row">
-              <span>Shipping</span>
-              <strong>
-                {formatMoney(shipping)}
-              </strong>
-            </div>
+            <TotalRow
+              label="Subtotal"
+              value={formatMoney(subtotal)}
+            />
 
-            <div className="total-row">
-              <span>Discount</span>
-              <strong>
-                {formatMoney(discount)}
-              </strong>
-            </div>
+            {discount > 0 && (
+              <TotalRow
+                label="Discount"
+                value={`-${formatMoney(discount)}`}
+                danger
+              />
+            )}
 
-            <div className="total-divider" />
+            <TotalRow
+              label="Shipping"
+              value={formatMoney(shipping)}
+            />
 
             <div className="grand-total">
-              <span>Total Order</span>
+
+              <span>
+                Grand Total
+              </span>
 
               <strong>
                 {formatMoney(total)}
               </strong>
+
             </div>
+
           </div>
+
         </section>
 
-        {/* =========================
-            FOOTER
-        ========================== */}
+
+        {/* FOOTER */}
         <footer className="invoice-footer">
-          <div className="footer-branding">ZoeLit Commerce</div>
-          <div className="footer-center">
-            <div className="footer-thanks">Thank you for your order with ZoeLit</div>
-            <div>This invoice was generated automatically.</div>
-            <div>For order queries contact support@zoelit.com</div>
+
+          <div className="footer-left">
+
+            <div className="heart-circle">
+              <SvgIcon name="heart" />
+            </div>
+
+            <div>
+
+              <div className="footer-title">
+                Thank you for your business!
+              </div>
+
+              <div className="footer-copy">
+                We appreciate your trust in ZoeLit Commerce.
+              </div>
+
+            </div>
+
           </div>
-          <div className="footer-support">support@zoelit.com</div>
+
+
+          <div className="footer-right">
+
+            <div className="footer-title">
+              Need help?
+            </div>
+
+            <div className="footer-copy">
+              support@zoelit.com
+              &nbsp;&nbsp; | &nbsp;&nbsp;
+              +1 (888) 123-4567
+            </div>
+
+          </div>
+
         </footer>
+
       </div>
 
-      {/* =========================
-          PRINT STYLES
-      ========================== */}
+
       <style jsx global>{`
+
         @page {
           size: A4 portrait;
-          margin: 12mm;
+          margin: 0;
         }
 
         * {
           box-sizing: border-box;
         }
 
+
+        /* =========================
+           SCREEN
+        ========================= */
+
         .invoice-print-root {
           width: 100%;
-          background: white;
-          color: #0f172a;
+          background: #ffffff;
+          color: #10172a;
+          display: none;
           font-family:
+            Inter,
             Arial,
             Helvetica,
             sans-serif;
         }
 
         .invoice-print-page {
-          width: 186mm;
-          min-height: 273mm;
-          margin: 0 auto;
-          padding: 4mm 5mm 4mm 5mm;
-          background: white;
+          position: relative;
+
+          width: 210mm;
+          height: 297mm;
+
+          margin: 30px auto;
+
+          padding:
+            14mm
+            14mm
+            10mm
+            14mm;
+
+          background: #ffffff;
+
           display: flex;
           flex-direction: column;
+
           overflow: hidden;
+
+          box-shadow:
+            0 10px 40px
+            rgba(15, 23, 42, 0.12);
         }
+
 
         /* =========================
            HEADER
-        ========================== */
+        ========================= */
 
         .invoice-header {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
-          padding-bottom: 7mm;
-          border-bottom: 1.5px solid #0f172a;
+
+          flex-shrink: 0;
         }
 
-        .invoice-brand {
+        .brand-area {
+          width: 55%;
+        }
+
+        .brand-row {
           display: flex;
           align-items: center;
           gap: 12px;
-          min-width: 0;
         }
 
-        .brand-content {
-          min-width: 0;
+        .brand-mark {
+          position: relative;
+
+          width: 34px;
+          height: 34px;
+
+          transform: rotate(30deg);
         }
 
-        .brand-wordmark {
-          font-size: 11px;
-          line-height: 1;
-          font-weight: 900;
-          letter-spacing: 2.8px;
-          text-transform: uppercase;
-          color: #1457d9;
+        .brand-mark span {
+          position: absolute;
+
+          width: 23px;
+          height: 12px;
+
+          border-radius: 3px;
+
+          background:
+            linear-gradient(
+              135deg,
+              #7c4dff,
+              #4020c8
+            );
+        }
+
+        .brand-mark span:nth-child(1) {
+          top: 1px;
+          left: 7px;
+        }
+
+        .brand-mark span:nth-child(2) {
+          top: 11px;
+          left: 0;
+
+          background:
+            linear-gradient(
+              135deg,
+              #5630df,
+              #8f6cff
+            );
+        }
+
+        .brand-mark span:nth-child(3) {
+          top: 22px;
+          left: 8px;
+
+          background:
+            linear-gradient(
+              135deg,
+              #3219bd,
+              #6c45ff
+            );
         }
 
         .brand-name {
-          margin-top: 4px;
-          font-size: 26px;
+          font-size: 25px;
           line-height: 1;
-          font-weight: 800;
-          letter-spacing: -1.2px;
+
+          font-weight: 900;
+
+          letter-spacing: -1px;
+
           color: #111827;
         }
 
         .brand-name span {
-          color: #1457d9;
+          color: #5b36ef;
         }
 
-        .company-line {
-          margin-top: 2px;
-        }
-
-        .company-contact {
+        .brand-subtitle {
           margin-top: 5px;
+
           font-size: 9px;
-          color: #64748b;
+          font-weight: 800;
+
+          letter-spacing: 5px;
+
+          color: #697186;
         }
 
-        .invoice-heading {
-          text-align: right;
-          min-width: 145px;
+        .company-list {
+          margin-top: 20px;
+
+          display: grid;
+          gap: 8px;
+
+          font-size: 9.5px;
+          line-height: 1.35;
+
+          color: #26314a;
+        }
+
+        .info-line {
+          display: flex;
+          align-items: flex-start;
+
+          gap: 13px;
+        }
+
+        .small-icon {
+          width: 12px;
+          height: 12px;
+
+          color: #586173;
+
+          flex: 0 0 12px;
+        }
+
+
+        /* =========================
+           INVOICE TITLE
+        ========================= */
+
+        .invoice-title-area {
+          width: 49mm;
+
+          padding-top: 2mm;
         }
 
         .invoice-title {
-          font-size: 28px;
+          font-size: 33px;
           line-height: 1;
-          font-weight: 800;
+
+          font-weight: 900;
+
           letter-spacing: 1px;
-          color: #0f172a;
+
+          color: #0b1224;
         }
 
         .invoice-number {
-          margin-top: 6px;
-          font-size: 11px;
+          margin-top: 8px;
+
+          font-size: 15px;
+
           font-weight: 700;
-          color: #1457d9;
+
+          color: #5630df;
         }
 
         .invoice-meta {
-          margin-top: 9px;
-          display: flex;
-          justify-content: flex-end;
-          gap: 18px;
-        }
+          margin-top: 26px;
 
-        .invoice-meta-grid {
           display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 10px 18px;
+          gap: 10px;
         }
 
-        .invoice-meta div {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-        }
+        .meta-row {
+          display: grid;
 
-        .invoice-meta span {
-          font-size: 8px;
-          text-transform: uppercase;
-          letter-spacing: 0.8px;
-          color: #94a3b8;
-          font-weight: 700;
-        }
+          grid-template-columns:
+            minmax(0, 1fr)
+            8px
+            minmax(0, 1fr);
 
-        .invoice-meta strong {
+          gap: 8px;
+
+          align-items: baseline;
+
           font-size: 10px;
-          color: #334155;
+
+          color: #1f2940;
         }
+
+        .meta-row strong {
+          font-size: 10px;
+
+          font-weight: 500;
+
+          color: #111827;
+
+          overflow-wrap: anywhere;
+        }
+
 
         /* =========================
            STATUS
-        ========================== */
+        ========================= */
 
-        .status-bar {
-          margin-top: 6mm;
-          padding: 9px 13px;
+        .status-strip {
+          margin-top: 13mm;
+
+          min-height: 17mm;
+
+          padding: 0 9mm;
+
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 14px;
-          border: 1px solid #dbe3ef;
-          border-radius: 8px;
-          background: #f8fafc;
+
+          grid-template-columns:
+            repeat(4, 1fr);
+
+          align-items: center;
+
+          border-radius: 6px;
+
+          background:
+            linear-gradient(
+              90deg,
+              #fbfaff,
+              #f3efff 48%,
+              #fbfaff
+            );
+
+          flex-shrink: 0;
         }
 
         .status-item {
-          min-width: 0;
+          min-height: 11mm;
+
+          display: grid;
+
+          grid-template-columns:
+            26px
+            minmax(0, 1fr);
+
+          gap: 10px;
+
+          align-items: center;
+
+          padding: 0 8px;
+
+          border-right:
+            1px solid #d9d2ec;
         }
 
-        .status-item span {
-          display: block;
-          margin-bottom: 3px;
-          font-size: 8px;
-          line-height: 1;
-          text-transform: uppercase;
-          letter-spacing: 0.9px;
+        .status-item:last-child {
+          border-right: 0;
+        }
+
+        .status-icon {
+          width: 19px;
+          height: 19px;
+
+          color: #5630df;
+        }
+
+        .status-label {
+          font-size: 9px;
+
+          color: #26314a;
+        }
+
+        .status-value {
+          margin-top: 4px;
+
+          font-size: 9px;
+
+          line-height: 1.2;
+
+          color: #5630df;
+
           font-weight: 700;
-          color: #94a3b8;
-        }
 
-        .status-item strong {
-          display: block;
           overflow-wrap: anywhere;
-          font-size: 10px;
-          line-height: 1.3;
-          font-weight: 700;
-          color: #1e293b;
         }
+
+        .status-value.green {
+          color: #0c9a2f;
+        }
+
 
         /* =========================
-           INFORMATION
-        ========================== */
+           DETAILS
+        ========================= */
 
-        .information-section {
-          margin-top: 6mm;
+        .details-grid {
+          margin-top: 9mm;
+
           display: grid;
-          grid-template-columns: 1fr 1fr;
-          column-gap: 9mm;
-          padding-bottom: 5mm;
-          border-bottom: 1px solid #dbe3ef;
-        }
 
-        .information-column {
-          min-width: 0;
-        }
+          grid-template-columns:
+            1fr
+            1fr;
 
-        .order-column {
-          padding-left: 9mm;
-          border-left: 1px solid #dbe3ef;
+          column-gap: 18mm;
+
+          flex-shrink: 0;
         }
 
         .section-label {
           margin-bottom: 8px;
-          font-size: 8px;
-          line-height: 1;
-          text-transform: uppercase;
-          letter-spacing: 1.2px;
-          font-weight: 800;
-          color: #64748b;
+
+          font-size: 9.5px;
+
+          font-weight: 900;
+
+          letter-spacing: 1.5px;
+
+          color: #121a2e;
+        }
+
+        .info-card-line {
+          display: grid;
+
+          grid-template-columns:
+            38px
+            minmax(0, 1fr);
+
+          gap: 10px;
+
+          align-items: flex-start;
+        }
+
+        .circle-icon,
+        .heart-circle {
+          width: 34px;
+          height: 34px;
+
+          display: flex;
+
+          align-items: center;
+          justify-content: center;
+
+          border-radius: 999px;
+
+          background: #f2efff;
+
+          color: #5630df;
+        }
+
+        .circle-icon svg,
+        .heart-circle svg {
+          width: 17px;
+          height: 17px;
+        }
+
+        .billing-copy {
+          font-size: 9.5px;
+
+          line-height: 1.45;
+
+          color: #111827;
         }
 
         .customer-name {
-          margin-bottom: 5px;
+          margin-bottom: 2px;
+
           font-size: 12px;
-          line-height: 1.3;
-          font-weight: 800;
-          color: #0f172a;
+
+          line-height: 1.2;
+
+          font-weight: 900;
         }
 
-        .address,
-        .contact-details {
-          font-size: 10px;
-          line-height: 1.55;
-          color: #475569;
-          overflow-wrap: anywhere;
+        .spaced-line {
+          margin-top: 5px;
         }
 
-        .contact-details {
-          margin-top: 6px;
+        .order-info-line {
+          grid-template-columns:
+            38px
+            minmax(0, 1fr);
         }
 
-        .order-details {
+        .order-info-table {
           display: grid;
-          gap: 5px;
+
+          gap: 7px;
         }
 
-        .order-details div {
-          display: flex;
-          justify-content: space-between;
-          align-items: baseline;
-          gap: 15px;
-          font-size: 10px;
-        }
 
-        .order-details span {
-          color: #64748b;
+        /* =========================
+           ITEMS
+        ========================= */
+
+        .items-section {
+          margin-top: 8mm;
+
           flex-shrink: 0;
         }
 
-        .order-details strong {
-          text-align: right;
-          color: #1e293b;
-          overflow-wrap: anywhere;
-        }
-
-        /* =========================
-           PRODUCTS
-        ========================== */
-
-        .products-section {
-          margin-top: 6mm;
-          border: 1px solid #dbe3ef;
-          border-radius: 8px;
-          overflow: hidden;
-        }
-
-        .products-heading {
+        .items-heading,
+        .item-row {
           display: grid;
+
           grid-template-columns:
-            minmax(0, 2.7fr)
-            minmax(0, 1.05fr)
-            0.45fr
-            0.95fr
-            0.95fr;
+            minmax(0, 2.8fr)
+            1fr
+            0.55fr
+            1.1fr
+            1.1fr;
+
           align-items: center;
-          min-height: 34px;
-          padding: 0 10px;
-          background: #f1f5f9;
-          border-bottom: 1px solid #dbe3ef;
+
+          column-gap: 7px;
+        }
+
+        .items-heading {
+          height: 25px;
+
+          padding: 0 9px;
+
+          border-radius: 5px;
+
+          background:
+            linear-gradient(
+              90deg,
+              #fbfaff,
+              #f3efff 48%,
+              #fbfaff
+            );
+
           font-size: 8px;
-          line-height: 1;
-          text-transform: uppercase;
-          letter-spacing: 0.9px;
-          font-weight: 800;
-          color: #475569;
+
+          font-weight: 900;
+
+          color: #172035;
         }
 
-        .product-heading-name {
-          text-align: left;
-        }
-
-        .product-heading-sku {
-          text-align: left;
-        }
-
-        .product-heading-qty {
+        .items-heading div:nth-child(3) {
           text-align: center;
         }
 
-        .product-heading-price,
-        .product-heading-total {
+        .items-heading div:nth-child(4),
+        .items-heading div:nth-child(5) {
           text-align: right;
         }
 
-        .products-body {
-          width: 100%;
-        }
+        .item-row {
+          min-height: 17mm;
 
-        .product-row {
-          display: grid;
-          grid-template-columns:
-            minmax(0, 2.7fr)
-            minmax(0, 1.05fr)
-            0.45fr
-            0.95fr
-            0.95fr;
-          align-items: center;
-          min-height: 68px;
-          padding: 8px 10px;
-          border-bottom: 1px solid #e2e8f0;
+          padding: 5px 9px;
+
+          border-bottom:
+            1px solid #dbe0eb;
+
           break-inside: avoid;
+
           page-break-inside: avoid;
         }
 
-        .product-row:last-child {
-          border-bottom: none;
-        }
+        .product-cell {
+          display: grid;
 
-        .product-info {
-          display: flex;
-          align-items: center;
-          min-width: 0;
+          grid-template-columns:
+            42px
+            minmax(0, 1fr);
+
           gap: 10px;
-          padding-right: 10px;
+
+          align-items: center;
+
+          min-width: 0;
         }
 
         .product-image {
-          width: 48px;
-          height: 48px;
-          flex: 0 0 48px;
+          width: 40px;
+          height: 40px;
+
           display: flex;
+
           align-items: center;
           justify-content: center;
+
           overflow: hidden;
-          border: 1px solid #dbe3ef;
+
+          border:
+            1px solid #dbe0eb;
+
           border-radius: 7px;
-          background: white;
+
+          background: #ffffff;
         }
 
-        .product-image-element {
+        .product-image img {
           width: 100%;
           height: 100%;
+
           display: block;
+
           object-fit: contain;
-          padding: 4px;
+
+          padding: 3px;
         }
 
         .no-image {
           width: 100%;
           height: 100%;
+
           display: flex;
+
           align-items: center;
           justify-content: center;
-          background: #f1f5f9;
-          color: #1457d9;
-          font-size: 17px;
-          font-weight: 800;
-        }
 
-        .product-name-wrapper {
-          min-width: 0;
+          background: #f5f7fb;
+
+          color: #5630df;
+
+          font-weight: 900;
         }
 
         .product-name {
-          font-size: 9.5px;
-          line-height: 1.45;
-          font-weight: 700;
-          color: #0f172a;
+          font-size: 9px;
+
+          line-height: 1.25;
+
+          font-weight: 900;
+
+          color: #10172a;
+
           overflow-wrap: anywhere;
         }
 
-        .product-sku {
-          min-width: 0;
-          padding-right: 7px;
-          font-size: 8.5px;
-          line-height: 1.4;
-          color: #64748b;
+        .product-description {
+          margin-top: 2px;
+
+          font-size: 8px;
+
+          line-height: 1.2;
+
+          color: #26314a;
+
           overflow-wrap: anywhere;
         }
 
-        .product-qty {
+        .muted-cell,
+        .center-cell,
+        .money-cell {
+          font-size: 9px;
+
+          color: #172035;
+        }
+
+        .muted-cell {
+          overflow-wrap: anywhere;
+        }
+
+        .center-cell {
           text-align: center;
-          font-size: 9.5px;
-          font-weight: 700;
-          color: #334155;
         }
 
-        .product-price {
+        .money-cell {
           text-align: right;
-          padding-left: 5px;
-          font-size: 9.5px;
-          color: #475569;
-          white-space: nowrap;
-        }
 
-        .product-total {
-          text-align: right;
-          padding-left: 5px;
-          font-size: 9.5px;
-          font-weight: 800;
-          color: #0f172a;
           white-space: nowrap;
         }
 
         .empty-products {
-          padding: 24px;
+          padding: 20px;
+
           text-align: center;
+
           font-size: 10px;
-          color: #64748b;
+
+          color: #697186;
+
+          border-bottom:
+            1px solid #dbe0eb;
         }
+
 
         /* =========================
-           BOTTOM
-        ========================== */
+           TOTALS
+        ========================= */
 
-        .bottom-section {
-          margin-top: 6mm;
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) 75mm;
-          gap: 10mm;
-          align-items: end;
+        .totals-wrap {
+          display: flex;
+
+          justify-content: flex-end;
+
+          flex-shrink: 0;
         }
 
-        .thank-you-area {
-          min-width: 0;
-          padding: 5px 0;
-        }
+        .totals-box {
+          width: 63mm;
 
-        .thank-you-title {
-          font-size: 12px;
-          font-weight: 800;
-          color: #1457d9;
-        }
-
-        .thank-you-text {
-          max-width: 105mm;
-          margin-top: 5px;
-          font-size: 9px;
-          line-height: 1.55;
-          color: #64748b;
-        }
-
-        .totals-section {
-          width: 100%;
-          padding: 10px 13px;
-          border: 1px solid #dbe3ef;
-          border-radius: 8px;
+          padding-top: 5px;
         }
 
         .total-row {
           display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 15px;
-          padding: 4px 0;
-          font-size: 10px;
-        }
 
-        .total-row span {
-          color: #64748b;
+          justify-content: space-between;
+
+          gap: 15px;
+
+          padding: 2.5px 4px;
+
+          font-size: 9.5px;
+
+          color: #10172a;
         }
 
         .total-row strong {
-          color: #334155;
+          font-weight: 500;
+
           white-space: nowrap;
         }
 
-        .total-divider {
-          height: 1px;
-          margin: 7px 0;
-          background: #dbe3ef;
+        .total-row.danger strong {
+          color: #d71920;
         }
 
         .grand-total {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 15px;
-          padding-top: 2px;
-        }
+          margin-top: 3px;
 
-        .grand-total span {
+          padding: 6px 9px;
+
+          display: flex;
+
+          justify-content: space-between;
+
+          align-items: center;
+
+          border-radius: 5px;
+
+          background:
+            linear-gradient(
+              90deg,
+              #fbfaff,
+              #efe9ff
+            );
+
           font-size: 11px;
-          font-weight: 800;
-          color: #0f172a;
+
+          font-weight: 900;
         }
 
         .grand-total strong {
-          font-size: 15px;
-          font-weight: 900;
-          color: #1457d9;
+          font-size: 12px;
+
+          color: #111827;
+
           white-space: nowrap;
         }
 
+
         /* =========================
            FOOTER
-        ========================== */
+        ========================= */
 
         .invoice-footer {
-          margin-top: 5mm;
-          padding-top: 4mm;
-          border-top: 1px solid #cbd5e1;
-          text-align: center;
+          margin-top: auto;
+
+          padding-top: 6mm;
+
+          border-top:
+            1.5px solid #9b7cff;
+
+          display: flex;
+
+          justify-content: space-between;
+
+          align-items: center;
+
+          flex-shrink: 0;
         }
 
-        .footer-branding {
+        .footer-left {
+          display: flex;
+
+          align-items: center;
+
+          gap: 14px;
+        }
+
+        .footer-title {
           font-size: 9px;
-          font-weight: 800;
-          letter-spacing: 2px;
-          text-transform: uppercase;
-          color: #1457d9;
+
+          font-weight: 900;
+
+          color: #5630df;
         }
 
-        .footer-center {
+        .footer-copy {
           margin-top: 4px;
-          font-size: 8.5px;
-          line-height: 1.55;
-          color: #94a3b8;
-        }
 
-        .footer-thanks {
-          font-size: 9px;
-          font-weight: 700;
-          color: #334155;
-        }
-
-        .footer-support {
-          margin-top: 4px;
           font-size: 8px;
-          color: #94a3b8;
+
+          color: #26314a;
         }
+
+        .footer-right {
+          text-align: left;
+        }
+
 
         /* =========================
            PRINT
-        ========================== */
+        ========================= */
 
         @media print {
+
           html,
           body {
-            width: 210mm;
-            min-height: 297mm;
+            width: 210mm !important;
+
+            height: 297mm !important;
+
+            min-height: 297mm !important;
+
             margin: 0 !important;
+
             padding: 0 !important;
-            background: white !important;
+
+            overflow: visible !important;
+
+            background: #ffffff !important;
           }
 
           body {
             -webkit-print-color-adjust: exact !important;
+
             print-color-adjust: exact !important;
           }
 
+          /*
+            Hide complete dashboard
+            and show only invoice
+          */
+
+          body > * {
+            visibility: hidden !important;
+          }
+
+          .invoice-print-root,
+          .invoice-print-root * {
+            visibility: visible !important;
+          }
+
+          /*
+            Force invoice to exact
+            A4 print area
+          */
+
           .invoice-print-root {
-            display: block !important;
+            position: fixed !important;
+
+            top: 0 !important;
+
+            left: 0 !important;
+
             width: 210mm !important;
-            background: white !important;
-          }
 
-          .invoice-print-page {
-            width: 186mm !important;
-            min-height: 273mm !important;
-            height: 273mm !important;
+            height: 297mm !important;
+
+            min-height: 297mm !important;
+
+            max-height: 297mm !important;
+
             margin: 0 !important;
-            padding: 4mm 5mm 4mm 5mm !important;
-            overflow: hidden !important;
+
+            padding: 0 !important;
+
+            display: block !important;
+
+            overflow: visible !important;
+
+            background: #ffffff !important;
+
+            z-index: 999999 !important;
           }
 
-          .products-section,
-          .information-section,
-          .bottom-section,
-          .status-bar {
-            break-inside: avoid;
-            page-break-inside: avoid;
-          }
-
-          .product-row {
-            break-inside: avoid;
-            page-break-inside: avoid;
-          }
-
-          img {
-            break-inside: avoid;
-          }
-        }
-
-        /* =========================
-           SCREEN SAFETY
-        ========================== */
-
-        @media screen {
           .invoice-print-page {
-            box-shadow:
-              0 10px 40px rgba(15, 23, 42, 0.12);
-            margin: 30px auto;
+            position: relative !important;
+
+            width: 210mm !important;
+
+            height: 297mm !important;
+
+            min-height: 297mm !important;
+
+            max-height: 297mm !important;
+
+            margin: 0 !important;
+
+            padding:
+              14mm
+              14mm
+              10mm
+              14mm !important;
+
+            overflow: hidden !important;
+
+            box-shadow: none !important;
+
+            background: #ffffff !important;
+
+            display: flex !important;
+
+            flex-direction: column !important;
+          }
+
+          .invoice-header {
+            flex: 0 0 auto !important;
+
+            display: flex !important;
+
+            justify-content: space-between !important;
+
+            align-items: flex-start !important;
+
+            width: 100% !important;
+          }
+
+          .brand-area,
+          .invoice-title-area {
+            display: block !important;
+          }
+
+          .status-strip {
+            flex: 0 0 auto !important;
+
+            margin-top: 10mm !important;
+          }
+
+          .details-grid {
+            flex: 0 0 auto !important;
+
+            margin-top: 8mm !important;
+          }
+
+          .items-section {
+            flex: 0 0 auto !important;
+
+            margin-top: 8mm !important;
+          }
+
+          .items-heading {
+            height: 25px !important;
+          }
+
+          .item-row {
+            min-height: 15mm !important;
+
+            padding: 4px 9px !important;
+          }
+
+          .product-image {
+            width: 40px !important;
+
+            height: 40px !important;
+          }
+
+          .totals-wrap {
+            flex: 0 0 auto !important;
+
+            margin-top: 2mm !important;
+          }
+
+          .invoice-footer {
+            flex: 0 0 auto !important;
+
+            margin-top: auto !important;
+
+            padding-top: 6mm !important;
+
+            display: flex !important;
+
+            justify-content: space-between !important;
+
+            align-items: center !important;
+
+            border-top: 1.5px solid #9b7cff !important;
+          }
+
+          .invoice-header,
+          .status-strip,
+          .details-grid,
+          .items-section,
+          .items-body,
+          .item-row,
+          .totals-wrap,
+          .invoice-footer {
+            break-inside: avoid !important;
+
+            page-break-inside: avoid !important;
+          }
+
+          .product-image img {
+            print-color-adjust: exact !important;
+
+            -webkit-print-color-adjust: exact !important;
+          }
+
+          .status-strip,
+          .items-heading,
+          .grand-total,
+          .circle-icon,
+          .heart-circle {
+            -webkit-print-color-adjust: exact !important;
+
+            print-color-adjust: exact !important;
           }
         }
+
       `}</style>
     </div>
+  );
+}
+
+
+/* =========================
+   HELPERS
+========================= */
+
+function MetaRow({ label, value }) {
+  return (
+    <div className="meta-row">
+      <span>{label}</span>
+
+      <span>:</span>
+
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+
+function TotalRow({
+  label,
+  value,
+  danger,
+}) {
+  return (
+    <div
+      className={`total-row${
+        danger ? " danger" : ""
+      }`}
+    >
+      <span>{label}</span>
+
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+
+function StatusItem({
+  icon,
+  label,
+  value,
+  accent,
+}) {
+  return (
+    <div className="status-item">
+
+      <SvgIcon
+        name={icon}
+        className="status-icon"
+      />
+
+      <div>
+
+        <div className="status-label">
+          {label}
+        </div>
+
+        <div
+          className={`status-value${
+            accent
+              ? ` ${accent}`
+              : ""
+          }`}
+        >
+          {value}
+        </div>
+
+      </div>
+
+    </div>
+  );
+}
+
+
+function InfoLine({
+  icon,
+  children,
+}) {
+  return (
+    <div className="info-line">
+
+      <SvgIcon
+        name={icon}
+        className="small-icon"
+      />
+
+      <div>
+        {children}
+      </div>
+
+    </div>
+  );
+}
+
+
+function addDays(date, days) {
+  const result = new Date(date);
+
+  result.setDate(
+    result.getDate() + days
+  );
+
+  return result;
+}
+
+
+function SvgIcon({
+  name,
+  className = "",
+}) {
+  const common = {
+    fill: "none",
+
+    stroke: "currentColor",
+
+    strokeWidth: 1.8,
+
+    strokeLinecap: "round",
+
+    strokeLinejoin: "round",
+
+    viewBox: "0 0 24 24",
+
+    className,
+  };
+
+  const paths = {
+
+    mail: (
+      <>
+        <rect
+          x="3"
+          y="5"
+          width="18"
+          height="14"
+          rx="2"
+        />
+
+        <path d="m3 7 9 7 9-7" />
+      </>
+    ),
+
+    globe: (
+      <>
+        <circle
+          cx="12"
+          cy="12"
+          r="9"
+        />
+
+        <path d="M3 12h18" />
+
+        <path d="M12 3a14 14 0 0 1 0 18" />
+
+        <path d="M12 3a14 14 0 0 0 0 18" />
+      </>
+    ),
+
+    pin: (
+      <>
+        <path d="M12 21s7-5.2 7-12a7 7 0 1 0-14 0c0 6.8 7 12 7 12Z" />
+
+        <circle
+          cx="12"
+          cy="9"
+          r="2.4"
+        />
+      </>
+    ),
+
+    clipboard: (
+      <>
+        <path d="M9 4h6l1 2h3v15H5V6h3l1-2Z" />
+
+        <path d="M9 10h6M9 14h6" />
+      </>
+    ),
+
+    card: (
+      <>
+        <rect
+          x="3"
+          y="6"
+          width="18"
+          height="13"
+          rx="2"
+        />
+
+        <path d="M3 10h18M7 15h4" />
+      </>
+    ),
+
+    truck: (
+      <>
+        <path d="M3 7h11v10H3zM14 11h4l3 3v3h-7z" />
+
+        <circle
+          cx="7"
+          cy="18"
+          r="1.7"
+        />
+
+        <circle
+          cx="17"
+          cy="18"
+          r="1.7"
+        />
+      </>
+    ),
+
+    box: (
+      <>
+        <path d="M4 8h16l-2 12H6L4 8Z" />
+
+        <path d="M8 8l2-4h4l2 4M9 12h6" />
+      </>
+    ),
+
+    user: (
+      <>
+        <circle
+          cx="12"
+          cy="8"
+          r="3"
+        />
+
+        <path d="M5 20a7 7 0 0 1 14 0" />
+      </>
+    ),
+
+    document: (
+      <>
+        <path d="M7 3h7l4 4v14H7z" />
+
+        <path d="M14 3v5h5M10 13h5M10 17h5" />
+      </>
+    ),
+
+    heart: (
+      <path
+        d="M20.8 8.6c0 5.1-8.8 10.2-8.8 10.2S3.2 13.7 3.2 8.6A4.5 4.5 0 0 1 12 7.2a4.5 4.5 0 0 1 8.8 1.4Z"
+        fill="currentColor"
+        stroke="none"
+      />
+    ),
+
+  };
+
+  return (
+    <svg {...common}>
+      {paths[name]}
+    </svg>
   );
 }

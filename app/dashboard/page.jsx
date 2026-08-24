@@ -9,7 +9,6 @@ import { useAuthStore } from "@/store/auth-store";
 import { AdminStatCard } from "@/components/admin-stat-card";
 import { AdminTable } from "@/components/admin-table";
 import { Badge, Button } from "@/components/ui";
-import Pagination from "@/components/pagination";
 import { Card } from "@/components/ui";
 import { DashboardSkeleton } from "@/components/skeletons";
 import { OrderNotesDialog } from "@/components/order-notes-dialog";
@@ -93,14 +92,8 @@ export default function DashboardPage() {
           page={safePage}
           onPageChange={setPage}
           onPaginationChange={handlePaginationChange}
-          hidePagination
           disableInitialSort
         />
-        {pagination.totalPages > 1 ? (
-          <div className="mt-6 flex justify-center">
-            <Pagination page={safePage} totalPages={pagination.totalPages} onPageChange={setPage} />
-          </div>
-        ) : null}
       </div>
     </div>
   );

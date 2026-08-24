@@ -5,7 +5,6 @@ import * as api from "@/lib/api";
 import { useAuthStore } from "@/store/auth-store";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminTable } from "@/components/admin-table";
-import Pagination from "@/components/pagination";
 import { OrderNotesDialog } from "@/components/order-notes-dialog";
 import { money, shortDate } from "@/lib/utils";
 import { OrdersSkeleton } from "@/components/skeletons";
@@ -80,15 +79,9 @@ export default function OrdersPage() {
           page={safePage}
           onPageChange={setPage}
           onPaginationChange={handlePaginationChange}
-          hidePagination
           disableInitialSort
         />
       </div>
-      {pagination.totalPages > 1 ? (
-        <div className="mt-6 flex justify-center">
-          <Pagination page={safePage} totalPages={pagination.totalPages} onPageChange={setPage} />
-        </div>
-      ) : null}
     </div>
   );
 }

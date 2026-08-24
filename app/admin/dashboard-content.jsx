@@ -3,30 +3,54 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, ChevronDown } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminTable } from "@/components/admin-table";
 import { OrderNotesDialog } from "@/components/order-notes-dialog";
 import { Card } from "@/components/ui";
+import { updateAdminOrderStatus } from "@/lib/api";
 import { statuses } from "@/lib/data";
 import { money, shortDate } from "@/lib/utils";
+import { useAdminAuthStore } from "@/store/admin-auth-store";
 
 export function AdminDashboardContent({ orders, topProducts, lowStock, salesOverview }) {
+  const token = useAdminAuthStore((state) => state.token);
+  const [tableOrders, setTableOrders] = useState(orders || []);
+
+  useEffect(() => {
+    setTableOrders(orders || []);
+  }, [orders]);
+
+  async function handleOrderStatusChange(order, nextStatus) {
+    const previousOrders = tableOrders;
+    setTableOrders((current) => current.map((row) => row.id === order.id ? { ...row, status: nextStatus } : row));
+
+    try {
+      await updateAdminOrderStatus(order.id, { status: nextStatus, note: "Status updated from admin dashboard" }, token);
+      toast.success("Order status updated");
+    } catch (statusError) {
+      setTableOrders(previousOrders);
+      toast.error(statusError.message || "Could not update order status");
+    }
+  }
+
   const orderColumns = [
     { key: "orderNumber", header: "Order", sortable: true, accessor: "orderNumber", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => `#${order.orderNumber || order.id || order.ingramOrderNumber}` },
     { key: "customer", header: "Customer", sortable: true, accessor: (order) => order.customer?.name || "—", cellClassName: "min-w-0 whitespace-normal font-semibold text-on-surface" },
-    { key: "date", header: "Date", sortable: true, accessor: "date", render: (order) => shortDate(order.date) },
-    { key: "status", header: "Status", accessor: "status", render: (order) => <AdminStatusBadge className="text-label-md font-normal text-on-surface-variant">{order.status}</AdminStatusBadge> },
     { key: "payment", header: "Payment", accessor: "payment", render: (order) => <AdminStatusBadge className="text-label-md font-normal text-on-surface-variant">{order.payment}</AdminStatusBadge> },
     { key: "notes", header: "Notes", accessor: "notes", render: (order) => <OrderNotesDialog notes={order.notes} label={`View notes for order ${order.orderNumber || order.id}`} /> },
     { key: "total", header: "Total", sortable: true, accessor: "total", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => money(order.total) },
+    { key: "date", header: "Date", sortable: true, accessor: "date", render: (order) => shortDate(order.date) },
+    { key: "status", header: "Status", accessor: "status", render: (order) => <OrderStatusSelect order={order} onChange={handleOrderStatusChange} /> },
   ];
   const trend = chartTrend(salesOverview);
 
   return (
     <>
       <div className="mt-6 grid items-stretch gap-6 lg:grid-cols-2">
-        <Card className="h-full overflow-hidden p-5 shadow-primary-elevated">
+        <Card className="flex h-full flex-col overflow-hidden p-5 shadow-primary-elevated">
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2 className="font-heading text-headline-md font-semibold tracking-[-0.03em] text-on-surface">Sales overview</h2>
@@ -34,7 +58,7 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
             </div>
             {trend ? <span className="rounded-full bg-tertiary-container px-3 py-1 text-label-sm font-semibold tabular-nums text-on-tertiary">{trend}</span> : null}
           </div>
-          <div className="mt-6 h-60 rounded-md bg-gradient-to-b from-primary-fixed/60 to-surface-container-low p-3 ring-1 ring-outline-variant">
+          <div className="mt-6 min-h-60 flex-1 rounded-md bg-gradient-to-b from-primary-fixed/60 to-surface-container-low p-3 ring-1 ring-outline-variant">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={salesOverview} margin={{ left: 0, right: 10, top: 12, bottom: 0 }}>
                 <defs>
@@ -110,7 +134,7 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
         title="Recent orders"
         description="Latest storefront orders with live status."
         columns={orderColumns}
-        data={orders}
+        data={tableOrders}
         searchPlaceholder="Search order or customer"
         searchKeys={["orderNumber", "id", (order) => order.customer?.name, "status", "payment", "total"]}
         filters={[{ key: "status", label: "Filter recent orders by status", allLabel: "All statuses", options: statuses, value: (order) => order.status }]}
@@ -121,6 +145,31 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
       />
     </>
   );
+}
+
+function OrderStatusSelect({ order, onChange }) {
+  const status = order.status || "Pending";
+
+  return (
+    <span className="relative inline-flex w-fit items-center">
+      <select
+        value={status}
+        onChange={(event) => onChange(order, event.target.value)}
+        aria-label={`Change status for order ${order.orderNumber || order.id}`}
+        className={`h-8 w-fit appearance-none rounded-full border-0 py-0 pl-3 pr-8 text-label-sm font-semibold shadow-none outline-none ring-0 transition focus:ring-2 ${statusClassName(status)}`}
+      >
+        {statuses.map((option) => <option key={option}>{option}</option>)}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-3 size-3.5 text-current" />
+    </span>
+  );
+}
+
+function statusClassName(status) {
+  if (["Delivered", "Invoiced"].includes(status)) return "bg-emerald-100 text-emerald-700 focus:ring-emerald-500/20 dark:bg-emerald-950/50 dark:text-emerald-300";
+  if (["Cancelled", "Voided"].includes(status)) return "bg-rose-100 text-rose-700 focus:ring-rose-500/20 dark:bg-rose-950/50 dark:text-rose-300";
+  if (["Shipped", "Processing"].includes(status)) return "bg-blue-100 text-blue-700 focus:ring-blue-500/20 dark:bg-blue-950/50 dark:text-blue-300";
+  return "bg-amber-100 text-amber-700 focus:ring-amber-500/20 dark:bg-amber-950/50 dark:text-amber-300";
 }
 
 function chartTrend(data) {

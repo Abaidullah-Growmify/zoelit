@@ -92,19 +92,22 @@ export default function ProductsPage() {
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
         <Input value={keyword} onChange={(event) => { setKeyword(event.target.value); setLoading(true); setPage(1); }} placeholder="Search products by name, SKU or keyword..." aria-label="Search products" className="h-12 pl-10" />
       </div>
-      <div className="mt-8 rounded-lg border border-outline-variant/80 bg-surface-container-lowest/60 p-3 shadow-sm">{loading ? <ProductGridSkeleton count={8} /> : products.length ? <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{products.map((product) => <ProductCard key={product.id} product={product} />)}</div> : <EmptyState title="No products found" description="No products match your search. Try a different keyword or category." />}</div>
-      {!loading && products.length ? (
-        <Pagination
-          page={page}
-          totalPages={totalPages}
-          onPageChange={(p) => {
-            setLoading(true);
-            setPage(p);
-            window.scrollTo({ top: 0, behavior: "smooth" });
-          }}
-          className="mt-10"
-        />
-      ) : null}
+      <div className="mt-8 rounded-lg border border-outline-variant/80 bg-surface-container-lowest/60 p-3 shadow-sm">
+        {loading ? <ProductGridSkeleton count={8} /> : products.length ? <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{products.map((product) => <ProductCard key={product.id} product={product} />)}</div> : <EmptyState title="No products found" description="No products match your search. Try a different keyword or category." />}
+        {!loading && products.length ? (
+          <div className="mt-6 border-t border-outline-variant/70 pt-5">
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={(p) => {
+                setLoading(true);
+                setPage(p);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            />
+          </div>
+        ) : null}
+      </div>
     </section>
   );
 }

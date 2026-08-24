@@ -29,6 +29,8 @@ export function AdminTable({
   page: controlledPage,
   onPageChange,
   onPaginationChange,
+  totalPages: controlledTotalPages,
+  totalItems: controlledTotalItems,
   className,
   wrapperClassName,
   tableClassName,
@@ -48,10 +50,10 @@ export function AdminTable({
     );
   }
 
-  return <AdminDataTable columns={columns} data={data} filters={filters} searchPlaceholder={searchPlaceholder} searchKeys={searchKeys} rowActions={rowActions} title={title} description={description} toolbar={toolbar} action={action} pageSize={pageSize} zebra={zebra} hideSearch={hideSearch} hidePagination={hidePagination} disableInitialSort={disableInitialSort} page={controlledPage} onPageChange={onPageChange} onPaginationChange={onPaginationChange} className={className} wrapperClassName={wrapperClassName} tableClassName={tableClassName} />;
+  return <AdminDataTable columns={columns} data={data} filters={filters} searchPlaceholder={searchPlaceholder} searchKeys={searchKeys} rowActions={rowActions} title={title} description={description} toolbar={toolbar} action={action} pageSize={pageSize} zebra={zebra} hideSearch={hideSearch} hidePagination={hidePagination} disableInitialSort={disableInitialSort} page={controlledPage} onPageChange={onPageChange} onPaginationChange={onPaginationChange} totalPages={controlledTotalPages} totalItems={controlledTotalItems} className={className} wrapperClassName={wrapperClassName} tableClassName={tableClassName} />;
 }
 
-function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys, rowActions, title, description, toolbar, action, pageSize, zebra, hideSearch, hidePagination, disableInitialSort, page: controlledPage, onPageChange, onPaginationChange, className, wrapperClassName, tableClassName }) {
+function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys, rowActions, title, description, toolbar, action, pageSize, zebra, hideSearch, hidePagination, disableInitialSort, page: controlledPage, onPageChange, onPaginationChange, totalPages: controlledTotalPages, totalItems: controlledTotalItems, className, wrapperClassName, tableClassName }) {
   const [query, setQuery] = useState("");
   const [filterValues, setFilterValues] = useState(() => Object.fromEntries(filters.map((filter) => [filter.key, filter.allLabel || "All"])));
   const [sort, setSort] = useState(() => {
@@ -84,12 +86,14 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
     return [...filteredData].sort((a, b) => compareValues(getSortValue(column, a), getSortValue(column, b), sort.direction));
   }, [columns, filteredData, sort]);
 
-  const totalPages = Math.max(1, Math.ceil(sortedData.length / pageSize));
+  const totalItems = controlledTotalItems ?? sortedData.length;
+  const totalPages = controlledTotalPages ?? Math.max(1, Math.ceil(sortedData.length / pageSize));
   const safePage = Math.min(page, totalPages);
+  const isServerPaged = controlledTotalPages !== undefined || controlledTotalItems !== undefined;
   const pageStart = sortedData.length ? (safePage - 1) * pageSize : 0;
-  const pageItems = sortedData.slice(pageStart, pageStart + pageSize);
-  const showingStart = sortedData.length ? pageStart + 1 : 0;
-  const showingEnd = Math.min(pageStart + pageSize, sortedData.length);
+  const pageItems = isServerPaged ? sortedData : sortedData.slice(pageStart, pageStart + pageSize);
+  const showingStart = totalItems ? (safePage - 1) * pageSize + 1 : 0;
+  const showingEnd = Math.min((safePage - 1) * pageSize + pageItems.length, totalItems);
   const hasActions = typeof rowActions === "function";
   const hasToolbar = !!toolbar || !hideSearch || filters.length > 0 || !!action;
   const columnCount = columns.length + (hasActions ? 1 : 0);
@@ -99,11 +103,11 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
     onPaginationChange({
       page: safePage,
       totalPages,
-      totalItems: sortedData.length,
+      totalItems,
       showingStart,
       showingEnd,
     });
-  }, [onPaginationChange, safePage, totalPages, sortedData.length, showingStart, showingEnd]);
+  }, [onPaginationChange, safePage, totalPages, totalItems, showingStart, showingEnd]);
 
   function updateQuery(value) {
     setQuery(value);
@@ -141,34 +145,32 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
           ) : null}
         </div>
       ) : null}
+      {hasToolbar ? (
+        <div className="border-b border-outline-variant/80 p-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
+              {toolbar}
+              {!hideSearch ? (
+                <div className="relative min-w-[16rem] flex-1 shrink-0 sm:max-w-md lg:max-w-xl">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
+                  <Input value={query} onChange={(event) => updateQuery(event.target.value)} placeholder={searchPlaceholder} aria-label={searchPlaceholder} className="h-10 pl-10 shadow-sm" />
+                </div>
+              ) : null}
+              {filters.map((filter) => (
+                <Select key={filter.key} value={filterValues[filter.key]} onChange={(event) => updateFilter(filter.key, event.target.value)} aria-label={filter.label} className="h-10 shrink-0 shadow-sm">
+                  <option>{filter.allLabel || "All"}</option>
+                  {filter.options.map((option) => <option key={option}>{option}</option>)}
+                </Select>
+              ))}
+              {filters.length > 0 ? <Button variant="secondary" size="sm" onClick={resetControls} className="h-10 shrink-0 shadow-sm">Reset</Button> : null}
+            </div>
+            {action ? <div className="flex shrink-0 flex-wrap items-center gap-3 lg:justify-end">{action}</div> : null}
+          </div>
+        </div>
+      ) : null}
       <div className={cn("overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", wrapperClassName)}>
         <table className={cn("w-full text-left text-label-md", tableClassName)}>
           <thead className="sticky top-0 z-10 border-b border-outline-variant/80 bg-surface-container-lowest/95 text-label-sm font-semibold uppercase tracking-[0.16em] text-on-surface-variant backdrop-blur">
-            {hasToolbar ? (
-              <tr>
-                <th colSpan={columnCount} className="border-b border-outline-variant/80 p-4 normal-case tracking-normal text-on-surface-variant">
-                  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-3 overflow-x-auto">
-                      {toolbar}
-                      {!hideSearch ? (
-                        <div className="relative min-w-[16rem] flex-1 shrink-0 sm:max-w-md lg:max-w-xl">
-                            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
-                            <Input value={query} onChange={(event) => updateQuery(event.target.value)} placeholder={searchPlaceholder} aria-label={searchPlaceholder} className="h-10 pl-10 shadow-sm" />
-                        </div>
-                      ) : null}
-                      {filters.map((filter) => (
-                         <Select key={filter.key} value={filterValues[filter.key]} onChange={(event) => updateFilter(filter.key, event.target.value)} aria-label={filter.label} className="h-10 shrink-0 shadow-sm">
-                          <option>{filter.allLabel || "All"}</option>
-                          {filter.options.map((option) => <option key={option}>{option}</option>)}
-                        </Select>
-                      ))}
-                      {filters.length > 0 ? <Button variant="secondary" size="sm" onClick={resetControls} className="h-10 shrink-0 shadow-sm">Reset</Button> : null}
-                    </div>
-                    {action ? <div className="flex flex-wrap items-center gap-3 lg:justify-end">{action}</div> : null}
-                  </div>
-                </th>
-              </tr>
-            ) : null}
             <tr>
               {columns.map((column) => (
                 <th key={column.key} className={cn("whitespace-nowrap px-6 py-4 text-label-sm font-semibold", column.className)}>
@@ -201,7 +203,7 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
               <tr>
                 <th colSpan={columnCount} className="border-t border-outline-variant/80 bg-surface-container-lowest/60 px-5 py-4 text-label-md font-normal normal-case tracking-normal">
                   <div className="flex flex-col gap-3 text-label-md sm:flex-row sm:items-center sm:justify-between">
-                    <p className="font-normal text-on-surface-variant">Showing {showingStart}-{showingEnd} of {sortedData.length} results</p>
+                    <p className="font-normal text-on-surface-variant">Showing {showingStart}-{showingEnd} of {totalItems} results</p>
                     <Pagination page={safePage} totalPages={totalPages} onPageChange={setPage} />
                   </div>
                 </th>

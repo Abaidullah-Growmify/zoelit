@@ -4,7 +4,6 @@ import { RefreshCw, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AdminTable } from "@/components/admin-table";
-import Pagination from "@/components/pagination";
 import { Button, Card, Input } from "@/components/ui";
 import { AdminCategoriesSkeleton } from "@/components/skeletons";
 import { getProductCategories } from "@/lib/api";
@@ -105,6 +104,10 @@ export default function AdminCategoriesPage() {
             columns={columns}
             data={pageItems}
             pageSize={PAGE_SIZE}
+            page={safePage}
+            onPageChange={setPage}
+            totalPages={totalPages}
+            totalItems={filteredRows.length}
             toolbar={(
               <div className="relative min-w-[16rem] flex-1 sm:max-w-md lg:max-w-xl">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
@@ -117,13 +120,6 @@ export default function AdminCategoriesPage() {
               </Button>
             )}
             hideSearch
-            hidePagination
-          />
-          <Pagination
-            page={safePage}
-            totalPages={totalPages}
-            onPageChange={(p) => setPage(p)}
-            className="mt-6"
           />
         </>
       )}

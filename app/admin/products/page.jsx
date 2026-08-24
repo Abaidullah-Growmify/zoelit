@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminTable } from "@/components/admin-table";
-import Pagination from "@/components/pagination";
 import { Button, Card, Input } from "@/components/ui";
 import { AdminProductsSkeleton } from "@/components/skeletons";
 import { getAdminProducts, startPriceSync, startProductSync } from "@/lib/api";
@@ -21,6 +20,7 @@ export default function AdminProductsPage() {
   const [rows, setRows] = useState(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [keyword, setKeyword] = useState("");
   const [debouncedKeyword, setDebouncedKeyword] = useState("");
   const [syncing, setSyncing] = useState(false);
@@ -39,6 +39,7 @@ export default function AdminProductsPage() {
         if (!active) return;
         setRows((data.products || []).map(toRow));
         setTotalPages(data.pagination?.totalPages ?? 1);
+        setTotalItems(data.pagination?.total ?? 0);
         setError("");
       })
       .catch((loadError) => {
@@ -108,6 +109,10 @@ export default function AdminProductsPage() {
             columns={columns}
             data={rows}
             pageSize={PAGE_SIZE}
+            page={page}
+            onPageChange={setPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
             toolbar={(
               <div className="relative min-w-[16rem] flex-1 sm:max-w-md lg:max-w-xl">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
@@ -115,7 +120,6 @@ export default function AdminProductsPage() {
               </div>
             )}
             hideSearch
-            hidePagination
             disableInitialSort
             action={(
               <div className="flex gap-3">
@@ -130,12 +134,6 @@ export default function AdminProductsPage() {
             rowActions={(product) => [
               { label: `View ${product.name}`, href: `/products/${product.id}`, icon: Eye },
             ]}
-          />
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            onPageChange={(p) => setPage(p)}
-            className="mt-6"
           />
         </>
       )}
