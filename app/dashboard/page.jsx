@@ -54,13 +54,13 @@ export default function DashboardPage() {
   if (!data) return <DashboardSkeleton />;
 
   const { stats, spendingOverview, recentOrders } = data;
-const recentOrderColumns = [
-    { key: "id", header: "Order", sortable: true, accessor: "id", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => `#${order.id}` },
+  const recentOrderColumns = [
+    { key: "id", header: "Order", sortable: true, accessor: "id", cellClassName: "font-semibold tabular-nums text-slate-950 dark:text-white", render: (order) => `#${order.customerOrderNumber || order.id}` },
     { key: "date", header: "Date", sortable: true, accessor: "date", render: (order) => shortDate(order.date) },
-    { key: "status", header: "Status", accessor: "status", render: (order) => <Badge>{order.status}</Badge> },
-    { key: "total", header: "Total", sortable: true, accessor: "total", cellClassName: "text-label-md font-normal text-on-surface-variant", render: (order) => money(order.total) },
-    { key: "notes", header: "Notes", accessor: "notes", render: (order) => <OrderNotesDialog notes={order.notes} label={`View notes for order ${order.id}`} /> },
-];
+    { key: "status", header: "Status", accessor: "status", render: (order) => <AdminStatusBadge>{order.status}</AdminStatusBadge> },
+    { key: "total", header: "Total", sortable: true, accessor: "total", cellClassName: "font-semibold tabular-nums text-slate-950 dark:text-white", render: (order) => money(order.total) },
+    { key: "notes", header: "Notes", accessor: "notes", render: (order) => <OrderNotesDialog notes={order.notes} label={`View notes for order ${order.customerOrderNumber || order.id}`} /> },
+  ];
 
   return (
     <div>

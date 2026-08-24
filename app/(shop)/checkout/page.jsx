@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Home, Loader2, MapPin, Minus, Plus } from "lucide-react";
@@ -19,6 +19,8 @@ export default function CheckoutPage() {
   const fetchProducts = useProductStore((state) => state.fetchProducts);
   const items = useCartStore((state) => state.items);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
+  const clearCart = useCartStore((state) => state.clearCart);
+  const restoreCart = useCartStore((state) => state.restoreCart);
   const [validatedPrices, setValidatedPrices] = useState({});
   const [priceNote, setPriceNote] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -26,9 +28,11 @@ export default function CheckoutPage() {
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [isMounted, setIsMounted] = useState(false);
 
-  const draftStorageKey = token ? `zoelit-checkout-draft:${user?.id || user?._id || "guest"}` : "zoelit-checkout-draft:guest";
+  const scopedUserId = String(user?.id || user?._id || "").trim();
+  const draftStorageKey = token && scopedUserId ? `zoelit-checkout-draft:${scopedUserId}` : null;
 
   function readDraft() {
+    if (!draftStorageKey) return null;
     if (typeof localStorage === "undefined") return null;
     try {
       const raw = localStorage.getItem(draftStorageKey);
@@ -40,13 +44,17 @@ export default function CheckoutPage() {
     }
   }
 
-  function saveDraft(values, sessionKey = checkoutSessionKey) {
+  function saveDraft(values, sessionKey = checkoutSessionKey, lastSubmittedSignature = null) {
+    if (!draftStorageKey) return;
     if (typeof localStorage === "undefined") return;
     try {
+      const existing = readDraft();
       localStorage.setItem(
         draftStorageKey,
         JSON.stringify({
           sessionKey: sessionKey || "",
+          lastSubmittedSignature:
+            lastSubmittedSignature === null ? existing?.lastSubmittedSignature || "" : String(lastSubmittedSignature || ""),
           values: {
             firstName: String(values.firstName || ""),
             lastName: String(values.lastName || ""),
@@ -65,7 +73,30 @@ export default function CheckoutPage() {
     }
   }
 
+  function buildCheckoutPayloadSignature(values) {
+    return JSON.stringify({
+      items: [...cartItems]
+        .sort((a, b) => String(a.productId || "").localeCompare(String(b.productId || "")))
+        .map((item) => ({
+          productId: String(item.productId || ""),
+          quantity: Math.max(1, Math.floor(Number(item.quantity)) || 1),
+        })),
+      billing: {
+        firstName: String(values.firstName || ""),
+        lastName: String(values.lastName || ""),
+        address: String(values.address || ""),
+        city: String(values.city || ""),
+        state: String(values.state || ""),
+        postal: String(values.postal || ""),
+        email: String(values.email || ""),
+        phone: String(values.phone || ""),
+      },
+      notes: String(values.notes || ""),
+    });
+  }
+
   function clearDraft() {
+    if (!draftStorageKey) return;
     if (typeof localStorage === "undefined") return;
     try {
       localStorage.removeItem(draftStorageKey);
@@ -99,6 +130,15 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (!isMounted) return;
 
+    if (!draftStorageKey) {
+      try {
+        localStorage.removeItem("zoelit-checkout-draft:guest");
+      } catch {
+        // Ignore storage failures.
+      }
+      return;
+    }
+
     const draft = readDraft();
     if (!draft?.values) return;
 
@@ -117,7 +157,15 @@ export default function CheckoutPage() {
     if (draft.sessionKey) {
       setCheckoutSessionKey(draft.sessionKey);
     }
-  }, [form, isMounted]);
+  }, [draftStorageKey, form, isMounted]);
+
+  const cartItems = items
+    .map((item) => ({
+      ...item,
+      quantity: Math.floor(Number(item.quantity)) || 0,
+      product: item.name ? item : getById(item.productId),
+    }))
+    .filter((item) => item.product);
 
   useEffect(() => {
     if (!isMounted) return;
@@ -127,19 +175,11 @@ export default function CheckoutPage() {
     });
 
     return () => subscription.unsubscribe();
-  }, [checkoutSessionKey, form, isMounted]);
+  }, [cartItems, checkoutSessionKey, form, isMounted]);
 
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
-
-  const cartItems = items
-    .map((item) => ({
-      ...item,
-      quantity: Math.floor(Number(item.quantity)) || 0,
-      product: item.name ? item : getById(item.productId),
-    }))
-    .filter((item) => item.product);
 
   const priceOf = (item) =>
     Number(validatedPrices[item.productId] ?? item.price ?? item.product.price ?? 0) || 0;
@@ -202,21 +242,51 @@ export default function CheckoutPage() {
   }, [items, token]);
 
   useEffect(() => {
+    if (!isMounted) return;
+
+    const params = new URLSearchParams(window.location.search);
+    if (!params.get("canceled")) return;
+
+    try {
+      const raw = sessionStorage.getItem("zoelit-cart-backup");
+      sessionStorage.removeItem("zoelit-cart-backup");
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed?.items) && parsed.items.length && !items.length) {
+        restoreCart(parsed.items);
+      }
+    } catch {
+      // Ignore malformed backups.
+    }
+  }, [isMounted, items.length, restoreCart]);
+
+  useEffect(() => {
     if (!user) return;
     if (readDraft()?.values) return;
     if (user.email) form.setValue("email", user.email || "");
     if (user.phone) form.setValue("phone", user.phone || "");
+  }, [draftStorageKey, form, user]);
+
+  useEffect(() => {
     if (!token) return;
+
+    let active = true;
 
     getAddresses(token)
       .then((res) => {
+        if (!active) return;
         const addresses = res.addresses || [];
         setSavedAddresses(addresses);
+        if (readDraft()?.values) return;
         const saved = addresses.find((item) => item.default) || addresses[0] || null;
         if (saved) applyAddress(saved);
       })
       .catch(() => {});
-  }, [token, user, applyAddress, form]);
+
+    return () => {
+      active = false;
+    };
+  }, [applyAddress, draftStorageKey, token]);
 
   if (!isMounted) {
     return null;
@@ -228,38 +298,69 @@ export default function CheckoutPage() {
     setIsProcessing(true);
     try {
       const billing = form.getValues();
-      const sessionKey = checkoutSessionKey || globalThis.crypto.randomUUID();
+      const payloadSignature = buildCheckoutPayloadSignature(billing);
+      const draft = readDraft();
+      let sessionKey = checkoutSessionKey || draft?.sessionKey || globalThis.crypto.randomUUID();
+
+      if (!draft?.lastSubmittedSignature || draft.lastSubmittedSignature !== payloadSignature) {
+        sessionKey = globalThis.crypto.randomUUID();
+      }
+
       setCheckoutSessionKey(sessionKey);
-      saveDraft(billing, sessionKey);
+      saveDraft(billing, sessionKey, payloadSignature);
 
       const products = items.map((item) => ({
         ingramPartNumber: item.productId,
         quantity: Math.floor(Number(item.quantity)) || 1,
       }));
 
-      const data = await createCheckoutSession(
-        {
-          products,
-          checkoutSessionKey: sessionKey,
-          billing: {
-            firstName: billing.firstName,
-            lastName: billing.lastName,
-            address: billing.address,
-            city: billing.city,
-            state: billing.state,
-            postal: billing.postal,
-            email: billing.email,
-            phone: billing.phone,
-          },
-          notes: billing.notes || "",
-        },
-        token
-      );
+      async function createSessionWithRetry(nextSessionKey, retryOnConflict = true) {
+        try {
+          const data = await createCheckoutSession(
+            {
+              products,
+              checkoutSessionKey: nextSessionKey,
+              billing: {
+                firstName: billing.firstName,
+                lastName: billing.lastName,
+                address: billing.address,
+                city: billing.city,
+                state: billing.state,
+                postal: billing.postal,
+                email: billing.email,
+                phone: billing.phone,
+              },
+              notes: billing.notes || "",
+            },
+            token
+          );
 
-      if (!data.url) {
-        throw new Error("Stripe checkout URL was not returned by the server.");
+          if (!data.url) {
+            throw new Error("Stripe checkout URL was not returned by the server.");
+          }
+
+          return data;
+        } catch (error) {
+          if (error?.status === 409 && retryOnConflict) {
+            const freshKey = globalThis.crypto.randomUUID();
+            setCheckoutSessionKey(freshKey);
+            saveDraft(billing, freshKey, payloadSignature);
+            return createSessionWithRetry(freshKey, false);
+          }
+
+          throw error;
+        }
       }
 
+      const data = await createSessionWithRetry(sessionKey);
+
+      try {
+        sessionStorage.setItem("zoelit-cart-backup", JSON.stringify({ items }));
+      } catch {
+        // Ignore storage failures.
+      }
+
+      clearCart();
       window.location.assign(data.url);
     } catch (error) {
       toast.error(error.message || "Failed to create Stripe checkout");

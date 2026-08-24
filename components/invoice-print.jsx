@@ -82,13 +82,13 @@ export function InvoicePrint({ order }) {
             </div>
 
             <div className="invoice-number">
-              #{order?.orderNumber || "—"}
+              #{order?.customerOrderNumber || order?.orderNumber || "—"}
             </div>
 
             <div className="invoice-meta invoice-meta-grid">
               <div>
                 <span>Invoice Number</span>
-                <strong>#{order?.orderNumber || "—"}</strong>
+                <strong>#{order?.customerOrderNumber || order?.orderNumber || "—"}</strong>
               </div>
 
               <div>
