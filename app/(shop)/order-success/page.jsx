@@ -44,14 +44,18 @@ function purgeCheckoutStorage() {
 function OrderSuccessContent() {
   const params = useSearchParams();
   const token = useAuthStore((state) => state.token);
-  const user = useAuthStore((state) => state.user);
   const fetchProducts = useProductStore((state) => state.fetchProducts);
   const sessionId = params.get("session_id");
   const clearCart = useCartStore((state) => state.clearCart);
   const [loading, setLoading] = useState(Boolean(sessionId));
   const [orderNumber, setOrderNumber] = useState(params.get("order") || "");
   const [ingramOrderNumber, setIngramOrderNumber] = useState(params.get("ingram") || "");
-  const mounted = true;
+  // Keep first paint identical to SSR; Redux auth may already be hydrated on the client.
+  const [showOrdersLink, setShowOrdersLink] = useState(false);
+
+  useEffect(() => {
+    setShowOrdersLink(Boolean(token));
+  }, [token]);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -92,7 +96,7 @@ function OrderSuccessContent() {
         {orderNumber ? <p className="mt-2 text-body-md font-semibold text-on-surface">Order #{orderNumber}</p> : null}
         {ingramOrderNumber ? <p className="mt-1 text-body-md font-normal text-on-surface-variant">Ingram order: {ingramOrderNumber}</p> : null}
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-          {mounted && token ? <Button asChild href="/dashboard/orders" aria-label="View orders"><Eye className="size-4" /></Button> : null}
+          {showOrdersLink ? <Button asChild href="/dashboard/orders" aria-label="View orders"><Eye className="size-4" /></Button> : null}
           <Button asChild href="/products" variant="outline">Continue Shopping</Button>
         </div>
       </Card>
