@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRef, useSyncExternalStore } from "react";
-import { Heart, ShoppingBag, Star } from "lucide-react";
+import { Heart, ShoppingBag } from "lucide-react";
 import { cn, money } from "@/lib/utils";
 import { useCartStore } from "@/store/cart-store";
 import { useAuthStore } from "@/store/auth-store";
@@ -18,7 +18,6 @@ export function ProductCard({
   category = product?.category,
   stockCount = product?.stock,
   description = product?.description,
-  rating = product?.rating ?? 0,
   isPriceOnRequest = product ? Number(product.price) <= 0 : false,
   isWishlisted: controlledWishlisted,
   onAddToCart,
@@ -126,31 +125,31 @@ export function ProductCard({
     <Link
       href={detailHref}
       title={title}
-      className="min-w-0 line-clamp-2 font-heading text-body-lg font-bold uppercase leading-tight tracking-[-0.02em] text-on-surface transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:text-primary group-hover:text-primary"
+      className="min-w-0 line-clamp-2 text-overflow-unset font-heading text-base font-bold uppercase leading-tight tracking-[-0.02em] text-on-surface transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:text-primary group-hover:text-primary"
     >
       {title}
     </Link>
   ) : (
-    <span className="min-w-0 line-clamp-2 font-heading text-body-lg font-bold uppercase leading-tight tracking-[-0.02em] text-on-surface">{title}</span>
+    <span className="min-w-0 line-clamp-2 text-overflow-unset font-heading text-base font-bold uppercase leading-tight tracking-[-0.02em] text-on-surface">{title}</span>
   );
 
   const imageNode = (
     <div
       ref={imageRef}
-      className="relative mx-auto flex aspect-[4/3] w-[74%] items-center justify-center overflow-hidden rounded-sm border border-outline-variant/70 bg-surface-container-lowest p-2 shadow-[0_14px_30px_-18px_rgb(15_23_42_/_0.55)] transition duration-200 ease-out group-hover:border-primary/20 dark:bg-surface-container-high"
+      className="relative mx-auto flex aspect-[4/3] w-[74%] items-center justify-center overflow-hidden rounded-xl bg-transparent p-2"
     >
       <Image
         src={image}
         alt={title}
         width={700}
         height={525}
-        className="h-full w-full rounded-sm object-contain transition-transform duration-300 ease-out motion-reduce:transform-none motion-reduce:transition-colors motion-reduce:hover:scale-100 group-hover:scale-[1.04]"
+        className="h-full w-full rounded-xl object-contain transition-transform duration-300 ease-out motion-reduce:transform-none group-hover:scale-[1.03]"
       />
     </div>
   );
 
   return (
-    <Card className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-lg border border-outline-variant/80 bg-surface-container-lowest p-0 shadow-primary-elevated ring-1 ring-transparent transition duration-200 ease-out hover:-translate-y-1 hover:border-primary/20 hover:shadow-[0_26px_58px_-16px_rgb(0_63_177_/_0.16)] hover:ring-primary/10 motion-reduce:transform-none motion-reduce:transition-colors motion-reduce:hover:translate-y-0 dark:bg-surface-container-low">
+    <Card className="group relative flex h-full cursor-pointer flex-col border-[rgba(0,0,0,0.06)] p-0 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_4px_12px_rgba(16,24,40,0.06)] transition-all duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:shadow-[0_8px_20px_rgba(16,24,40,0.10)] hover:-translate-y-0.5">
       <button
         type="button"
         onClick={handleWishlistToggle}
@@ -166,44 +165,37 @@ export function ProductCard({
         <Heart className="size-4" fill={isWishlisted ? "currentColor" : "none"} />
       </button>
 
-      <div className="p-2 pb-0">
-        <div className="relative flex min-h-44 items-center rounded-lg border border-outline-variant/50 bg-surface-container-low p-5 dark:bg-surface-container">
+      <div className="p-4 pb-0">
+        <div className="relative flex aspect-[4/3] items-center justify-center rounded-xl bg-[#F8F9FB] p-5">
           {category ? (
-            <span className="absolute left-4 top-4 max-w-[60%] truncate rounded-sm bg-primary/10 px-2.5 py-1 text-label-sm font-bold uppercase tracking-[0.08em] text-primary ring-1 ring-primary/10 transition duration-200 ease-out group-hover:bg-primary/15">
+            <span className="absolute left-4 top-4 inline-block max-w-[60%] truncate rounded-full bg-[rgba(37,99,235,0.08)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.02em] text-[#2563EB]">
               {category}
             </span>
           ) : null}
-          {hasDetailLink ? <Link href={detailHref} className="block w-full pt-5 focus-visible:outline-none">{imageNode}</Link> : <div className="block w-full pt-5">{imageNode}</div>}
+          {hasDetailLink ? <Link href={detailHref} className="block w-full focus-visible:outline-none">{imageNode}</Link> : <div className="block w-full">{imageNode}</div>}
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col p-5 pt-4">
+      <div className="flex flex-1 flex-col p-4 pt-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">{titleNode}</div>
           <div className="shrink-0 text-right">
-            <span className={cn("block whitespace-nowrap font-heading text-body-lg font-extrabold tabular-nums tracking-[-0.02em]", isPriceOnRequest ? "text-on-surface-variant" : "text-primary")}>{isPriceOnRequest ? "On request" : money(Number(price) || 0)}</span>
+            <span className={cn("block whitespace-nowrap font-heading text-body-lg font-extrabold tabular-nums tracking-[-0.02em]", isPriceOnRequest ? "text-on-surface-variant" : "text-[#2563EB]")}>{isPriceOnRequest ? "On request" : money(Number(price) || 0)}</span>
           </div>
         </div>
 
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <span className="inline-flex items-center gap-2 text-body-md font-medium text-on-surface-variant">
-            <span className={cn("size-2 rounded-full", remainingStock > 0 ? "bg-tertiary" : "bg-error")} />
+        <div className="mt-3 flex items-center gap-2">
+          <span className={cn("inline-flex size-2 shrink-0 rounded-full", remainingStock > 0 ? "bg-emerald-500" : "bg-rose-500")} />
+          <span className="text-sm font-medium text-on-surface-variant">
             {remainingStock > 0 ? `${remainingStock} in stock` : "Out of stock"}
           </span>
-
-          {rating > 0 ? (
-            <span className="inline-flex items-center gap-1 rounded-sm bg-secondary-container px-2 py-1 text-label-sm font-semibold text-on-secondary-container">
-              <Star className="size-3.5 fill-current" />
-              {rating}
-            </span>
-          ) : null}
         </div>
 
-        <p className="mt-3 line-clamp-1 min-h-5 text-label-md font-medium uppercase leading-5 tracking-[0.02em] text-on-surface-variant">{description}</p>
+        {description ? <p className="mt-2 truncate text-sm text-on-surface-variant">{description}</p> : null}
 
-        <div className="mt-auto pt-7">
+        <div className="mt-auto pt-5">
           <Button
-            className="group/cta h-12 w-full rounded-sm text-body-md font-bold text-white shadow-primary-elevated transition duration-200 ease-out hover:-translate-y-0.5 hover:brightness-95 hover:shadow-lg active:scale-[0.97] motion-reduce:transform-none motion-reduce:hover:translate-y-0 motion-reduce:hover:brightness-100 motion-reduce:active:scale-100"
+            className="h-10 w-full rounded-md bg-[#2563EB] text-white hover:bg-[#1d4ed8]"
             onClick={handleAddToCart}
             aria-label={`Add ${title} to cart`}
             disabled={remainingStock <= 0}

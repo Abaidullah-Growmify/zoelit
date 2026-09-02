@@ -3,67 +3,43 @@ import { Card } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 const tones = {
-  green: {
-    glow: "bg-tertiary-container/10",
-    icon: "bg-tertiary-container text-white ring-tertiary-container/20",
-  },
-  blue: {
-    glow: "bg-primary-container/10",
-    icon: "bg-primary-container text-white ring-primary-container/20",
-  },
-  purple: {
-    glow: "bg-secondary-container/10",
-    icon: "bg-secondary-container text-white ring-secondary-container/20",
-  },
-  amber: {
-    glow: "bg-secondary-container/10",
-    icon: "bg-secondary-container text-white ring-secondary-container/20",
-  },
-  red: {
-    glow: "bg-error-container/10",
-    icon: "bg-error-container text-white ring-error-container/20",
-  },
-  emerald: {
-    glow: "bg-tertiary-container/10",
-    icon: "bg-tertiary-container text-white ring-tertiary-container/20",
-  },
-  indigo: {
-    glow: "bg-primary-container/10",
-    icon: "bg-primary-container text-white ring-primary-container/20",
-  },
-  pink: {
-    glow: "bg-secondary-container/10",
-    icon: "bg-secondary-container text-white ring-secondary-container/20",
-  },
-  teal: {
-    glow: "bg-tertiary-container/10",
-    icon: "bg-tertiary-container text-white ring-tertiary-container/20",
-  },
+  green: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+  blue: "bg-primary/10 text-primary",
+  purple: "bg-violet-500/10 text-violet-700 dark:text-violet-300",
+  amber: "bg-amber-500/10 text-amber-700 dark:text-amber-300",
+  red: "bg-rose-500/10 text-rose-700 dark:text-rose-300",
+  emerald: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+  indigo: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300",
+  pink: "bg-pink-500/10 text-pink-700 dark:text-pink-300",
+  teal: "bg-teal-500/10 text-teal-700 dark:text-teal-300",
 };
 
 export function AdminStatCard({ label, value, icon: Icon, helper, tone = "blue", trend }) {
-  const palette = tones[tone] || tones.blue;
+  const iconClass = tones[tone] || tones.blue;
   const trendPositive = trend?.direction !== "down";
   const TrendIcon = trendPositive ? ArrowUp : ArrowDown;
 
   return (
-    <Card className="relative overflow-hidden p-5 shadow-primary-elevated transition duration-200 hover:-translate-y-0.5 hover:shadow-primary-elevated">
-      <div className={cn("pointer-events-none absolute right-0 top-0 size-24 rounded-full blur-2xl", palette.glow)} />
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-label-sm font-semibold uppercase tracking-[0.14em] text-on-surface-variant">{label}</p>
-          <p className="mt-2 font-heading text-headline-lg font-extrabold tabular-nums tracking-[-0.03em] text-on-surface">{value}</p>
+    <Card className="p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-on-surface-variant">{label}</p>
+          <p className="mt-1.5 truncate font-heading text-xl font-semibold tabular-nums tracking-tight text-on-surface">{value}</p>
         </div>
-        <span className={cn("grid size-12 shrink-0 place-items-center rounded-sm ring-1", palette.icon)}>
-          <Icon className="size-5" />
+        <span className={cn("grid size-9 shrink-0 place-items-center rounded-xl", iconClass)}>
+          <Icon className="size-4" />
         </span>
       </div>
-      {(helper || trend) ? <div className="mt-4 flex items-center justify-between gap-3 border-t border-outline-variant/40 pt-4 text-label-sm font-semibold">
-        {helper ? <p className="font-semibold text-on-surface-variant">{helper}</p> : <span />}
-        {trend ? <span className={cn("inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 font-semibold tabular-nums", trendPositive ? "bg-tertiary-container text-white" : "bg-error-container text-white")}>
-          <TrendIcon className="size-3" aria-hidden="true" /> {trend.value}
-        </span> : null}
-      </div> : null}
+      {(helper || trend) ? (
+        <div className="mt-3 flex items-center justify-between gap-3 text-sm">
+          {helper ? <p className="text-on-surface-variant">{helper}</p> : <span />}
+          {trend ? (
+            <span className={cn("inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-0.5 font-medium tabular-nums", trendPositive ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-rose-500/10 text-rose-700 dark:text-rose-300")}>
+              <TrendIcon className="size-3" aria-hidden="true" /> {trend.value}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
     </Card>
   );
 }

@@ -81,10 +81,10 @@ export default function Pagination({
         disabled={page <= 1}
         onClick={() => onPageChange(page - 1)}
         className={cn(
-           "inline-flex h-10 items-center gap-1.5 rounded-md border border-outline-variant bg-surface-container-lowest px-3 text-label-sm font-medium transition",
+           "inline-flex h-10 items-center gap-1.5 rounded-md border border-outline-variant bg-surface px-4 text-sm font-medium transition",
            page <= 1
              ? "cursor-not-allowed text-on-surface-variant opacity-40"
-             : "text-on-surface-variant shadow-sm hover:-translate-y-0.5 hover:border-primary hover:bg-surface-container-low hover:text-primary"
+             : "text-on-surface-variant hover:border-primary/40 hover:bg-surface-container-low hover:text-primary"
         )}
       >
         <ChevronLeft className="size-3.5" />
@@ -112,10 +112,10 @@ export default function Pagination({
             onClick={() => onPageChange(item)}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "inline-flex h-10 min-w-10 items-center justify-center rounded-md border border-outline-variant bg-surface-container-lowest px-3 text-label-sm font-medium transition",
+              "inline-flex h-10 min-w-10 items-center justify-center rounded-md border border-outline-variant bg-surface px-3.5 text-sm font-medium transition",
               isActive
-                ? "border-primary bg-primary text-white shadow-primary-elevated"
-                : "text-on-surface-variant shadow-sm hover:-translate-y-0.5 hover:border-primary hover:bg-surface-container-low hover:text-primary"
+                ? "border-primary bg-primary text-white"
+                : "text-on-surface-variant hover:border-primary/40 hover:bg-surface-container-low hover:text-primary"
             )}
           >
             {item}
@@ -128,10 +128,10 @@ export default function Pagination({
         disabled={page >= totalPages}
         onClick={() => onPageChange(page + 1)}
         className={cn(
-           "inline-flex h-10 items-center gap-1.5 rounded-md border border-outline-variant bg-surface-container-lowest px-3 text-label-sm font-medium transition",
+           "inline-flex h-10 items-center gap-1.5 rounded-md border border-outline-variant bg-surface px-4 text-sm font-medium transition",
            page >= totalPages
              ? "cursor-not-allowed text-on-surface-variant opacity-40"
-             : "text-on-surface-variant shadow-sm hover:-translate-y-0.5 hover:border-primary hover:bg-surface-container-low hover:text-primary"
+             : "text-on-surface-variant hover:border-primary/40 hover:bg-surface-container-low hover:text-primary"
         )}
       >
         <span className="hidden sm:inline">Next</span>

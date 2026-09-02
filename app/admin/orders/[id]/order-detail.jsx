@@ -8,7 +8,7 @@ import { AdminPageHeader } from "@/components/admin-page-header";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { Button, Card, Input, Label } from "@/components/ui";
 import { AdminOrderDetailSkeleton } from "@/components/skeletons";
-import { cancelAdminOrder, getAdminOrder, updateAdminOrderStatus } from "@/lib/api";
+import { cancelAdminOrder, getAdminOrder, updateAdminManualFulfillment, updateAdminOrderStatus } from "@/lib/api";
 import { money, shortDate } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
 import { usePolling } from "@/lib/use-polling";
@@ -22,6 +22,9 @@ export function AdminOrderDetail({ id }) {
   const [notFound, setNotFound] = useState(false);
   const [tracking, setTracking] = useState("");
   const [carrier, setCarrier] = useState("");
+  const [manualStatus, setManualStatus] = useState("Pending");
+  const [manualShipDate, setManualShipDate] = useState("");
+  const [manualInvoice, setManualInvoice] = useState("");
   const [saving, setSaving] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const dirtyRef = useRef(false);
@@ -34,6 +37,14 @@ export function AdminOrderDetail({ id }) {
         setOrder(data.order);
         setTracking(data.order.tracking || "");
         setCarrier(data.order.carrierName || "");
+        const manualGroup = (data.order.fulfillmentGroups || []).find((group) => group.source === "manual");
+        setManualStatus(manualGroup?.status || "Pending");
+        setManualShipDate(manualGroup?.shipDate ? String(manualGroup.shipDate).slice(0, 10) : "");
+        setManualInvoice(manualGroup?.invoiceNumber || "");
+        if (manualGroup) {
+          setTracking(manualGroup.tracking || "");
+          setCarrier(manualGroup.carrierName || "");
+        }
         setLoading(false);
       })
       .catch(() => {
@@ -53,10 +64,21 @@ export function AdminOrderDetail({ id }) {
     if (!token) return;
     setSaving(true);
     try {
-      const data = await updateAdminOrderStatus(id, { tracking, carrierName: carrier }, token);
+      const manualGroup = (order?.fulfillmentGroups || []).find((group) => group.source === "manual");
+      const data = manualGroup
+        ? await updateAdminManualFulfillment(id, { groupId: manualGroup._id, status: manualStatus, tracking, carrierName: carrier, shipDate: manualShipDate, invoiceNumber: manualInvoice }, token)
+        : await updateAdminOrderStatus(id, { tracking, carrierName: carrier }, token);
       setOrder(data.order);
       setTracking(data.order.tracking || "");
       setCarrier(data.order.carrierName || "");
+      const updatedManualGroup = (data.order.fulfillmentGroups || []).find((group) => group.source === "manual");
+      if (updatedManualGroup) {
+        setManualStatus(updatedManualGroup.status || "Pending");
+        setManualShipDate(updatedManualGroup.shipDate ? String(updatedManualGroup.shipDate).slice(0, 10) : "");
+        setManualInvoice(updatedManualGroup.invoiceNumber || "");
+        setTracking(updatedManualGroup.tracking || "");
+        setCarrier(updatedManualGroup.carrierName || "");
+      }
       dirtyRef.current = false;
       toast.success("Shipment details updated");
     } catch (error) {
@@ -100,7 +122,7 @@ export function AdminOrderDetail({ id }) {
 
         <div className="mt-8 grid gap-6 xl:grid-cols-[1fr_380px]">
           <div className="space-y-6">
-            <Card>
+              <Card>
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <h2 className="font-heading text-h2 font-semibold">Order items</h2>
@@ -130,7 +152,24 @@ export function AdminOrderDetail({ id }) {
                 <Summary label="Discount" value={`-${money(order.discount || 0)}`} />
                 <Summary label="Total" value={money(order.total || 0)} strong />
               </div>
-            </Card>
+              </Card>
+
+            {(order.fulfillmentGroups || []).filter((group) => group.source === "manual").map((group) => (
+              <Card key={group._id}>
+                <h2 className="font-heading text-h2 font-semibold">Manual fulfilment</h2>
+                <p className="mt-1 text-body font-regular text-slate-500 dark:text-slate-400">Prepare and ship these products from your own inventory.</p>
+                <div className="mt-5 space-y-3">
+                  {group.items.map((item) => <div key={item.productId} className="flex justify-between gap-3 text-body"><span className="min-w-0 truncate">{item.name}</span><span className="shrink-0">Qty {item.quantity}</span></div>)}
+                </div>
+                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                  <Info label="Status" value={group.status} />
+                  <Info label="Carrier" value={group.carrierName || "—"} />
+                  <Info label="Tracking number" value={group.tracking || "—"} />
+                  <Info label="Ship date" value={group.shipDate ? shortDate(group.shipDate) : "—"} />
+                  <Info label="Invoice number" value={group.invoiceNumber || "—"} />
+                </div>
+              </Card>
+            ))}
 
             <Card>
               <h2 className="font-heading text-h2 font-semibold">Ingram Micro fulfilment</h2>
@@ -162,12 +201,21 @@ export function AdminOrderDetail({ id }) {
               <h2 className="font-heading text-h2 font-semibold">Shipment controls</h2>
               <p className="mt-1 text-body font-regular text-slate-500 dark:text-slate-400">Update shipment details. Order status is changed from the orders table.</p>
               <div className="mt-5 space-y-4">
+                {(order.fulfillmentGroups || []).some((group) => group.source === "manual") ? <Field label="Manual status">
+                  <select value={manualStatus} onChange={(event) => { setManualStatus(event.target.value); dirtyRef.current = true; }} className="h-10 w-full rounded-md border border-outline-variant bg-surface px-3 text-sm">
+                    {['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'].map((status) => <option key={status}>{status}</option>)}
+                  </select>
+                </Field> : null}
                 <Field label="Tracking number">
                   <Input value={tracking} onChange={(event) => { setTracking(event.target.value); dirtyRef.current = true; }} placeholder="ZX-000000" />
                 </Field>
                 <Field label="Carrier name">
                   <Input value={carrier} onChange={(event) => { setCarrier(event.target.value); dirtyRef.current = true; }} placeholder="DHL Express" />
                 </Field>
+                {(order.fulfillmentGroups || []).some((group) => group.source === "manual") ? <>
+                  <Field label="Ship date"><Input type="date" value={manualShipDate} onChange={(event) => { setManualShipDate(event.target.value); dirtyRef.current = true; }} /></Field>
+                  <Field label="Invoice number"><Input value={manualInvoice} onChange={(event) => { setManualInvoice(event.target.value); dirtyRef.current = true; }} placeholder="INV-000001" /></Field>
+                </> : null}
                 <Button className="w-full" onClick={handleUpdate} disabled={saving}>
                   {saving ? <Loader2 className="size-4 animate-spin" /> : null} Update shipment
                 </Button>

@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { AdminTable } from "@/components/admin-table";
-import { Button, Card, ErrorText, Input, Label, Select } from "@/components/ui";
+import { Button, Card, ErrorText, Input, Label } from "@/components/ui";
 import { AdminCustomersSkeleton } from "@/components/skeletons";
 import { createAdminCustomer, getAdminCustomers, updateAdminCustomerStatus } from "@/lib/api";
 import { money, shortDate } from "@/lib/utils";
@@ -87,10 +87,10 @@ export default function AdminCustomersPage() {
   })), [rows, page]);
 
   const columns = [
-    { key: "serial", header: "#", sortable: true, accessor: "serial", cellClassName: "w-16 font-semibold tabular-nums text-on-surface" },
+    { key: "serial", header: "#", sortable: true, accessor: "serial", cellClassName: "font-semibold tabular-nums text-on-surface" },
     { key: "name", header: "Name", sortable: true, accessor: "name", cellClassName: "font-semibold text-on-surface" },
     { key: "email", header: "Email", sortable: true, accessor: "email", cellClassName: "text-on-surface-variant" },
-    { key: "phone", header: "Phone", accessor: "phone", render: (customer) => customer.phone || "—" },
+    { key: "phone", header: "Phone", accessor: "phone", cellClassName: "text-on-surface-variant", render: (customer) => customer.phone || "—" },
     { key: "orders", header: "Orders", sortable: true, accessor: "orders", cellClassName: "tabular-nums" },
     { key: "totalSpent", header: "Spent", sortable: true, accessor: "totalSpent", cellClassName: "font-semibold tabular-nums text-on-surface", render: (customer) => money(customer.totalSpent) },
     { key: "joined", header: "Joined", sortable: true, accessor: "joined", render: (customer) => shortDate(customer.joined) },
@@ -115,6 +115,8 @@ export default function AdminCustomersPage() {
             onPageChange={setPage}
             totalPages={totalPages}
             totalItems={totalItems}
+            wrapperClassName="customer-table-scroll"
+            tableClassName="customer-table-compact"
             toolbar={(
               <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="relative min-w-[16rem] flex-1 sm:max-w-md lg:max-w-xl">
@@ -159,12 +161,12 @@ function CustomerStatusSelect({ customer, onChange }) {
         value={status}
         onChange={(event) => onChange(customer, event.target.value)}
         aria-label={`Change status for ${customer.name}`}
-        className={`h-8 w-fit appearance-none rounded-full border-0 py-0 pl-3 pr-8 text-label-sm font-semibold uppercase tracking-[0.12em] shadow-none outline-none ring-0 transition focus:ring-2 ${status === "active" ? "bg-emerald-100 text-emerald-700 focus:ring-emerald-500/20 dark:bg-emerald-950/50 dark:text-emerald-300" : "bg-rose-100 text-rose-700 focus:ring-rose-500/20 dark:bg-rose-950/50 dark:text-rose-300"}`}
+        className={`h-7 w-fit max-w-full appearance-none rounded-md border-0 py-0 pl-2 pr-6 text-[10px] font-semibold uppercase tracking-[0.08em] shadow-none outline-none ring-0 transition focus:ring-2 ${status === "active" ? "bg-emerald-100 text-emerald-700 focus:ring-emerald-500/20 dark:bg-emerald-950/50 dark:text-emerald-300" : "bg-rose-100 text-rose-700 focus:ring-rose-500/20 dark:bg-rose-950/50 dark:text-rose-300"}`}
       >
         <option value="active">Active</option>
         <option value="inactive">Inactive</option>
       </select>
-      <ChevronDown className="pointer-events-none absolute right-3 size-3.5 text-current" />
+      <ChevronDown className="pointer-events-none absolute right-1.5 size-3 text-current" />
     </span>
   );
 }
@@ -206,7 +208,7 @@ function NewCustomerModal({ open, token, onClose, onCreated }) {
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-2xl overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest shadow-2xl dark:bg-surface-container">
+      <div className="max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-lg border border-outline-variant bg-surface-container-lowest shadow-2xl dark:bg-surface-container">
         <div className="flex items-start justify-between gap-4 border-b border-outline-variant/70 p-6">
           <div className="flex items-start gap-4">
             <div className="grid size-11 shrink-0 place-items-center rounded-lg bg-primary-container/10 text-primary">
@@ -222,15 +224,15 @@ function NewCustomerModal({ open, token, onClose, onCreated }) {
           </button>
         </div>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-5 p-6" noValidate>
-          <div className="grid gap-5 md:grid-cols-2">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 p-6" noValidate>
+          <div className="grid gap-4 md:grid-cols-2">
             <Field label="Full name" name="name" form={form} autoComplete="name" placeholder="John Doe" />
             <Field label="Email" name="email" type="email" form={form} autoComplete="email" placeholder="customer@example.com" />
           </div>
 
           <Field label="Phone" name="phone" type="tel" form={form} autoComplete="tel" placeholder="+1 (212) 555-0187" />
 
-          <div className="grid gap-5 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             <PasswordField label="Password" name="password" form={form} autoComplete="new-password" placeholder="Create password" show={showPassword} onToggle={() => setShowPassword((value) => !value)} />
             <PasswordField label="Confirm password" name="confirmPassword" form={form} autoComplete="new-password" placeholder="Confirm password" show={showConfirmPassword} onToggle={() => setShowConfirmPassword((value) => !value)} />
           </div>

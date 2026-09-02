@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { Phone, Mail, MapPin, Link2 } from "lucide-react";
+import { BrandLogo } from "@/components/brand-logo";
 
 export function SiteFooter() {
   return (
     <footer className="w-full border-t border-outline-variant bg-surface-container-lowest pt-16 pb-6">
       <div className="mx-auto mb-16 grid max-w-[1280px] grid-cols-1 gap-6 px-5 md:grid-cols-4 md:px-16">
         <div className="flex flex-col gap-4">
-          <Link href="/" className="font-heading text-headline-md font-bold tracking-[-0.02em] text-primary">
-            ZoelLit
+          <Link href="/" className="flex items-center">
+            <BrandLogo className="h-7 w-auto" />
           </Link>
           <p className="max-w-xs text-body-md leading-6 text-on-surface-variant">
             Curated network and connectivity solutions for professionals and businesses.

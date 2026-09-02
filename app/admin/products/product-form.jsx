@@ -46,7 +46,8 @@ export function ProductForm({ product, mode }) {
     setSaving(true);
     try {
       const data = await updateAdminProduct(values.sku, {
-        description: values.name,
+        name: values.name,
+        description: values.description,
         category: values.category,
         price: values.price,
         stock: values.stock,
