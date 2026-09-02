@@ -88,6 +88,7 @@ export function SyncModal({ open, onClose, title, type, items, onSync, syncing, 
       const isLocalOnly = searchMode === "local" && category.source === "manual";
       const pageSize = isLocalOnly ? 200 : 100;
       const allProducts = [];
+      const seenProductKeys = new Set();
       let page = 1;
       let total = Infinity;
 
@@ -96,7 +97,12 @@ export function SyncModal({ open, onClose, title, type, items, onSync, syncing, 
           ? await getCategoryProducts(categoryName, { page, limit: pageSize })
           : await getIngramCategoryProducts(categoryName, { page, pageSize });
         const products = data.products || [];
-        allProducts.push(...products);
+        for (const product of products) {
+          const productKey = product.ingramPartNumber || `${product.description}-${product.vendorPartNumber}`;
+          if (!productKey || seenProductKeys.has(productKey)) continue;
+          seenProductKeys.add(productKey);
+          allProducts.push(product);
+        }
         setCategoryProducts([...allProducts]);
 
         total = data.pagination?.total ?? data.total ?? allProducts.length;
@@ -113,9 +119,9 @@ export function SyncModal({ open, onClose, title, type, items, onSync, syncing, 
 
   const displayCategories = searchMode === "ingram" ? ingramSearchResults : ingramCategories;
 
-  const filteredCategories = displayCategories.filter((cat) => {
+  const filteredCategories = displayCategories.filter((cat, index, arr) => {
     const name = cat.name || "";
-    return name.toLowerCase().includes(search.toLowerCase());
+    return name.toLowerCase().includes(search.toLowerCase()) && arr.findIndex((item) => item.name === name) === index;
   });
 
   const allExpandedProductsSelected = categoryProducts.length > 0 && categoryProducts.every((p) => selected.has(p.ingramPartNumber));
@@ -156,11 +162,11 @@ export function SyncModal({ open, onClose, title, type, items, onSync, syncing, 
   if (type === "product") {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center">
-        <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-        <div className="relative z-10 flex w-full max-w-2xl flex-col overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest shadow-lg" style={{ height: "85vh" }}>
-          <div className="flex items-center justify-between border-b border-outline-variant px-6 py-4">
-            <h2 className="font-heading text-headline-sm font-semibold text-on-surface">{title}</h2>
-            <button onClick={onClose} className="rounded-sm p-1.5 text-on-surface-variant hover:bg-surface-container hover:text-on-surface">
+        <div className="fixed inset-0 bg-inverse-surface/40 backdrop-blur-sm" onClick={onClose} />
+        <div className="relative z-10 flex w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-outline-variant bg-surface shadow-2xl" style={{ height: "85vh" }}>
+          <div className="flex items-center justify-between border-b border-outline-variant px-5 py-4">
+            <h2 className="font-heading text-lg font-semibold text-on-surface">{title}</h2>
+            <button onClick={onClose} className="icon-btn size-8">
               <X className="size-5" />
             </button>
           </div>
@@ -197,11 +203,11 @@ export function SyncModal({ open, onClose, title, type, items, onSync, syncing, 
                 <p className="mb-2 text-meta text-on-surface-variant">
                   {searchMode === "ingram" ? "Ingram search results" : "Local categories"}
                 </p>
-                {filteredCategories.map((cat) => {
+                {filteredCategories.map((cat, index) => {
                   const catName = cat.name || "";
                   const expanded = expandedCategory === catName;
                   return (
-                    <div key={catName} className="rounded-sm">
+                    <div key={`${catName}-${index}`} className="rounded-sm">
                       <div className="flex items-start gap-2 px-3 py-3 hover:bg-surface-container-low">
                         <button
                           type="button"
@@ -237,11 +243,11 @@ export function SyncModal({ open, onClose, title, type, items, onSync, syncing, 
                                 <span className="text-label-md font-semibold text-on-surface">Select All ({categoryProducts.length})</span>
                               </label>
                               <div className="my-1 border-t border-outline-variant" />
-                              {categoryProducts.map((product) => {
+                              {categoryProducts.map((product, index) => {
                                 const key = product.ingramPartNumber;
                                 const checked = selected.has(key);
                                 return (
-                                  <label key={key} className="flex cursor-pointer items-center gap-3 rounded-sm py-2 pr-3 hover:bg-surface-container-low" onClick={() => handleToggleItem(key)}>
+                                  <label key={`${expandedCategory}-${key}-${index}`} className="flex cursor-pointer items-center gap-3 rounded-sm py-2 pr-3 hover:bg-surface-container-low" onClick={() => handleToggleItem(key)}>
                                     <span className={`flex size-5 shrink-0 items-center justify-center rounded border ${checked ? "border-primary bg-primary text-white" : "border-outline-variant bg-surface-container-lowest"}`}>
                                       {checked && <Check className="size-3.5" />}
                                     </span>
@@ -316,11 +322,11 @@ export function SyncModal({ open, onClose, title, type, items, onSync, syncing, 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative z-10 flex w-full max-w-2xl flex-col overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest shadow-lg" style={{ height: "85vh" }}>
-        <div className="flex items-center justify-between border-b border-outline-variant px-6 py-4">
-          <h2 className="font-heading text-headline-sm font-semibold text-on-surface">{title}</h2>
-          <button onClick={onClose} className="rounded-sm p-1.5 text-on-surface-variant hover:bg-surface-container hover:text-on-surface">
+      <div className="fixed inset-0 bg-inverse-surface/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 flex w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-outline-variant bg-surface shadow-2xl" style={{ height: "85vh" }}>
+        <div className="flex items-center justify-between border-b border-outline-variant px-5 py-4">
+          <h2 className="font-heading text-lg font-semibold text-on-surface">{title}</h2>
+          <button onClick={onClose} className="icon-btn size-8">
             <X className="size-5" />
           </button>
         </div>

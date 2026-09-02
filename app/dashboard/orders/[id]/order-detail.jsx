@@ -124,16 +124,33 @@ export function OrderDetail({ id }) {
               <h2 className="font-heading text-h3 font-semibold">Order notes</h2>
               <div className="mt-3"><BulletNotes notes={order.notes} /></div>
             </Card>
-            <Card>
-              <h2 className="font-heading text-h3 font-semibold">Shipment</h2>
-              <div className="mt-4 space-y-3 text-body font-regular">
-                <ShipmentInfo label="Carrier" value={order.carrierName || "—"} />
-                <ShipmentInfo label="Tracking number" value={order.tracking || "—"} />
-                <ShipmentInfo label="Ship date" value={order.shipDate ? shortDate(order.shipDate) : "—"} />
-                <ShipmentInfo label="Ingram order number" value={order.ingramOrderNumber || "—"} />
-                <ShipmentInfo label="Invoice number" value={order.invoiceNumber || "—"} />
-              </div>
-            </Card>
+             {(order.fulfillmentGroups || []).length ? order.fulfillmentGroups.map((group) => (
+               <Card key={group._id}>
+                 <div className="flex items-center justify-between gap-3">
+                   <h2 className="font-heading text-h3 font-semibold">{group.source === "ingram" ? "Ingram shipment" : "Manual shipment"}</h2>
+                   <Badge>{group.status}</Badge>
+                 </div>
+                 <p className="mt-3 text-body font-regular text-slate-500 dark:text-slate-400">{group.items?.map((item) => item.name).join(", ")}</p>
+                 <div className="mt-4 space-y-3 text-body font-regular">
+                   <ShipmentInfo label="Carrier" value={group.carrierName || "—"} />
+                   <ShipmentInfo label="Tracking number" value={group.tracking || "—"} />
+                   <ShipmentInfo label="Ship date" value={group.shipDate ? shortDate(group.shipDate) : "—"} />
+                   {group.source === "ingram" ? <ShipmentInfo label="Ingram order number" value={group.providerOrderNumber || order.ingramOrderNumber || "—"} /> : null}
+                   <ShipmentInfo label="Invoice number" value={group.invoiceNumber || "—"} />
+                 </div>
+               </Card>
+             )) : (
+               <Card>
+                 <h2 className="font-heading text-h3 font-semibold">Shipment</h2>
+                 <div className="mt-4 space-y-3 text-body font-regular">
+                   <ShipmentInfo label="Carrier" value={order.carrierName || "—"} />
+                   <ShipmentInfo label="Tracking number" value={order.tracking || "—"} />
+                   <ShipmentInfo label="Ship date" value={order.shipDate ? shortDate(order.shipDate) : "—"} />
+                   <ShipmentInfo label="Ingram order number" value={order.ingramOrderNumber || "—"} />
+                   <ShipmentInfo label="Invoice number" value={order.invoiceNumber || "—"} />
+                 </div>
+               </Card>
+             )}
           </div>
         </div>
 

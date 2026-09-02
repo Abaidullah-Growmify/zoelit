@@ -5,15 +5,13 @@ import { Eye, RefreshCw, Search, ChevronDown, Plus } from "lucide-react";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { toast } from "sonner";
 import { AdminTable } from "@/components/admin-table";
-import { Button, Card, Input } from "@/components/ui";
-import { SyncModal } from "@/components/sync-modal";
+import { Button, Card, FilterTabs, Input, SourceBadge } from "@/components/ui";
 import { AddItemModal } from "@/components/add-item-modal";
 import { AdminProductsSkeleton } from "@/components/skeletons";
 import {
   getAdminProducts,
   getAdminCategories,
   startPriceSync,
-  startProductSync,
   createManualProduct,
   toggleProductActive,
   getSyncStatus,
@@ -35,10 +33,7 @@ export default function AdminProductsPage() {
   const [syncing, setSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState({ percent: 0, label: "" });
   const [error, setError] = useState("");
-
-  const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [prodModalOpen, setProdModalOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [sourceFilter, setSourceFilter] = useState("all");
@@ -78,7 +73,7 @@ export default function AdminProductsPage() {
   useEffect(() => {
     let active = true;
     if (!token) return;
-    getAdminProducts({ page, limit: PAGE_SIZE, keyword: debouncedKeyword || undefined }, token)
+    getAdminProducts({ page, limit: PAGE_SIZE, keyword: debouncedKeyword || undefined, source: sourceFilter !== "all" ? sourceFilter : undefined }, token)
       .then((data) => {
         if (!active) return;
         setRows((data.products || []).map(toRow));
@@ -92,25 +87,11 @@ export default function AdminProductsPage() {
         setRows([]);
       });
     return () => { active = false; };
-  }, [token, page, debouncedKeyword]);
-
-  const loadAllProducts = () => {
-    if (!token) return;
-    getAdminProducts({ page: 1, limit: 200 }, token)
-      .then((data) => setProducts(data.products || []))
-      .catch(() => {});
-  };
+  }, [token, page, debouncedKeyword, sourceFilter]);
 
   function handleSearchChange(value) {
     setKeyword(value);
     setPage(1);
-  }
-
-  async function handleProductSync() {
-    const isRunning = await checkSyncStatus();
-    if (isRunning) return;
-    loadAllProducts();
-    setProdModalOpen(true);
   }
 
   async function handleOpenAddModal() {
@@ -134,30 +115,6 @@ export default function AdminProductsPage() {
       pollSyncProgress();
     } catch (syncError) {
       toast.error(syncError.message || "Could not start price sync");
-      setSyncing(false);
-      setSyncProgress({ percent: 0, label: "" });
-    }
-  }
-
-  async function handleProductSyncSubmit(selectedSkus) {
-    const isRunning = await checkSyncStatus();
-    if (isRunning) {
-      setProdModalOpen(false);
-      return;
-    }
-    setProdModalOpen(false);
-    setSyncing(true);
-    setSyncProgress({ percent: 0, label: "Starting sync..." });
-    try {
-      for (let i = 0; i < selectedSkus.length; i++) {
-        await startProductSync({ keyword: selectedSkus[i] }, token);
-        const percent = Math.round(((i + 1) / selectedSkus.length) * 100);
-        setSyncProgress({ percent, label: `Syncing ${i + 1}/${selectedSkus.length}` });
-      }
-      toast.success(`Product sync started for ${selectedSkus.length} products`);
-      pollSyncProgress();
-    } catch (syncError) {
-      toast.error(syncError.message || "Could not start sync");
       setSyncing(false);
       setSyncProgress({ percent: 0, label: "" });
     }
@@ -201,7 +158,6 @@ export default function AdminProductsPage() {
       await createManualProduct(payload, token);
       toast.success("Product created successfully");
       setAddModalOpen(false);
-      loadAllProducts();
       refreshProducts();
     } catch (err) {
       toast.error(err.message || "Failed to create product");
@@ -212,7 +168,7 @@ export default function AdminProductsPage() {
 
   function refreshProducts() {
     if (!token) return;
-    getAdminProducts({ page, limit: PAGE_SIZE, keyword: debouncedKeyword || undefined }, token)
+    getAdminProducts({ page, limit: PAGE_SIZE, keyword: debouncedKeyword || undefined, source: sourceFilter !== "all" ? sourceFilter : undefined }, token)
       .then((data) => {
         setRows((data.products || []).map(toRow));
         setTotalPages(data.pagination?.totalPages ?? 1);
@@ -243,15 +199,7 @@ export default function AdminProductsPage() {
       key: "source",
       header: "Source",
       accessor: "source",
-      render: (product) => (
-        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-          product.source === "ingram"
-            ? "bg-blue-50 text-blue-700"
-            : "bg-slate-100 text-slate-700"
-        }`}>
-          {product.source === "ingram" ? "Ingram" : "Manual"}
-        </span>
-      ),
+      render: (product) => <SourceBadge source={product.source} />,
     },
     { key: "category", header: "Category", sortable: true, accessor: "category" },
     { key: "price", header: "Price", sortable: true, accessor: "price", cellClassName: "font-semibold tabular-nums text-on-surface", render: (product) => money(product.price) },
@@ -265,10 +213,10 @@ export default function AdminProductsPage() {
           <select
             value={product.isActive ? "active" : "inactive"}
             onChange={() => handleToggleProduct(product.sku)}
-            className={`h-9 appearance-none rounded-full border px-3 pr-8 text-label-sm font-semibold transition-colors ${
+            className={`h-8 appearance-none rounded-lg border px-3 pr-7 text-xs font-medium transition-colors ${
               product.isActive
-                ? "border-emerald-300 bg-emerald-50 text-emerald-700 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
-                : "border-rose-300 bg-rose-50 text-rose-700 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+                : "border-rose-200 bg-rose-50 text-rose-700 focus:border-rose-400 focus:ring-4 focus:ring-rose-500/10 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
             }`}
           >
             <option value="active">Active</option>
@@ -288,26 +236,6 @@ export default function AdminProductsPage() {
         <Card className="p-8 text-center text-body font-regular text-rose-600">{error}</Card>
       ) : (
         <>
-          <div className="flex gap-2 border-b border-outline pb-4">
-            {[
-              { value: "all", label: "All" },
-              { value: "manual", label: "Manual" },
-              { value: "ingram", label: "Ingram" },
-            ].map((tab) => (
-              <button
-                key={tab.value}
-                onClick={() => { setSourceFilter(tab.value); setPage(1); }}
-                className={`rounded-full px-4 py-1.5 text-label-sm font-semibold transition-colors ${
-                  sourceFilter === tab.value
-                    ? "bg-on-surface text-white"
-                    : "bg-slate-100 text-on-surface-variant hover:bg-slate-200"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
           <AdminTable
             title="Products"
             description="Browse and manage your product catalog. Manually added and Ingram synced products are tracked separately."
@@ -319,10 +247,21 @@ export default function AdminProductsPage() {
             totalPages={totalPages}
             totalItems={totalItems}
             toolbar={(
-              <div className="relative min-w-[16rem] flex-1 sm:max-w-md lg:max-w-xl">
-                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
-                <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search products, SKU or category" aria-label="Search products" className="h-10 pl-10 shadow-sm" />
-              </div>
+              <>
+                <FilterTabs
+                  value={sourceFilter}
+                  onChange={(value) => { setSourceFilter(value); setPage(1); }}
+                  tabs={[
+                    { value: "all", label: "All" },
+                    { value: "manual", label: "Manual" },
+                    { value: "ingram", label: "Ingram" },
+                  ]}
+                />
+                <div className="relative min-w-[16rem] flex-1 sm:max-w-md lg:max-w-xl">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
+                  <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search products, SKU or category" aria-label="Search products" className="h-10 pl-10 shadow-sm" />
+                </div>
+              </>
             )}
             hideSearch
             disableInitialSort
@@ -335,7 +274,7 @@ export default function AdminProductsPage() {
                   <RefreshCw className={`size-4 ${syncing ? "animate-spin" : ""}`} /> Sync prices
                 </Button>
                 <div className="relative">
-                  <Button onClick={handleProductSync} disabled={syncing} className="min-w-[160px]">
+                  <Button asChild href="/admin/products/sync" className="min-w-[160px]">
                     {syncing ? (
                       <span className="flex items-center gap-2">
                         <svg className="size-4 animate-spin" viewBox="0 0 24 24" fill="none">
@@ -368,17 +307,6 @@ export default function AdminProductsPage() {
         </>
       )}
 
-      <SyncModal
-        open={prodModalOpen}
-        onClose={() => setProdModalOpen(false)}
-        title="Sync from Ingram"
-        type="product"
-        items={products}
-        onSync={handleProductSyncSubmit}
-        syncing={syncing}
-        syncProgress={syncProgress}
-      />
-
       <AddItemModal
         open={addModalOpen}
         onClose={() => setAddModalOpen(false)}
@@ -394,7 +322,7 @@ export default function AdminProductsPage() {
 function toRow(product) {
   return {
     id: product.ingramPartNumber,
-    name: product.description || product.ingramPartNumber || "Unnamed product",
+    name: product.name || product.description || product.ingramPartNumber || "Unnamed product",
     sku: product.ingramPartNumber || "—",
     category: product.category || "Uncategorized",
     price: product.price || 0,
@@ -417,7 +345,7 @@ function toRow(product) {
 function ProductCell({ product }) {
   return (
     <div className="flex max-w-64 items-center gap-3">
-      <Image src={product.image} alt={product.name} width={48} height={48} className="size-12 shrink-0 rounded-md object-cover ring-1 ring-slate-200 dark:ring-slate-800" />
+      <Image src={product.image} alt={product.name} width={48} height={48} className="size-10 shrink-0 rounded-xl object-cover ring-1 ring-outline-variant" />
       <div className="min-w-0">
         <p title={product.name} className="truncate font-semibold text-on-surface">{product.name}</p>
         <p className="mt-0.5 truncate text-meta font-normal text-on-surface-variant">{product.sku}</p>

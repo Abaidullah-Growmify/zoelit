@@ -20,7 +20,11 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
   const [tableOrders, setTableOrders] = useState(orders || []);
 
   useEffect(() => {
-    setTableOrders(orders || []);
+    const timeout = window.setTimeout(() => {
+      setTableOrders(orders || []);
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
   }, [orders]);
 
   async function handleOrderStatusChange(order, nextStatus) {
@@ -50,15 +54,15 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
   return (
     <>
       <div className="mt-6 grid items-stretch gap-6 lg:grid-cols-2">
-        <Card className="flex h-full flex-col overflow-hidden p-5 shadow-primary-elevated">
+        <Card className="flex h-full flex-col overflow-hidden p-5">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="font-heading text-headline-md font-semibold tracking-[-0.03em] text-on-surface">Sales overview</h2>
-              <p className="mt-1 text-body-md font-normal text-on-surface-variant">Revenue across the last 6 months</p>
+              <h2 className="font-heading text-lg font-semibold tracking-tight text-on-surface">Sales overview</h2>
+              <p className="mt-1 text-sm text-on-surface-variant">Revenue across the last 6 months</p>
             </div>
-            {trend ? <span className="rounded-full bg-tertiary-container px-3 py-1 text-label-sm font-semibold tabular-nums text-on-tertiary">{trend}</span> : null}
+            {trend ? <span className="rounded-lg bg-tertiary-container px-3 py-1 text-label-sm font-semibold tabular-nums text-on-tertiary">{trend}</span> : null}
           </div>
-          <div className="mt-6 min-h-60 flex-1 rounded-md bg-gradient-to-b from-primary-fixed/60 to-surface-container-low p-3 ring-1 ring-outline-variant">
+          <div className="mt-6 min-h-60 flex-1 rounded-2xl bg-surface-container-low/70 p-3 ring-1 ring-outline-variant/70">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={salesOverview} margin={{ left: 0, right: 10, top: 12, bottom: 0 }}>
                 <defs>
@@ -76,13 +80,13 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
             </ResponsiveContainer>
           </div>
         </Card>
-        <Card className="h-full p-5 shadow-sm">
-          <h2 className="font-heading text-headline-md font-semibold tracking-[-0.03em] text-on-surface">Low stock alerts</h2>
-          <p className="mt-1 text-body-md font-normal text-on-surface-variant">Products that need quick attention.</p>
+        <Card className="h-full p-5">
+          <h2 className="font-heading text-lg font-semibold tracking-tight text-on-surface">Low stock alerts</h2>
+          <p className="mt-1 text-sm text-on-surface-variant">Products that need quick attention.</p>
           <div className="mt-4 space-y-3">
             {lowStock.length ? (
               lowStock.map((item) => (
-                <div key={item.productId} className="flex items-center justify-between gap-3 rounded-md border border-secondary-container bg-secondary-container p-3">
+                <div key={item.productId} className="flex items-center justify-between gap-3 rounded-xl border border-amber-200/70 bg-amber-50/80 p-3 dark:border-amber-500/20 dark:bg-amber-500/10">
                   <div className="flex min-w-0 items-center gap-3">
                     {item.image ? (
                       <Image src={item.image} alt={item.productName} width={40} height={40} className="size-10 shrink-0 rounded-md object-cover ring-1 ring-amber-200 dark:ring-amber-500/30" />
@@ -92,7 +96,7 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
                       <p className="truncate text-label-sm font-semibold text-on-secondary-container">{item.sku}</p>
                     </div>
                   </div>
-                  <strong className="shrink-0 rounded-full bg-surface-container-lowest px-3 py-1 text-label-sm font-semibold tabular-nums text-on-surface">{item.currentStock}</strong>
+                  <strong className="shrink-0 rounded-lg bg-surface-container-lowest px-3 py-1 text-label-sm font-semibold tabular-nums text-on-surface">{item.currentStock}</strong>
                 </div>
               ))
             ) : (
@@ -101,26 +105,28 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
           </div>
         </Card>
       </div>
-      <Card className="mt-6 p-5 shadow-sm">
+      <Card className="mt-6 p-5">
         <div className="mb-5 flex items-center justify-between gap-4">
           <div>
-            <h2 className="font-heading text-headline-md font-semibold tracking-[-0.03em] text-on-surface">Top products</h2>
-            <p className="mt-1 text-body-md font-normal text-on-surface-variant">Best-selling products by quantity ordered.</p>
+            <h2 className="font-heading text-lg font-semibold tracking-tight text-on-surface">Top products</h2>
+            <p className="mt-1 text-sm text-on-surface-variant">Best-selling products, with catalog products shown until sales are available.</p>
           </div>
-          <Link href="/admin/products" aria-label="Open products" className="grid size-9 shrink-0 place-items-center rounded-sm text-primary transition hover:bg-surface-container-low hover:text-primary-container"><ArrowUpRight className="size-4" /></Link>
+          <Link href="/admin/products" aria-label="Open products" className="icon-btn size-8 text-primary"><ArrowUpRight className="size-4" /></Link>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {topProducts.length ? (
-            topProducts.map((product) => (
-              <div key={product.productId} className="flex items-center gap-4 rounded-md border border-outline-variant bg-surface-container-low p-4">
+            topProducts.map((product, index) => (
+              <div key={`${product.productId}-${index}`} className="flex items-center gap-3 rounded-xl border border-outline-variant bg-surface-container-low/60 p-3">
                 {product.image ? (
-                  <Image src={product.image} alt={product.name} width={56} height={56} className="size-14 shrink-0 rounded-md object-cover ring-1 ring-outline-variant" />
+                  <Image src={product.image} alt={product.name} width={56} height={56} className="size-12 shrink-0 rounded-xl object-cover ring-1 ring-outline-variant" />
                 ) : (
-                  <div className="grid size-14 shrink-0 place-items-center rounded-md bg-surface-container text-label-sm font-semibold text-on-surface-variant">IT</div>
+                  <div className="grid size-12 shrink-0 place-items-center rounded-xl bg-surface-container text-xs font-semibold text-on-surface-variant">IT</div>
                 )}
                 <div className="min-w-0">
                     <p className="truncate text-body-md font-medium text-on-surface">{product.name}</p>
-                    <p className="mt-1 text-label-sm font-semibold tabular-nums text-on-surface-variant">{product.qty} sold · {money(product.revenue)}</p>
+                    <p className="mt-1 text-label-sm font-semibold tabular-nums text-on-surface-variant">
+                      {product.fallback ? `${product.qty} in stock · ${money(product.revenue)}` : `${product.qty} sold · ${money(product.revenue)}`}
+                    </p>
                 </div>
               </div>
             ))
@@ -155,8 +161,9 @@ function OrderStatusSelect({ order, onChange }) {
       <select
         value={status}
         onChange={(event) => onChange(order, event.target.value)}
+        disabled={Boolean(order.fulfillmentGroups?.length)}
         aria-label={`Change status for order ${order.orderNumber || order.id}`}
-        className={`h-8 w-fit appearance-none rounded-full border-0 py-0 pl-3 pr-8 text-label-sm font-semibold shadow-none outline-none ring-0 transition focus:ring-2 ${statusClassName(status)}`}
+        className={`h-8 w-fit appearance-none rounded-lg border-0 py-0 pl-3 pr-8 text-label-sm font-semibold shadow-none outline-none ring-0 transition focus:ring-2 disabled:cursor-not-allowed disabled:opacity-70 ${statusClassName(status)}`}
       >
         {statuses.map((option) => <option key={option}>{option}</option>)}
       </select>

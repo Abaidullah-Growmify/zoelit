@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AdminPageHeader } from "@/components/admin-page-header";
+import { Card } from "@/components/ui";
 import { AdminProductEditSkeleton } from "@/components/skeletons";
 import { getAdminProduct } from "@/lib/api";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
@@ -41,9 +42,9 @@ export function AdminProductEdit({ id }) {
   }
 
   return (
-    <div>
-      <AdminPageHeader title={`Edit ${product.description || product.ingramPartNumber}`} description={`Update catalog content, pricing, stock, and image for ${product.ingramPartNumber}.`} />
+    <Card className="p-5 sm:p-6">
+      <AdminPageHeader title={`Edit ${product.name || product.description || product.ingramPartNumber}`} description={`Update catalog content, pricing, stock, and image for ${product.ingramPartNumber}.`} />
       <ProductForm product={product} mode="edit" />
-    </div>
+    </Card>
   );
 }

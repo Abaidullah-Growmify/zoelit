@@ -5,7 +5,7 @@ import { RefreshCw, Search, ChevronDown, Plus, ArrowLeft, Eye } from "lucide-rea
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { toast } from "sonner";
 import { AdminTable } from "@/components/admin-table";
-import { Button, Card, Input } from "@/components/ui";
+import { Button, Card, FilterTabs, Input, SourceBadge } from "@/components/ui";
 import { SyncModal } from "@/components/sync-modal";
 import { AddItemModal } from "@/components/add-item-modal";
 import { AdminCategoriesSkeleton } from "@/components/skeletons";
@@ -66,6 +66,7 @@ export default function AdminCategoriesPage() {
         if (!active) return;
         setRows((data.categories || []).map((category) => ({
           name: category.name,
+          description: category.description || "",
           slug: category.name.toLowerCase().replaceAll(" ", "-"),
           count: category.count,
           status: category.isActive ? "Active" : "Inactive",
@@ -279,7 +280,7 @@ export default function AdminCategoriesPage() {
     const query = keyword.trim().toLowerCase();
     let result = rows || [];
     if (sourceFilter !== "all") {
-      result = result.filter((category) => category.source === sourceFilter);
+      result = result.filter((category) => category.source === sourceFilter || category.source === "mixed");
     }
     if (query) {
       result = result.filter(
@@ -298,24 +299,14 @@ export default function AdminCategoriesPage() {
     { key: "name", header: "Name", sortable: true, accessor: "name", cellClassName: "font-semibold text-on-surface", render: (category) => (
       <div className="max-w-72">
         <p title={category.name} className="line-clamp-2 whitespace-normal font-semibold text-on-surface">{category.name}</p>
-        <p className="truncate text-meta font-normal text-on-surface-variant">{category.slug}</p>
+        <p className="truncate text-meta font-normal text-on-surface-variant">{category.description || category.slug}</p>
       </div>
     ) },
     {
       key: "source",
       header: "Source",
       accessor: "source",
-      render: (category) => (
-        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-          category.source === "ingram"
-            ? "bg-blue-50 text-blue-700"
-            : category.source === "mixed"
-              ? "bg-purple-50 text-purple-700"
-              : "bg-slate-100 text-slate-700"
-        }`}>
-          {category.source === "ingram" ? "Ingram" : category.source === "mixed" ? "Mixed" : "Manual"}
-        </span>
-      ),
+      render: (category) => <SourceBadge source={category.source} />,
     },
     { key: "count", header: "Products", sortable: true, accessor: "count", cellClassName: "tabular-nums" },
     {
@@ -339,10 +330,10 @@ export default function AdminCategoriesPage() {
           <select
             value={category.status === "Active" ? "active" : "inactive"}
             onChange={() => handleToggleCategory(category.name)}
-            className={`h-9 appearance-none rounded-full border px-3 pr-8 text-label-sm font-semibold transition-colors ${
+            className={`h-8 appearance-none rounded-lg border px-3 pr-7 text-xs font-medium transition-colors ${
               category.status === "Active"
-                ? "border-emerald-300 bg-emerald-50 text-emerald-700 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
-                : "border-rose-300 bg-rose-50 text-rose-700 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+                : "border-rose-200 bg-rose-50 text-rose-700 focus:border-rose-400 focus:ring-4 focus:ring-rose-500/10 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
             }`}
           >
             <option value="active">Active</option>
@@ -354,15 +345,17 @@ export default function AdminCategoriesPage() {
     },
     {
       key: "actions",
-      header: "",
+      header: "Actions",
       render: (category) => (
         <Button
           variant="ghost"
           size="sm"
           onClick={() => handleViewCategory(category)}
-          className="gap-1.5"
+          className="size-9 p-0"
+          aria-label={`View products in ${category.name}`}
+          title="View products"
         >
-          <Eye className="size-4" /> View Products
+          <Eye className="size-4" />
         </Button>
       ),
     },
@@ -370,33 +363,34 @@ export default function AdminCategoriesPage() {
 
   if (view === "products" && selectedCategory) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={handleBackToList} className="gap-1.5">
-            <ArrowLeft className="size-4" /> Back to Categories
-          </Button>
-          <div>
-            <h2 className="font-heading text-headline-sm font-semibold text-on-surface">{selectedCategory.name}</h2>
-            <p className="text-body-sm text-on-surface-variant">
+      <Card className="overflow-hidden p-0">
+        <div className="flex flex-col gap-4 border-b border-outline-variant px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0 flex-1 lg:order-first">
+            <h2 className="font-heading text-lg font-semibold text-on-surface">{selectedCategory.name}</h2>
+            <p className="text-sm text-on-surface-variant">
               {selectedCategory.count} products · Source: {selectedCategory.source}
             </p>
+            {selectedCategory.description ? <p className="mt-1 max-w-2xl text-sm text-on-surface-variant">{selectedCategory.description}</p> : null}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={handleSyncCategoryProducts} disabled={syncing} className="gap-1.5">
+              <RefreshCw className={`size-4 ${syncing ? "animate-spin" : ""}`} /> Sync All Products
+            </Button>
+            {selectedProducts.size > 0 ? (
+              <Button onClick={handleSyncSelectedProducts} disabled={syncing} className="gap-1.5">
+                <RefreshCw className={`size-4 ${syncing ? "animate-spin" : ""}`} /> Sync Selected ({selectedProducts.size})
+              </Button>
+            ) : null}
+            <Button variant="outline" onClick={handleBackToList} className="gap-1.5">
+              <ArrowLeft className="size-4" /> Back to Categories
+            </Button>
           </div>
         </div>
 
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={handleSyncCategoryProducts} disabled={syncing} className="gap-1.5">
-            <RefreshCw className={`size-4 ${syncing ? "animate-spin" : ""}`} /> Sync All Products
-          </Button>
-          {selectedProducts.size > 0 && (
-            <Button onClick={handleSyncSelectedProducts} disabled={syncing} className="gap-1.5">
-              <RefreshCw className={`size-4 ${syncing ? "animate-spin" : ""}`} /> Sync Selected ({selectedProducts.size})
-            </Button>
-          )}
-        </div>
-
-        {categoryProducts === null ? (
+        <div className="p-4 sm:p-5">
+          {categoryProducts === null ? (
           <AdminCategoriesSkeleton />
-        ) : (
+          ) : (
           <Card className="overflow-hidden">
             <div className="border-b border-outline-variant px-4 py-3">
               <label className="flex cursor-pointer items-center gap-3">
@@ -410,10 +404,10 @@ export default function AdminCategoriesPage() {
               </label>
             </div>
             <div className="divide-y divide-outline-variant">
-              {categoryProducts.map((product) => (
+              {categoryProducts.map((product, index) => (
                 <label
-                  key={product.ingramPartNumber}
-                  className="flex cursor-pointer items-center gap-4 px-4 py-3 hover:bg-surface-container-low"
+                  key={`${product.ingramPartNumber}-${index}`}
+                  className="flex cursor-pointer items-center gap-4 px-4 py-3 transition hover:bg-surface-container-low/80"
                 >
                   <input
                     type="checkbox"
@@ -424,23 +418,20 @@ export default function AdminCategoriesPage() {
                   <div className="flex flex-1 items-center gap-3">
                     <Image
                       src={product.imageUrl || FALLBACK_IMAGE}
-                      alt={product.description || product.ingramPartNumber}
+                      alt={product.name || product.description || product.ingramPartNumber}
                       width={40}
                       height={40}
-                      className="size-10 shrink-0 rounded-md object-cover ring-1 ring-slate-200"
-                    />
+                  className="size-10 shrink-0 rounded-xl object-cover ring-1 ring-outline-variant"
+                />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold text-on-surface">{product.description || product.ingramPartNumber}</p>
+                      <p className="truncate font-semibold text-on-surface">{product.name || product.description || product.ingramPartNumber}</p>
                       <p className="truncate text-meta text-on-surface-variant">{product.ingramPartNumber}</p>
                     </div>
                   </div>
-                  <span className="font-semibold tabular-nums text-on-surface">{money(product.price)}</span>
-                  <span className="tabular-nums text-on-surface-variant">{product.stock}</span>
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                    product.isActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
-                  }`}>
-                    {product.isActive ? "Active" : "Inactive"}
-                  </span>
+                  <div className="min-w-[4.5rem] shrink-0 text-right">
+                    <p className="text-xs font-semibold tabular-nums text-on-surface sm:text-label-md">{money(product.price)}</p>
+                    <p className="text-[11px] text-on-surface-variant sm:text-meta">Stock {product.stock || 0}</p>
+                  </div>
                 </label>
               ))}
               {categoryProducts.length === 0 && (
@@ -448,8 +439,9 @@ export default function AdminCategoriesPage() {
               )}
             </div>
           </Card>
-        )}
-      </div>
+          )}
+        </div>
+      </Card>
     );
   }
 
@@ -461,27 +453,6 @@ export default function AdminCategoriesPage() {
         <Card className="p-8 text-center text-body font-regular text-rose-600">{error}</Card>
       ) : (
         <>
-          <div className="flex gap-2 border-b border-outline pb-4">
-            {[
-              { value: "all", label: "All" },
-              { value: "manual", label: "Manual" },
-              { value: "ingram", label: "Ingram" },
-              { value: "mixed", label: "Mixed" },
-            ].map((tab) => (
-              <button
-                key={tab.value}
-                onClick={() => { setSourceFilter(tab.value); setPage(1); }}
-                className={`rounded-full px-4 py-1.5 text-label-sm font-semibold transition-colors ${
-                  sourceFilter === tab.value
-                    ? "bg-on-surface text-white"
-                    : "bg-slate-100 text-on-surface-variant hover:bg-slate-200"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
           <AdminTable
             title="Categories"
             description="Manage your product categories. Click 'View Products' to see and sync products within a category."
@@ -493,10 +464,21 @@ export default function AdminCategoriesPage() {
             totalPages={totalPages}
             totalItems={filteredRows.length}
             toolbar={(
-              <div className="relative min-w-[16rem] flex-1 sm:max-w-md lg:max-w-xl">
-                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
-                <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search categories" aria-label="Search categories" className="h-10 pl-10 shadow-sm" />
-              </div>
+              <>
+                <FilterTabs
+                  value={sourceFilter}
+                  onChange={(value) => { setSourceFilter(value); setPage(1); }}
+                  tabs={[
+                    { value: "all", label: "All" },
+                    { value: "manual", label: "Manual" },
+                    { value: "ingram", label: "Ingram" },
+                  ]}
+                />
+                <div className="relative min-w-[16rem] flex-1 sm:max-w-md lg:max-w-xl">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
+                  <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search categories" aria-label="Search categories" className="h-10 pl-10 shadow-sm" />
+                </div>
+              </>
             )}
             action={(
               <div className="flex gap-3">

@@ -47,13 +47,13 @@ export function LoginForm() {
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background p-4">
       <div className="pointer-events-none absolute inset-0 opacity-40 [background-image:linear-gradient(to_right,rgb(0_63_177_/_0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgb(0_63_177_/_0.12)_1px,transparent_1px)] [background-size:34px_34px]" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgb(0_63_177_/_0.16),transparent_34%),radial-gradient(circle_at_20%_80%,rgb(26_86_219_/_0.12),transparent_28%)]" />
-      <section className="relative z-10 w-full max-w-md rounded-lg border border-outline-variant bg-surface-container-lowest/85 p-6 soft-shadow backdrop-blur-xl">
+      <section className="relative z-10 w-full max-w-md rounded-2xl border border-outline-variant bg-surface/90 p-6 shadow-xl backdrop-blur-xl">
         <div className="flex flex-col items-center pb-2 text-center">
-          <Link href="/" className="mb-3 flex size-14 items-center justify-center rounded-lg bg-primary-container/10 text-primary shadow-primary-elevated">
-            <UserRound className="size-7" />
+          <Link href="/" className="mb-3 flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <UserRound className="size-6" />
           </Link>
-          <h1 className="font-heading text-headline-md font-extrabold tracking-[-0.02em] text-on-surface">ZoeLit Login</h1>
-          <p className="mt-2 text-body-md text-on-surface-variant">Sign in to your shopping account.</p>
+          <h1 className="font-heading text-2xl font-semibold tracking-tight text-on-surface">Welcome back</h1>
+          <p className="mt-2 text-sm text-on-surface-variant">Sign in to your shopping account.</p>
         </div>
         <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-4" noValidate>
           <div className="space-y-2">
@@ -64,7 +64,7 @@ export function LoginForm() {
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-4">
               <Label>Password</Label>
-              <Link href="#" className="text-body-md font-semibold text-primary hover:text-primary-container">Forgot password?</Link>
+               <Link href="/forgot-password" className="text-body-md font-semibold text-primary hover:text-primary-container">Forgot password?</Link>
             </div>
             <div className="relative">
               <Input type={showPassword ? "text" : "password"} autoComplete="current-password" placeholder="Enter password" className="pr-10" {...form.register("password")} />

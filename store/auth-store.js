@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { authLogin as loginThunk, authRegister as registerThunk, authLogout as logoutThunk, setUser } from "@/store/slices/auth-slice";
+import { authLogin as loginThunk, authRegister as registerThunk, authLogout as logoutThunk, forceLogout, setUser } from "@/store/slices/auth-slice";
 
 export function useAuthStore(selector) {
   const auth = useAppSelector((state) => state.auth);
@@ -15,6 +15,7 @@ export function useAuthStore(selector) {
       register: (values) => dispatch(registerThunk(values)).unwrap(),
       setUser: (user) => dispatch(setUser(user)),
       logout: () => dispatch(logoutThunk()).unwrap(),
+      clearSession: () => dispatch(forceLogout()),
     }),
     [auth, dispatch]
   );

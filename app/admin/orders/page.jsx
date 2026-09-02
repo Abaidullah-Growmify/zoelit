@@ -17,6 +17,7 @@ const PAGE_SIZE = 10;
 const STATUS_OPTIONS = [
   "All statuses",
   "Pending",
+  "Partially Fulfilled",
   "Processing",
   "Invoiced",
   "On Hold",
@@ -169,8 +170,9 @@ function OrderStatusSelect({ order, onChange }) {
       <select
         value={status}
         onChange={(event) => onChange(order, event.target.value)}
+        disabled={Boolean(order.fulfillmentGroups?.length)}
         aria-label={`Change status for order ${order.orderNumber || order.id}`}
-        className={`h-8 w-fit appearance-none rounded-full border-0 py-0 pl-3 pr-8 text-label-sm font-semibold shadow-none outline-none ring-0 transition focus:ring-2 ${statusClassName(status)}`}
+        className={`h-8 w-fit appearance-none rounded-lg border-0 py-0 pl-3 pr-8 text-label-sm font-semibold shadow-none outline-none ring-0 transition focus:ring-2 disabled:cursor-not-allowed disabled:opacity-70 ${statusClassName(status)}`}
       >
         {ORDER_STATUS_OPTIONS.map((option) => <option key={option}>{option}</option>)}
       </select>

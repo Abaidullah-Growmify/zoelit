@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Heart, LogIn, Menu, ShoppingBag, User, X } from "lucide-react";
 import { useCartStore } from "@/store/cart-store";
 import { useAuthStore } from "@/store/auth-store";
+import { BrandLogo } from "@/components/brand-logo";
 
 const nav = [
   { href: "/", label: "Home" },
@@ -52,12 +53,12 @@ export function SiteHeader() {
   }, [mobileNavOpen]);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-outline-variant/80 bg-surface-container-lowest/80 shadow-primary-elevated backdrop-blur-md dark:bg-surface/80">
-      <div className="mx-auto flex w-full max-w-[1280px] items-center justify-between px-5 py-4 md:px-16">
-        <Link href="/" className="font-heading text-headline-md font-bold tracking-[-0.02em] text-primary">
-          ZoelLit
+    <header className="sticky top-0 z-50 w-full border-b border-outline-variant/70 bg-surface/80 backdrop-blur-md">
+      <div className="mx-auto flex w-full max-w-[1280px] items-center justify-between px-5 py-2.5 md:px-16">
+        <Link href="/" className="flex items-center">
+          <BrandLogo className="h-auto w-[200px] max-w-[42vw]" priority />
         </Link>
-        <nav className="hidden items-center gap-2 md:flex">
+        <nav className="hidden items-center gap-1 md:flex">
           {nav.map((item) => {
             const active = item.href === "/" ? pathname === item.href : pathname.startsWith(item.href);
 
@@ -65,7 +66,7 @@ export function SiteHeader() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`rounded-sm px-3 py-2 text-label-md font-semibold tracking-[0.05em] transition-colors hover:bg-surface-container-low hover:text-primary ${active ? "text-primary" : "text-on-surface-variant"}`}
+                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:bg-surface-container-low hover:text-primary ${active ? "text-primary" : "text-on-surface-variant"}`}
               >
                 {item.label}
               </Link>

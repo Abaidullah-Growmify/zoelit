@@ -13,12 +13,12 @@ export function ThemeToggle({ className = "" }) {
     <button
       type="button"
       onClick={toggleTheme}
-      className={`grid size-11 place-items-center rounded-sm bg-surface-container-low text-on-surface-variant transition hover:bg-surface-container dark:bg-surface-container dark:text-on-surface ${className}`}
+      className={`icon-btn ${className}`}
       aria-label="Toggle color mode"
       title="Toggle color mode"
     >
-      <Moon className="size-5 dark:hidden" />
-      <Sun className="hidden size-5 dark:block" />
+      <Moon className="size-4 dark:hidden" />
+      <Sun className="hidden size-4 dark:block" />
     </button>
   );
 }

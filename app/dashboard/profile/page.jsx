@@ -2,6 +2,7 @@
 
 import { CalendarDays, Camera, Check, Eye, EyeOff, Heart, KeyRound, ShoppingBag, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import * as api from "@/lib/api";
@@ -70,7 +71,7 @@ export default function ProfilePage() {
 
 function CustomerIdentityCard({ user }) {
   return (
-    <Card className="h-full transition duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_26px_58px_-16px_rgb(0_63_177_/_0.12)] hover:shadow-primary/10 dark:hover:shadow-black/20">
+    <Card className="h-full">
       <AvatarEditor initials={getInitials(user.name)} label="Edit profile photo" />
        <h2 className="mt-5 font-heading text-headline-md font-semibold tracking-[-0.02em] text-on-surface">{user.name}</h2>
        <p className="mt-1 text-body-md font-normal text-on-surface-variant">{user.email}</p>
@@ -124,6 +125,8 @@ function CustomerPersonalInfoCard({ user }) {
 
 function CustomerSecurityCard() {
   const token = useAuthStore((state) => state.token);
+  const logout = useAuthStore((state) => state.logout);
+  const router = useRouter();
   const [saved, setSaved] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -133,10 +136,11 @@ function CustomerSecurityCard() {
   async function onSubmit() {
     try {
       await api.updatePassword({ currentPassword: form.getValues("currentPassword"), newPassword: form.getValues("newPassword") }, token);
+      await logout();
       setSaved(true);
       toast.success("Password updated");
       form.reset({ currentPassword: "", newPassword: "" });
-      window.setTimeout(() => setSaved(false), 1800);
+      window.setTimeout(() => router.replace("/login?reset=success"), 900);
     } catch (error) {
       toast.error(error.message || "Could not update password");
     }

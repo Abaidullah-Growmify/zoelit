@@ -1,13 +1,14 @@
 "use client";
 
 import { shortDate } from "@/lib/utils";
+import { BrandLogo } from "@/components/brand-logo";
 
 export function InvoicePrint({ order }) {
   const billing = order?.billing || {};
   const items = order?.lineItems || order?.items || [];
 
   const invoiceNumber =
-    order?.customerOrderNumber || order?.orderNumber || "—";
+    order?.invoiceNumber || order?.customerOrderNumber || order?.orderNumber || "—";
 
   const orderDate = order?.date ? shortDate(order.date) : "—";
   const dueDate = order?.date ? shortDate(addDays(order.date, 7)) : "—";
@@ -82,21 +83,7 @@ export function InvoicePrint({ order }) {
           <div className="brand-area">
 
             <div className="brand-row">
-              <div className="brand-mark">
-                <span />
-                <span />
-                <span />
-              </div>
-
-              <div>
-                <div className="brand-name">
-                  Zoe<span>Lit</span>
-                </div>
-
-                <div className="brand-subtitle">
-                  COMMERCE
-                </div>
-              </div>
+              <BrandLogo variant="light" className="invoice-logo" />
             </div>
 
             <div className="company-list">
@@ -537,6 +524,12 @@ export function InvoicePrint({ order }) {
           display: flex;
           align-items: center;
           gap: 12px;
+        }
+
+        .invoice-logo {
+          display: block;
+          width: 220px;
+          height: auto;
         }
 
         .brand-mark {

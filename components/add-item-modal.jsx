@@ -41,13 +41,17 @@ export function AddItemModal({ open, onClose, type, categories = [], onSubmit, s
 
   useEffect(() => {
     if (open) {
-      setImagePreview("");
-      setImageUrlInput("");
-      setForm({
-        name: "", sku: "", description: "", category: "", price: "", stock: "",
-        status: "active",
-      });
+      const timeout = window.setTimeout(() => {
+        setImagePreview("");
+        setImageUrlInput("");
+        setForm({
+          name: "", sku: "", description: "", category: "", price: "", stock: "",
+          status: "active",
+        });
+      }, 0);
+      return () => window.clearTimeout(timeout);
     }
+    return undefined;
   }, [open]);
 
   async function handleFileUpload(e) {
@@ -97,7 +101,8 @@ export function AddItemModal({ open, onClose, type, categories = [], onSubmit, s
       }
       await onSubmit({
         ingramPartNumber: form.sku.trim(),
-        description: form.name.trim(),
+        name: form.name.trim(),
+        description: form.description.trim(),
         category: form.category.trim(),
         price: Number(form.price) || 0,
         stock: Number(form.stock) || 0,
@@ -121,14 +126,14 @@ export function AddItemModal({ open, onClose, type, categories = [], onSubmit, s
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative z-10 flex w-full max-w-lg flex-col rounded-lg border border-outline-variant bg-surface-container-lowest shadow-lg overflow-hidden">
+      <div className="fixed inset-0 bg-inverse-surface/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 flex w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-outline-variant bg-surface shadow-2xl">
 
-        <div className="flex items-center justify-between border-b border-outline-variant px-6 py-4">
-          <h2 className="font-heading text-headline-sm font-semibold text-on-surface">
+        <div className="flex items-center justify-between border-b border-outline-variant px-5 py-4">
+          <h2 className="font-heading text-lg font-semibold text-on-surface">
             {type === "category" ? "Add New Category" : "Add New Product"}
           </h2>
-          <button onClick={onClose} className="rounded-sm p-1.5 text-on-surface-variant hover:bg-surface-container hover:text-on-surface">
+          <button onClick={onClose} className="icon-btn size-8">
             <X className="size-5" />
           </button>
         </div>
@@ -142,7 +147,7 @@ export function AddItemModal({ open, onClose, type, categories = [], onSubmit, s
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="Enter category name"
-                  className="h-12"
+                  className="h-10"
                 />
               </div>
               <div>
@@ -151,7 +156,7 @@ export function AddItemModal({ open, onClose, type, categories = [], onSubmit, s
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   placeholder="Category description (optional)"
-                  className="h-12"
+                  className="h-10"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -163,7 +168,7 @@ export function AddItemModal({ open, onClose, type, categories = [], onSubmit, s
                     placeholder="0.00"
                     type="number"
                     step="0.01"
-                    className="h-12"
+                    className="h-10"
                   />
                 </div>
                 <div>
@@ -173,7 +178,7 @@ export function AddItemModal({ open, onClose, type, categories = [], onSubmit, s
                     onChange={(e) => setForm({ ...form, stock: e.target.value })}
                     placeholder="0"
                     type="number"
-                    className="h-12"
+                    className="h-10"
                   />
                 </div>
               </div>
@@ -184,7 +189,7 @@ export function AddItemModal({ open, onClose, type, categories = [], onSubmit, s
                     <select
                       value={form.status}
                       onChange={(e) => setForm({ ...form, status: e.target.value })}
-                      className={`h-12 w-full appearance-none rounded-sm border px-3 pr-8 text-label-md font-semibold transition-colors ${
+                      className={`h-10 w-full appearance-none rounded-xl border px-3 pr-8 text-sm font-medium transition-colors ${
                         form.status === "active"
                           ? "border-emerald-300 bg-emerald-50 text-emerald-700"
                           : "border-rose-300 bg-rose-50 text-rose-700"
@@ -203,12 +208,12 @@ export function AddItemModal({ open, onClose, type, categories = [], onSubmit, s
                       value={imageUrlInput}
                       onChange={(e) => { setImageUrlInput(e.target.value); setImagePreview(""); }}
                       placeholder="URL or upload"
-                      className="h-12 flex-1"
+                      className="h-10 flex-1"
                     />
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex h-12 shrink-0 items-center gap-1.5 rounded-sm border border-outline-variant bg-surface-container-lowest px-3 text-label-md font-semibold text-on-surface-variant hover:bg-surface-container"
+                      className="icon-btn h-10 w-10 shrink-0"
                     >
                       <Upload className="size-4" />
                     </button>
@@ -237,7 +242,7 @@ export function AddItemModal({ open, onClose, type, categories = [], onSubmit, s
                     value={form.sku}
                     onChange={(e) => setForm({ ...form, sku: e.target.value })}
                     placeholder="Part Number"
-                    className="h-12"
+                    className="h-10"
                   />
                 </div>
                 <div>
@@ -246,7 +251,7 @@ export function AddItemModal({ open, onClose, type, categories = [], onSubmit, s
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     placeholder="Product name"
-                    className="h-12"
+                    className="h-10"
                   />
                 </div>
               </div>
@@ -257,7 +262,7 @@ export function AddItemModal({ open, onClose, type, categories = [], onSubmit, s
                     <select
                       value={form.category}
                       onChange={(e) => setForm({ ...form, category: e.target.value })}
-                      className="h-12 w-full appearance-none rounded-sm border border-outline-variant bg-surface-container-lowest px-3 pr-8 text-label-md font-semibold text-on-surface"
+                      className="h-10 w-full appearance-none rounded-xl border border-outline-variant bg-surface px-3 pr-8 text-sm font-medium text-on-surface"
                     >
                       <option value="">Select category</option>
                       {categories.map((cat) => (
@@ -273,7 +278,7 @@ export function AddItemModal({ open, onClose, type, categories = [], onSubmit, s
                     <select
                       value={form.status}
                       onChange={(e) => setForm({ ...form, status: e.target.value })}
-                      className={`h-12 w-full appearance-none rounded-sm border px-3 pr-8 text-label-md font-semibold transition-colors ${
+                      className={`h-10 w-full appearance-none rounded-xl border px-3 pr-8 text-sm font-medium transition-colors ${
                         form.status === "active"
                           ? "border-emerald-300 bg-emerald-50 text-emerald-700"
                           : "border-rose-300 bg-rose-50 text-rose-700"
@@ -295,7 +300,7 @@ export function AddItemModal({ open, onClose, type, categories = [], onSubmit, s
                     placeholder="0.00"
                     type="number"
                     step="0.01"
-                    className="h-12"
+                    className="h-10"
                   />
                 </div>
                 <div>
@@ -305,7 +310,7 @@ export function AddItemModal({ open, onClose, type, categories = [], onSubmit, s
                     onChange={(e) => setForm({ ...form, stock: e.target.value })}
                     placeholder="0"
                     type="number"
-                    className="h-12"
+                    className="h-10"
                   />
                 </div>
               </div>
@@ -316,12 +321,12 @@ export function AddItemModal({ open, onClose, type, categories = [], onSubmit, s
                     value={imageUrlInput}
                     onChange={(e) => { setImageUrlInput(e.target.value); setImagePreview(""); }}
                     placeholder="URL or upload"
-                    className="h-12 flex-1"
+                    className="h-10 flex-1"
                   />
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex h-12 shrink-0 items-center gap-1.5 rounded-sm border border-outline-variant bg-surface-container-lowest px-3 text-label-md font-semibold text-on-surface-variant hover:bg-surface-container"
+                    className="icon-btn h-10 w-10 shrink-0"
                   >
                     <Upload className="size-4" />
                   </button>

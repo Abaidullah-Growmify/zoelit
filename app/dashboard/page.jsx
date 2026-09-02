@@ -76,7 +76,7 @@ export default function DashboardPage() {
 
       <div className="mt-6">
         <div className="mb-4 flex justify-end">
-          <Button asChild href="/products" className="h-12 w-full shrink-0 sm:w-auto">
+          <Button asChild href="/products">
             <ShoppingBag className="size-4" /> Continue Shopping
           </Button>
         </div>
@@ -101,14 +101,14 @@ export default function DashboardPage() {
 
 function SpendingChart({ data }) {
   return (
-      <Card className="mt-6 overflow-hidden rounded-lg p-6 shadow-primary-elevated">
+      <Card className="mt-6 overflow-hidden p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="font-heading text-headline-md font-semibold tracking-[-0.03em] text-on-surface">Spending over last 6 months</h2>
-          <p className="mt-1 text-body-md font-normal text-on-surface-variant">Monthly order totals from your account data.</p>
+          <h2 className="font-heading text-lg font-semibold tracking-tight text-on-surface">Spending over last 6 months</h2>
+          <p className="mt-1 text-sm text-on-surface-variant">Monthly order totals from your account data.</p>
         </div>
       </div>
-      <div className="mt-6 h-64 rounded-lg bg-gradient-to-b from-primary-fixed/60 to-surface-container-low p-3 ring-1 ring-outline-variant">
+      <div className="mt-6 h-64 rounded-2xl bg-surface-container-low/70 p-3 ring-1 ring-outline-variant/70">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ left: 0, right: 10, top: 12, bottom: 0 }}>
             <defs>
