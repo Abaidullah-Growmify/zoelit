@@ -1,7 +1,7 @@
 import Image from "next/image";
 
-const LIGHT_LOGO = "/Zoelit logo light mode.png";
-const DARK_LOGO = "/Zoelit logo dark mode.png";
+const LIGHT_LOGO = "https://res.cloudinary.com/erspxhnu/image/upload/v1788352762/Zoelit_logo_light_mode.jpg";
+const DARK_LOGO = "https://res.cloudinary.com/erspxhnu/image/upload/v1788352855/Zoelit_logo_dark_mode.png";
 
 export function BrandLogo({ alt = "ZoeLit", className = "", priority = false, variant = "auto" }) {
   const props = {
