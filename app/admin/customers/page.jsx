@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronDown, Eye, EyeOff, Loader2, Plus, Search, UserPlus, X } from "lucide-react";
+import { ChevronDown, Edit3, Eye, EyeOff, Loader2, Plus, Search, UserPlus, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -9,7 +9,7 @@ import { z } from "zod";
 import { AdminTable } from "@/components/admin-table";
 import { Button, Card, ErrorText, Input, Label } from "@/components/ui";
 import { AdminCustomersSkeleton } from "@/components/skeletons";
-import { createAdminCustomer, getAdminCustomers, updateAdminCustomerStatus } from "@/lib/api";
+import { createAdminCustomer, getAdminCustomers, updateAdminCustomer, updateAdminCustomerStatus } from "@/lib/api";
 import { money, shortDate } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
 
@@ -23,6 +23,19 @@ const customerSchema = z.object({
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, { path: ["confirmPassword"], message: "Passwords do not match" });
 
+const editCustomerSchema = z.object({
+  name: z.string().min(2, "Full name is required"),
+  email: z.string().email("Enter a valid email address"),
+  phone: z.string().trim().optional(),
+  password: z.string().optional(),
+  confirmPassword: z.string().optional(),
+}).superRefine((data, context) => {
+  if (data.password && data.password.length < 8) context.addIssue({ code: "custom", path: ["password"], message: "Use at least 8 characters" });
+  if (data.password && !/[A-Z]/.test(data.password)) context.addIssue({ code: "custom", path: ["password"], message: "Add one uppercase letter" });
+  if (data.password && !/[0-9]/.test(data.password)) context.addIssue({ code: "custom", path: ["password"], message: "Add one number" });
+  if (data.password !== data.confirmPassword) context.addIssue({ code: "custom", path: ["confirmPassword"], message: "Passwords do not match" });
+});
+
 export default function AdminCustomersPage() {
   const token = useAdminAuthStore((state) => state.token);
   const [rows, setRows] = useState(null);
@@ -33,6 +46,7 @@ export default function AdminCustomersPage() {
   const [debouncedKeyword, setDebouncedKeyword] = useState("");
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
+  const [editCustomer, setEditCustomer] = useState(null);
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
@@ -130,8 +144,9 @@ export default function AdminCustomersPage() {
             )}
             hideSearch
             disableInitialSort
-            rowActions={(customer) => [
+           rowActions={(customer) => [
               { label: `View ${customer.name}`, href: `/admin/customers/${customer.id}`, icon: Eye },
+              { label: `Edit ${customer.name}`, onClick: () => setEditCustomer(customer), icon: Edit3 },
             ]}
           />
           <NewCustomerModal
@@ -146,8 +161,77 @@ export default function AdminCustomersPage() {
               setReloadKey((value) => value + 1);
             }}
           />
+          <EditCustomerModal
+            customer={editCustomer}
+            token={token}
+            onClose={() => setEditCustomer(null)}
+            onUpdated={(updatedCustomer) => {
+              setRows((items) => items.map((item) => item.id === updatedCustomer.id ? { ...item, ...updatedCustomer } : item));
+              setEditCustomer(null);
+            }}
+          />
         </>
       )}
+    </div>
+  );
+}
+
+function EditCustomerModal({ customer, token, onClose, onUpdated }) {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const form = useForm({
+    resolver: zodResolver(editCustomerSchema),
+    defaultValues: { name: "", email: "", phone: "", password: "", confirmPassword: "" },
+  });
+
+  useEffect(() => {
+    if (customer) {
+      form.reset({ name: customer.name || "", email: customer.email || "", phone: customer.phone || "", password: "", confirmPassword: "" });
+      setShowPassword(false);
+      setShowConfirmPassword(false);
+    }
+  }, [customer, form]);
+
+  if (!customer) return null;
+
+  async function onSubmit(values) {
+    try {
+      const result = await updateAdminCustomer(customer.id, {
+        name: values.name,
+        email: values.email,
+        phone: values.phone || undefined,
+        ...(values.password ? { password: values.password, confirmPassword: values.confirmPassword } : {}),
+      }, token);
+      toast.success("Customer updated successfully");
+      onUpdated(result.customer);
+    } catch (updateError) {
+      toast.error(updateError.message || "Could not update customer");
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm">
+      <div className="max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-lg border border-outline-variant bg-surface-container-lowest shadow-2xl dark:bg-surface-container">
+        <div className="flex items-start justify-between gap-4 border-b border-outline-variant/70 p-6">
+          <div className="flex items-start gap-4">
+            <div className="grid size-11 shrink-0 place-items-center rounded-lg bg-primary-container/10 text-primary"><Edit3 className="size-5" /></div>
+            <div><h2 className="font-heading text-headline-md font-semibold tracking-[-0.02em] text-on-surface">Edit customer</h2><p className="mt-1 text-body-md text-on-surface-variant">Update account details and login credentials.</p></div>
+          </div>
+          <button type="button" onClick={onClose} className="grid size-9 shrink-0 place-items-center rounded-sm border border-outline-variant text-on-surface-variant transition hover:bg-surface-container-low hover:text-on-surface" aria-label="Close edit customer modal"><X className="size-4" /></button>
+        </div>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 p-6" noValidate>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field label="Full name" name="name" form={form} autoComplete="name" placeholder="John Doe" />
+            <Field label="Email" name="email" type="email" form={form} autoComplete="email" placeholder="customer@example.com" />
+          </div>
+          <Field label="Phone" name="phone" type="tel" form={form} autoComplete="tel" placeholder="+1 (212) 555-0187" />
+          <div className="grid gap-4 md:grid-cols-2">
+            <PasswordField label="New password" name="password" form={form} autoComplete="new-password" placeholder="Leave blank to keep current" show={showPassword} onToggle={() => setShowPassword((value) => !value)} />
+            <PasswordField label="Confirm new password" name="confirmPassword" form={form} autoComplete="new-password" placeholder="Confirm new password" show={showConfirmPassword} onToggle={() => setShowConfirmPassword((value) => !value)} />
+          </div>
+          <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-end"><Button type="button" variant="outline" onClick={onClose}>Cancel</Button><Button disabled={form.formState.isSubmitting}>{form.formState.isSubmitting ? <><Loader2 className="size-4 animate-spin" /> Saving...</> : "Save changes"}</Button></div>
+        </form>
+      </div>
     </div>
   );
 }
@@ -227,7 +311,7 @@ function NewCustomerModal({ open, token, onClose, onCreated }) {
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 p-6" noValidate>
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Full name" name="name" form={form} autoComplete="name" placeholder="John Doe" />
-            <Field label="Email" name="email" type="email" form={form} autoComplete="email" placeholder="customer@example.com" />
+            <Field label="Email (cannot be changed)" name="email" type="email" form={form} autoComplete="email" placeholder="customer@example.com" disabled />
           </div>
 
           <Field label="Phone" name="phone" type="tel" form={form} autoComplete="tel" placeholder="+1 (212) 555-0187" />
@@ -249,11 +333,11 @@ function NewCustomerModal({ open, token, onClose, onCreated }) {
   );
 }
 
-function Field({ label, name, type = "text", form, autoComplete, placeholder }) {
+function Field({ label, name, type = "text", form, autoComplete, placeholder, disabled = false }) {
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
-      <Input type={type} autoComplete={autoComplete} placeholder={placeholder} aria-invalid={Boolean(form.formState.errors[name])} {...form.register(name)} />
+      <Input type={type} autoComplete={autoComplete} placeholder={placeholder} disabled={disabled} aria-invalid={Boolean(form.formState.errors[name])} {...form.register(name)} />
       <ErrorText>{form.formState.errors[name]?.message}</ErrorText>
     </div>
   );

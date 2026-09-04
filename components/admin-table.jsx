@@ -237,6 +237,22 @@ export function AdminTableActions({ actions, label = "Row actions" }) {
     return <button type="button" onClick={action.onClick} aria-label={action.label} title={action.label} className={className}><Icon className="size-4" /></button>;
   }
 
+  if (actions.length === 2) {
+    return (
+      <div className="inline-flex items-center gap-2">
+        {actions.map((action) => {
+          const Icon = action.icon || Eye;
+          const className = "inline-grid size-8 place-items-center rounded-lg border border-outline-variant bg-surface text-on-surface-variant transition hover:border-primary/40 hover:text-primary";
+          return action.href ? (
+            <Link key={action.label} href={action.href} aria-label={action.label} title={action.label} className={className}><Icon className="size-4" /></Link>
+          ) : (
+            <button key={action.label} type="button" onClick={action.onClick} aria-label={action.label} title={action.label} className={className}><Icon className="size-4" /></button>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <div className="relative inline-block text-left">
       <details className="group">

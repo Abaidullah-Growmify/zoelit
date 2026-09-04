@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Eye, Mail, MapPin, Pencil, Phone, ShoppingBag, Wallet } from "lucide-react";
+import { ArrowLeft, Eye, Mail, MapPin, Phone, ShoppingBag, Wallet } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { AdminStatCard } from "@/components/admin-stat-card";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
@@ -50,8 +50,8 @@ export function AdminCustomerDetail({ id }) {
   }
 
   return (
-    <div>
-      <AdminPageHeader title={customer.name} description="Customer account overview with profile, addresses, spend history, and orders." action={<Button variant="outline" aria-label="Edit customer"><Pencil className="size-4" /></Button>} />
+    <Card className="space-y-6 p-6">
+      <AdminPageHeader title={customer.name} description="Customer account overview with profile, addresses, spend history, and orders." action={<Button asChild href="/admin/customers" variant="outline"><ArrowLeft className="size-4" /> Back to customers</Button>} />
       <div className="mt-8 grid gap-4 md:grid-cols-3">
         <AdminStatCard label="Total spent" value={money(customer.totalSpent || 0)} icon={Wallet} />
         <AdminStatCard label="Orders" value={customer.ordersCount ?? 0} icon={ShoppingBag} />
@@ -103,6 +103,6 @@ export function AdminCustomerDetail({ id }) {
           </AdminTable>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

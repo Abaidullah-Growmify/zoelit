@@ -1089,9 +1089,14 @@ button, a[href], summary, select {
 .customer-table-compact th:nth-child(7),
 .customer-table-compact td:nth-child(7) { width: 12%; }
 .customer-table-compact th:nth-child(8),
-.customer-table-compact td:nth-child(8) { width: 11%; }
+.customer-table-compact td:nth-child(8) { width: 10%; }
 .customer-table-compact th:nth-child(9),
-.customer-table-compact td:nth-child(9) { width: 6%; }
+.customer-table-compact td:nth-child(9) { width: 9%; }
+
+.customer-table-compact td:last-child,
+.customer-table-compact th:last-child {
+  min-width: 6.5rem;
+}
 
 .customer-table-compact td {
   white-space: normal !important;

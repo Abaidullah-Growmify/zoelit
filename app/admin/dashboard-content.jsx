@@ -18,6 +18,7 @@ import { useAdminAuthStore } from "@/store/admin-auth-store";
 export function AdminDashboardContent({ orders, topProducts, lowStock, salesOverview }) {
   const token = useAdminAuthStore((state) => state.token);
   const [tableOrders, setTableOrders] = useState(orders || []);
+  const numberedOrders = tableOrders.map((order, index) => ({ ...order, serial: index + 1 }));
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -41,6 +42,7 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
   }
 
   const orderColumns = [
+    { key: "serial", header: "#", sortable: true, accessor: "serial", cellClassName: "font-semibold tabular-nums text-on-surface" },
     { key: "orderNumber", header: "Order", sortable: true, accessor: "orderNumber", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => `#${order.orderNumber || order.id || order.ingramOrderNumber}` },
     { key: "customer", header: "Customer", sortable: true, accessor: (order) => order.customer?.name || "—", cellClassName: "min-w-0 whitespace-normal font-semibold text-on-surface" },
     { key: "payment", header: "Payment", accessor: "payment", render: (order) => <AdminStatusBadge className="text-label-md font-normal text-on-surface-variant">{order.payment}</AdminStatusBadge> },
@@ -140,7 +142,7 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
         title="Recent orders"
         description="Latest storefront orders with live status."
         columns={orderColumns}
-        data={tableOrders}
+        data={numberedOrders}
         searchPlaceholder="Search order or customer"
         searchKeys={["orderNumber", "id", (order) => order.customer?.name, "status", "payment", "total"]}
         filters={[{ key: "status", label: "Filter recent orders by status", allLabel: "All statuses", options: statuses, value: (order) => order.status }]}

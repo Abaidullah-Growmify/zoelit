@@ -64,8 +64,8 @@ export default function AdminCategoriesPage() {
     getAdminCategories()
       .then((data) => {
         if (!active) return;
-        setRows((data.categories || []).map((category) => ({
-          name: category.name,
+         setRows((data.categories || []).map((category) => ({
+           name: category.name,
           description: category.description || "",
           slug: category.name.toLowerCase().replaceAll(" ", "-"),
           count: category.count,
@@ -293,9 +293,13 @@ export default function AdminCategoriesPage() {
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
   const pageStart = filteredRows.length ? (safePage - 1) * PAGE_SIZE : 0;
-  const pageItems = filteredRows.slice(pageStart, pageStart + PAGE_SIZE);
+   const pageItems = filteredRows.slice(pageStart, pageStart + PAGE_SIZE).map((category, index) => ({
+     ...category,
+     serial: pageStart + index + 1,
+   }));
 
   const categoryColumns = [
+    { key: "serial", header: "#", sortable: true, accessor: "serial", cellClassName: "font-semibold tabular-nums text-on-surface" },
     { key: "name", header: "Name", sortable: true, accessor: "name", cellClassName: "font-semibold text-on-surface", render: (category) => (
       <div className="max-w-72">
         <p title={category.name} className="line-clamp-2 whitespace-normal font-semibold text-on-surface">{category.name}</p>

@@ -76,7 +76,7 @@ export default function AdminProductsPage() {
     getAdminProducts({ page, limit: PAGE_SIZE, keyword: debouncedKeyword || undefined, source: sourceFilter !== "all" ? sourceFilter : undefined }, token)
       .then((data) => {
         if (!active) return;
-        setRows((data.products || []).map(toRow));
+        setRows((data.products || []).map((product, index) => toRow(product, (page - 1) * PAGE_SIZE + index + 1)));
         setTotalPages(data.pagination?.totalPages ?? 1);
         setTotalItems(data.pagination?.total ?? 0);
         setError("");
@@ -188,6 +188,7 @@ export default function AdminProductsPage() {
   }
 
   const columns = [
+    { key: "serial", header: "#", sortable: true, accessor: "serial", cellClassName: "font-semibold tabular-nums text-on-surface" },
     {
       key: "name",
       header: "Product",
@@ -319,9 +320,10 @@ export default function AdminProductsPage() {
   );
 }
 
-function toRow(product) {
+function toRow(product, serial) {
   return {
     id: product.ingramPartNumber,
+    serial,
     name: product.name || product.description || product.ingramPartNumber || "Unnamed product",
     sku: product.ingramPartNumber || "—",
     category: product.category || "Uncategorized",
