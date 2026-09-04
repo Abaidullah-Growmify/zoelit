@@ -13,7 +13,9 @@ function getTokenExpiryMs(token) {
   try {
     const payload = token?.split(".")?.[1];
     if (!payload) return 0;
-    const parsed = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
+    const normalizedPayload = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const paddedPayload = normalizedPayload.padEnd(Math.ceil(normalizedPayload.length / 4) * 4, "=");
+    const parsed = JSON.parse(atob(paddedPayload));
     return Number(parsed?.exp || 0) * 1000;
   } catch {
     return 0;
@@ -95,6 +97,7 @@ export function StoreHydration() {
     if (!hasHydratedAuth || !token) return;
 
     const expiresAt = getTokenExpiryMs(token);
+    if (!expiresAt) return;
     const delay = Math.max(expiresAt - Date.now() - 5000, 0);
 
     customerTimerRef.current = window.setTimeout(async () => {
@@ -133,6 +136,7 @@ export function StoreHydration() {
     if (!hasHydratedAdmin || !adminToken) return;
 
     const expiresAt = getTokenExpiryMs(adminToken);
+    if (!expiresAt) return;
     const delay = Math.max(expiresAt - Date.now() - 5000, 0);
 
     adminTimerRef.current = window.setTimeout(async () => {

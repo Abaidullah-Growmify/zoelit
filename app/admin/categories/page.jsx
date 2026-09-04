@@ -12,10 +12,12 @@ import { AdminCategoriesSkeleton } from "@/components/skeletons";
 import { getAdminCategories, getCategoryProducts, startProductSync, createManualCategory, toggleCategoryActive, getSyncStatus } from "@/lib/api";
 import { FALLBACK_IMAGE } from "@/lib/product-mapper";
 import { money } from "@/lib/utils";
+import { useAdminAuthStore } from "@/store/admin-auth-store";
 
 const PAGE_SIZE = 10;
 
 export default function AdminCategoriesPage() {
+  const token = useAdminAuthStore((state) => state.token);
   const [view, setView] = useState("list");
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [categoryProducts, setCategoryProducts] = useState(null);
@@ -35,8 +37,9 @@ export default function AdminCategoriesPage() {
   const pollRef = useRef(null);
 
   const checkSyncStatus = useCallback(async () => {
+    if (!token) return false;
     try {
-      const data = await getSyncStatus();
+      const data = await getSyncStatus(token);
       const catalog = data.sync?.catalog;
       if (catalog?.status === "processing" || catalog?.status === "started") {
         setSyncing(true);
@@ -49,7 +52,7 @@ export default function AdminCategoriesPage() {
     } catch {
       return false;
     }
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -61,7 +64,8 @@ export default function AdminCategoriesPage() {
 
   const loadCategories = useCallback(() => {
     let active = true;
-    getAdminCategories()
+    if (!token) return () => { active = false; };
+    getAdminCategories(token)
       .then((data) => {
         if (!active) return;
          setRows((data.categories || []).map((category) => ({
@@ -84,7 +88,7 @@ export default function AdminCategoriesPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     const cleanup = loadCategories();
@@ -92,15 +96,16 @@ export default function AdminCategoriesPage() {
   }, [loadCategories]);
 
   const loadCategoryProducts = useCallback(async (categoryName) => {
+    if (!token) return;
     try {
-      const data = await getCategoryProducts(categoryName, { page: 1, limit: 50 });
+      const data = await getCategoryProducts(categoryName, { page: 1, limit: 50 }, token);
       setCategoryProducts(data.products || []);
       setSelectedProducts(new Set());
     } catch (err) {
       toast.error(err.message || "Could not load category products");
       setCategoryProducts([]);
     }
-  }, []);
+  }, [token]);
 
   function handleSearchChange(value) {
     setKeyword(value);
@@ -111,7 +116,7 @@ export default function AdminCategoriesPage() {
     const isRunning = await checkSyncStatus();
     if (isRunning) return;
     try {
-      const data = await getAdminCategories();
+      const data = await getAdminCategories(token);
       setCategories(data.categories || []);
     } catch {
       setCategories([]);
@@ -147,7 +152,7 @@ export default function AdminCategoriesPage() {
     setSyncProgress({ percent: 0, label: "Starting sync..." });
     try {
       for (let i = 0; i < selectedNames.length; i++) {
-        await startProductSync({ category: selectedNames[i] });
+      await startProductSync({ category: selectedNames[i] }, token);
         const percent = Math.round(((i + 1) / selectedNames.length) * 100);
         setSyncProgress({ percent, label: `Syncing ${i + 1}/${selectedNames.length}` });
       }
@@ -168,7 +173,7 @@ export default function AdminCategoriesPage() {
     setSyncing(true);
     setSyncProgress({ percent: 0, label: `Syncing ${selectedCategory.name}...` });
     try {
-      await startProductSync({ category: selectedCategory.name });
+    await startProductSync({ category: selectedCategory.name }, token);
       toast.success(`Sync started for ${selectedCategory.name}`);
       pollSyncProgress();
     } catch (syncError) {
@@ -188,7 +193,7 @@ export default function AdminCategoriesPage() {
     try {
       const skus = [...selectedProducts];
       for (let i = 0; i < skus.length; i++) {
-        await startProductSync({ keyword: skus[i] });
+      await startProductSync({ keyword: skus[i] }, token);
         const percent = Math.round(((i + 1) / skus.length) * 100);
         setSyncProgress({ percent, label: `Syncing ${i + 1}/${skus.length}` });
       }
@@ -226,7 +231,7 @@ export default function AdminCategoriesPage() {
     pollRef.current = setInterval(async () => {
       attempts++;
       try {
-        const data = await getSyncStatus();
+      const data = await getSyncStatus(token);
         const catalog = data.sync?.catalog;
         if (catalog?.status === "completed" || catalog?.status === "failed" || attempts >= maxAttempts) {
           clearInterval(pollRef.current);
@@ -255,7 +260,7 @@ export default function AdminCategoriesPage() {
   async function handleCreateCategory(payload) {
     setSubmitting(true);
     try {
-      await createManualCategory(payload);
+      await createManualCategory(payload, token);
       toast.success("Category created successfully");
       setAddModalOpen(false);
       loadCategories();
@@ -268,7 +273,7 @@ export default function AdminCategoriesPage() {
 
   async function handleToggleCategory(categoryName) {
     try {
-      const data = await toggleCategoryActive(categoryName);
+      const data = await toggleCategoryActive(categoryName, token);
       toast.success(data.message);
       loadCategories();
     } catch (err) {
