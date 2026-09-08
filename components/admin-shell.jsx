@@ -156,7 +156,13 @@ function Sidebar({ collapsed, onNavigate }) {
   return (
     <div className="flex h-full min-h-0 flex-col">
       <Link href="/admin" className={cn("mb-6 flex shrink-0 items-center gap-2.5", collapsed ? "justify-center" : "")} aria-label="Admin">
-        <BrandLogo className={cn("h-9 w-auto", collapsed && "h-9 w-9 object-contain")} />
+        {collapsed ? (
+          <span className="flex size-10 shrink-0 items-center overflow-hidden rounded-md" aria-hidden="true">
+            <BrandLogo className="h-9 w-[202px] max-w-none shrink-0 -translate-x-9" />
+          </span>
+        ) : (
+          <BrandLogo className="h-9 w-auto" />
+        )}
       </Link>
       <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto">
         {items.map((item) => {

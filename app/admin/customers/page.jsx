@@ -222,7 +222,13 @@ function EditCustomerModal({ customer, token, onClose, onUpdated }) {
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 p-6" noValidate>
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Full name" name="name" form={form} autoComplete="name" placeholder="John Doe" />
-            <Field label="Email" name="email" type="email" form={form} autoComplete="email" placeholder="customer@example.com" />
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <input type="hidden" {...form.register("email")} />
+              <div className="flex h-10 w-full items-center rounded-md border border-outline-variant bg-slate-100 px-3.5 text-sm text-slate-500 dark:bg-slate-900 dark:text-slate-400" aria-label="Customer email, read-only">
+                {customer.email}
+              </div>
+            </div>
           </div>
           <Field label="Phone" name="phone" type="tel" form={form} autoComplete="tel" placeholder="+1 (212) 555-0187" />
           <div className="grid gap-4 md:grid-cols-2">
@@ -311,7 +317,7 @@ function NewCustomerModal({ open, token, onClose, onCreated }) {
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 p-6" noValidate>
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Full name" name="name" form={form} autoComplete="name" placeholder="John Doe" />
-            <Field label="Email (cannot be changed)" name="email" type="email" form={form} autoComplete="email" placeholder="customer@example.com" disabled />
+            <Field label="Email" name="email" type="email" form={form} autoComplete="email" placeholder="customer@example.com" />
           </div>
 
           <Field label="Phone" name="phone" type="tel" form={form} autoComplete="tel" placeholder="+1 (212) 555-0187" />
@@ -333,11 +339,11 @@ function NewCustomerModal({ open, token, onClose, onCreated }) {
   );
 }
 
-function Field({ label, name, type = "text", form, autoComplete, placeholder, disabled = false }) {
+function Field({ label, name, type = "text", form, autoComplete, placeholder, disabled = false, readOnly = false }) {
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
-      <Input type={type} autoComplete={autoComplete} placeholder={placeholder} disabled={disabled} aria-invalid={Boolean(form.formState.errors[name])} {...form.register(name)} />
+      <Input type={type} autoComplete={autoComplete} placeholder={placeholder} disabled={disabled} readOnly={readOnly} tabIndex={disabled ? -1 : undefined} className={disabled ? "cursor-not-allowed bg-slate-100 text-slate-500 dark:bg-slate-900 dark:text-slate-400" : undefined} aria-invalid={Boolean(form.formState.errors[name])} {...form.register(name)} />
       <ErrorText>{form.formState.errors[name]?.message}</ErrorText>
     </div>
   );

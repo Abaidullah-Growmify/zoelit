@@ -3,7 +3,8 @@ import { ArrowRight, Mail, PackageCheck, PackageSearch, ShieldCheck, Truck } fro
 import { getFeaturedProducts } from "@/lib/server-catalog";
 import { HomeHero } from "@/components/home-hero";
 import { ProductCard } from "@/components/product-card";
-import { Button, Card, EmptyState, Input, SectionHeader } from "@/components/ui";
+import { Button, Card, EmptyState, SectionHeader } from "@/components/ui";
+import { NewsletterSignup } from "@/components/newsletter-signup";
 
 export default async function HomePage() {
   const products = await getFeaturedProducts();
@@ -41,16 +42,7 @@ export default async function HomePage() {
                     Get fresh arrivals, limited-time deals, and smart shopping notes delivered straight to your inbox.
                   </p>
                 </div>
-                <form className="rounded-lg border border-outline-variant/70 bg-surface-container-low p-3 shadow-sm dark:bg-surface-container" aria-label="Subscribe for latest trends and offers">
-                  <div className="flex flex-col gap-3 sm:flex-row">
-                    <Input type="email" name="email" placeholder="Enter your email" aria-label="Email address" className="h-12 flex-1 bg-surface-container-lowest" />
-                    <Button type="button" className="h-12 px-6 text-white">
-                      Subscribe
-                      <ArrowRight className="size-4" />
-                    </Button>
-                  </div>
-                  <p className="mt-3 text-label-sm font-medium leading-5 text-on-surface-variant">No spam. Just ZoeLit picks, offers, and product updates.</p>
-                </form>
+                <NewsletterSignup />
               </div>
             </Card>
           </section>
