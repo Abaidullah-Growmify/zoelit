@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Minus, PackageCheck, Plus, ShoppingBag } from "lucide-react";
+import { Minus, PackageCheck, Plus, ShoppingBasket } from "lucide-react";
 import { Button } from "@/components/ui";
 import { money } from "@/lib/utils";
 import { useCartStore } from "@/store/cart-store";
@@ -74,7 +74,7 @@ export function ProductBuy({ product }) {
         </div>
 
         <Button onClick={handleAdd} disabled={outOfStock || remainingStock <= 0} className="h-12 flex-1 text-label-md text-white">
-          <ShoppingBag className="size-4" />
+          <ShoppingBasket className="size-4" />
           {outOfStock || remainingStock <= 0 ? "Limit reached" : justAdded ? "Added to cart" : "Add to cart"}
         </Button>
       </div>

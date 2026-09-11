@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRef, useSyncExternalStore } from "react";
-import { Heart, ShoppingBag } from "lucide-react";
+import { Heart, ShoppingBasket } from "lucide-react";
 import { cn, money } from "@/lib/utils";
 import { useCartStore } from "@/store/cart-store";
 import { useAuthStore } from "@/store/auth-store";
@@ -166,9 +166,9 @@ export function ProductCard({
       </button>
 
       <div className="p-4 pb-0">
-        <div className="relative flex aspect-[4/3] items-center justify-center rounded-xl bg-[#F8F9FB] p-5">
+        <div className="relative flex h-[185px] items-center justify-center rounded-xl bg-[#F4F4F5] p-5 dark:bg-slate-800 sm:h-[185px]">
           {category ? (
-            <span className="absolute left-4 top-4 inline-block max-w-[60%] truncate rounded-full bg-[rgba(37,99,235,0.08)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.02em] text-[#2563EB]">
+              <span className="absolute left-4 top-4 inline-block max-w-[60%] truncate rounded-full bg-surface-container-low px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.02em] text-on-surface-variant">
               {category}
             </span>
           ) : null}
@@ -180,7 +180,7 @@ export function ProductCard({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">{titleNode}</div>
           <div className="shrink-0 text-right">
-            <span className={cn("block whitespace-nowrap font-heading text-body-lg font-extrabold tabular-nums tracking-[-0.02em]", isPriceOnRequest ? "text-on-surface-variant" : "text-[#2563EB]")}>{isPriceOnRequest ? "On request" : money(Number(price) || 0)}</span>
+            <span className={cn("block whitespace-nowrap font-heading text-body-lg font-extrabold tabular-nums tracking-[-0.02em]", isPriceOnRequest ? "text-on-surface-variant" : "text-on-surface")}>{isPriceOnRequest ? "On request" : money(Number(price) || 0)}</span>
           </div>
         </div>
 
@@ -195,12 +195,12 @@ export function ProductCard({
 
         <div className="mt-auto pt-5">
           <Button
-            className="h-10 w-full rounded-md bg-[#2563EB] text-white hover:bg-[#1d4ed8]"
+             className="h-10 w-full rounded-md bg-[#2563EB] text-white hover:bg-[#1d4ed8]"
             onClick={handleAddToCart}
             aria-label={`Add ${title} to cart`}
             disabled={remainingStock <= 0}
           >
-            <ShoppingBag className="size-4 transition-transform duration-200 ease-out group-hover/cta:translate-x-0.5 motion-reduce:transition-none" />
+              <ShoppingBasket className="size-4 transition-transform duration-200 ease-out group-hover/cta:translate-x-0.5 motion-reduce:transition-none" />
             Add to cart
           </Button>
         </div>
