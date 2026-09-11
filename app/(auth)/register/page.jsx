@@ -4,7 +4,7 @@ import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Loader2, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -24,7 +24,12 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
   const registerUser = useAuthStore((state) => state.register);
+  const user = useAuthStore((state) => state.user);
+  const ready = useAuthStore((state) => state.hasHydrated);
   const form = useForm({ resolver: zodResolver(schema), defaultValues: { name: "", email: "", password: "", confirmPassword: "", terms: false } });
+  useEffect(() => {
+    if (ready && user) router.replace("/dashboard");
+  }, [ready, user, router]);
   async function onSubmit(values) {
     try {
       await registerUser({ name: values.name, email: values.email, password: values.password, confirmPassword: values.confirmPassword, terms: values.terms });

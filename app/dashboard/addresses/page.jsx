@@ -5,7 +5,7 @@ import { Home, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import * as api from "@/lib/api";
 import { useAuthStore } from "@/store/auth-store";
-import { AdminTableActions, AdminTableCell, AdminTableRow } from "@/components/admin-table";
+import { AdminTableCell, AdminTableRow } from "@/components/admin-table";
 import { Badge, Button, Card, Input, Label } from "@/components/ui";
 import { AddressSkeleton } from "@/components/skeletons";
 import { cn } from "@/lib/utils";
@@ -158,17 +158,11 @@ export default function AddressesPage() {
                          {address.default ? <Badge tone="slate">Default</Badge> : <span className="text-meta font-medium text-on-surface-variant">Saved</span>}
                       </AdminTableCell>
                       <AdminTableCell className="text-center">
-                        <AdminTableActions
-                          label={`Actions for ${address.label}`}
-                          actions={address.default ? [
-                            { label: "Edit", onClick: () => openEdit(address), icon: Pencil },
-                            { label: "Delete", onClick: () => setConfirming(address), icon: Trash2, tone: "danger" },
-                          ] : [
-                            { label: "Edit", onClick: () => openEdit(address), icon: Pencil },
-                            { label: "Set default", onClick: () => setDefault(address._id), icon: Home },
-                            { label: "Delete", onClick: () => setConfirming(address), icon: Trash2, tone: "danger" },
-                          ]}
-                        />
+                        <div className="flex flex-wrap items-center justify-center gap-2">
+                          <button type="button" onClick={() => openEdit(address)} className="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant px-3 py-2 text-xs font-semibold text-on-surface-variant transition hover:border-on-surface hover:text-on-surface"><Pencil className="size-3.5" />Edit</button>
+                          {!address.default ? <button type="button" onClick={() => setDefault(address._id)} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white transition hover:bg-primary-container"><Home className="size-3.5" />Set default</button> : <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700"><Home className="size-3.5" />Default</span>}
+                          <button type="button" onClick={() => setConfirming(address)} className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50"><Trash2 className="size-3.5" />Delete</button>
+                        </div>
                       </AdminTableCell>
                     </AdminTableRow>
                   ))}

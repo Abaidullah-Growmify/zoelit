@@ -5,6 +5,7 @@ import { HomeHero } from "@/components/home-hero";
 import { ProductCard } from "@/components/product-card";
 import { Button, Card, EmptyState, SectionHeader } from "@/components/ui";
 import { NewsletterSignup } from "@/components/newsletter-signup";
+import { HomeCategories } from "@/components/home-categories";
 
 export default async function HomePage() {
   const products = await getFeaturedProducts();
@@ -20,6 +21,10 @@ export default async function HomePage() {
       {products.length ? (
         <>
           <HomeHero products={heroProducts} />
+          <section className="container-page pb-4 pt-8 sm:pt-10">
+            <SectionHeader title="Shop by Category" action={<Link href="/products" className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">View all<ArrowRight className="size-4" /></Link>} className="mb-6" />
+            <HomeCategories />
+          </section>
           {productSections.map((section, index) => (
             <section key={section.eyebrow} className={`container-page ${index === 0 ? "section-fade-up py-16" : "pb-16"}`}>
               <SectionHeader eyebrow={section.eyebrow} title={section.title} action={<Link href="/products" aria-label="View all products" className="inline-flex h-9 items-center gap-2 rounded-sm px-3 text-label-md font-semibold text-primary transition duration-200 ease-out hover:bg-surface-container-low dark:hover:bg-surface-container-low">View all<ArrowRight className="size-4" /></Link>} className="mb-8" />
