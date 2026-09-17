@@ -19,7 +19,7 @@ export function CartItemCard({ item, updateQuantity, removeItem }) {
   };
 
   const maxStock = Math.max(Number(displayProduct.stock ?? item.stock ?? 0) || 0, 1);
-  const price = Number(item.price ?? displayProduct.price ?? 0) || 0;
+  const price = Number(displayProduct?.price ?? item.price ?? 0) || 0;
   const quantity = Math.floor(Number(item.quantity)) || 0;
 
   return (

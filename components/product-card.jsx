@@ -179,8 +179,8 @@ export function ProductCard({
       <div className="flex flex-1 flex-col p-4 pt-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">{titleNode}</div>
-          <div className="shrink-0 text-right">
-            <span className={cn("block whitespace-nowrap font-heading text-body-lg font-extrabold tabular-nums tracking-[-0.02em]", isPriceOnRequest ? "text-on-surface-variant" : "text-on-surface")}>{isPriceOnRequest ? "On request" : money(Number(price) || 0)}</span>
+           <div className="shrink-0 text-right">
+             <span className={cn("block whitespace-nowrap font-heading text-body-lg font-extrabold tabular-nums tracking-[-0.02em]", isPriceOnRequest ? "text-on-surface-variant" : "text-on-surface")}>{isPriceOnRequest ? "On request" : money(Number(price) || 0)}</span>
           </div>
         </div>
 

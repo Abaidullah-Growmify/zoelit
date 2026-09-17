@@ -21,7 +21,7 @@ export function useCartStore(selector) {
     const getProduct = (id) => products.find((product) => product.id === id) || null;
     const subtotal = () =>
       cart.items.reduce((sum, item) => {
-        const price = Number(item.price ?? getProduct(item.productId)?.price ?? 0) || 0;
+        const price = Number(getProduct(item.productId)?.price ?? item.price ?? 0) || 0;
         return sum + price * (Math.floor(Number(item.quantity)) || 1);
       }, 0);
 

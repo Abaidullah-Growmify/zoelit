@@ -171,7 +171,7 @@ export default function CheckoutPage() {
   }, [fetchProducts]);
 
   const priceOf = (item) =>
-    Number(validatedPrices[item.productId] ?? item.price ?? item.product.price ?? 0) || 0;
+    Number(validatedPrices[item.productId] ?? item.product.price ?? item.price ?? 0) || 0;
 
   const cartSubtotal = cartItems.reduce((sum, item) => sum + priceOf(item) * (item.quantity || 1), 0);
   const shipping = cartSubtotal > 150 || cartSubtotal === 0 ? 0 : 12;

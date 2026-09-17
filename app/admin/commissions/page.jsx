@@ -8,7 +8,7 @@ import { AdminTable } from "@/components/admin-table";
 import { getAdminCategories, getAdminProduct, getCategoryProducts, getCommissionRules, createCommissionRule, updateCommissionRule, deleteCommissionRule } from "@/lib/api";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
 
-const empty = { type: "product", productId: "", category: "", minOrderAmount: "", maxOrderAmount: "", valueType: "percentage", value: "", name: "", isActive: true };
+const empty = { type: "product", productId: "", category: "", valueType: "percentage", value: "", name: "", isActive: true };
 
 export default function AdminCommissionsPage() {
   const token = useAdminAuthStore((state) => state.token);
@@ -66,7 +66,7 @@ export default function AdminCommissionsPage() {
   }
   async function edit(rule) {
     setEditingId(rule._id);
-    setForm({ ...empty, ...rule, minOrderAmount: rule.minOrderAmount ?? "", maxOrderAmount: rule.maxOrderAmount ?? "", valueType: rule.valueType || "percentage", value: rule.value ?? rule.rate ?? "" });
+    setForm({ ...empty, ...rule, valueType: rule.valueType || "percentage", value: rule.value ?? rule.rate ?? "" });
     setProductCategory(rule.type === "category" ? "" : rule.category || "");
     setProductSearch(rule.type === "product" ? rule.productId || "" : "");
     setRuleView("all");
@@ -104,7 +104,7 @@ export default function AdminCommissionsPage() {
   async function save(event) {
     event.preventDefault(); setSaving(true);
     try {
-      const payload = { ...form, value: Number(form.value), rate: form.valueType === "percentage" ? Number(form.value) : 0, minOrderAmount: Number(form.minOrderAmount || 0), maxOrderAmount: form.maxOrderAmount === "" ? null : Number(form.maxOrderAmount) };
+      const payload = { ...form, value: Number(form.value), rate: form.valueType === "percentage" ? Number(form.value) : 0 };
       if (editingId) await updateCommissionRule(editingId, payload, token); else await createCommissionRule(payload, token);
       toast.success(editingId ? "Commission updated" : "Commission created"); const nextView = form.isActive ? "active" : "all"; reset(); setRuleView(nextView); setFormOpen(false); await load();
     } catch (error) { toast.error(error.message || "Could not save commission"); }
@@ -138,17 +138,16 @@ export default function AdminCommissionsPage() {
      <Card className="overflow-visible p-0">
       <div className="border-b border-outline-variant bg-surface-container-low/40 px-5 py-6 sm:px-7">
         <h1 className="font-heading text-2xl font-semibold text-on-surface">Commissions</h1>
-        <p className="mt-1 max-w-3xl text-sm leading-6 text-on-surface-variant">Create and manage product, category, global, and order-value commission rules.</p>
+        <p className="mt-1 max-w-3xl text-sm leading-6 text-on-surface-variant">Create and manage product, category, and general commission rules.</p>
         <div className="mt-5 flex gap-1 border-b border-outline-variant/80"><button type="button" onClick={() => { setRuleView("active"); setEditingId(""); setFormOpen(false); }} className={`border-b-2 px-4 py-2.5 text-sm font-semibold ${ruleView === "active" ? "border-primary text-primary" : "border-transparent text-on-surface-variant"}`}>Active commissions</button><button type="button" onClick={() => { setRuleView("all"); setEditingId(""); reset(); setFormOpen(false); }} className={`border-b-2 px-4 py-2.5 text-sm font-semibold ${ruleView === "all" ? "border-primary text-primary" : "border-transparent text-on-surface-variant"}`}>All commissions</button></div>
       </div>
         {formOpen ? <div className="fixed inset-0 z-40 grid place-items-center overflow-y-auto bg-inverse-surface/50 px-4 py-6 backdrop-blur-sm"><div className="w-full max-w-2xl rounded-2xl border border-outline-variant bg-surface shadow-2xl"><div className="p-5 sm:p-6">
         <div className="mb-5 flex items-center justify-between gap-4"><h2 className="font-heading text-xl font-semibold text-on-surface">{editingId ? "Edit commission rule" : "Add commission rule"}</h2><button type="button" onClick={() => { reset(); setFormOpen(false); }} className="grid size-9 shrink-0 place-items-center rounded-xl border border-outline-variant text-on-surface-variant transition hover:bg-surface-container-low hover:text-on-surface" aria-label="Close commission form"><X className="size-5" /></button></div>
         <form onSubmit={save} className="space-y-4">
           <div className="rounded-xl border border-outline-variant bg-surface-container-low/20 p-4"><div className="grid gap-4 sm:grid-cols-2">
-            <label className="text-sm font-medium text-on-surface">Rule type<select value={form.type} onChange={(e) => change("type", e.target.value)} className="mt-2 h-11 w-full rounded-xl border border-outline-variant bg-surface px-3 text-sm"><option value="product">Specific product</option><option value="category">Category</option><option value="global">All products</option><option value="order">General order range</option></select></label>
+            <label className="text-sm font-medium text-on-surface">Rule type<select value={form.type} onChange={(e) => change("type", e.target.value)} className="mt-2 h-11 w-full rounded-xl border border-outline-variant bg-surface px-3 text-sm"><option value="product">Specific product</option><option value="category">Category</option><option value="global">General / all products</option></select></label>
             {form.type === "category" ? <label className="text-sm font-medium text-on-surface">Category<select required value={form.category} onChange={(e) => change("category", e.target.value)} className="mt-2 h-11 w-full rounded-xl border border-outline-variant bg-surface px-3 text-sm"><option value="">Choose category</option>{categories.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}</select></label> : null}
             {form.type === "product" ? <div className="sm:col-span-2"><ProductPicker categories={categories} category={productCategory} onCategoryChange={(value) => { setProductCategory(value); setProductSearch(""); setProductOpen(false); setForm((current) => ({ ...current, productId: "" })); }} value={productSearch} onChange={(value) => { setProductSearch(value); setProductOpen(true); setForm((current) => ({ ...current, productId: "" })); }} products={matchingProducts} loading={productsLoading} open={productOpen} onOpenChange={setProductOpen} onOutside={() => { const product = categoryProducts.find((item) => item.ingramPartNumber === form.productId); if (product) setProductSearch(`${product.name || product.description || "Unnamed product"} · ${product.ingramPartNumber}`); }} onSelect={(product) => { setForm((current) => ({ ...current, productId: product.ingramPartNumber })); setProductSearch(`${product.name || product.description || "Unnamed product"} · ${product.ingramPartNumber}`); setProductOpen(false); }} currentSku={editingId && !productCategory ? form.productId : ""} /></div> : null}
-            {form.type === "order" ? <><label className="text-sm font-medium text-on-surface">Minimum order amount<input type="number" min="0" step="0.01" value={form.minOrderAmount} onChange={(e) => change("minOrderAmount", e.target.value)} className="mt-2 h-11 w-full rounded-xl border border-outline-variant bg-surface px-3 text-sm" /></label><label className="text-sm font-medium text-on-surface">Maximum amount<input type="number" min="0" step="0.01" value={form.maxOrderAmount} onChange={(e) => change("maxOrderAmount", e.target.value)} placeholder="No limit" className="mt-2 h-11 w-full rounded-xl border border-outline-variant bg-surface px-3 text-sm" /></label></> : null}
           </div><div className="mt-4 border-t border-outline-variant pt-4"><div className="grid gap-4 sm:grid-cols-2">
              <label className="text-sm font-medium text-on-surface">{form.valueType === "fixed" ? "Fixed commission per unit" : "Commission percentage"}<div className="mt-2 flex h-11 overflow-hidden rounded-xl border border-outline-variant bg-surface transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10"><input required type="number" min="0" max={form.valueType === "percentage" ? "100" : undefined} step={form.valueType === "percentage" ? "1" : "0.01"} inputMode="decimal" value={form.value} onChange={(e) => change("value", e.target.value)} placeholder={form.valueType === "percentage" ? "e.g. 5" : "e.g. 10.00 per unit"} className="min-w-0 flex-1 border-0 bg-transparent px-3.5 text-sm outline-none" /><select value={form.valueType} onChange={(e) => change("valueType", e.target.value)} aria-label="Commission value type" className="w-28 shrink-0 border-0 border-l border-outline-variant bg-surface-container-low px-2 text-center text-sm font-semibold text-on-surface outline-none"><option value="percentage">% Percentage</option><option value="fixed">$ Fixed amount</option></select></div></label>
             <label className="text-sm font-medium text-on-surface">Rule name<input value={form.name} onChange={(e) => change("name", e.target.value)} placeholder="Optional internal name" className="mt-2 h-11 w-full rounded-xl border border-outline-variant bg-surface px-3 text-sm" /></label>
@@ -171,15 +170,15 @@ export default function AdminCommissionsPage() {
 function ruleTypeLabel(type) {
   if (type === "product") return "Product";
   if (type === "category") return "Category";
-  if (type === "global") return "All products";
-  return "Order range";
+  if (type === "global") return "General / all products";
+  return "Unknown";
 }
 
 function ruleTargetLabel(rule) {
   if (rule.type === "product") return `Product SKU: ${rule.productId}`;
   if (rule.type === "category") return `Category: ${rule.category}`;
   if (rule.type === "global") return "All products and categories";
-  return `Order total: $${rule.minOrderAmount || 0} to ${rule.maxOrderAmount ?? "unlimited"}`;
+  return "General / all products";
 }
 
 function commissionValueLabel(rule) {
@@ -205,7 +204,7 @@ function ActiveCommissionRules({ rules, onAll, onEdit, onDelete, onStatusChange,
     { key: "status", header: "Status", accessor: (rule) => rule.isActive === false ? "Inactive" : "Active", render: (rule) => <select value={rule.isActive === false ? "inactive" : "active"} disabled={statusSavingId === rule._id} onChange={(event) => onStatusChange(rule, event.target.value === "active")} className="h-8 rounded-lg border border-emerald-200 bg-emerald-50 px-2 text-xs font-semibold text-emerald-700"><option value="active">Active</option><option value="inactive">Inactive</option></select> },
   ];
 
-  return <div className="space-y-4"><Card className="overflow-visible p-0"><div className="border-b border-outline-variant bg-surface-container-low/40 px-5 py-6 sm:px-7"><h1 className="font-heading text-2xl font-semibold text-on-surface">Commissions</h1><p className="mt-1 max-w-3xl text-sm leading-6 text-on-surface-variant">Create and manage product, category, global, and order-value commission rules.</p><div className="mt-5 flex gap-1 border-b border-outline-variant/80"><button type="button" className="border-b-2 border-primary px-4 py-2.5 text-sm font-semibold text-primary">Active commissions</button><button type="button" onClick={onAll} className="border-b-2 border-transparent px-4 py-2.5 text-sm font-semibold text-on-surface-variant transition hover:text-on-surface">All commissions</button></div></div><AdminTable title="Active commission rules" description="Only active rules are applied automatically to new orders." columns={columns} data={rules} searchPlaceholder="Search active rules" searchKeys={["type", "productId", "category", "name", "rate"]} rowActions={(rule) => [{ label: "Edit rule", icon: Pencil, onClick: () => onEdit(rule) }, { label: "Delete rule", icon: Trash2, onClick: () => onDelete(rule._id), tone: "danger" }]} /></Card><DeleteCommissionModal rule={deleteTarget} deleting={deleting} onCancel={onCancelDelete} onConfirm={onConfirmDelete} /></div>;
+  return <div className="space-y-4"><Card className="overflow-visible p-0"><div className="border-b border-outline-variant bg-surface-container-low/40 px-5 py-6 sm:px-7"><h1 className="font-heading text-2xl font-semibold text-on-surface">Commissions</h1><p className="mt-1 max-w-3xl text-sm leading-6 text-on-surface-variant">Create and manage product, category, and general commission rules.</p><div className="mt-5 flex gap-1 border-b border-outline-variant/80"><button type="button" className="border-b-2 border-primary px-4 py-2.5 text-sm font-semibold text-primary">Active commissions</button><button type="button" onClick={onAll} className="border-b-2 border-transparent px-4 py-2.5 text-sm font-semibold text-on-surface-variant transition hover:text-on-surface">All commissions</button></div></div><AdminTable title="Active commission rules" description="Only active rules are applied automatically to new orders." columns={columns} data={rules} searchPlaceholder="Search active rules" searchKeys={["type", "productId", "category", "name", "rate"]} rowActions={(rule) => [{ label: "Edit rule", icon: Pencil, onClick: () => onEdit(rule) }, { label: "Delete rule", icon: Trash2, onClick: () => onDelete(rule._id), tone: "danger" }]} /></Card><DeleteCommissionModal rule={deleteTarget} deleting={deleting} onCancel={onCancelDelete} onConfirm={onConfirmDelete} /></div>;
 }
 
 function StatusCommissionModal({ rule, saving, onCancel, onConfirm }) {
@@ -221,7 +220,7 @@ function StatusCommissionModal({ rule, saving, onCancel, onConfirm }) {
 
 function DeleteCommissionModal({ rule, deleting, onCancel, onConfirm }) {
   if (!rule) return null;
-  const target = rule.type === "product" ? rule.productId : rule.type === "category" ? rule.category : "this order range";
+  const target = rule.type === "product" ? rule.productId : rule.type === "category" ? rule.category : "all products";
   return <div className="fixed inset-0 z-50 grid place-items-center bg-inverse-surface/50 px-4 backdrop-blur-sm" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !deleting) onCancel(); }}>
     <div role="dialog" aria-modal="true" aria-labelledby="delete-commission-title" className="w-full max-w-md overflow-hidden rounded-2xl border border-outline-variant bg-surface shadow-2xl">
       <div className="flex items-start gap-4 border-b border-outline-variant px-5 py-5"><span className="grid size-11 shrink-0 place-items-center rounded-full bg-error-container text-error"><AlertTriangle className="size-5" /></span><div className="min-w-0 flex-1"><h2 id="delete-commission-title" className="font-heading text-lg font-semibold text-on-surface">Delete commission rule?</h2><p className="mt-1 text-sm leading-5 text-on-surface-variant">This rule for <strong className="text-on-surface">{target}</strong> will be permanently removed.</p></div><button type="button" onClick={onCancel} disabled={deleting} className="grid size-8 place-items-center rounded-lg text-on-surface-variant transition hover:bg-surface-container-low hover:text-on-surface" aria-label="Close dialog"><X className="size-4" /></button></div>
