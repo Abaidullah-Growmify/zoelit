@@ -14,11 +14,13 @@ import {
   startPriceSync,
   createManualProduct,
   toggleProductActive,
+  setProductPriority,
   getSyncStatus,
 } from "@/lib/api";
 import { FALLBACK_IMAGE } from "@/lib/product-mapper";
 import { money } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
+import { PriorityToggle } from "@/components/priority-toggle";
 
 const PAGE_SIZE = 10;
 
@@ -187,6 +189,16 @@ export default function AdminProductsPage() {
     }
   }
 
+  async function handlePriorityChange(product, isPriority = true) {
+    try {
+      await setProductPriority(product.sku, isPriority, token);
+      toast.success(isPriority ? "Priority product updated" : "Product priority removed");
+      refreshProducts();
+    } catch (err) {
+      toast.error(err.message || "Could not update product priority");
+    }
+  }
+
   const columns = [
     { key: "serial", header: "#", sortable: true, accessor: "serial", cellClassName: "font-semibold tabular-nums text-on-surface" },
     {
@@ -205,6 +217,7 @@ export default function AdminProductsPage() {
     { key: "category", header: "Category", sortable: true, accessor: "category" },
     { key: "price", header: "Price", sortable: true, accessor: "price", cellClassName: "font-semibold tabular-nums text-on-surface", render: (product) => money(product.price) },
     { key: "stock", header: "Stock", sortable: true, accessor: "stock", cellClassName: "tabular-nums" },
+    { key: "priority", header: "Priority", accessor: "isPriority", render: (product) => <PriorityToggle checked={Boolean(product.isPriority)} onChange={(value) => handlePriorityChange(product, value)} label={`${product.isPriority ? "Remove priority from" : "Prioritize"} ${product.name}`} /> },
     {
       key: "status",
       header: "Status",
@@ -332,6 +345,7 @@ function toRow(product, serial) {
     image: product.imageUrl || FALLBACK_IMAGE,
     isActive: product.isActive,
     source: product.source || "manual",
+    isPriority: Boolean(product.isPriority),
     status: !product.isActive
       ? "Paused"
       : product.imageStatus === "failed"

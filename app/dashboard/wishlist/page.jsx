@@ -6,6 +6,7 @@ import { useWishlistStore } from "@/store/wishlist-store";
 import { useProductStore } from "@/store/product-store";
 import { ProductCard } from "@/components/product-card";
 import { EmptyState } from "@/components/ui";
+import { DashboardSectionBanner } from "@/components/dashboard-section-banner";
 
 export default function WishlistPage() {
   const items = useWishlistStore((state) => state.items);
@@ -35,7 +36,8 @@ export default function WishlistPage() {
 
   return (
     <div>
-      <div>
+      <DashboardSectionBanner eyebrow="Account / Wishlist" title="Wishlist" description="Keep your favorite products saved for later." />
+      <div className="mt-6">
         {products.length ? (
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {products.map((product) => (

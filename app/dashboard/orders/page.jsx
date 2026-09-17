@@ -9,6 +9,7 @@ import { OrderNotesDialog } from "@/components/order-notes-dialog";
 import { money, shortDate } from "@/lib/utils";
 import { OrdersSkeleton } from "@/components/skeletons";
 import { usePolling } from "@/lib/use-polling";
+import { DashboardSectionBanner } from "@/components/dashboard-section-banner";
 
 export default function OrdersPage() {
   const token = useAuthStore((state) => state.token);
@@ -65,7 +66,8 @@ export default function OrdersPage() {
 
   return (
     <div>
-      <div>
+      <DashboardSectionBanner eyebrow="Account / Orders" title="My Orders" description="Review your purchases, payment status, and delivery progress." />
+      <div className="mt-6">
         <AdminTable
           title="Orders"
           description="Search, sort, and open your latest purchases."

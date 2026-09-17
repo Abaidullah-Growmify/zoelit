@@ -4,6 +4,7 @@ import { X, Upload, ChevronDown } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
 import { Button, Input } from "@/components/ui";
+import { getCategoryIconOptions } from "@/lib/category-icons";
 
 function compressImage(file, maxWidth = 400, quality = 0.6) {
   return new Promise((resolve) => {
@@ -35,9 +36,10 @@ export function AddItemModal({ open, onClose, type, categories = [], onSubmit, s
   const [imageUrlInput, setImageUrlInput] = useState("");
   const fileInputRef = useRef(null);
   const [form, setForm] = useState({
-    name: "", sku: "", description: "", category: "", price: "", stock: "",
+    name: "", sku: "", description: "", category: "", icon: "Package", price: "", stock: "",
     status: "active",
   });
+  const categoryIconOptions = getCategoryIconOptions(form.name);
 
   useEffect(() => {
     if (open) {
@@ -45,7 +47,7 @@ export function AddItemModal({ open, onClose, type, categories = [], onSubmit, s
         setImagePreview("");
         setImageUrlInput("");
         setForm({
-          name: "", sku: "", description: "", category: "", price: "", stock: "",
+          name: "", sku: "", description: "", category: "", icon: "Package", price: "", stock: "",
           status: "active",
         });
       }, 0);
@@ -88,7 +90,7 @@ export function AddItemModal({ open, onClose, type, categories = [], onSubmit, s
       await onSubmit({
         name: form.name.trim(),
         description: form.description.trim(),
-        imageUrl,
+        icon: form.icon,
         isActive,
         stock: Number(form.stock) || 0,
       });
@@ -116,7 +118,7 @@ export function AddItemModal({ open, onClose, type, categories = [], onSubmit, s
     setImagePreview("");
     setImageUrlInput("");
     setForm({
-      name: "", sku: "", description: "", category: "", price: "", stock: "",
+      name: "", sku: "", description: "", category: "", icon: "Package", price: "", stock: "",
       status: "active",
     });
   }
@@ -144,7 +146,7 @@ export function AddItemModal({ open, onClose, type, categories = [], onSubmit, s
                 <label className="mb-1.5 block text-label-md font-semibold text-on-surface-variant">Category Name *</label>
                 <Input
                   value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                   onChange={(e) => { const name = e.target.value; const options = getCategoryIconOptions(name); setForm({ ...form, name, icon: options.some((item) => item.value === form.icon) ? form.icon : options[0].value }); }}
                   placeholder="Enter category name"
                   className="h-10"
                 />
@@ -188,36 +190,12 @@ export function AddItemModal({ open, onClose, type, categories = [], onSubmit, s
                   </span>
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-label-md font-semibold text-on-surface-variant">Image</label>
-                  <div className="flex gap-2">
-                    <Input
-                      value={imageUrlInput}
-                      onChange={(e) => { setImageUrlInput(e.target.value); setImagePreview(""); }}
-                      placeholder="URL or upload"
-                      className="h-10 flex-1"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="icon-btn h-10 w-10 shrink-0"
-                    >
-                      <Upload className="size-4" />
-                    </button>
-                    <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
-                  </div>
+                  <label className="mb-1.5 block text-label-md font-semibold text-on-surface-variant">Category icon</label>
+                  <select value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })} className="h-10 w-full rounded-xl border border-outline-variant bg-surface px-3 text-sm font-medium text-on-surface">
+                    {categoryIconOptions.map((icon) => <option key={icon.value} value={icon.value}>{icon.label}</option>)}
+                  </select>
                 </div>
               </div>
-              {imagePreview && (
-                <div className="relative inline-block self-start">
-                  <img src={imagePreview} alt="Preview" className="h-20 w-20 rounded-md object-cover ring-1 ring-outline-variant" />
-                  <button
-                    onClick={handleRemoveImage}
-                    className="absolute -right-2 -top-2 flex size-5 items-center justify-center rounded-full bg-rose-500 text-white shadow-sm hover:bg-rose-600"
-                  >
-                    <X className="size-3" />
-                  </button>
-                </div>
-              )}
             </div>
           ) : (
             <div className="flex flex-col gap-4">

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import * as api from "@/lib/api";
 import { useAuthStore } from "@/store/auth-store";
 import { Button, Card, Input, Label } from "@/components/ui";
+import { DashboardSectionBanner } from "@/components/dashboard-section-banner";
 import { ProfileSkeleton } from "@/components/skeletons";
 
 const EMPTY_ADDRESS = { label: "Home", name: "", line1: "", city: "", region: "", postal: "" };
@@ -83,10 +84,10 @@ export default function ProfilePage() {
   const currentTab = TABS.find((tab) => tab.id === activeTab);
 
   return <section>
-    <div className="mb-7"><h1 className="font-heading text-3xl font-bold tracking-[-0.03em] text-on-surface">Account Settings</h1><p className="mt-2 text-sm text-on-surface-variant">Manage your profile, addresses and security.</p></div>
-    <div className="grid items-start gap-7 lg:grid-cols-[280px_minmax(0,1fr)]">
+    <DashboardSectionBanner eyebrow="Account / Settings" title={currentTab.label} description={activeTab === "profile" ? "Update your personal details." : activeTab === "address" ? "Save multiple delivery locations and choose a default." : "Keep your account secure with a strong password."} />
+    <div className="mt-6 grid items-start gap-7 lg:grid-cols-[280px_minmax(0,1fr)]">
       <aside className="rounded-[14px] border border-outline-variant bg-surface p-2"><nav className="space-y-1">{TABS.map(({ id, label, icon: Icon }) => <button key={id} type="button" onClick={() => setActiveTab(id)} className={`flex w-full items-center gap-3 rounded-[10px] px-4 py-3 text-left text-sm font-medium transition ${activeTab === id ? "bg-primary text-white" : "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface"}`}><Icon className="size-4" />{label}</button>)}</nav></aside>
-      <Card className="p-7 sm:p-9"><h2 className="font-heading text-xl font-bold tracking-tight text-on-surface">{currentTab.label}</h2><p className="mt-1 text-sm text-on-surface-variant">{activeTab === "profile" ? "Update your personal details." : activeTab === "address" ? "Save multiple delivery locations and choose a default." : "Keep your account secure with a strong password."}</p>
+      <Card className="p-7 sm:p-9">
         {activeTab === "profile" ? <form onSubmit={saveProfile} className="mt-7 grid gap-5 sm:grid-cols-2"><Field label="Full name"><Input value={profile.name} onChange={(event) => setProfile({ ...profile, name: event.target.value })} required /></Field><Field label="Phone"><Input value={profile.phone} onChange={(event) => setProfile({ ...profile, phone: event.target.value })} /></Field><Field label="Email address" className="sm:col-span-2"><Input type="email" value={profile.email} onChange={(event) => setProfile({ ...profile, email: event.target.value })} required /></Field><div className="sm:col-span-2"><Button className="w-fit">Save Changes</Button></div></form> : null}
         {activeTab === "address" ? <AddressPanel addresses={addresses} form={addressForm} setForm={setAddressForm} editingId={editingId} setEditingId={setEditingId} onSubmit={saveAddress} onEdit={editAddress} onDefault={makeDefault} onDelete={deleteAddress} /> : null}
         {activeTab === "security" ? <PasswordForm onSubmit={savePassword} /> : null}

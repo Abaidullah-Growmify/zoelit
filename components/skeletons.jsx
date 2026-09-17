@@ -76,19 +76,13 @@ export function CartSkeleton() {
 
 export function ProfileSkeleton() {
   return (
-    <Card className="p-5">
-      <div className="flex items-center gap-4">
-        <Skeleton className="size-24 rounded-sm" />
-        <div className="flex-1">
-          <Skeleton className="h-6 w-48 rounded-sm" />
-          <Skeleton className="mt-3 h-4 w-40 rounded-sm" />
-        </div>
+    <div className="space-y-6">
+      <HeaderPanelSkeleton titleWidth="w-56" descWidth="w-80" />
+      <div className="grid items-start gap-7 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <Card className="p-3"><div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-11 w-full rounded-lg" />)}</div></Card>
+        <Card className="p-7 sm:p-9"><Skeleton className="h-6 w-36 rounded-sm" /><Skeleton className="mt-3 h-4 w-64 rounded-sm" /><div className="mt-7 grid gap-5 sm:grid-cols-2">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-11 w-full rounded-sm" />)}</div><Skeleton className="mt-7 h-10 w-32 rounded-sm" /></Card>
       </div>
-      <div className="mt-8 grid gap-5 md:grid-cols-2">
-        {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-11 w-full rounded-sm" />)}
-      </div>
-      <Skeleton className="mt-8 h-11 w-40 rounded-sm" />
-    </Card>
+    </div>
   );
 }
 
@@ -310,8 +304,9 @@ export function AdminProductEditSkeleton() {
 
 export function WishlistSkeleton() {
   return (
-    <div>
-      <div className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+    <div className="space-y-6">
+      <HeaderPanelSkeleton titleWidth="w-44" descWidth="w-72" />
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <Card key={i} className="overflow-hidden rounded-lg p-0 shadow-sm">
             <Skeleton className="aspect-[4/5] w-full rounded-none" />
@@ -462,10 +457,9 @@ export function DashboardSkeleton() {
 
 export function OrdersSkeleton() {
   return (
-    <div>
-      <div className="pt-4 lg:pt-6">
-        <TableFrameSkeleton rows={4} columns={7} />
-      </div>
+    <div className="space-y-6">
+      <HeaderPanelSkeleton titleWidth="w-44" descWidth="w-80" />
+      <TableFrameSkeleton rows={4} columns={7} />
     </div>
   );
 }

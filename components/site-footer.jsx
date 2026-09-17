@@ -6,9 +6,9 @@ export function SiteFooter() {
   return (
     <footer className="site-footer w-full border-t pt-16 pb-6">
       <div className="mx-auto mb-16 grid max-w-[1280px] grid-cols-1 gap-6 px-5 md:grid-cols-4 md:px-16">
-        <div className="flex flex-col gap-4">
-          <Link href="/" className="flex items-center">
-            <BrandLogo variant="auto" className="h-7 w-auto" />
+        <div className="flex -translate-y-5 flex-col gap-4">
+          <Link href="/" className="flex -translate-x-14 items-center">
+            <BrandLogo variant="dark" className="h-7 w-auto" />
           </Link>
           <p className="max-w-xs text-body-md leading-6">
             Curated network and connectivity solutions for professionals and businesses.

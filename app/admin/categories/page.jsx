@@ -9,10 +9,11 @@ import { Button, Card, FilterTabs, Input, SourceBadge } from "@/components/ui";
 import { SyncModal } from "@/components/sync-modal";
 import { AddItemModal } from "@/components/add-item-modal";
 import { AdminCategoriesSkeleton } from "@/components/skeletons";
-import { getAdminCategories, getCategoryProducts, startProductSync, createManualCategory, toggleCategoryActive, getSyncStatus } from "@/lib/api";
+import { getAdminCategories, getCategoryProducts, startProductSync, createManualCategory, toggleCategoryActive, setCategoryPriority, getSyncStatus } from "@/lib/api";
 import { FALLBACK_IMAGE } from "@/lib/product-mapper";
 import { money } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
+import { PriorityToggle } from "@/components/priority-toggle";
 
 const PAGE_SIZE = 10;
 
@@ -78,6 +79,7 @@ export default function AdminCategoriesPage() {
            lastSyncedAt: category.lastSyncedAt,
            ingramCategoryId: category.ingramCategoryId || "",
            createdAt: category.createdAt,
+           isPriority: Boolean(category.isPriority),
          })));
         setError("");
       })
@@ -282,6 +284,16 @@ export default function AdminCategoriesPage() {
     }
   }
 
+  async function handlePriorityChange(category, isPriority = true) {
+    try {
+      await setCategoryPriority(category.name, isPriority, token);
+      toast.success(isPriority ? "Priority category updated" : "Category priority removed");
+      loadCategories();
+    } catch (err) {
+      toast.error(err.message || "Could not update category priority");
+    }
+  }
+
   const filteredRows = useMemo(() => {
     const query = keyword.trim().toLowerCase();
     let result = rows || [];
@@ -331,6 +343,7 @@ export default function AdminCategoriesPage() {
         </span>
       ),
     },
+    { key: "priority", header: "Priority", accessor: "isPriority", render: (category) => <PriorityToggle checked={Boolean(category.isPriority)} onChange={(value) => handlePriorityChange(category, value)} label={`${category.isPriority ? "Remove priority from" : "Prioritize"} ${category.name}`} /> },
     {
       key: "status",
       header: "Status",
