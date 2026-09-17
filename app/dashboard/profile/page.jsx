@@ -82,7 +82,7 @@ export default function ProfilePage() {
   if (loading) return <ProfileSkeleton />;
   const currentTab = TABS.find((tab) => tab.id === activeTab);
 
-  return <section className="pb-16 pt-2 lg:pb-20">
+  return <section>
     <div className="mb-7"><h1 className="font-heading text-3xl font-bold tracking-[-0.03em] text-on-surface">Account Settings</h1><p className="mt-2 text-sm text-on-surface-variant">Manage your profile, addresses and security.</p></div>
     <div className="grid items-start gap-7 lg:grid-cols-[280px_minmax(0,1fr)]">
       <aside className="rounded-[14px] border border-outline-variant bg-surface p-2"><nav className="space-y-1">{TABS.map(({ id, label, icon: Icon }) => <button key={id} type="button" onClick={() => setActiveTab(id)} className={`flex w-full items-center gap-3 rounded-[10px] px-4 py-3 text-left text-sm font-medium transition ${activeTab === id ? "bg-primary text-white" : "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface"}`}><Icon className="size-4" />{label}</button>)}</nav></aside>

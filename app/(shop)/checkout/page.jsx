@@ -25,6 +25,7 @@ export default function CheckoutPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [checkoutSessionKey, setCheckoutSessionKey] = useState("");
   const [savedAddresses, setSavedAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState("");
   const [isMounted, setIsMounted] = useState(false);
 
   const scopedUserId = String(user?.id || user?._id || "").trim();
@@ -181,6 +182,7 @@ export default function CheckoutPage() {
   const applyAddress = useCallback(
     (address) => {
       if (!address) return;
+      setSelectedAddressId(String(address._id || ""));
       const nameParts = String(address.name || "").split(/\s+/);
       form.setValue("firstName", nameParts.shift() || "");
       form.setValue("lastName", nameParts.join(" ") || "");
@@ -403,7 +405,8 @@ export default function CheckoutPage() {
                   key={address._id}
                   type="button"
                   onClick={() => applyAddress(address)}
-                  className="flex items-start gap-3 rounded-lg border border-outline-variant/80 bg-surface-container-low p-4 text-left transition duration-200 ease-out hover:border-primary/20 hover:bg-surface-container-lowest"
+                  aria-pressed={selectedAddressId === String(address._id)}
+                  className={`flex items-start gap-3 rounded-lg border p-4 text-left transition duration-200 ease-out ${selectedAddressId === String(address._id) ? "border-primary bg-primary/5 ring-2 ring-primary/20" : "border-outline-variant/80 bg-surface-container-low hover:border-primary/20 hover:bg-surface-container-lowest"}`}
                 >
                   <span className="grid size-9 shrink-0 place-items-center rounded-full bg-surface-container-lowest text-on-surface-variant shadow-sm ring-1 ring-outline-variant">
                     {address.label.toLowerCase().includes("home") ? <Home className="size-4" /> : <MapPin className="size-4" />}

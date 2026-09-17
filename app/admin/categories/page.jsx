@@ -75,9 +75,10 @@ export default function AdminCategoriesPage() {
           count: category.count,
           status: category.isActive ? "Active" : "Inactive",
           source: category.source || "manual",
-          lastSyncedAt: category.lastSyncedAt,
-          ingramCategoryId: category.ingramCategoryId || "",
-        })));
+           lastSyncedAt: category.lastSyncedAt,
+           ingramCategoryId: category.ingramCategoryId || "",
+           createdAt: category.createdAt,
+         })));
         setError("");
       })
       .catch((loadError) => {

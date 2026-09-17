@@ -29,7 +29,8 @@ export function DashboardShell({ children }) {
   if (!ready && !timedOut) return <AuthGateSkeleton title="Checking customer access..." description="Preparing your account." />;
   if (!user) return <AuthGateSkeleton title="Checking customer access..." description="Redirecting to sign in." />;
 
-  return <div className="flex min-h-screen flex-col bg-[#f8fafc] dark:bg-slate-950"><SiteHeader /><main className="flex-1">{pathname !== "/dashboard" ? <div className="container-page pt-6 lg:pt-8"><AccountBackButton /></div> : null}<div className="container-page">{children}</div></main><CartDrawer /><SiteFooter /></div>;
+  const hideBackButton = ["/dashboard/orders", "/dashboard/wishlist", "/dashboard/profile"].some((path) => pathname === path || pathname.startsWith(`${path}/`));
+  return <div className="flex min-h-screen flex-col bg-[#f8fafc] dark:bg-slate-950"><SiteHeader /><main className="flex-1">{pathname !== "/dashboard" && !hideBackButton ? <div className="container-page pt-6 lg:pt-8"><AccountBackButton /></div> : null}<div className="container-page py-8 lg:py-10">{children}</div></main><CartDrawer /><SiteFooter /></div>;
 }
 
 export function AccountBackButton() {

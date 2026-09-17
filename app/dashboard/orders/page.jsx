@@ -52,7 +52,7 @@ export default function OrdersPage() {
   usePolling(load, [token], 30000, !loading);
 
   const columns = [
-    { key: "orderNumber", header: "Order Number", sortable: true, accessor: "orderNumber", cellClassName: "font-semibold tabular-nums text-slate-950 dark:text-white", render: (order) => `#${order.customerOrderNumber || order.orderNumber}` },
+    { key: "orderNumber", header: "Order Number", sortable: true, accessor: "orderNumber", cellClassName: "font-bold tabular-nums text-slate-950 dark:text-white", render: (order) => `#${order.customerOrderNumber || order.orderNumber}` },
     { key: "date", header: "Date", sortable: true, accessor: "date", render: (order) => shortDate(order.date) },
     { key: "status", header: "Status", accessor: "status", render: (order) => <AdminStatusBadge>{order.status}</AdminStatusBadge> },
     { key: "payment", header: "Payment", accessor: "payment", render: (order) => <AdminStatusBadge>{order.payment}</AdminStatusBadge> },
@@ -65,7 +65,7 @@ export default function OrdersPage() {
 
   return (
     <div>
-      <div className="pt-4 lg:pt-6">
+      <div>
         <AdminTable
           title="Orders"
           description="Search, sort, and open your latest purchases."
@@ -78,9 +78,13 @@ export default function OrdersPage() {
           pageSize={10}
           page={safePage}
           onPageChange={setPage}
-          onPaginationChange={handlePaginationChange}
-          disableInitialSort
-        />
+           onPaginationChange={handlePaginationChange}
+           disableInitialSort
+           inlineToolbar
+           resetButtonClassName="border-primary bg-primary text-white hover:bg-primary/90"
+           searchWrapperClassName="min-w-[24rem]"
+           filterWrapperClassName="w-40"
+         />
       </div>
     </div>
   );

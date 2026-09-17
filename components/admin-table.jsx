@@ -34,6 +34,11 @@ export function AdminTable({
   className,
   wrapperClassName,
   tableClassName,
+  inlineToolbar = false,
+  resetButtonClassName,
+  searchWrapperClassName,
+  filterClassName,
+  filterWrapperClassName,
 }) {
   if (!data) {
     return (
@@ -50,10 +55,10 @@ export function AdminTable({
     );
   }
 
-  return <AdminDataTable columns={columns} data={data} filters={filters} searchPlaceholder={searchPlaceholder} searchKeys={searchKeys} rowActions={rowActions} title={title} description={description} toolbar={toolbar} action={action} pageSize={pageSize} zebra={zebra} hideSearch={hideSearch} hidePagination={hidePagination} disableInitialSort={disableInitialSort} page={controlledPage} onPageChange={onPageChange} onPaginationChange={onPaginationChange} totalPages={controlledTotalPages} totalItems={controlledTotalItems} className={className} wrapperClassName={wrapperClassName} tableClassName={tableClassName} />;
+  return <AdminDataTable columns={columns} data={data} filters={filters} searchPlaceholder={searchPlaceholder} searchKeys={searchKeys} rowActions={rowActions} title={title} description={description} toolbar={toolbar} action={action} pageSize={pageSize} zebra={zebra} hideSearch={hideSearch} hidePagination={hidePagination} disableInitialSort={disableInitialSort} page={controlledPage} onPageChange={onPageChange} onPaginationChange={onPaginationChange} totalPages={controlledTotalPages} totalItems={controlledTotalItems} className={className} wrapperClassName={wrapperClassName} tableClassName={tableClassName} inlineToolbar={inlineToolbar} resetButtonClassName={resetButtonClassName} searchWrapperClassName={searchWrapperClassName} filterClassName={filterClassName} filterWrapperClassName={filterWrapperClassName} />;
 }
 
-function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys, rowActions, title, description, toolbar, action, pageSize, zebra, hideSearch, hidePagination, disableInitialSort, page: controlledPage, onPageChange, onPaginationChange, totalPages: controlledTotalPages, totalItems: controlledTotalItems, className, wrapperClassName, tableClassName }) {
+function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys, rowActions, title, description, toolbar, action, pageSize, zebra, hideSearch, hidePagination, disableInitialSort, page: controlledPage, onPageChange, onPaginationChange, totalPages: controlledTotalPages, totalItems: controlledTotalItems, className, wrapperClassName, tableClassName, inlineToolbar, resetButtonClassName, searchWrapperClassName, filterClassName, filterWrapperClassName }) {
   const [query, setQuery] = useState("");
   const [filterValues, setFilterValues] = useState(() => Object.fromEntries(filters.map((filter) => [filter.key, filter.allLabel || "All"])));
   const [sort, setSort] = useState(() => {
@@ -138,7 +143,7 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
           {title || description ? (
             <div className="mb-0">
               <div>
-                {title ? <h2 className="font-heading text-lg font-semibold tracking-tight text-on-surface">{title}</h2> : null}
+                 {title ? <h2 className="font-heading text-lg font-bold tracking-tight text-on-surface">{title}</h2> : null}
                 {description ? <p className="mt-1 text-sm text-on-surface-variant">{description}</p> : null}
               </div>
             </div>
@@ -148,21 +153,23 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
       {hasToolbar ? (
         <div className="border-b border-outline-variant/70 p-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
+            <div className={cn("flex min-w-0 flex-1 items-center gap-4", inlineToolbar ? "flex-nowrap overflow-x-auto" : "flex-wrap")}>
               {toolbar}
               {!hideSearch ? (
-                <div className="relative min-w-[16rem] flex-1 shrink-0 sm:max-w-md lg:max-w-xl">
+                <div className={cn("relative min-w-[16rem] flex-1 shrink-0 sm:max-w-md lg:max-w-xl", searchWrapperClassName)}>
                   <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
                   <Input value={query} onChange={(event) => updateQuery(event.target.value)} placeholder={searchPlaceholder} aria-label={searchPlaceholder} className="h-10 pl-10 shadow-sm" />
                 </div>
               ) : null}
               {filters.map((filter) => (
-                <Select key={filter.key} value={filterValues[filter.key]} onChange={(event) => updateFilter(filter.key, event.target.value)} aria-label={filter.label} className="h-10 shrink-0 shadow-sm">
-                  <option>{filter.allLabel || "All"}</option>
-                  {filter.options.map((option) => <option key={option}>{option}</option>)}
-                </Select>
+                <div key={filter.key} className={cn(inlineToolbar && "shrink-0", filterWrapperClassName)}>
+                  <Select value={filterValues[filter.key]} onChange={(event) => updateFilter(filter.key, event.target.value)} aria-label={filter.label} className={cn("h-10 shadow-sm", filterClassName)}>
+                    <option>{filter.allLabel || "All"}</option>
+                    {filter.options.map((option) => <option key={option}>{option}</option>)}
+                  </Select>
+                </div>
               ))}
-              {filters.length > 0 ? <Button variant="secondary" size="sm" onClick={resetControls} className="h-10 shrink-0 shadow-sm">Reset</Button> : null}
+              {filters.length > 0 ? <Button variant="secondary" size="sm" onClick={resetControls} className={cn("h-10 shrink-0 shadow-sm", resetButtonClassName)}>Reset</Button> : null}
             </div>
             {action ? <div className="flex shrink-0 flex-wrap items-center gap-3 lg:justify-end">{action}</div> : null}
           </div>
