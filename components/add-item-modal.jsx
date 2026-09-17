@@ -90,7 +90,6 @@ export function AddItemModal({ open, onClose, type, categories = [], onSubmit, s
         description: form.description.trim(),
         imageUrl,
         isActive,
-        price: Number(form.price) || 0,
         stock: Number(form.stock) || 0,
       });
       resetForm();
@@ -159,28 +158,15 @@ export function AddItemModal({ open, onClose, type, categories = [], onSubmit, s
                   className="h-10"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="mb-1.5 block text-label-md font-semibold text-on-surface-variant">Price ($)</label>
-                  <Input
-                    value={form.price}
-                    onChange={(e) => setForm({ ...form, price: e.target.value })}
-                    placeholder="0.00"
-                    type="number"
-                    step="0.01"
-                    className="h-10"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1.5 block text-label-md font-semibold text-on-surface-variant">Stock</label>
-                  <Input
-                    value={form.stock}
-                    onChange={(e) => setForm({ ...form, stock: e.target.value })}
-                    placeholder="0"
-                    type="number"
-                    className="h-10"
-                  />
-                </div>
+              <div>
+                <label className="mb-1.5 block text-label-md font-semibold text-on-surface-variant">Stock</label>
+                <Input
+                  value={form.stock}
+                  onChange={(e) => setForm({ ...form, stock: e.target.value })}
+                  placeholder="0"
+                  type="number"
+                  className="h-10"
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
