@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Bell, ChevronDown, LayoutDashboard, Mail, Maximize2, Minimize2, Package, PanelLeftClose, PanelLeftOpen, Settings, ShoppingBag, Tags, Users, Menu, X } from "lucide-react";
+import { Bell, ChevronDown, LayoutDashboard, Mail, Maximize2, Minimize2, Package, PanelLeftClose, PanelLeftOpen, Settings, ShoppingBag, Tags, Users, Menu, X, Percent } from "lucide-react";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { BrandLogo } from "@/components/brand-logo";
@@ -16,6 +16,7 @@ const items = [
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/categories", label: "Categories", icon: Tags },
   { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
+  { href: "/admin/commissions", label: "Commissions", icon: Percent },
   { href: "/admin/customers", label: "Customers", icon: Users },
   { href: "/admin/email-templates", label: "Email templates", icon: Mail },
   { href: "/admin/settings", label: "Settings", icon: Settings },

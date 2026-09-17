@@ -142,14 +142,15 @@ export function AdminOrderDetail({ id }) {
                       <h3 className="font-heading text-h3 font-semibold text-slate-950 dark:text-white">{item.name}</h3>
                       <p className="mt-1 text-body font-regular tabular-nums text-slate-500 dark:text-slate-400">Qty {Math.floor(Number(item.quantity)) || 0}</p>
                     </div>
-                    <strong className="font-semibold tabular-nums">{money((Number(item.price) || 0) * (Math.floor(Number(item.quantity)) || 1))}</strong>
+                     <div className="text-right"><strong className="block font-semibold tabular-nums">{money((Number(item.price) || 0) * (Math.floor(Number(item.quantity)) || 1))}</strong><span className="text-xs text-on-surface-variant">{item.commissionRuleType === "order" ? "Order commission" : item.commissionRuleType === "category" ? "Category commission" : item.commissionRuleType === "product" ? "Product commission" : "Commission"} · {Number(item.commissionRate || 0)}% · {money(item.commissionAmount || 0)}</span></div>
                   </div>
                 ))}
               </div>
               <div className="mt-6 space-y-2 border-t border-slate-200 pt-5 text-body dark:border-slate-800">
                 <Summary label="Subtotal" value={money(order.subtotal || 0)} />
                 <Summary label="Shipping" value={money(order.shippingFee || 0)} />
-                <Summary label="Discount" value={`-${money(order.discount || 0)}`} />
+                 <Summary label="Discount" value={`-${money(order.discount || 0)}`} />
+                 <Summary label="Commission earned" value={money(order.commissionTotal || 0)} />
                 <Summary label="Total" value={money(order.total || 0)} strong />
               </div>
               </Card>

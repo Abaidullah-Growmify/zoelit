@@ -66,8 +66,8 @@ export function SiteHeader() {
   }, [profileOpen]);
 
   return (
-    <>
-      <header className="site-header sticky top-0 z-50 w-full border-b border-outline-variant/70 bg-surface/95 backdrop-blur-md">
+    <div className="sticky top-0 z-50">
+      <header className="site-header w-full border-b border-outline-variant/70 bg-surface/95 backdrop-blur-md">
       <div className="mx-auto flex min-h-16 w-full max-w-[1280px] items-center justify-between gap-8 px-5 py-2.5 md:px-10 lg:px-16">
         <Link href="/" className="flex items-center">
           <BrandLogo className="h-auto w-[200px] max-w-[42vw]" priority />
@@ -134,8 +134,8 @@ export function SiteHeader() {
         </div>
       ) : null}
     </header>
-    {user ? <div className="account-strip sticky top-16 z-40"><div className="mx-auto flex max-w-[1280px] items-center justify-center gap-5 overflow-x-auto px-5 md:px-10 lg:px-16"><p className="hidden shrink-0 text-xs text-blue-200 lg:block">Hello, <b className="text-white">{user.name || "there"}</b></p><div className="flex min-w-max items-center justify-center gap-1"><AccountLink href="/dashboard" icon={LayoutDashboard} label="Dashboard" pathname={pathname} /><AccountLink href="/dashboard/orders" icon={Package} label="My Orders" badge="5" pathname={pathname} /><AccountLink href="/dashboard/wishlist" icon={Heart} label="Wishlist" pathname={pathname} /><AccountLink href="/dashboard/profile" icon={Settings2} label="Account Settings" pathname={pathname} /><button type="button" onClick={handleLogout} className="account-strip-link"><LogOut className="size-3.5" />Sign Out</button></div></div></div> : null}
-    </>
+     {user ? <div className="account-strip"><div className="mx-auto flex max-w-[1280px] items-center justify-center gap-5 overflow-x-auto px-5 md:px-10 lg:px-16"><p className="hidden shrink-0 text-xs text-blue-200 lg:block">Hello, <b className="text-white">{user.name || "there"}</b></p><div className="flex min-w-max items-center justify-center gap-1"><AccountLink href="/dashboard" icon={LayoutDashboard} label="Dashboard" pathname={pathname} /><AccountLink href="/dashboard/orders" icon={Package} label="My Orders" badge="5" pathname={pathname} /><AccountLink href="/dashboard/wishlist" icon={Heart} label="Wishlist" pathname={pathname} /><AccountLink href="/dashboard/profile" icon={Settings2} label="Account Settings" pathname={pathname} /><button type="button" onClick={handleLogout} className="account-strip-link"><LogOut className="size-3.5" />Sign Out</button></div></div></div> : null}
+    </div>
   );
 }
 

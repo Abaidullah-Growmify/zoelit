@@ -15,7 +15,7 @@ export function buttonClasses({ variant = "primary", size = "md" } = {}) {
     variant === "secondary" && "bg-surface-container-low text-on-surface ring-1 ring-outline-variant hover:bg-surface-container",
     variant === "outline" && "border border-outline-variant bg-surface text-on-surface hover:border-primary/40 hover:bg-surface-container-low",
     variant === "ghost" && "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface",
-    variant === "danger" && "bg-error text-on-error hover:bg-error-container hover:text-on-error-container"
+     variant === "danger" && "bg-error-container text-on-error-container hover:bg-error hover:text-on-error"
   );
 }
 
