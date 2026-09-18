@@ -73,7 +73,7 @@ export function ProductForm({ product, mode }) {
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             <Field label="Product name"><Input value={values.name} onChange={(event) => setValue("name", event.target.value)} placeholder="Product name" /></Field>
             <Field label="Ingram part number / SKU"><Input value={values.sku} disabled /></Field>
-            <Field label="Category"><Select value={values.category} onChange={(event) => setValue("category", event.target.value)}>{categories.map((category) => <option key={category}>{category}</option>)}</Select></Field>
+            <Field label="Category"><Select value={values.category} onChange={(event) => setValue("category", event.target.value)}><option value="">Select category</option>{categories.map((category) => <option key={category} value={category}>{category}</option>)}</Select></Field>
             <Field label="Status"><Select value={values.status} onChange={(event) => setValue("status", event.target.value)}><option>Active</option><option>Paused</option></Select></Field>
           </div>
           <Field className="mt-4" label="Description"><Textarea value={values.description} onChange={(event) => setValue("description", event.target.value)} placeholder="Short product description" /></Field>

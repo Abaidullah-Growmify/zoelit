@@ -100,6 +100,10 @@ export function AddItemModal({ open, onClose, type, categories = [], onSubmit, s
         toast.error("Product SKU is required");
         return;
       }
+      if (!form.category.trim()) {
+        toast.error("Please select a category");
+        return;
+      }
       await onSubmit({
         ingramPartNumber: form.sku.trim(),
         name: form.name.trim(),

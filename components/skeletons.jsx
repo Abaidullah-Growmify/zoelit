@@ -4,21 +4,23 @@ import { SecureAccessLoader } from "@/components/auth-loading";
 
 export function ProductGridSkeleton({ count = 8 }) {
   return (
-    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: count }).map((_, i) => (
-        <Card key={i} className="flex h-full flex-col gap-0 overflow-hidden rounded-lg p-0 shadow-sm">
-          <Skeleton className="aspect-[4/3] w-full rounded-none" />
-          <div className="flex flex-1 flex-col gap-3 p-4">
-            <div className="flex items-center justify-between">
-              <Skeleton className="h-4 w-28 rounded-sm" />
-              <Skeleton className="size-6 rounded-full" />
+        <Card key={i} className="group relative flex h-full flex-col border-[rgba(0,0,0,0.06)] p-0 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_4px_12px_rgba(16,24,40,0.06)]">
+          <div className="p-4 pb-0">
+            <div className="relative flex h-[185px] items-center justify-center rounded-xl bg-[#F4F4F5] p-5 dark:bg-slate-800">
+              <Skeleton className="aspect-[4/3] w-[74%] rounded-xl" />
             </div>
-            <Skeleton className="mt-1 h-5 w-full max-w-[90%] rounded-sm" />
-            <Skeleton className="h-4 w-3/4 rounded-sm" />
-            <Skeleton className="h-4 w-2/3 rounded-sm" />
-            <Skeleton className="mt-auto h-5 w-24 rounded-sm" />
-            <div className="mt-2 border-t border-slate-100 pt-4 dark:border-slate-800">
-              <Skeleton className="h-11 w-full rounded-sm" />
+          </div>
+          <div className="flex flex-1 flex-col p-4 pt-4">
+            <div className="flex items-start justify-between gap-3">
+              <Skeleton className="h-5 w-3/5 rounded-sm" />
+              <Skeleton className="h-5 w-20 shrink-0 rounded-sm" />
+            </div>
+            <Skeleton className="mt-3 h-4 w-28 rounded-sm" />
+            <Skeleton className="mt-2 h-4 w-4/5 rounded-sm" />
+            <div className="mt-auto pt-5">
+              <Skeleton className="h-10 w-full rounded-md" />
             </div>
           </div>
         </Card>
@@ -429,14 +431,28 @@ export function AdminCustomerDetailSkeleton() {
 export function DashboardSkeleton() {
   return (
     <div>
-      <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => <StatCardSkeleton key={i} />)}
+      <div className="mb-8">
+        <Skeleton className="h-9 w-72 max-w-full rounded-sm" />
+        <Skeleton className="mt-3 h-4 w-80 max-w-full rounded-sm" />
       </div>
 
-      <Card className="mt-6 overflow-hidden rounded-lg p-6 shadow-sm">
-        <Skeleton className="h-7 w-56 rounded-sm" />
-        <Skeleton className="mt-2 h-4 w-72 rounded-sm" />
-        <div className="mt-6 h-64 rounded-lg bg-gradient-to-b from-blue-50 to-slate-50 p-3 ring-1 ring-slate-200 dark:from-blue-500/10 dark:to-slate-950 dark:ring-slate-800">
+      <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={i} className="border-outline-variant/70 p-5 shadow-sm">
+            <div className="mb-5 flex items-start justify-between">
+              <Skeleton className="size-10 rounded-xl" />
+            </div>
+            <Skeleton className="h-8 w-28 rounded-sm" />
+            <Skeleton className="mt-2 h-4 w-24 rounded-sm" />
+            <Skeleton className="mt-3 h-3 w-32 rounded-sm" />
+          </Card>
+        ))}
+      </div>
+
+      <Card className="overflow-hidden p-5 shadow-sm sm:p-6">
+        <Skeleton className="h-6 w-56 rounded-sm" />
+        <Skeleton className="mt-2 h-4 w-72 max-w-full rounded-sm" />
+        <div className="mt-6 h-64 rounded-2xl bg-slate-50/80 p-3 ring-1 ring-slate-200 dark:bg-slate-900/50 dark:ring-slate-800">
           <div className="flex h-full items-end gap-3">
             {["45%", "60%", "38%", "72%", "52%", "82%"].map((height, index) => (
               <Skeleton key={index} className="w-full flex-1 rounded-t-lg" style={{ height }} />
@@ -445,12 +461,39 @@ export function DashboardSkeleton() {
         </div>
       </Card>
 
-      <div className="mt-6">
-        <TableFrameSkeleton rows={5} columns={5} titleWidth="w-40" descWidth="w-72" />
-        <div className="mt-4 flex justify-end">
-          <Skeleton className="size-9 rounded-sm" />
-        </div>
+      <div className="flex justify-end py-7">
+        <Skeleton className="h-10 w-40 rounded-md" />
       </div>
+
+      <Card className="overflow-hidden p-0 shadow-sm">
+        <div className="flex items-center justify-between border-b border-outline-variant/70 px-5 py-5 sm:px-6">
+          <div>
+            <Skeleton className="h-6 w-40 rounded-sm" />
+            <Skeleton className="mt-2 h-4 w-64 max-w-full rounded-sm" />
+          </div>
+          <Skeleton className="h-4 w-16 rounded-sm" />
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[980px] text-left text-sm">
+            <thead className="bg-slate-50 dark:bg-slate-900/50">
+              <tr>
+                {Array.from({ length: 8 }).map((_, index) => (
+                  <th key={index} className="px-5 py-3"><Skeleton className="h-3 w-16 rounded-sm" /></th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 5 }).map((_, rowIndex) => (
+                <tr key={rowIndex} className="border-t border-outline-variant/60">
+                  {Array.from({ length: 8 }).map((_, columnIndex) => (
+                    <td key={columnIndex} className="px-5 py-4"><Skeleton className={columnIndex === 5 ? "h-6 w-20 rounded-full" : "h-4 w-24 rounded-sm"} /></td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
     </div>
   );
 }

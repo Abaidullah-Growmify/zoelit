@@ -30,9 +30,9 @@ export function SiteFooter() {
            <h4 className="mb-4 text-label-md font-semibold tracking-[0.05em]">Shop</h4>
           <ul className="flex flex-col gap-2">
              <li><a className="footer-link text-body-md leading-6 transition-colors" href="#">All Products</a></li>
-             <li><a className="footer-link text-body-md leading-6 transition-colors" href="#">New Arrivals</a></li>
-             <li><a className="footer-link text-body-md leading-6 transition-colors" href="#">Best Sellers</a></li>
-             <li><a className="footer-link text-body-md leading-6 transition-colors" href="#">Deals</a></li>
+              <li><a className="footer-link text-body-md leading-6 transition-colors" href="/products">Categories</a></li>
+              <li><a className="footer-link text-body-md leading-6 transition-colors" href="/faq">Support</a></li>
+              <li><a className="footer-link text-body-md leading-6 transition-colors" href="/contact">Contact</a></li>
           </ul>
         </div>
 
@@ -69,7 +69,7 @@ export function SiteFooter() {
       </div>
 
        <div className="footer-bottom mx-auto flex max-w-[1280px] flex-col items-center justify-between gap-4 border-t px-5 pt-6 text-center md:flex-row md:px-16 md:text-left">
-         <p className="text-body-md leading-6">© 2024 ZoeLit. All rights reserved.</p>
+         <p className="text-body-md leading-6">© 2026 ZoeLit. All rights reserved.</p>
         <div className="flex flex-wrap justify-center gap-6 md:justify-end">
            <a className="footer-link text-body-md leading-6 transition-colors" href="#">Privacy Policy</a>
            <a className="footer-link text-body-md leading-6 transition-colors" href="#">Terms of Service</a>

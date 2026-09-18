@@ -42,15 +42,16 @@ function OrderSuccessContent() {
 
     api.confirmCheckoutSession(sessionId, token)
       .then((res) => {
-        if (!active) return;
-        if (res?.order?.customerOrderNumber || res?.order?.orderNumber) setOrderNumber(res.order.customerOrderNumber || res.order.orderNumber);
-        if (res?.ingram?.ingramOrderNumber) setIngramOrderNumber(res.ingram.ingramOrderNumber);
         if (res?.success || res?.order) {
+          // Clear both Redux and persisted cart state as soon as payment is confirmed.
           markCompletedCheckoutCleanup();
           clearCompletedCheckoutStorage();
           clearCart();
-          fetchProducts().catch(() => {});
         }
+        if (!active) return;
+        if (res?.order?.customerOrderNumber || res?.order?.orderNumber) setOrderNumber(res.order.customerOrderNumber || res.order.orderNumber);
+        if (res?.ingram?.ingramOrderNumber) setIngramOrderNumber(res.ingram.ingramOrderNumber);
+        if (res?.success || res?.order) fetchProducts().catch(() => {});
       })
       .catch((error) => {
         if (!active) return;

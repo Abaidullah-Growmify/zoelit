@@ -131,8 +131,19 @@ export function AdminOrderDetail({ id }) {
                 <AdminStatusBadge>{order.status}</AdminStatusBadge>
               </div>
               <div className="mt-6 space-y-5">
-                {(order.lineItems || []).map((item) => (
-                  <div key={item.productId} className="flex gap-4 rounded-md border border-slate-100 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-950/60">
+                 {(order.lineItems || []).map((item) => {
+                   const quantity = Math.max(1, Math.floor(Number(item.quantity)) || 1);
+                   const baseLineTotal = Number(item.originalLineTotal) || (Number(item.price) || 0) * quantity;
+                   const commissionAmount = Number(item.commissionAmount) || 0;
+                   const finalLineTotal = Number(item.lineTotalAfterCommission) || baseLineTotal + commissionAmount;
+                   const commissionLabel = item.commissionValueType === "fixed"
+                     ? `${commissionTypeLabel(item.commissionRuleType)} · ${money(item.commissionValue || 0)}/unit · ${money(commissionAmount)}`
+                     : item.commissionRuleType && item.commissionRuleType !== "none"
+                       ? `${commissionTypeLabel(item.commissionRuleType)} · ${Number(item.commissionValue ?? item.commissionRate ?? 0)}% · ${money(commissionAmount)}`
+                       : "No commission applied";
+
+                   return (
+                   <div key={item.productId} className="flex gap-4 rounded-md border border-slate-100 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-950/60">
                     {item.image ? (
                       <Image src={item.image} alt={item.name} width={96} height={96} unoptimized className="size-24 shrink-0 rounded-md object-cover ring-1 ring-slate-200 dark:ring-slate-800" />
                     ) : (
@@ -142,9 +153,10 @@ export function AdminOrderDetail({ id }) {
                       <h3 className="font-heading text-h3 font-semibold text-slate-950 dark:text-white">{item.name}</h3>
                       <p className="mt-1 text-body font-regular tabular-nums text-slate-500 dark:text-slate-400">Qty {Math.floor(Number(item.quantity)) || 0}</p>
                     </div>
-                     <div className="text-right"><strong className="block font-semibold tabular-nums">{money((Number(item.price) || 0) * (Math.floor(Number(item.quantity)) || 1))}</strong><span className="text-xs text-on-surface-variant">{item.commissionRuleType === "order" ? "Order commission" : item.commissionRuleType === "category" ? "Category commission" : item.commissionRuleType === "product" ? "Product commission" : "Commission"} · {Number(item.commissionRate || 0)}% · {money(item.commissionAmount || 0)}</span></div>
-                  </div>
-                ))}
+                      <div className="min-w-44 text-right"><strong className="block font-semibold tabular-nums">{money(finalLineTotal)}</strong><span className="block text-xs text-on-surface-variant">Base: {money(baseLineTotal)}</span><span className="block text-xs font-semibold text-primary">{commissionLabel}</span></div>
+                   </div>
+                   );
+                 })}
               </div>
               <div className="mt-6 space-y-2 border-t border-slate-200 pt-5 text-body dark:border-slate-800">
                 <Summary label="Subtotal" value={money(order.subtotal || 0)} />
@@ -290,4 +302,12 @@ function Info({ label, value }) {
       <p className="mt-1 break-all text-body font-semibold text-slate-950 dark:text-white">{value}</p>
     </div>
   );
+}
+
+function commissionTypeLabel(type) {
+  if (type === "order") return "Order commission";
+  if (type === "category") return "Category commission";
+  if (type === "product") return "Product commission";
+  if (type === "global") return "General commission";
+  return "Commission";
 }
