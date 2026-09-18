@@ -37,7 +37,7 @@ export function SyncModal({ open, onClose, title, type, items, onSync, syncing, 
     setLoadingCategories(true);
     try {
       const data = await getIngramCategories();
-      setIngramCategories(data.categories || []);
+      setIngramCategories((data.categories || []).filter((category) => category.source === "ingram"));
     } catch (err) {
       toast.error(err.message || "Failed to load categories");
       setIngramCategories([]);
