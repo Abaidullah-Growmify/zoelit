@@ -10,6 +10,7 @@ import { AdminOrdersSkeleton } from "@/components/skeletons";
 import { getAdminOrders, updateAdminOrderStatus } from "@/lib/api";
 import { money, shortDate } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
+import { minimumLoadingDelay } from "@/lib/utils";
 import { usePolling } from "@/lib/use-polling";
 
 const PAGE_SIZE = 10;
@@ -50,13 +51,13 @@ export default function AdminOrdersPage() {
 
   const load = useCallback(() => {
     if (!token) return;
-    getAdminOrders({
+    const startedAt = Date.now();
+    Promise.all([getAdminOrders({
       page,
       limit: PAGE_SIZE,
       keyword: debouncedKeyword || undefined,
       status: status === "All statuses" ? undefined : status,
-    }, token)
-      .then((data) => {
+    }, token), minimumLoadingDelay(startedAt)]).then(([data]) => {
         hasLoaded.current = true;
         setOrders(data.orders || []);
         setTotalPages(data.pagination?.totalPages ?? 1);
@@ -129,7 +130,7 @@ export default function AdminOrdersPage() {
       ) : (
         <>
           <AdminTable
-            title="Orders"
+            title={<span className="text-2xl font-black tracking-tight">Orders</span>}
             description="Review order history, tracking, and payment details."
             columns={columns}
             data={tableRows}
@@ -138,9 +139,9 @@ export default function AdminOrdersPage() {
             onPageChange={setPage}
             totalPages={totalPages}
             totalItems={totalItems}
-            toolbar={(
-              <>
-                <div className="relative min-w-[16rem] flex-1 sm:max-w-md lg:max-w-xl">
+            action={(
+              <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+                <div className="relative min-w-0 flex-1 sm:max-w-md lg:w-80">
                   <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
                   <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search order, customer or tracking" aria-label="Search orders" className="h-10 pl-10 shadow-sm" />
                 </div>
@@ -149,7 +150,7 @@ export default function AdminOrdersPage() {
                     {STATUS_OPTIONS.map((option) => <option key={option}>{option}</option>)}
                   </Select>
                 </div>
-              </>
+              </div>
             )}
             hideSearch
             disableInitialSort

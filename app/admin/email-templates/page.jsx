@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ChevronDown, ChevronUp, Mail, Pencil, Search, Trash2 } from "lucide-react";
+import { ArrowLeft, CheckCircle, ChevronDown, ChevronUp, CircleOff, Eye, Mail, Pencil, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { Button, Card, Input, Label, Textarea } from "@/components/ui";
+import { Button, Card, Input, Label, Skeleton, Textarea } from "@/components/ui";
+import { AdminTableActions } from "@/components/admin-table";
+import { ConfirmActionDialog, TransparentActionLoader } from "@/components/action-feedback";
 import {
   deleteAdminEmailTemplate,
   getAdminEmailTemplates,
@@ -46,9 +48,14 @@ function formatHtmlForEditor(html) {
     .trim();
 }
 
+function EmailTemplatesSkeleton() {
+  return <Card className="space-y-6 p-6"><div className="flex flex-col justify-between gap-4 md:flex-row md:items-end"><div className="space-y-3"><Skeleton className="h-3 w-28 rounded-sm" /><Skeleton className="h-10 w-44 rounded-sm" /><Skeleton className="h-5 w-96 max-w-full rounded-sm" /></div><Skeleton className="h-10 w-56 rounded-md" /></div><div className="flex gap-1 border-b border-outline-variant/80"><Skeleton className="h-11 w-40 rounded-t-md" /><Skeleton className="h-11 w-48 rounded-t-md" /></div><Card className="overflow-hidden p-0"><div className="border-b border-outline-variant/80 px-5 py-4"><Skeleton className="h-6 w-44 rounded-sm" /><Skeleton className="mt-2 h-4 w-[30rem] max-w-full rounded-sm" /></div><div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left text-sm"><thead className="border-b border-outline-variant/70 bg-surface-container-low"><tr>{["w-8", "w-28", "w-32", "w-24", "w-16", "w-16"].map((width, index) => <th key={index} className="px-5 py-3"><Skeleton className={`h-3 ${width} rounded-sm`} /></th>)}</tr></thead><tbody className="divide-y divide-outline-variant/60">{Array.from({ length: 6 }).map((_, rowIndex) => <tr key={rowIndex}>{["w-8", "w-40", "w-36", "w-56", "w-24", "size-9"].map((width, cellIndex) => <td key={cellIndex} className="px-5 py-5"><Skeleton className={`${width === "size-9" ? "size-9 rounded-md" : `h-4 ${width} rounded-sm`}`} /></td>)}</tr>)}</tbody></table></div></Card></Card>;
+}
+
 export default function EmailTemplatesPage() {
   const token = useAdminAuthStore((state) => state.token);
   const [templates, setTemplates] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [view, setView] = useState("active");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
@@ -56,13 +63,17 @@ export default function EmailTemplatesPage() {
   const [serialSort, setSerialSort] = useState("asc");
   const [saving, setSaving] = useState(false);
   const [activating, setActivating] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [actionLoading, setActionLoading] = useState("");
 
   useEffect(() => {
     if (!token) return;
 
+    const startedAt = Date.now();
     getAdminEmailTemplates(search, token)
       .then((data) => setTemplates(data.templates || []))
-      .catch((error) => toast.error(error.message));
+      .catch((error) => toast.error(error.message))
+      .finally(() => window.setTimeout(() => setLoading(false), Math.max(0, 650 - (Date.now() - startedAt))));
   }, [token, search]);
 
   const activeTemplates = templates.filter((template) => template.isActive);
@@ -73,27 +84,25 @@ export default function EmailTemplatesPage() {
     return buildPreviewHtml(selected);
   }, [selected]);
 
+  if (loading) return <EmailTemplatesSkeleton />;
+
   function openEditor(template) {
-    setSelected({ ...template, htmlBody: formatHtmlForEditor(template.htmlBody) });
+    setActionLoading("Opening template...");
+    window.setTimeout(() => {
+      setSelected({ ...template, htmlBody: formatHtmlForEditor(template.htmlBody) });
+      setActionLoading("");
+    }, 250);
   }
 
-  async function changeTemplateStatus(template, event) {
-    event.stopPropagation();
-    const isActive = event.target.value === "active";
-
-    try {
-      const result = await updateAdminEmailTemplateStatus(template._id, isActive, token);
-      setTemplates((items) => items.map((item) => (item._id === result.template._id ? result.template : item)));
-      if (selected?._id === result.template._id) setSelected(result.template);
-      toast.success(`Template ${isActive ? "activated" : "deactivated"}`);
-    } catch (error) {
-      toast.error(error.message);
-    }
+  function requestStatusChange(template, event) {
+    event?.stopPropagation();
+    setActivationTarget(template);
   }
 
   async function save(event) {
     event.preventDefault();
     setSaving(true);
+    setActionLoading("Saving template...");
 
     try {
       const payload = {
@@ -112,67 +121,54 @@ export default function EmailTemplatesPage() {
       toast.error(error.message);
     } finally {
       setSaving(false);
+      setActionLoading("");
     }
   }
 
-  async function remove() {
-    if (!selected || !window.confirm("Delete this template?")) return;
+  function remove() {
+    if (selected) setDeleteTarget(selected);
+  }
+
+  async function confirmRemove() {
+    if (!deleteTarget) return;
+    setActionLoading("Deleting template...");
 
     try {
-      await deleteAdminEmailTemplate(selected._id, token);
-      setTemplates((items) => items.filter((item) => item._id !== selected._id));
+      await deleteAdminEmailTemplate(deleteTarget._id, token);
+      setTemplates((items) => items.filter((item) => item._id !== deleteTarget._id));
       setSelected(null);
+      setDeleteTarget(null);
       toast.success("Template deleted");
     } catch (error) {
       toast.error(error.message);
-    }
-  }
-
-  async function toggleStatus(event) {
-    event.stopPropagation();
-    if (!selected?._id) return;
-
-    const nextStatus = !selected.isActive;
-    setSelected({ ...selected, isActive: nextStatus });
-
-    try {
-      const result = await updateAdminEmailTemplateStatus(selected._id, nextStatus, token);
-      setSelected(result.template);
-      setTemplates((items) => items.map((item) => (item._id === result.template._id ? result.template : item)));
-      toast.success(`Template ${nextStatus ? "activated" : "deactivated"}`);
-    } catch (error) {
-      setSelected({ ...selected, isActive: !nextStatus });
-      toast.error(error.message);
+    } finally {
+      setActionLoading("");
     }
   }
 
   async function activateTemplate() {
     if (!activationTarget?._id) return;
 
-    if (activationTarget.isActive) {
-      setActivationTarget(null);
-      setView("active");
-      toast.info("Template is already active");
-      return;
-    }
-
     setActivating(true);
+    setActionLoading("Updating template status...");
+    const nextStatus = !activationTarget.isActive;
 
     try {
-      const result = await updateAdminEmailTemplateStatus(activationTarget._id, true, token);
+      const result = await updateAdminEmailTemplateStatus(activationTarget._id, nextStatus, token);
       setTemplates((items) => items.map((item) => (item._id === result.template._id ? result.template : item)));
       setActivationTarget(null);
-      setView("active");
-      toast.success("Template activated and moved to Template tab");
+      toast.success(`Template ${nextStatus ? "activated" : "deactivated"}`);
     } catch (error) {
       toast.error(error.message);
     } finally {
       setActivating(false);
+      setActionLoading("");
     }
   }
 
   return (
     <Card className="space-y-6 p-6">
+      <TransparentActionLoader open={Boolean(actionLoading)} label={actionLoading} />
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
           <p className="mb-1 text-xs font-semibold uppercase tracking-[0.16em] text-primary">Communication</p>
@@ -248,20 +244,28 @@ export default function EmailTemplatesPage() {
                         <td className="px-5 py-4 font-mono text-xs text-on-surface-variant">{template.templateKey}</td>
                         <td className="max-w-xs px-5 py-4 text-on-surface-variant">{template.subject}</td>
                         <td className="px-5 py-4">
-                          <select
-                            aria-label={`Status for ${template.name}`}
-                            value={template.isActive ? "active" : "inactive"}
-                            onChange={(event) => changeTemplateStatus(template, event)}
-                            className="h-9 rounded-md border border-outline-variant bg-surface px-3 text-sm font-semibold text-on-surface"
-                          >
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                          </select>
+                           <Button
+                             type="button"
+                             size="sm"
+                             variant="outline"
+                             aria-label={`${template.isActive ? "Deactivate" : "Activate"} ${template.name}`}
+                             onClick={(event) => requestStatusChange(template, event)}
+                             title={`Click to ${template.isActive ? "deactivate" : "activate"} this template`}
+                             className={`inline-flex cursor-pointer items-center gap-1.5 border font-semibold shadow-sm transition hover:-translate-y-px hover:shadow ${template.isActive ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200"}`}
+                           >
+                             {template.isActive ? <CheckCircle className="size-3.5" /> : <CircleOff className="size-3.5" />}
+                             {template.isActive ? "Active" : "Inactive"}
+                           </Button>
                         </td>
                         <td className="px-5 py-4 text-right">
-                          <Button type="button" size="sm" variant="outline" aria-label={`Edit ${template.name}`} onClick={() => openEditor(template)}>
-                            <Pencil className="size-4" />
-                          </Button>
+                          <AdminTableActions
+                            label={`Actions for ${template.name}`}
+                            actions={[
+                              { label: "View", ariaLabel: `View ${template.name}`, icon: Eye, onClick: () => setSelected(template) },
+                              { label: "Edit", ariaLabel: `Edit ${template.name}`, icon: Pencil, onClick: () => openEditor(template) },
+                              { label: "Delete", ariaLabel: `Delete ${template.name}`, icon: Trash2, tone: "danger", onClick: () => setDeleteTarget(template) },
+                            ]}
+                          />
                         </td>
                       </tr>
                     ))}
@@ -272,25 +276,26 @@ export default function EmailTemplatesPage() {
           ) : (
             <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {visibleTemplates.map((template, index) => (
-                <button
-                  type="button"
+                <div
                   key={template._id}
-                  onClick={() => setActivationTarget(template)}
-                  className="min-h-44 rounded-lg border border-outline-variant/80 bg-surface p-5 text-left transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+                  className="flex min-h-44 flex-col rounded-lg border border-outline-variant/80 bg-surface p-5 text-left transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="grid size-10 place-items-center rounded-lg bg-surface-container-low text-on-surface-variant">
-                      <Mail className="size-5" />
-                    </div>
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${template.isActive ? "bg-green-100 text-green-700" : "bg-outline-variant text-on-surface-variant"}`}>
-                      {template.isActive ? "Active" : "Inactive"}
-                    </span>
+                  <div className="grid size-10 place-items-center rounded-lg bg-surface-container-low text-on-surface-variant">
+                    <Mail className="size-5" />
                   </div>
                   <h3 className="mt-5 font-heading text-lg font-semibold text-on-surface">{template.name}</h3>
                   <p className="mt-2 line-clamp-2 text-sm text-on-surface-variant">{template.description || template.subject}</p>
-                  <p className="mt-3 font-mono text-[10px] text-on-surface-variant">Record #{index + 1}</p>
-                  <p className="mt-4 font-mono text-xs text-on-surface-variant">{template.templateKey}</p>
-                </button>
+                  <div className="mt-auto flex items-end justify-between gap-3 border-t border-outline-variant/70 pt-4">
+                    <div>
+                      <p className="font-mono text-[10px] text-on-surface-variant">Record #{index + 1}</p>
+                      <p className="mt-1 font-mono text-xs text-on-surface-variant">{template.templateKey}</p>
+                    </div>
+                    <button type="button" aria-label={`${template.isActive ? "Deactivate" : "Activate"} ${template.name}`} title={`Click to ${template.isActive ? "deactivate" : "activate"} this template`} onClick={(event) => requestStatusChange(template, event)} className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-sm transition hover:-translate-y-px hover:shadow ${template.isActive ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>
+                      {template.isActive ? <CheckCircle className="size-3.5" /> : <CircleOff className="size-3.5" />}
+                      {template.isActive ? "Active" : "Inactive"}
+                    </button>
+                  </div>
+                </div>
               ))}
             </section>
           )}
@@ -307,12 +312,10 @@ export default function EmailTemplatesPage() {
                 <p className="text-xs text-on-surface-variant">Complete email template details</p>
               </div>
             </div>
-            <button type="button" aria-pressed={Boolean(selected.isActive)} onClick={toggleStatus} className="flex items-center gap-2 text-sm font-semibold text-on-surface">
-              <span className={`relative h-6 w-11 rounded-full p-0.5 transition ${selected.isActive ? "bg-primary" : "bg-outline"}`}>
-                <span className={`block size-5 rounded-full bg-white shadow transition-transform ${selected.isActive ? "translate-x-5" : "translate-x-0"}`} />
-              </span>
+            <Button type="button" variant="outline" aria-label={`${selected.isActive ? "Deactivate" : "Activate"} ${selected.name}`} title={`Click to ${selected.isActive ? "deactivate" : "activate"} this template`} onClick={(event) => requestStatusChange(selected, event)} className={`inline-flex cursor-pointer items-center gap-1.5 shadow-sm ${selected.isActive ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>
+              {selected.isActive ? <CheckCircle className="size-3.5" /> : <CircleOff className="size-3.5" />}
               {selected.isActive ? "Active" : "Inactive"}
-            </button>
+            </Button>
           </div>
           <form onSubmit={save} className="grid gap-6 p-5 lg:grid-cols-[minmax(0,1fr)_240px]">
             <div className="space-y-4">
@@ -367,12 +370,12 @@ export default function EmailTemplatesPage() {
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 px-4">
           <Card className="w-full max-w-md space-y-5 rounded-2xl p-6 shadow-2xl">
             <div>
-              <p className="font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">Activate template</p>
+              <p className="font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">Change template status</p>
               <h2 className="mt-2 font-heading text-lg font-bold leading-7 text-black">
-                {activationTarget.isActive ? "This template is already active" : "Are you sure you want to activate this email template?"}
+                {activationTarget.isActive ? "Are you sure you want to deactivate this email template?" : "Are you sure you want to activate this email template?"}
               </h2>
               <p className="mt-3 font-body text-sm leading-6 text-on-surface-variant">
-                {activationTarget.isActive ? "It is already available in the Template tab." : `${activationTarget.name} will be available for email delivery.`}
+                {activationTarget.isActive ? `${activationTarget.name} will no longer be used for email delivery.` : `${activationTarget.name} will be available for email delivery.`}
               </p>
             </div>
             <div className="flex justify-end gap-2">
@@ -380,12 +383,21 @@ export default function EmailTemplatesPage() {
                 Cancel
               </Button>
               <Button type="button" onClick={activateTemplate} disabled={activating}>
-                {activating ? "Activating..." : activationTarget.isActive ? "Go to Template" : "OK, Activate"}
+                {activating ? "Saving..." : activationTarget.isActive ? "Yes, Deactivate" : "Yes, Activate"}
               </Button>
             </div>
           </Card>
         </div>
       ) : null}
+      <ConfirmActionDialog
+        open={Boolean(deleteTarget)}
+        title="Delete email template?"
+        message={deleteTarget ? `Are you sure you want to delete ${deleteTarget.name}? This action cannot be undone.` : ""}
+        confirmLabel="Delete template"
+        loading={Boolean(actionLoading)}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={confirmRemove}
+      />
     </Card>
   );
 }

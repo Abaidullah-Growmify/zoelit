@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { ChevronDown, ChevronUp, Eye, MoreVertical, Search } from "lucide-react";
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Button, Card, Input, Select } from "@/components/ui";
 import Pagination from "@/components/pagination";
 import { cn } from "@/lib/utils";
+import { TransparentActionLoader } from "@/components/action-feedback";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -34,11 +36,14 @@ export function AdminTable({
   className,
   wrapperClassName,
   tableClassName,
-  inlineToolbar = false,
+  inlineToolbar = true,
   resetButtonClassName,
   searchWrapperClassName,
   filterClassName,
   filterWrapperClassName,
+  toolbarInHeader = false,
+  secondaryToolbar,
+  hideReset = false,
 }) {
   if (!data) {
     return (
@@ -55,10 +60,10 @@ export function AdminTable({
     );
   }
 
-  return <AdminDataTable columns={columns} data={data} filters={filters} searchPlaceholder={searchPlaceholder} searchKeys={searchKeys} rowActions={rowActions} title={title} description={description} toolbar={toolbar} action={action} pageSize={pageSize} zebra={zebra} hideSearch={hideSearch} hidePagination={hidePagination} disableInitialSort={disableInitialSort} page={controlledPage} onPageChange={onPageChange} onPaginationChange={onPaginationChange} totalPages={controlledTotalPages} totalItems={controlledTotalItems} className={className} wrapperClassName={wrapperClassName} tableClassName={tableClassName} inlineToolbar={inlineToolbar} resetButtonClassName={resetButtonClassName} searchWrapperClassName={searchWrapperClassName} filterClassName={filterClassName} filterWrapperClassName={filterWrapperClassName} />;
+  return <AdminDataTable columns={columns} data={data} filters={filters} searchPlaceholder={searchPlaceholder} searchKeys={searchKeys} rowActions={rowActions} title={title} description={description} toolbar={toolbar} action={action} pageSize={pageSize} zebra={zebra} hideSearch={hideSearch} hidePagination={hidePagination} disableInitialSort={disableInitialSort} page={controlledPage} onPageChange={onPageChange} onPaginationChange={onPaginationChange} totalPages={controlledTotalPages} totalItems={controlledTotalItems} className={className} wrapperClassName={wrapperClassName} tableClassName={tableClassName} inlineToolbar={inlineToolbar} resetButtonClassName={resetButtonClassName} searchWrapperClassName={searchWrapperClassName} filterClassName={filterClassName} filterWrapperClassName={filterWrapperClassName} toolbarInHeader={toolbarInHeader} secondaryToolbar={secondaryToolbar} hideReset={hideReset} />;
 }
 
-function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys, rowActions, title, description, toolbar, action, pageSize, zebra, hideSearch, hidePagination, disableInitialSort, page: controlledPage, onPageChange, onPaginationChange, totalPages: controlledTotalPages, totalItems: controlledTotalItems, className, wrapperClassName, tableClassName, inlineToolbar, resetButtonClassName, searchWrapperClassName, filterClassName, filterWrapperClassName }) {
+function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys, rowActions, title, description, toolbar, action, pageSize, zebra, hideSearch, hidePagination, disableInitialSort, page: controlledPage, onPageChange, onPaginationChange, totalPages: controlledTotalPages, totalItems: controlledTotalItems, className, wrapperClassName, tableClassName, inlineToolbar, resetButtonClassName, searchWrapperClassName, filterClassName, filterWrapperClassName, toolbarInHeader, secondaryToolbar, hideReset }) {
   const [query, setQuery] = useState("");
   const [filterValues, setFilterValues] = useState(() => Object.fromEntries(filters.map((filter) => [filter.key, filter.allLabel || "All"])));
   const [sort, setSort] = useState(() => {
@@ -100,7 +105,7 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
   const showingStart = totalItems ? (safePage - 1) * pageSize + 1 : 0;
   const showingEnd = Math.min((safePage - 1) * pageSize + pageItems.length, totalItems);
   const hasActions = typeof rowActions === "function";
-  const hasToolbar = !!toolbar || !hideSearch || filters.length > 0 || !!action;
+  const hasToolbar = !!toolbar || !hideSearch || filters.length > 0 || (!!action && !inlineToolbar);
   const columnCount = columns.length + (hasActions ? 1 : 0);
 
   useEffect(() => {
@@ -136,45 +141,53 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
     setSort((current) => current?.key === column.key ? { key: column.key, direction: current.direction === "asc" ? "desc" : "asc" } : { key: column.key, direction: "asc" });
   }
 
+  const tableControls = (
+    <div className="flex min-w-0 flex-wrap items-center justify-end gap-3">
+      {toolbar}
+      {!hideSearch ? (
+        <div className={cn("relative min-w-[16rem] flex-1 shrink-0 sm:max-w-md lg:max-w-xl", searchWrapperClassName)}>
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
+          <Input value={query} onChange={(event) => updateQuery(event.target.value)} placeholder={searchPlaceholder} aria-label={searchPlaceholder} className="h-10 pl-10 shadow-sm" />
+        </div>
+      ) : null}
+      {filters.map((filter) => (
+        <div key={filter.key} className={filterWrapperClassName}>
+          <Select value={filterValues[filter.key]} onChange={(event) => updateFilter(filter.key, event.target.value)} aria-label={filter.label} className={cn("h-10 shadow-sm", filterClassName)}>
+            <option>{filter.allLabel || "All"}</option>
+            {filter.options.map((option) => <option key={option}>{option}</option>)}
+          </Select>
+        </div>
+      ))}
+      {filters.length > 0 && !hideReset ? <Button variant="secondary" size="sm" onClick={resetControls} className={cn("h-10 shrink-0 shadow-sm", resetButtonClassName)}>Reset</Button> : null}
+    </div>
+  );
+
   return (
     <Card className={cn("overflow-hidden p-0 shadow-sm", className)}>
       {title || description ? (
         <div className="border-b border-outline-variant/70 px-5 py-4">
-          {title || description ? (
+            <div className={cn("flex gap-4", inlineToolbar ? "flex-col lg:flex-row lg:items-center lg:justify-between" : "")}> 
+            {title || description ? (
             <div className="mb-0">
               <div>
                  {title ? <h2 className="font-heading text-lg font-bold tracking-tight text-on-surface">{title}</h2> : null}
                 {description ? <p className="mt-1 text-sm text-on-surface-variant">{description}</p> : null}
               </div>
             </div>
-          ) : null}
-        </div>
-      ) : null}
-      {hasToolbar ? (
-        <div className="border-b border-outline-variant/70 p-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className={cn("flex min-w-0 flex-1 items-center gap-4", inlineToolbar ? "flex-nowrap overflow-x-auto" : "flex-wrap")}>
-              {toolbar}
-              {!hideSearch ? (
-                <div className={cn("relative min-w-[16rem] flex-1 shrink-0 sm:max-w-md lg:max-w-xl", searchWrapperClassName)}>
-                  <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
-                  <Input value={query} onChange={(event) => updateQuery(event.target.value)} placeholder={searchPlaceholder} aria-label={searchPlaceholder} className="h-10 pl-10 shadow-sm" />
-                </div>
-              ) : null}
-              {filters.map((filter) => (
-                <div key={filter.key} className={cn(inlineToolbar && "shrink-0", filterWrapperClassName)}>
-                  <Select value={filterValues[filter.key]} onChange={(event) => updateFilter(filter.key, event.target.value)} aria-label={filter.label} className={cn("h-10 shadow-sm", filterClassName)}>
-                    <option>{filter.allLabel || "All"}</option>
-                    {filter.options.map((option) => <option key={option}>{option}</option>)}
-                  </Select>
-                </div>
-              ))}
-              {filters.length > 0 ? <Button variant="secondary" size="sm" onClick={resetControls} className={cn("h-10 shrink-0 shadow-sm", resetButtonClassName)}>Reset</Button> : null}
-            </div>
-            {action ? <div className="flex shrink-0 flex-wrap items-center gap-3 lg:justify-end">{action}</div> : null}
+            ) : null}
+            {toolbarInHeader ? <div className="w-full shrink-0 lg:w-auto">{tableControls}</div> : inlineToolbar && action ? <div className="shrink-0">{action}</div> : null}
           </div>
         </div>
       ) : null}
+      {hasToolbar && !toolbarInHeader ? (
+        <div className="border-b border-outline-variant/70 p-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            {tableControls}
+            {action && !inlineToolbar ? <div className="flex shrink-0 flex-wrap items-center gap-3 lg:justify-end">{action}</div> : null}
+          </div>
+        </div>
+      ) : null}
+      {secondaryToolbar ? <div className="flex justify-start border-b border-outline-variant/70 px-4 py-3">{secondaryToolbar}</div> : null}
       <div className={cn("overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", wrapperClassName)}>
         <table className={cn("w-full text-left text-label-md", tableClassName)}>
           <thead className="sticky top-0 z-10 border-b border-outline-variant/70 bg-surface-container-low/60 text-xs font-medium text-on-surface-variant backdrop-blur">
@@ -232,49 +245,114 @@ export function AdminTableCell({ children, className }) {
 }
 
 export function AdminTableActions({ actions, label = "Row actions" }) {
-  if (!actions?.length) return null;
+  const triggerRef = useRef(null);
+  const [open, setOpen] = useState(false);
+  const [anchor, setAnchor] = useState(null);
+  const [loadingLabel, setLoadingLabel] = useState("");
 
-  if (actions.length === 1) {
-    const action = actions[0];
-    const Icon = action.icon || Eye;
-    const className = "inline-grid size-8 place-items-center rounded-lg border border-outline-variant bg-surface text-on-surface-variant transition hover:border-primary/40 hover:text-primary";
-    if (action.href) {
-      return <Link href={action.href} aria-label={action.label} title={action.label} className={className}><Icon className="size-4" /></Link>;
-    }
-    return <button type="button" onClick={action.onClick} aria-label={action.label} title={action.label} className={className}><Icon className="size-4" /></button>;
+  function runAction(action) {
+    if (action.disabled) return;
+    setLoadingLabel(action.loadingLabel || `${action.label}...`);
+    const result = action.onClick?.();
+    if (result?.finally) result.finally(() => setLoadingLabel(""));
+    else window.setTimeout(() => setLoadingLabel(""), 350);
   }
 
-  if (actions.length === 2) {
-    return (
-      <div className="inline-flex items-center gap-2">
-        {actions.map((action) => {
-          const Icon = action.icon || Eye;
-          const className = "inline-grid size-8 place-items-center rounded-lg border border-outline-variant bg-surface text-on-surface-variant transition hover:border-primary/40 hover:text-primary";
-          return action.href ? (
-            <Link key={action.label} href={action.href} aria-label={action.label} title={action.label} className={className}><Icon className="size-4" /></Link>
-          ) : (
-            <button key={action.label} type="button" onClick={action.onClick} aria-label={action.label} title={action.label} className={className}><Icon className="size-4" /></button>
-          );
-        })}
-      </div>
-    );
+  useEffect(() => {
+    function closeOnOutsideClick(event) {
+      if (!triggerRef.current || triggerRef.current.contains(event.target)) return;
+      if (event.target.closest?.("[data-row-actions-menu]")) return;
+      setOpen(false);
+    }
+
+    function closeOnEscape(event) {
+      if (event.key === "Escape") setOpen(false);
+    }
+
+    function closeOnScroll() {
+      setOpen(false);
+    }
+
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    window.addEventListener("scroll", closeOnScroll, true);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+      window.removeEventListener("scroll", closeOnScroll, true);
+    };
+  }, []);
+
+  if (!actions?.length) return null;
+
+  function handleToggle() {
+    const rect = triggerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const width = 176;
+    const gap = 6;
+    const menuHeight = actions.length * 44 + 12;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const top = spaceBelow >= menuHeight + gap
+      ? rect.bottom + gap
+      : Math.max(8, rect.bottom - menuHeight - gap);
+    const left = Math.max(8, Math.min(rect.right - width, window.innerWidth - width - 8));
+    setAnchor({ top, left });
+    setOpen(true);
+  }
+
+  function handleClose() {
+    setOpen(false);
+    setAnchor(null);
   }
 
   return (
-    <div className="relative inline-block text-left">
-      <details className="group">
-        <summary className="inline-grid size-8 cursor-pointer list-none place-items-center rounded-lg border border-outline-variant bg-surface text-on-surface-variant transition hover:border-primary/40 hover:text-primary group-open:border-primary group-open:text-primary" aria-label={label}>
+    <>
+      <div className="relative inline-block text-left">
+        <button
+          ref={triggerRef}
+          type="button"
+          onClick={handleToggle}
+          className={`inline-grid size-8 cursor-pointer place-items-center rounded-lg border transition ${open ? "border-primary text-primary" : "border-outline-variant bg-surface text-on-surface-variant hover:border-primary/40 hover:text-primary"}`}
+          aria-label={label}
+          aria-expanded={open}
+        >
           <MoreVertical className="size-4" />
-        </summary>
-        <div className="absolute right-0 z-30 mt-2 w-40 overflow-hidden rounded-lg border border-outline-variant bg-surface py-1 shadow-xl">
-          {actions.map((action) => action.href ? (
-            <Link key={action.label} href={action.href} className={cn("block px-4 py-2.5 text-left text-label-md font-normal text-on-surface-variant transition hover:bg-surface-container-low", action.tone === "danger" && "text-error")}>{action.label}</Link>
-          ) : (
-            <button key={action.label} type="button" onClick={action.onClick} className={cn("block w-full px-4 py-2.5 text-left text-label-md font-normal text-on-surface-variant transition hover:bg-surface-container-low", action.tone === "danger" && "text-error")}>{action.label}</button>
-          ))}
-        </div>
-      </details>
-    </div>
+        </button>
+      </div>
+      {open && anchor && typeof document !== "undefined"
+        ? createPortal(
+            <div data-row-actions-menu style={{ position: "fixed", top: anchor.top, left: anchor.left, zIndex: 100 }} className="w-44 overflow-hidden rounded-lg border border-outline-variant bg-surface py-1 shadow-xl">
+              {actions.map((action) => {
+                const Icon = action.icon || Eye;
+                const isDisabled = Boolean(action.disabled);
+                const baseClassName = isDisabled
+                  ? "flex w-full cursor-not-allowed items-center gap-2 px-4 py-2.5 text-left text-label-md font-normal text-on-surface-variant/60"
+                  : cn("flex w-full items-center gap-2 px-4 py-2.5 text-left text-label-md font-normal text-on-surface-variant transition hover:bg-surface-container-low", action.tone === "danger" && "text-error");
+                const content = (
+                  <>
+                    <Icon className={isDisabled ? "size-4 opacity-60" : "size-4"} />
+                    {action.label}
+                  </>
+                );
+                if (!isDisabled && action.href) {
+                  return (
+                    <Link key={action.label} href={action.href} onClick={() => { handleClose(); setLoadingLabel(action.loadingLabel || `${action.label}...`); }} aria-label={action.ariaLabel || action.label} title={action.ariaLabel || action.label} className={baseClassName}>
+                      {content}
+                    </Link>
+                  );
+                }
+                return (
+                  <button key={action.label} type="button" disabled={isDisabled} onClick={() => { handleClose(); runAction(action); }} aria-label={action.ariaLabel || action.label} aria-disabled={isDisabled || undefined} title={isDisabled ? (action.disabledTitle || `${action.label} is not available`) : (action.ariaLabel || action.label)} className={baseClassName}>
+                    {content}
+                  </button>
+                );
+              })}
+            </div>,
+            document.body
+          )
+        : null}
+      <TransparentActionLoader open={Boolean(loadingLabel)} label={loadingLabel} />
+    </>
   );
 }
 

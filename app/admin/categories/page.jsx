@@ -1,21 +1,22 @@
 "use client";
 
 import Image from "next/image";
-import { RefreshCw, Search, ChevronDown, Plus, ArrowLeft, Eye } from "lucide-react";
+import { RefreshCw, Search, ChevronDown, Plus, ArrowLeft, Eye, Pencil, Trash2, Save } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { toast } from "sonner";
-import { AdminTable } from "@/components/admin-table";
-import { Button, Card, FilterTabs, Input, SourceBadge } from "@/components/ui";
-import { SyncModal } from "@/components/sync-modal";
+import { AdminTable, AdminTableActions } from "@/components/admin-table";
+import { ConfirmActionDialog, TransparentActionLoader } from "@/components/action-feedback";
+import { Button, Card, FilterTabs, Input, Textarea, Label, SourceBadge, Badge } from "@/components/ui";
 import { AddItemModal } from "@/components/add-item-modal";
 import { AdminCategoriesSkeleton } from "@/components/skeletons";
-import { getAdminCategories, getCategoryProducts, startProductSync, createManualCategory, toggleCategoryActive, setCategoryPriority, getSyncStatus } from "@/lib/api";
+import { getAdminCategories, getCategoryProducts, startProductSync, createManualCategory, toggleCategoryActive, setCategoryPriority, updateAdminCategory, deleteAdminCategory, getSyncStatus } from "@/lib/api";
 import { FALLBACK_IMAGE } from "@/lib/product-mapper";
 import { money } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
 import { PriorityToggle } from "@/components/priority-toggle";
 
 const PAGE_SIZE = 10;
+const MIN_SKELETON_MS = 650;
 
 export default function AdminCategoriesPage() {
   const token = useAdminAuthStore((state) => state.token);
@@ -29,12 +30,13 @@ export default function AdminCategoriesPage() {
   const [page, setPage] = useState(1);
   const [syncing, setSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState({ percent: 0, label: "" });
-  const [modalOpen, setModalOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [categories, setCategories] = useState([]);
   const [sourceFilter, setSourceFilter] = useState("all");
   const [selectedProducts, setSelectedProducts] = useState(new Set());
+const [actionLoading, setActionLoading] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [editTarget, setEditTarget] = useState(null);
   const pollRef = useRef(null);
 
   const checkSyncStatus = useCallback(async () => {
@@ -66,15 +68,20 @@ export default function AdminCategoriesPage() {
   const loadCategories = useCallback(() => {
     let active = true;
     if (!token) return () => { active = false; };
-    getAdminCategories(token)
-      .then((data) => {
+    Promise.all([
+      getAdminCategories(token),
+      new Promise((resolve) => window.setTimeout(resolve, MIN_SKELETON_MS)),
+    ])
+      .then(([data]) => {
         if (!active) return;
-         setRows((data.categories || []).map((category) => ({
+setRows((data.categories || []).map((category) => ({
            name: category.name,
           description: category.description || "",
           slug: category.name.toLowerCase().replaceAll(" ", "-"),
           count: category.count,
           status: category.isActive ? "Active" : "Inactive",
+          isActive: category.isActive,
+          icon: category.icon || "",
           source: category.source || "manual",
            lastSyncedAt: category.lastSyncedAt,
            ingramCategoryId: category.ingramCategoryId || "",
@@ -115,26 +122,19 @@ export default function AdminCategoriesPage() {
     setPage(1);
   }
 
-  async function handleOpenModal() {
-    const isRunning = await checkSyncStatus();
-    if (isRunning) return;
-    try {
-      const data = await getAdminCategories(token);
-      setCategories(data.categories || []);
-    } catch {
-      setCategories([]);
-    }
-    setModalOpen(true);
-  }
-
   function handleOpenAddModal() {
     setAddModalOpen(true);
   }
 
   async function handleViewCategory(category) {
-    setSelectedCategory(category);
-    setView("products");
-    await loadCategoryProducts(category.name);
+    setActionLoading("Loading category products...");
+    try {
+      await loadCategoryProducts(category.name);
+      setSelectedCategory(category);
+      setView("products");
+    } finally {
+      setActionLoading("");
+    }
   }
 
   function handleBackToList() {
@@ -142,30 +142,6 @@ export default function AdminCategoriesPage() {
     setSelectedCategory(null);
     setCategoryProducts(null);
     setSelectedProducts(new Set());
-  }
-
-  async function handleSyncSubmit(selectedNames) {
-    const isRunning = await checkSyncStatus();
-    if (isRunning) {
-      setModalOpen(false);
-      return;
-    }
-    setModalOpen(false);
-    setSyncing(true);
-    setSyncProgress({ percent: 0, label: "Starting sync..." });
-    try {
-      for (let i = 0; i < selectedNames.length; i++) {
-      await startProductSync({ category: selectedNames[i] }, token);
-        const percent = Math.round(((i + 1) / selectedNames.length) * 100);
-        setSyncProgress({ percent, label: `Syncing ${i + 1}/${selectedNames.length}` });
-      }
-      toast.success(`Sync started for ${selectedNames.length} categories`);
-      pollSyncProgress();
-    } catch (syncError) {
-      toast.error(syncError.message || "Could not start sync");
-      setSyncing(false);
-      setSyncProgress({ percent: 0, label: "" });
-    }
   }
 
   async function handleSyncCategoryProducts() {
@@ -196,7 +172,12 @@ export default function AdminCategoriesPage() {
     try {
       const skus = [...selectedProducts];
       for (let i = 0; i < skus.length; i++) {
-      await startProductSync({ keyword: skus[i] }, token);
+        await startProductSync({
+          ingramPartNumber: skus[i],
+          category: selectedCategory?.name || "",
+          categoryId: selectedCategory?.ingramCategoryId || selectedCategory?.id || "",
+          addOnly: true,
+        }, token);
         const percent = Math.round(((i + 1) / skus.length) * 100);
         setSyncProgress({ percent, label: `Syncing ${i + 1}/${skus.length}` });
       }
@@ -275,22 +256,66 @@ export default function AdminCategoriesPage() {
   }
 
   async function handleToggleCategory(categoryName) {
+    setActionLoading("Updating category...");
     try {
       const data = await toggleCategoryActive(categoryName, token);
       toast.success(data.message);
       loadCategories();
     } catch (err) {
       toast.error(err.message || "Could not toggle category");
+    } finally {
+      setActionLoading("");
     }
   }
 
-  async function handlePriorityChange(category, isPriority = true) {
+async function handlePriorityChange(category, isPriority = true) {
+    setActionLoading("Updating category priority...");
     try {
       await setCategoryPriority(category.name, isPriority, token);
       toast.success(isPriority ? "Priority category updated" : "Category priority removed");
       loadCategories();
     } catch (err) {
       toast.error(err.message || "Could not update category priority");
+    } finally {
+      setActionLoading("");
+    }
+  }
+
+  function handleEditCategory(category) {
+    setEditTarget(category);
+  }
+
+  async function confirmSaveCategory(payload) {
+    if (!editTarget) return;
+    setActionLoading("Saving category...");
+    try {
+      const data = await updateAdminCategory(editTarget.name, payload, token);
+      toast.success(data.message || "Category updated");
+      setEditTarget(null);
+      loadCategories();
+    } catch (err) {
+      toast.error(err.message || "Could not update category");
+    } finally {
+      setActionLoading("");
+    }
+  }
+
+  function handleDeleteCategory(category) {
+    setDeleteTarget(category);
+  }
+
+  async function confirmDeleteCategory() {
+    if (!deleteTarget) return;
+    setActionLoading("Deleting category...");
+    try {
+      const data = await deleteAdminCategory(deleteTarget.name, token);
+      toast.success(data.message || "Category permanently deleted from the database");
+      setDeleteTarget(null);
+      loadCategories();
+    } catch (err) {
+      toast.error(err.message || "Could not delete category");
+    } finally {
+      setActionLoading("");
     }
   }
 
@@ -320,7 +345,7 @@ export default function AdminCategoriesPage() {
     { key: "serial", header: "#", sortable: true, accessor: "serial", cellClassName: "font-semibold tabular-nums text-on-surface" },
     { key: "name", header: "Name", sortable: true, accessor: "name", cellClassName: "font-semibold text-on-surface", render: (category) => (
       <div className="max-w-72">
-        <p title={category.name} className="line-clamp-2 whitespace-normal font-semibold text-on-surface">{category.name}</p>
+         <p title={category.name} className="line-clamp-2 whitespace-normal text-base font-bold text-on-surface">{category.name}</p>
         <p className="truncate text-meta font-normal text-on-surface-variant">{category.description || category.slug}</p>
       </div>
     ) },
@@ -370,29 +395,81 @@ export default function AdminCategoriesPage() {
       key: "actions",
       header: "Actions",
       render: (category) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => handleViewCategory(category)}
-          className="size-9 p-0"
-          aria-label={`View products in ${category.name}`}
-          title="View products"
-        >
-          <Eye className="size-4" />
-        </Button>
+        <AdminTableActions
+          label={`Actions for ${category.name}`}
+          actions={[
+            { label: "View", ariaLabel: `View ${category.name}`, icon: Eye, onClick: () => handleViewCategory(category) },
+            {
+              label: "Edit",
+              ariaLabel: `Edit ${category.name}`,
+              icon: Pencil,
+              onClick: () => handleEditCategory(category),
+              disabled: category.source === "ingram",
+              disabledTitle: "Ingram categories cannot be edited (read-only)",
+            },
+            { label: "Delete", ariaLabel: `Delete ${category.name}`, icon: Trash2, tone: "danger", onClick: () => handleDeleteCategory(category) },
+          ]}
+        />
       ),
     },
   ];
 
   if (view === "products" && selectedCategory) {
+    const productColumns = [
+      {
+        key: "select",
+        header: "Select",
+        render: (product) => (
+          <input
+            type="checkbox"
+            checked={selectedProducts.has(product.ingramPartNumber)}
+            onChange={() => toggleProductSelection(product.ingramPartNumber)}
+            aria-label={`Select ${product.ingramPartNumber}`}
+            className="size-4 rounded border-outline-variant text-primary focus:ring-primary"
+          />
+        ),
+      },
+      {
+        key: "name",
+        header: "Product",
+        sortable: true,
+        accessor: "name",
+        cellClassName: "font-semibold text-on-surface",
+        render: (product) => (
+          <div className="flex max-w-72 items-center gap-3">
+            <Image
+              src={product.imageUrl || FALLBACK_IMAGE}
+              alt={product.name || product.description || product.ingramPartNumber}
+              width={40}
+              height={40}
+              className="size-10 shrink-0 rounded-xl object-cover ring-1 ring-outline-variant"
+            />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold text-on-surface">{product.name || product.description || product.ingramPartNumber}</p>
+              <p className="truncate text-meta font-normal text-on-surface-variant">{product.ingramPartNumber}</p>
+            </div>
+          </div>
+        ),
+      },
+      { key: "price", header: "Price", sortable: true, accessor: "price", render: (product) => <span className="font-semibold tabular-nums text-on-surface">{money(product.price)}</span> },
+      { key: "stock", header: "Stock", sortable: true, accessor: "stock", render: (product) => <StockCell stock={product.stock} /> },
+      {
+        key: "source",
+        header: "Source",
+        accessor: "source",
+        render: (product) => <SourceBadge source={product.source || "manual"} />,
+      },
+    ];
+
     return (
       <Card className="overflow-hidden p-0">
         <div className="flex flex-col gap-4 border-b border-outline-variant px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0 flex-1 lg:order-first">
-            <h2 className="font-heading text-lg font-semibold text-on-surface">{selectedCategory.name}</h2>
-            <p className="text-sm text-on-surface-variant">
-              {selectedCategory.count} products · Source: {selectedCategory.source}
-            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="font-heading text-lg font-semibold text-on-surface">{selectedCategory.name}</h2>
+              <SourceBadge source={selectedCategory.source} />
+            </div>
+            <p className="text-sm text-on-surface-variant">{selectedCategory.count} products in this category</p>
             {selectedCategory.description ? <p className="mt-1 max-w-2xl text-sm text-on-surface-variant">{selectedCategory.description}</p> : null}
           </div>
           <div className="flex flex-wrap gap-2">
@@ -412,56 +489,27 @@ export default function AdminCategoriesPage() {
 
         <div className="p-4 sm:p-5">
           {categoryProducts === null ? (
-          <AdminCategoriesSkeleton />
+            <AdminCategoriesSkeleton />
           ) : (
-          <Card className="overflow-hidden">
-            <div className="border-b border-outline-variant px-4 py-3">
-              <label className="flex cursor-pointer items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={selectedProducts.size === categoryProducts.length && categoryProducts.length > 0}
-                  onChange={toggleAllProducts}
-                  className="size-4 rounded border-outline-variant text-primary focus:ring-primary"
-                />
-                <span className="text-label-sm font-semibold text-on-surface">Select All ({categoryProducts.length})</span>
-              </label>
-            </div>
-            <div className="divide-y divide-outline-variant">
-              {categoryProducts.map((product, index) => (
-                <label
-                  key={`${product.ingramPartNumber}-${index}`}
-                  className="flex cursor-pointer items-center gap-4 px-4 py-3 transition hover:bg-surface-container-low/80"
-                >
+            <AdminTable
+              title="Products"
+              description="Review pricing and stock, or select products to sync."
+              columns={productColumns}
+              data={categoryProducts}
+              pageSize={PAGE_SIZE}
+              toolbar={(
+                <label className="flex cursor-pointer items-center gap-3">
                   <input
                     type="checkbox"
-                    checked={selectedProducts.has(product.ingramPartNumber)}
-                    onChange={() => toggleProductSelection(product.ingramPartNumber)}
+                    checked={categoryProducts.length > 0 && selectedProducts.size === categoryProducts.length}
+                    onChange={toggleAllProducts}
                     className="size-4 rounded border-outline-variant text-primary focus:ring-primary"
                   />
-                  <div className="flex flex-1 items-center gap-3">
-                    <Image
-                      src={product.imageUrl || FALLBACK_IMAGE}
-                      alt={product.name || product.description || product.ingramPartNumber}
-                      width={40}
-                      height={40}
-                  className="size-10 shrink-0 rounded-xl object-cover ring-1 ring-outline-variant"
-                />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold text-on-surface">{product.name || product.description || product.ingramPartNumber}</p>
-                      <p className="truncate text-meta text-on-surface-variant">{product.ingramPartNumber}</p>
-                    </div>
-                  </div>
-                  <div className="min-w-[4.5rem] shrink-0 text-right">
-                    <p className="text-xs font-semibold tabular-nums text-on-surface sm:text-label-md">{money(product.price)}</p>
-                    <p className="text-[11px] text-on-surface-variant sm:text-meta">Stock {product.stock || 0}</p>
-                  </div>
+                  <span className="text-label-sm font-semibold text-on-surface">Select All ({categoryProducts.length})</span>
                 </label>
-              ))}
-              {categoryProducts.length === 0 && (
-                <p className="py-8 text-center text-body-sm text-on-surface-variant">No products in this category</p>
               )}
-            </div>
-          </Card>
+              hideSearch
+            />
           )}
         </div>
       </Card>
@@ -470,6 +518,7 @@ export default function AdminCategoriesPage() {
 
   return (
     <div className="space-y-6">
+      <TransparentActionLoader open={Boolean(actionLoading)} label={actionLoading} />
       {rows === null && !error ? (
         <AdminCategoriesSkeleton />
       ) : error ? (
@@ -478,7 +527,7 @@ export default function AdminCategoriesPage() {
         <>
           <AdminTable
             title="Categories"
-            description="Manage your product categories. Click 'View Products' to see and sync products within a category."
+             description="Manage product categories and synced products."
             columns={categoryColumns}
             data={pageItems}
             pageSize={PAGE_SIZE}
@@ -487,69 +536,35 @@ export default function AdminCategoriesPage() {
             totalPages={totalPages}
             totalItems={filteredRows.length}
             toolbar={(
-              <>
-                <FilterTabs
-                  value={sourceFilter}
-                  onChange={(value) => { setSourceFilter(value); setPage(1); }}
-                  tabs={[
-                    { value: "all", label: "All" },
-                    { value: "manual", label: "Manual" },
-                    { value: "ingram", label: "Ingram" },
-                  ]}
-                />
-                <div className="relative min-w-[16rem] flex-1 sm:max-w-md lg:max-w-xl">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
-                  <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search categories" aria-label="Search categories" className="h-10 pl-10 shadow-sm" />
-                </div>
-              </>
-            )}
-            action={(
-              <div className="flex gap-3">
-                <Button variant="outline" onClick={handleOpenAddModal} className="gap-1.5">
-                  <Plus className="size-4" /> Add Category
-                </Button>
-                <div className="relative">
-                  <Button onClick={handleOpenModal} disabled={syncing} className="min-w-[160px]">
-                    {syncing ? (
-                      <span className="flex items-center gap-2">
-                        <svg className="size-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                        </svg>
-                        {syncProgress.percent > 0 ? `${syncProgress.percent}%` : "Syncing..."}
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-2">
-                        <RefreshCw className="size-4" /> Sync from Ingram
-                      </span>
-                    )}
-                  </Button>
-                  {syncing && syncProgress.percent > 0 && (
-                    <div className="absolute bottom-0 left-0 h-1 w-full overflow-hidden rounded-b-md bg-primary/20">
-                      <div
-                        className="h-full bg-primary transition-all duration-300"
-                        style={{ width: `${syncProgress.percent}%` }}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-            hideSearch
+               <div className="flex flex-wrap items-center justify-end gap-3">
+                  <div className="relative min-w-[14rem] flex-1 sm:max-w-md lg:max-w-md">
+                   <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
+                   <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search categories" aria-label="Search categories" className="h-10 pl-10 shadow-sm" />
+                 </div>
+              <Button variant="outline" onClick={handleOpenAddModal} className="shrink-0 gap-1.5"><Plus className="size-4" /> Add Category</Button>
+                 <div className="relative shrink-0">
+                   <Button asChild href="/admin/categories/sync" className="min-w-[160px] whitespace-nowrap"><RefreshCw className="size-4" /> Sync from Ingram</Button>
+                   {syncing && syncProgress.percent > 0 ? <div className="absolute bottom-0 left-0 h-1 w-full overflow-hidden rounded-b-md bg-primary/20"><div className="h-full bg-primary transition-all duration-300" style={{ width: `${syncProgress.percent}%` }} /></div> : null}
+                 </div>
+               </div>
+             )}
+             inlineToolbar
+             toolbarInHeader
+             secondaryToolbar={(
+               <FilterTabs
+                 value={sourceFilter}
+                 onChange={(value) => { setSourceFilter(value); setPage(1); }}
+                 tabs={[
+                   { value: "all", label: "All" },
+                   { value: "manual", label: "Manual" },
+                   { value: "ingram", label: "Ingram" },
+                 ]}
+               />
+             )}
+             hideSearch
           />
         </>
       )}
-
-      <SyncModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title="Sync from Ingram"
-        type="category"
-        items={categories}
-        onSync={handleSyncSubmit}
-        syncing={syncing}
-        syncProgress={syncProgress}
-      />
 
       <AddItemModal
         open={addModalOpen}
@@ -559,6 +574,95 @@ export default function AdminCategoriesPage() {
         onSubmit={handleCreateCategory}
         submitting={submitting}
       />
+
+      <CategoryEditModal
+        key={editTarget ? editTarget.name : "closed"}
+        open={Boolean(editTarget)}
+        category={editTarget}
+        onClose={() => setEditTarget(null)}
+        onSubmit={confirmSaveCategory}
+      />
+
+      <ConfirmActionDialog
+        open={Boolean(deleteTarget)}
+        title="Delete category"
+        message="Are you sure you want to delete this category?"
+        confirmLabel="Delete"
+        loading={Boolean(actionLoading)}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={confirmDeleteCategory}
+      />
+    </div>
+  );
+}
+
+function StockCell({ stock }) {
+  const qty = Number(stock) || 0;
+  const tone = qty === 0 ? "Out of Stock" : qty <= 10 ? "Low Stock" : "In Stock";
+  return (
+    <div className="flex items-center gap-2">
+      <span className="font-semibold tabular-nums text-on-surface">{qty}</span>
+      <Badge tone={tone}>{tone}</Badge>
+    </div>
+  );
+}
+
+function CategoryEditModal({ open, category, onClose, onSubmit }) {
+  const [name, setName] = useState(category?.name || "");
+  const [description, setDescription] = useState(category?.description || "");
+  const [icon, setIcon] = useState(category?.icon || "");
+  const [isActive, setIsActive] = useState(category?.isActive ?? category?.status === "Active");
+  const [submitting, setSubmitting] = useState(false);
+
+  if (!open || !category) return null;
+
+  function handleSubmit(event) {
+    if (event) event.preventDefault();
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      toast.error("Category name is required");
+      return;
+    }
+    setSubmitting(true);
+    onSubmit({
+      name: trimmedName,
+      description: description.trim(),
+      icon,
+      isActive,
+    }).finally(() => setSubmitting(false));
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={`Edit category ${category.name}`}>
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <Card className="relative w-full max-w-md p-0">
+        <div className="border-b border-outline-variant px-5 py-4">
+          <h2 className="font-heading text-lg font-semibold text-on-surface">Edit Category</h2>
+          <p className="text-sm text-on-surface-variant">Update category details below.</p>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4 px-5 py-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="edit-category-name">Name</Label>
+            <Input id="edit-category-name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Category name" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="edit-category-description">Description</Label>
+            <Textarea id="edit-category-description" value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Short description" rows={3} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="edit-category-icon">Icon (emoji)</Label>
+            <Input id="edit-category-icon" value={icon} onChange={(event) => setIcon(event.target.value)} placeholder="e.g. 🔧" />
+          </div>
+          <label className="flex cursor-pointer items-center gap-2">
+            <input type="checkbox" checked={isActive} onChange={(event) => setIsActive(event.target.checked)} className="size-4 rounded border-outline-variant text-primary focus:ring-primary" />
+            <span className="text-body font-medium text-on-surface">Active (visible on website)</span>
+          </label>
+          <div className="flex justify-end gap-3 border-t border-outline-variant pt-4">
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="submit" disabled={submitting} className="gap-1.5"><Save className="size-4" /> {submitting ? "Saving..." : "Save Changes"}</Button>
+          </div>
+        </form>
+      </Card>
     </div>
   );
 }

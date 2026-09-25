@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { ArrowUp } from "lucide-react";
 import { money } from "@/lib/utils";
 
-export function HomeHero({ products }) {
+export function HomeHero({ products, productCount = 0 }) {
   const [activeIndex, setActiveIndex] = useState(0);
   useEffect(() => {
     if (!products || products.length < 2) return undefined;
@@ -40,7 +40,7 @@ export function HomeHero({ products }) {
         </div>
         <div className="zl-stats">
           <AnimatedStat target={50000} suffix="k+" label="Happy customers" divisor={1000} />
-          <AnimatedStat target={10000} suffix="k+" label="Products" divisor={1000} />
+          <AnimatedStat target={productCount} suffix="" label={productCount === 1 ? "Product" : "Products"} />
           <AnimatedStat target={rating} suffix="" label="Average rating" decimal />
         </div>
       </div>

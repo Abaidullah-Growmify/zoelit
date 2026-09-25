@@ -1,17 +1,19 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronDown, Edit3, Eye, EyeOff, Loader2, Plus, Search, UserPlus, X } from "lucide-react";
+import { ChevronDown, Edit3, Eye, EyeOff, Loader2, Plus, Search, Trash2, UserPlus, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { AdminTable } from "@/components/admin-table";
+import { ConfirmActionDialog } from "@/components/action-feedback";
 import { Button, Card, ErrorText, Input, Label } from "@/components/ui";
 import { AdminCustomersSkeleton } from "@/components/skeletons";
-import { createAdminCustomer, getAdminCustomers, updateAdminCustomer, updateAdminCustomerStatus } from "@/lib/api";
+import { createAdminCustomer, deleteAdminCustomer, getAdminCustomers, updateAdminCustomer, updateAdminCustomerStatus } from "@/lib/api";
 import { money, shortDate } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
+import { minimumLoadingDelay } from "@/lib/utils";
 
 const PAGE_SIZE = 20;
 
@@ -47,6 +49,8 @@ export default function AdminCustomersPage() {
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editCustomer, setEditCustomer] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
@@ -57,8 +61,12 @@ export default function AdminCustomersPage() {
   useEffect(() => {
     let active = true;
     if (!token) return;
-    getAdminCustomers({ page, limit: PAGE_SIZE, keyword: debouncedKeyword || undefined }, token)
-      .then((data) => {
+    const startedAt = Date.now();
+    Promise.all([
+      getAdminCustomers({ page, limit: PAGE_SIZE, keyword: debouncedKeyword || undefined }, token),
+      minimumLoadingDelay(startedAt),
+    ])
+      .then(([data]) => {
         if (!active) return;
         setRows(data.customers || []);
         setTotalPages(data.pagination?.totalPages ?? 1);
@@ -93,6 +101,27 @@ export default function AdminCustomersPage() {
     }
   }
 
+  async function handleDeleteCustomer(customer) {
+    setDeleteTarget(customer);
+  }
+
+  async function confirmDeleteCustomer() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+
+    try {
+      await deleteAdminCustomer(deleteTarget.id, token);
+      toast.success("Customer deactivated successfully");
+      setDeleteTarget(null);
+      if (rows?.length === 1 && page > 1) setPage((current) => current - 1);
+      else setReloadKey((value) => value + 1);
+    } catch (deleteError) {
+      toast.error(deleteError.message || "Could not delete customer");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   const tableRows = useMemo(() => (
     rows || []
   ).map((row, index) => ({
@@ -120,7 +149,7 @@ export default function AdminCustomersPage() {
       ) : (
         <>
           <AdminTable
-            title="Customers"
+            title={<span className="text-xl font-extrabold tracking-tight">Customers</span>}
             description="All registered customers with their order history and lifetime spend."
             columns={columns}
             data={tableRows}
@@ -131,9 +160,9 @@ export default function AdminCustomersPage() {
             totalItems={totalItems}
             wrapperClassName="customer-table-scroll"
             tableClassName="customer-table-compact"
-            toolbar={(
+            action={(
               <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="relative min-w-[16rem] flex-1 sm:max-w-md lg:max-w-xl">
+                <div className="relative min-w-0 flex-1 sm:max-w-md lg:max-w-lg">
                   <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
                   <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search customers" aria-label="Search customers" className="h-10 pl-10 shadow-sm" />
                 </div>
@@ -144,10 +173,11 @@ export default function AdminCustomersPage() {
             )}
             hideSearch
             disableInitialSort
-           rowActions={(customer) => [
-              { label: `View ${customer.name}`, href: `/admin/customers/${customer.id}`, icon: Eye },
-              { label: `Edit ${customer.name}`, onClick: () => setEditCustomer(customer), icon: Edit3 },
-            ]}
+             rowActions={(customer) => [
+               { label: "View", ariaLabel: `View ${customer.name}`, href: `/admin/customers/${customer.id}`, icon: Eye },
+               { label: "Edit", ariaLabel: `Edit ${customer.name}`, onClick: () => setEditCustomer(customer), icon: Edit3 },
+               { label: "Delete", ariaLabel: `Delete ${customer.name}`, onClick: () => handleDeleteCustomer(customer), icon: Trash2, tone: "danger" },
+             ]}
           />
           <NewCustomerModal
             open={modalOpen}
@@ -162,6 +192,7 @@ export default function AdminCustomersPage() {
             }}
           />
           <EditCustomerModal
+            key={editCustomer?.id || "edit-customer"}
             customer={editCustomer}
             token={token}
             onClose={() => setEditCustomer(null)}
@@ -169,6 +200,15 @@ export default function AdminCustomersPage() {
               setRows((items) => items.map((item) => item.id === updatedCustomer.id ? { ...item, ...updatedCustomer } : item));
               setEditCustomer(null);
             }}
+          />
+          <ConfirmActionDialog
+            open={Boolean(deleteTarget)}
+            title="Deactivate customer?"
+            message={deleteTarget ? `Are you sure you want to deactivate ${deleteTarget.name}? The customer record will remain in the database, but the customer will no longer be able to log in.` : ""}
+            confirmLabel="Deactivate customer"
+            loading={deleting}
+            onCancel={() => setDeleteTarget(null)}
+            onConfirm={confirmDeleteCustomer}
           />
         </>
       )}
@@ -187,8 +227,6 @@ function EditCustomerModal({ customer, token, onClose, onUpdated }) {
   useEffect(() => {
     if (customer) {
       form.reset({ name: customer.name || "", email: customer.email || "", phone: customer.phone || "", password: "", confirmPassword: "" });
-      setShowPassword(false);
-      setShowConfirmPassword(false);
     }
   }, [customer, form]);
 

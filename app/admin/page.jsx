@@ -8,6 +8,7 @@ import { Card } from "@/components/ui";
 import { getAdminDashboardSummary } from "@/lib/api";
 import { money } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
+import { minimumLoadingDelay } from "@/lib/utils";
 import { AdminDashboardContent } from "./dashboard-content";
 
 export default function AdminDashboardPage() {
@@ -18,8 +19,9 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     let active = true;
     if (!token) return;
-    getAdminDashboardSummary(token)
-      .then((data) => {
+    const startedAt = Date.now();
+    Promise.all([getAdminDashboardSummary(token), minimumLoadingDelay(startedAt)])
+      .then(([data]) => {
         if (active) setSummary(data);
       })
       .catch((fetchError) => {

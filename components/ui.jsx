@@ -12,9 +12,9 @@ export function buttonClasses({ variant = "primary", size = "md" } = {}) {
     "inline-flex items-center justify-center gap-2 rounded-md font-semibold tracking-tight transition duration-150 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15 disabled:pointer-events-none disabled:opacity-60",
     size === "sm" ? "h-9 px-3.5 text-sm" : "h-10 px-4 text-sm",
     variant === "primary" && "bg-primary text-white shadow-sm hover:bg-primary-container",
-    variant === "secondary" && "bg-surface-container-low text-on-surface ring-1 ring-outline-variant hover:bg-surface-container",
-    variant === "outline" && "border border-outline-variant bg-surface text-on-surface hover:border-primary/40 hover:bg-surface-container-low",
-    variant === "ghost" && "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface",
+     variant === "secondary" && "bg-primary text-white shadow-sm hover:bg-primary-container",
+     variant === "outline" && "border border-primary bg-primary text-white shadow-sm hover:bg-primary-container",
+     variant === "ghost" && "text-primary hover:bg-primary/10 hover:text-primary",
      variant === "danger" && "bg-error-container text-on-error-container hover:bg-error hover:text-on-error"
   );
 }

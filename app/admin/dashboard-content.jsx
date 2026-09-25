@@ -146,10 +146,12 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
         searchPlaceholder="Search order or customer"
         searchKeys={["orderNumber", "id", (order) => order.customer?.name, "status", "payment", "total"]}
         filters={[{ key: "status", label: "Filter recent orders by status", allLabel: "All statuses", options: statuses, value: (order) => order.status }]}
-        rowActions={(order) => [
-          { label: "View", href: `/admin/orders/${order.id}` },
-        ]}
-        disableInitialSort
+         rowActions={(order) => [
+           { label: "View", href: `/admin/orders/${order.id}` },
+         ]}
+         toolbarInHeader
+         hideReset
+         disableInitialSort
       />
     </>
   );

@@ -9,6 +9,7 @@ import { AdminTableCell, AdminTableRow } from "@/components/admin-table";
 import { Badge, Button, Card, Input, Label } from "@/components/ui";
 import { AddressSkeleton } from "@/components/skeletons";
 import { cn } from "@/lib/utils";
+import { ConfirmActionDialog, TransparentActionLoader } from "@/components/action-feedback";
 
 export default function AddressesPage() {
   const token = useAuthStore((state) => state.token);
@@ -17,6 +18,7 @@ export default function AddressesPage() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [confirming, setConfirming] = useState(null);
+  const [actionLoading, setActionLoading] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -38,16 +40,19 @@ export default function AddressesPage() {
   }, [token]);
 
   function setDefault(id) {
+    setActionLoading("Updating address...");
     api
       .setDefaultAddress(id, token)
       .then(({ address }) => {
         setItems((current) => current.map((item) => ({ ...item, default: item._id === address._id })));
         toast.success("Default address updated");
       })
-      .catch((error) => toast.error(error.message || "Could not update default address"));
+      .catch((error) => toast.error(error.message || "Could not update default address"))
+      .finally(() => setActionLoading(""));
   }
 
   function remove(id) {
+    setActionLoading("Deleting address...");
     api
       .deleteAddress(id, token)
       .then(() => {
@@ -55,7 +60,8 @@ export default function AddressesPage() {
         setConfirming(null);
         toast.info("Address deleted");
       })
-      .catch((error) => toast.error(error.message || "Could not delete address"));
+      .catch((error) => toast.error(error.message || "Could not delete address"))
+      .finally(() => setActionLoading(""));
   }
 
   function openAdd() {
@@ -64,8 +70,10 @@ export default function AddressesPage() {
   }
 
   function openEdit(address) {
+    setActionLoading("Opening address editor...");
     setEditing(address);
     setShowForm(true);
+    window.setTimeout(() => setActionLoading(""), 300);
   }
 
   function closeForm() {
@@ -86,6 +94,7 @@ export default function AddressesPage() {
     };
 
     if (editing) {
+      setActionLoading("Saving address...");
       api
         .updateAddress(editing._id, payload, token)
         .then(({ address }) => {
@@ -93,8 +102,10 @@ export default function AddressesPage() {
           closeForm();
           toast.success("Address updated");
         })
-        .catch((error) => toast.error(error.message || "Could not update address"));
+        .catch((error) => toast.error(error.message || "Could not update address"))
+        .finally(() => setActionLoading(""));
     } else {
+      setActionLoading("Adding address...");
       api
         .createAddress(payload, token)
         .then(({ address }) => {
@@ -102,7 +113,8 @@ export default function AddressesPage() {
           closeForm();
           toast.success("Address added");
         })
-        .catch((error) => toast.error(error.message || "Could not add address"));
+        .catch((error) => toast.error(error.message || "Could not add address"))
+        .finally(() => setActionLoading(""));
     }
   }
 
@@ -205,20 +217,16 @@ export default function AddressesPage() {
         </div>
       ) : null}
 
-      {confirming ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-inverse-surface/60 p-4 backdrop-blur-sm">
-          <Card className="w-full max-w-md p-6 shadow-2xl shadow-slate-950/25">
-            <h2 className="font-heading text-headline-md font-semibold tracking-[-0.02em] text-on-surface">Delete address?</h2>
-            <p className="mt-2 text-body-md font-normal leading-6 text-on-surface-variant">
-              Are you sure you want to delete <strong className="font-semibold text-on-surface">{confirming.label}</strong>? This action cannot be undone.
-            </p>
-            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <Button type="button" variant="secondary" onClick={() => setConfirming(null)}>Cancel</Button>
-              <Button type="button" variant="danger" onClick={() => remove(confirming._id)}><Trash2 className="size-4" /> Delete address</Button>
-            </div>
-          </Card>
-        </div>
-      ) : null}
+      <ConfirmActionDialog
+        open={Boolean(confirming)}
+        title="Delete address?"
+        message={confirming ? `Are you sure you want to delete ${confirming.label}? This action cannot be undone.` : ""}
+        confirmLabel="Delete address"
+        loading={Boolean(actionLoading)}
+        onCancel={() => setConfirming(null)}
+        onConfirm={() => remove(confirming?._id)}
+      />
+      <TransparentActionLoader open={Boolean(actionLoading) && !confirming} label={actionLoading} />
     </div>
   );
 }

@@ -1,21 +1,23 @@
 "use client";
 
 import Image from "next/image";
-import { Eye, RefreshCw, Search, ChevronDown, Plus } from "lucide-react";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { Eye, Pencil, Trash2, RefreshCw, Search, ChevronDown, Plus } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
 import { AdminTable } from "@/components/admin-table";
 import { Button, Card, FilterTabs, Input, SourceBadge } from "@/components/ui";
 import { AddItemModal } from "@/components/add-item-modal";
 import { AdminProductsSkeleton } from "@/components/skeletons";
+import { ConfirmActionDialog, TransparentActionLoader, InfoActionDialog } from "@/components/action-feedback";
 import {
-  getAdminProducts,
-  getAdminCategories,
-  startPriceSync,
+   getAdminProducts,
+   getAdminCategories,
+   startPriceSync,
   createManualProduct,
   toggleProductActive,
   setProductPriority,
   getSyncStatus,
+  deleteAdminProduct,
 } from "@/lib/api";
 import { FALLBACK_IMAGE } from "@/lib/product-mapper";
 import { money } from "@/lib/utils";
@@ -23,6 +25,7 @@ import { useAdminAuthStore } from "@/store/admin-auth-store";
 import { PriorityToggle } from "@/components/priority-toggle";
 
 const PAGE_SIZE = 10;
+const MIN_SKELETON_MS = 650;
 
 export default function AdminProductsPage() {
   const token = useAdminAuthStore((state) => state.token);
@@ -32,40 +35,17 @@ export default function AdminProductsPage() {
   const [totalItems, setTotalItems] = useState(0);
   const [keyword, setKeyword] = useState("");
   const [debouncedKeyword, setDebouncedKeyword] = useState("");
-  const [syncing, setSyncing] = useState(false);
-  const [syncProgress, setSyncProgress] = useState({ percent: 0, label: "" });
+const [syncing, setSyncing] = useState(false);
+  const [, setSyncProgress] = useState({ percent: 0, label: "" });
   const [error, setError] = useState("");
   const [categories, setCategories] = useState([]);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [sourceFilter, setSourceFilter] = useState("all");
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [actionLoading, setActionLoading] = useState("");
+  const [categoryError, setCategoryError] = useState("");
   const pollRef = useRef(null);
-
-  const checkSyncStatus = useCallback(async () => {
-    if (!token) return;
-    try {
-      const data = await getSyncStatus(token);
-      const catalog = data.sync?.catalog;
-      if (catalog?.status === "processing" || catalog?.status === "started") {
-        setSyncing(true);
-        const processed = catalog.totalProcessed || 0;
-        const percent = Math.min(95, Math.round((processed / Math.max(processed, 10)) * 100));
-        setSyncProgress({ percent, label: `Processed ${processed} products` });
-        return true;
-      }
-      return false;
-    } catch {
-      return false;
-    }
-  }, [token]);
-
-  useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      checkSyncStatus();
-    }, 0);
-
-    return () => window.clearTimeout(timeout);
-  }, [checkSyncStatus]);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedKeyword(keyword.trim()), 400);
@@ -75,8 +55,11 @@ export default function AdminProductsPage() {
   useEffect(() => {
     let active = true;
     if (!token) return;
-    getAdminProducts({ page, limit: PAGE_SIZE, keyword: debouncedKeyword || undefined, source: sourceFilter !== "all" ? sourceFilter : undefined }, token)
-      .then((data) => {
+    Promise.all([
+      getAdminProducts({ page, limit: PAGE_SIZE, keyword: debouncedKeyword || undefined, source: sourceFilter !== "all" ? sourceFilter : undefined }, token),
+      new Promise((resolve) => window.setTimeout(resolve, MIN_SKELETON_MS)),
+    ])
+      .then(([data]) => {
         if (!active) return;
         setRows((data.products || []).map((product, index) => toRow(product, (page - 1) * PAGE_SIZE + index + 1)));
         setTotalPages(data.pagination?.totalPages ?? 1);
@@ -106,15 +89,13 @@ export default function AdminProductsPage() {
     setAddModalOpen(true);
   }
 
-  async function handlePriceSync() {
-    const isRunning = await checkSyncStatus();
-    if (isRunning) return;
+async function handlePriceSync() {
     setSyncing(true);
     setSyncProgress({ percent: 0, label: "Starting price sync..." });
     try {
       const data = await startPriceSync(token);
       toast.success(data.message || "Price synchronization started");
-      pollSyncProgress();
+      pollSyncProgress("price");
     } catch (syncError) {
       toast.error(syncError.message || "Could not start price sync");
       setSyncing(false);
@@ -122,7 +103,7 @@ export default function AdminProductsPage() {
     }
   }
 
-  function pollSyncProgress() {
+  function pollSyncProgress(syncType = "price") {
     if (pollRef.current) clearInterval(pollRef.current);
     let attempts = 0;
     const maxAttempts = 120;
@@ -130,16 +111,16 @@ export default function AdminProductsPage() {
       attempts++;
       try {
         const data = await getSyncStatus(token);
-        const catalog = data.sync?.catalog;
-        if (catalog?.status === "completed" || catalog?.status === "failed" || attempts >= maxAttempts) {
+         const sync = data.sync?.[syncType];
+         if (sync?.status === "completed" || sync?.status === "failed" || attempts >= maxAttempts) {
           clearInterval(pollRef.current);
           pollRef.current = null;
           setSyncing(false);
-          setSyncProgress({ percent: 100, label: catalog?.status === "completed" ? "Done!" : "Sync ended" });
+           setSyncProgress({ percent: 100, label: sync?.status === "completed" ? "Done!" : "Sync ended" });
           refreshProducts();
           setTimeout(() => setSyncProgress({ percent: 0, label: "" }), 2000);
-        } else if (catalog?.status === "processing") {
-          const processed = catalog.totalProcessed || 0;
+         } else if (sync?.status === "processing" || sync?.status === "started") {
+           const processed = sync.totalProcessed || 0;
           const percent = Math.min(95, Math.round((processed / Math.max(processed, 10)) * 100));
           setSyncProgress({ percent, label: `Processed ${processed} products` });
         }
@@ -179,23 +160,46 @@ export default function AdminProductsPage() {
       .catch(() => {});
   }
 
-  async function handleToggleProduct(ingramPartNumber) {
+async function handleToggleProduct(ingramPartNumber) {
     try {
       const data = await toggleProductActive(ingramPartNumber, token);
       toast.success(data.message);
       refreshProducts();
     } catch (err) {
-      toast.error(err.message || "Could not toggle product");
+      if (err.status === 409 && err.message) {
+        setCategoryError(err.message);
+      } else {
+        toast.error(err.message || "Could not toggle product");
+      }
     }
   }
 
-  async function handlePriorityChange(product, isPriority = true) {
+async function handlePriorityChange(product, isPriority = true) {
     try {
       await setProductPriority(product.sku, isPriority, token);
       toast.success(isPriority ? "Priority product updated" : "Product priority removed");
       refreshProducts();
     } catch (err) {
       toast.error(err.message || "Could not update product priority");
+    }
+  }
+
+  function handleDeleteProduct(product) {
+    setDeleteTarget(product);
+  }
+
+  async function confirmDeleteProduct() {
+    if (!deleteTarget) return;
+    setActionLoading("Deleting product...");
+    try {
+      const data = await deleteAdminProduct(deleteTarget.id, token);
+      toast.success(data.message || "Product permanently deleted from the database");
+      setDeleteTarget(null);
+      refreshProducts();
+    } catch (err) {
+      toast.error(err.message || "Could not delete product");
+    } finally {
+      setActionLoading("");
     }
   }
 
@@ -252,7 +256,7 @@ export default function AdminProductsPage() {
         <>
           <AdminTable
             title="Products"
-            description="Browse and manage your product catalog. Manually added and Ingram synced products are tracked separately."
+             description="Manage products from manual and Ingram sources."
             columns={columns}
             data={rows}
             pageSize={PAGE_SIZE}
@@ -262,60 +266,41 @@ export default function AdminProductsPage() {
             totalItems={totalItems}
             toolbar={(
               <>
-                <FilterTabs
-                  value={sourceFilter}
-                  onChange={(value) => { setSourceFilter(value); setPage(1); }}
-                  tabs={[
-                    { value: "all", label: "All" },
-                    { value: "manual", label: "Manual" },
-                    { value: "ingram", label: "Ingram" },
-                  ]}
-                />
-                <div className="relative min-w-[16rem] flex-1 sm:max-w-md lg:max-w-xl">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
-                  <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search products, SKU or category" aria-label="Search products" className="h-10 pl-10 shadow-sm" />
-                </div>
-              </>
+                 <div className="relative min-w-[14rem] flex-1 sm:max-w-md lg:max-w-sm">
+                   <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
+                   <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search products, SKU or category" aria-label="Search products" className="h-10 pl-10 shadow-sm" />
+                 </div>
+                 <Button onClick={handleOpenAddModal} className="shrink-0 gap-1.5"><Plus className="size-4" /> Add Product</Button>
+                 <Button asChild href="/admin/products/sync" className="shrink-0 whitespace-nowrap"><RefreshCw className="size-4" /> Sync from Ingram</Button>
+                 <Button onClick={handlePriceSync} disabled={syncing} className="shrink-0 gap-2 whitespace-nowrap"><RefreshCw className={`size-4 ${syncing ? "animate-spin" : ""}`} /> Sync prices</Button>
+               </>
             )}
-            hideSearch
-            disableInitialSort
-            action={(
-              <div className="flex gap-3">
-                <Button variant="outline" onClick={handleOpenAddModal} className="gap-1.5">
-                  <Plus className="size-4" /> Add Product
-                </Button>
-                <Button variant="outline" onClick={handlePriceSync} disabled={syncing}>
-                  <RefreshCw className={`size-4 ${syncing ? "animate-spin" : ""}`} /> Sync prices
-                </Button>
-                <div className="relative">
-                  <Button asChild href="/admin/products/sync" className="min-w-[160px]">
-                    {syncing ? (
-                      <span className="flex items-center gap-2">
-                        <svg className="size-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                        </svg>
-                        {syncProgress.percent > 0 ? `${syncProgress.percent}%` : "Syncing..."}
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-2">
-                        <RefreshCw className="size-4" /> Sync from Ingram
-                      </span>
-                    )}
-                  </Button>
-                  {syncing && syncProgress.percent > 0 && (
-                    <div className="absolute bottom-0 left-0 h-1 w-full overflow-hidden rounded-b-md bg-primary/20">
-                      <div
-                        className="h-full bg-primary transition-all duration-300"
-                        style={{ width: `${syncProgress.percent}%` }}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-            rowActions={(product) => [
-              { label: `View ${product.name}`, href: `/admin/products/${encodeURIComponent(product.id)}`, icon: Eye },
+             hideSearch
+             disableInitialSort
+             inlineToolbar
+             toolbarInHeader
+             secondaryToolbar={(
+               <FilterTabs
+                 value={sourceFilter}
+                 onChange={(value) => { setSourceFilter(value); setPage(1); }}
+                 tabs={[
+                   { value: "all", label: "All" },
+                   { value: "manual", label: "Manual" },
+                   { value: "ingram", label: "Ingram" },
+                 ]}
+               />
+             )}
+rowActions={(product) => [
+              { label: "View", ariaLabel: `View ${product.name}`, href: `/admin/products/${encodeURIComponent(product.id)}`, icon: Eye },
+              {
+                label: "Edit",
+                ariaLabel: `Edit ${product.name}`,
+                href: `/admin/products/${encodeURIComponent(product.id)}`,
+                icon: Pencil,
+                disabled: product.source === "ingram",
+                disabledTitle: "Ingram products cannot be edited (read-only)",
+              },
+              { label: "Delete", ariaLabel: `Delete ${product.name}`, onClick: () => handleDeleteProduct(product), icon: Trash2, tone: "danger" },
             ]}
           />
         </>
@@ -328,6 +313,25 @@ export default function AdminProductsPage() {
         categories={categories}
         onSubmit={handleCreateProduct}
         submitting={submitting}
+      />
+
+      <ConfirmActionDialog
+        open={Boolean(deleteTarget)}
+        title="Delete product"
+        message="Are you sure you want to delete this product?"
+        confirmLabel="Delete"
+        loading={Boolean(actionLoading)}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={confirmDeleteProduct}
+      />
+
+      <TransparentActionLoader open={Boolean(actionLoading)} label={actionLoading} />
+
+      <InfoActionDialog
+        open={Boolean(categoryError)}
+        title="Cannot activate product"
+        message={categoryError}
+        onClose={() => setCategoryError("")}
       />
     </div>
   );
@@ -362,8 +366,8 @@ function ProductCell({ product }) {
   return (
     <div className="flex max-w-64 items-center gap-3">
       <Image src={product.image} alt={product.name} width={48} height={48} className="size-10 shrink-0 rounded-xl object-cover ring-1 ring-outline-variant" />
-      <div className="min-w-0">
-        <p title={product.name} className="truncate font-semibold text-on-surface">{product.name}</p>
+       <div className="min-w-0">
+         <p title={product.name} className="truncate text-base font-bold text-on-surface">{product.name}</p>
         <p className="mt-0.5 truncate text-meta font-normal text-on-surface-variant">{product.sku}</p>
       </div>
     </div>

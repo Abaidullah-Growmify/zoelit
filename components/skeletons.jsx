@@ -131,34 +131,31 @@ const TABLE_BODY_PATTERN = ["h-4 w-24 rounded-sm", "h-4 w-28 rounded-sm", "size-
 
 function renderToolbarSkeleton(variant) {
   const search = <Skeleton className="h-10 min-w-[16rem] flex-1 rounded-sm sm:max-w-md lg:max-w-xl" />;
-  const button = <Skeleton className="h-10 w-32 shrink-0 rounded-md" />;
+  const fixedSearch = <Skeleton className="h-10 w-full max-w-md min-w-0 flex-1 rounded-sm" />;
+  const productSearch = <Skeleton className="h-10 w-96 min-w-0 max-w-full rounded-sm" />;
+  const button = <Skeleton className="h-10 w-44 shrink-0 rounded-md" />;
+  const productButton = <Skeleton className="h-10 min-w-0 flex-1 rounded-md" />;
+  const productWideButton = <Skeleton className="h-10 min-w-0 flex-1 rounded-md" />;
+  const wideButton = <Skeleton className="h-10 w-52 shrink-0 rounded-md" />;
   const select = <Skeleton className="h-10 w-48 shrink-0 rounded-md" />;
 
   switch (variant) {
     case "search-action":
-      return <><div className="flex min-w-0 flex-1 flex-nowrap items-center gap-3 overflow-x-auto">{search}</div>{button}</>;
+      return <><div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">{search}</div><div className="max-w-full shrink-0">{button}</div></>;
     case "search-double-action":
-      return <><div className="flex min-w-0 flex-1 flex-nowrap items-center gap-3 overflow-x-auto">{search}</div><div className="flex items-center gap-3">{button}{button}</div></>;
+      return <><div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">{search}</div><div className="flex max-w-full shrink-0 flex-wrap items-center justify-end gap-3">{button}{button}</div></>;
+    case "search-triple-action":
+      return <><div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">{search}</div><div className="flex max-w-full shrink-0 flex-wrap items-center justify-end gap-3">{button}{button}{wideButton}</div></>;
+    case "filter-search-double-action":
+      return <><div className="flex min-w-0 flex-1 flex-wrap items-center gap-3 lg:flex-nowrap"><Skeleton className="h-10 w-64 shrink-0 rounded-md" />{fixedSearch}</div><div className="flex max-w-full shrink-0 flex-wrap items-center justify-end gap-3">{button}{wideButton}</div></>;
+    case "filter-search-triple-action":
+      return <><div className="flex min-w-0 flex-1 flex-wrap items-center gap-3 lg:flex-nowrap"><Skeleton className="h-10 w-64 shrink-0 rounded-md" />{productSearch}</div><div className="mr-4 flex w-full max-w-[36rem] min-w-0 shrink items-center gap-3">{productButton}{productButton}{productWideButton}</div></>;
     case "search-select":
-      return <><div className="flex min-w-0 flex-1 flex-nowrap items-center gap-3 overflow-x-auto">{search}</div>{select}</>;
+      return <><div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">{search}</div>{select}</>;
     case "search-only":
     default:
-      return <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-3 overflow-x-auto">{search}</div>;
+      return <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">{search}</div>;
   }
-}
-
-function PaginationSkeleton() {
-  return (
-    <div className="mt-6 flex justify-center">
-      <div className="flex items-center gap-1.5">
-        <Skeleton className="h-10 w-28 rounded-md" />
-        <Skeleton className="h-10 w-10 rounded-md" />
-        <Skeleton className="h-10 w-10 rounded-md" />
-        <Skeleton className="h-10 w-10 rounded-md" />
-        <Skeleton className="h-10 w-24 rounded-md" />
-      </div>
-    </div>
-  );
 }
 
 function TableFrameSkeleton({ rows = 5, columns = 6, titleWidth, descWidth, toolbarVariant = "search-only", hasActions = true, bodyPattern = TABLE_BODY_PATTERN, className, showFooter = true }) {
@@ -170,20 +167,18 @@ function TableFrameSkeleton({ rows = 5, columns = 6, titleWidth, descWidth, tool
           {descWidth ? <Skeleton className={cn("mt-2 h-4 max-w-full rounded-sm", descWidth)} /> : null}
         </div>
       ) : null}
+      <div className="border-b border-slate-200/80 p-4 dark:border-slate-800">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          {renderToolbarSkeleton(toolbarVariant)}
+        </div>
+      </div>
       <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <table className="w-full text-left text-body">
+        <table className="w-full table-fixed text-left text-body">
           <thead className="border-b border-slate-200/80 bg-slate-50/95 dark:border-slate-800 dark:bg-slate-900/95">
-            <tr>
-              <th colSpan={columns} className="border-b border-slate-200/80 p-4 dark:border-slate-800">
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                  {renderToolbarSkeleton(toolbarVariant)}
-                </div>
-              </th>
-            </tr>
             <tr>
               {Array.from({ length: columns }).map((_, index) => (
                 <th key={index} className="whitespace-nowrap px-6 py-4">
-                  <Skeleton className="h-3 w-24 rounded-sm" />
+                   <Skeleton className="h-3 w-24 max-w-full rounded-sm" />
                 </th>
               ))}
             </tr>
@@ -196,7 +191,7 @@ function TableFrameSkeleton({ rows = 5, columns = 6, titleWidth, descWidth, tool
                   const cellClass = isAction ? "size-9 rounded-md" : bodyPattern[columnIndex % bodyPattern.length];
                   return (
                     <td key={columnIndex} className={cn("whitespace-nowrap px-6 py-4 align-middle", isAction && "text-center")}>
-                      <Skeleton className={cn("inline-block", cellClass)} />
+                       <Skeleton className={cn("inline-block max-w-full", cellClass)} />
                     </td>
                   );
                 })}
@@ -229,38 +224,74 @@ function TableFrameSkeleton({ rows = 5, columns = 6, titleWidth, descWidth, tool
 
 export function AdminProductsSkeleton() {
   return (
-    <div>
-      <TableFrameSkeleton rows={5} columns={6} hasActions titleWidth="w-40" descWidth="w-[32rem]" toolbarVariant="search-double-action" bodyPattern={["h-12 w-full max-w-64 rounded-md", "h-4 w-24 rounded-sm", "h-4 w-20 rounded-sm", "h-4 w-16 rounded-sm", "h-5 w-16 rounded-sm", "size-9 rounded-md"]} showFooter={false} />
-      <PaginationSkeleton />
-    </div>
+    <Card className="overflow-hidden p-0 shadow-sm">
+      <div className="border-b border-outline-variant/70 px-5 py-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0 flex-1"><Skeleton className="h-6 w-28 rounded-sm" /><Skeleton className="mt-2 h-4 w-full max-w-[42rem] rounded-sm" /></div>
+          <div className="flex w-full flex-wrap items-center justify-end gap-3 lg:w-auto lg:flex-nowrap"><Skeleton className="h-10 w-48 shrink-0 rounded-md" /><Skeleton className="h-10 w-32 shrink-0 rounded-md" /><Skeleton className="h-10 w-40 shrink-0 rounded-md" /><Skeleton className="h-10 w-32 shrink-0 rounded-md" /></div>
+        </div>
+      </div>
+      <div className="flex justify-start border-b border-outline-variant/70 px-4 py-3"><Skeleton className="h-10 w-64 rounded-md" /></div>
+      <div className="overflow-x-auto"><table className="w-full min-w-[1120px] text-left text-body"><thead className="border-b border-outline-variant/70 bg-surface-container-low/60"><tr>{Array.from({ length: 10 }).map((_, index) => <th key={index} className="px-4 py-3"><Skeleton className="h-3 w-20 rounded-sm" /></th>)}</tr></thead><tbody className="divide-y divide-outline-variant/40">{Array.from({ length: 7 }).map((_, rowIndex) => <tr key={rowIndex}>{Array.from({ length: 10 }).map((_, columnIndex) => <td key={columnIndex} className="px-4 py-4">{columnIndex === 1 ? <div className="flex items-center gap-3"><Skeleton className="size-10 rounded-xl" /><div><Skeleton className="h-4 w-40 rounded-sm" /><Skeleton className="mt-2 h-3 w-24 rounded-sm" /></div></div> : <Skeleton className={columnIndex === 9 ? "size-9 rounded-md" : "h-4 w-20 rounded-sm"} />}</td>)}</tr>)}</tbody></table></div>
+      <div className="flex items-center justify-between border-t border-outline-variant/70 px-5 py-4"><Skeleton className="h-4 w-40 rounded-sm" /><div className="flex gap-2"><Skeleton className="h-9 w-24 rounded-md" /><Skeleton className="h-9 w-9 rounded-md" /><Skeleton className="h-9 w-9 rounded-md" /><Skeleton className="h-9 w-24 rounded-md" /></div></div>
+    </Card>
   );
 }
 
 export function AdminCategoriesSkeleton() {
   return (
-    <div>
-      <TableFrameSkeleton rows={5} columns={2} hasActions={false} titleWidth="w-44" descWidth="w-[30rem]" toolbarVariant="search-action" bodyPattern={["h-5 w-44 rounded-sm", "h-4 w-20 rounded-sm"]} showFooter={false} />
-      <PaginationSkeleton />
-    </div>
+    <Card className="overflow-hidden p-0 shadow-sm">
+      <div className="border-b border-outline-variant/70 px-5 py-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0 flex-1"><Skeleton className="h-6 w-32 rounded-sm" /><Skeleton className="mt-2 h-4 w-full max-w-[38rem] rounded-sm" /></div>
+          <div className="flex w-full flex-wrap items-center justify-end gap-3 lg:w-auto lg:flex-nowrap"><Skeleton className="h-10 w-48 shrink-0 rounded-md" /><Skeleton className="h-10 w-32 shrink-0 rounded-md" /><Skeleton className="h-10 w-40 shrink-0 rounded-md" /></div>
+        </div>
+      </div>
+      <div className="flex justify-start border-b border-outline-variant/70 px-4 py-3"><Skeleton className="h-10 w-64 rounded-md" /></div>
+      <div className="overflow-x-auto"><table className="w-full min-w-[1040px] text-left text-body"><thead className="border-b border-outline-variant/70 bg-surface-container-low/60"><tr>{Array.from({ length: 9 }).map((_, index) => <th key={index} className="px-4 py-3"><Skeleton className="h-3 w-20 rounded-sm" /></th>)}</tr></thead><tbody className="divide-y divide-outline-variant/40">{Array.from({ length: 7 }).map((_, rowIndex) => <tr key={rowIndex}>{Array.from({ length: 9 }).map((_, columnIndex) => <td key={columnIndex} className="px-4 py-4">{columnIndex === 1 ? <div><Skeleton className="h-5 w-44 rounded-sm" /><Skeleton className="mt-2 h-3 w-32 rounded-sm" /></div> : <Skeleton className={columnIndex === 8 ? "size-9 rounded-md" : "h-4 w-20 rounded-sm"} />}</td>)}</tr>)}</tbody></table></div>
+      <div className="flex items-center justify-between border-t border-outline-variant/70 px-5 py-4"><Skeleton className="h-4 w-40 rounded-sm" /><div className="flex gap-2"><Skeleton className="h-9 w-24 rounded-md" /><Skeleton className="h-9 w-9 rounded-md" /><Skeleton className="h-9 w-9 rounded-md" /><Skeleton className="h-9 w-24 rounded-md" /></div></div>
+    </Card>
   );
 }
 
 export function AdminCustomersSkeleton() {
+  const headers = ["w-8", "w-20", "w-20", "w-20", "w-16", "w-16", "w-20", "w-20", "w-20"];
+  const cells = ["w-8", "w-36", "w-48", "w-24", "w-12", "w-20", "w-24", "w-20", "size-9"];
+
   return (
-    <div>
-      <TableFrameSkeleton rows={5} columns={6} hasActions={false} titleWidth="w-44" descWidth="w-[30rem]" toolbarVariant="search-action" bodyPattern={["h-5 w-48 rounded-sm", "h-4 w-24 rounded-sm", "h-4 w-16 rounded-sm", "h-5 w-20 rounded-sm", "h-6 w-20 rounded-full", "h-4 w-20 rounded-sm"]} showFooter={false} />
-      <PaginationSkeleton />
-    </div>
+    <Card className="overflow-hidden p-0 shadow-sm">
+      <div className="border-b border-outline-variant/70 px-5 py-4 sm:px-7">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <Skeleton className="h-7 w-44 rounded-sm" />
+            <Skeleton className="mt-1 h-4 w-[27rem] max-w-full rounded-sm" />
+          </div>
+          <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
+            <Skeleton className="h-10 w-full sm:w-72" />
+            <Skeleton className="h-10 w-full sm:w-40" />
+          </div>
+        </div>
+      </div>
+      <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <table className="w-full min-w-[1040px] text-left text-body">
+          <thead className="border-b border-outline-variant/70 bg-surface-container-low/60">
+            <tr>{headers.map((width, index) => <th key={index} className="whitespace-nowrap px-4 py-3"><Skeleton className={`h-3 ${width} rounded-sm`} /></th>)}</tr>
+          </thead>
+          <tbody className="divide-y divide-outline-variant/40">
+            {Array.from({ length: 8 }).map((_, rowIndex) => <tr key={rowIndex} className={rowIndex % 2 ? "bg-surface-container-low/40" : ""}>{cells.map((width, cellIndex) => <td key={cellIndex} className="whitespace-nowrap px-4 py-3.5"><Skeleton className={`${width === "size-9" ? "size-9 rounded-md" : `h-4 ${width}`} inline-block rounded-sm`} /></td>)}</tr>)}
+          </tbody>
+          <tfoot><tr><td colSpan={9} className="border-t border-outline-variant/70 px-5 py-4"><div className="flex items-center justify-between"><Skeleton className="h-4 w-40 rounded-sm" /><div className="flex gap-2"><Skeleton className="h-9 w-24 rounded-md" /><Skeleton className="h-9 w-9 rounded-md" /><Skeleton className="h-9 w-24 rounded-md" /></div></div></td></tr></tfoot>
+        </table>
+      </div>
+    </Card>
   );
 }
 
 export function AdminOrdersSkeleton() {
-  return (
-    <div>
-      <TableFrameSkeleton rows={6} columns={9} hasActions titleWidth="w-40" descWidth="w-[28rem]" toolbarVariant="search-select" bodyPattern={["h-4 w-24 rounded-sm", "h-4 w-28 rounded-sm", "h-4 w-20 rounded-sm", "h-5 w-20 rounded-full", "h-5 w-20 rounded-full", "h-4 w-32 rounded-sm", "h-4 w-24 rounded-sm", "h-5 w-16 rounded-sm", "size-9 rounded-md"]} showFooter={false} />
-      <PaginationSkeleton />
-    </div>
-  );
+  const headers = ["w-8", "w-20", "w-24", "w-20", "w-16", "w-24", "w-20", "w-20", "w-20"];
+  const cells = ["w-8", "w-20", "w-28", "w-14", "w-20", "w-20", "w-24", "w-28", "size-9"];
+
+  return <Card className="overflow-hidden p-0 shadow-sm"><div className="border-b border-outline-variant/70 px-5 py-4 sm:px-7"><div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"><div><Skeleton className="h-7 w-48 rounded-sm" /><Skeleton className="mt-1 h-4 w-[27rem] max-w-full rounded-sm" /></div><div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto"><Skeleton className="h-10 w-full sm:w-72 lg:w-80" /><Skeleton className="h-10 w-full sm:w-56" /></div></div></div><div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"><table className="w-full min-w-[1120px] text-left text-body"><thead className="border-b border-outline-variant/70 bg-surface-container-low/60"><tr>{headers.map((width, index) => <th key={index} className="whitespace-nowrap px-4 py-3"><Skeleton className={`h-3 ${width} rounded-sm`} /></th>)}</tr></thead><tbody className="divide-y divide-outline-variant/40">{Array.from({ length: 7 }).map((_, rowIndex) => <tr key={rowIndex} className={rowIndex % 2 ? "bg-surface-container-low/40" : ""}>{cells.map((width, cellIndex) => <td key={cellIndex} className="whitespace-nowrap px-4 py-3.5"><Skeleton className={`${width === "size-9" ? "size-9 rounded-md" : `h-4 ${width} rounded-sm`}`} /></td>)}</tr>)}</tbody><tfoot><tr><td colSpan={9} className="border-t border-outline-variant/70 px-5 py-4"><div className="flex items-center justify-between"><Skeleton className="h-4 w-40 rounded-sm" /><div className="flex gap-2"><Skeleton className="h-9 w-24 rounded-md" /><Skeleton className="h-9 w-9 rounded-md" /><Skeleton className="h-9 w-24 rounded-md" /></div></div></td></tr></tfoot></table></div></Card>;
 }
 
 export function AdminProductEditSkeleton() {
@@ -764,6 +795,130 @@ export function AdminFormSkeleton() {
         <Skeleton className="mt-6 aspect-square w-full rounded-lg" />
         <Skeleton className="mt-5 h-11 w-full rounded-sm" />
       </Card>
+    </div>
+  );
+}
+
+// Mirrors the storefront home page layout ("(shop)/page.jsx") using real DB
+// counts so the skeleton only shows as many tiles/cards as actually exist.
+export function HomePageSkeleton({ categoryCount = 0, productCount = 0 }) {
+  const categoryTiles = Math.max(0, Math.min(categoryCount, 6));
+  const cardsPerSection = Math.min(4, Math.max(1, productCount));
+  const sectionLabels = ["Top Sale", "New Arrivals", "Trending"];
+
+  return (
+    <>
+      <section className="zl-hero">
+        <div className="zl-hero-left">
+          <Skeleton className="h-3 w-44 rounded-sm" />
+          <Skeleton className="mt-4 h-11 w-full max-w-md rounded-sm" />
+          <Skeleton className="mt-2 h-11 w-80 max-w-full rounded-sm" />
+          <Skeleton className="mt-5 h-4 w-full max-w-lg rounded-sm" />
+          <Skeleton className="mt-2 h-4 w-96 max-w-full rounded-sm" />
+          <Skeleton className="mt-7 h-12 w-40 rounded-xl" />
+          <div className="zl-stats">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="zl-stat">
+                <Skeleton className="h-5 w-20 rounded-sm" />
+                <Skeleton className="mt-1.5 h-3 w-16 rounded-sm" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="zl-hero-right">
+          <HeroCardSkeleton className="zl-hv1" />
+          <HeroCardSkeleton className="zl-hv2" />
+          <HeroCardSkeleton className="zl-hv3" />
+        </div>
+      </section>
+
+      <section className="container-page pb-4 pt-8 sm:pt-10">
+        <div className="mb-6 flex items-end justify-between gap-4">
+          <Skeleton className="h-7 w-52 rounded-sm" />
+          <Skeleton className="h-4 w-16 rounded-sm" />
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          {Array.from({ length: categoryTiles }).map((_, index) => (
+            <div key={index} className="flex min-h-[116px] flex-col items-center justify-center rounded-[14px] border border-outline-variant bg-surface px-3 py-5 text-center">
+              <Skeleton className="size-7 rounded-sm" />
+              <Skeleton className="mt-3 h-4 w-24 rounded-sm" />
+              <Skeleton className="mt-1.5 h-3 w-16 rounded-sm" />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {sectionLabels.map((label, index) => (
+        <section key={label} className={`container-page ${index === 0 ? "section-fade-up py-16" : "pb-16"}`}>
+          <div className="mb-8 flex items-end justify-between gap-4">
+            <div className="min-w-0">
+              <Skeleton className="h-4 w-24 rounded-sm" />
+              <Skeleton className="mt-2 h-7 w-64 max-w-full rounded-sm" />
+            </div>
+            <Skeleton className="h-9 w-24 shrink-0 rounded-sm" />
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: cardsPerSection }).map((_, productIndex) => (
+              <HomeCardSkeleton key={productIndex} />
+            ))}
+          </div>
+        </section>
+      ))}
+
+      <section className="container-page pb-16">
+        <Card className="relative overflow-hidden p-6 sm:p-8 lg:p-10">
+          <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)] lg:items-center">
+            <div>
+              <Skeleton className="h-6 w-28 rounded-sm" />
+              <Skeleton className="mt-5 h-9 w-full max-w-xl rounded-sm" />
+              <Skeleton className="mt-4 h-4 w-full max-w-lg rounded-sm" />
+              <Skeleton className="mt-2 h-4 w-full max-w-md rounded-sm" />
+            </div>
+            <div className="space-y-3">
+              <Skeleton className="h-12 w-full rounded-md" />
+              <Skeleton className="h-10 w-40 rounded-md" />
+            </div>
+          </div>
+        </Card>
+      </section>
+    </>
+  );
+}
+
+function HomeCardSkeleton() {
+  return (
+    <Card className="group relative flex h-full flex-col border-[rgba(0,0,0,0.06)] p-0 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_4px_12px_rgba(16,24,40,0.06)]">
+      <div className="p-4 pb-0">
+        <div className="relative flex h-[185px] items-center justify-center rounded-xl bg-[#F4F4F5] p-5 dark:bg-slate-800">
+          <Skeleton className="aspect-[4/3] w-[74%] rounded-xl" />
+        </div>
+      </div>
+      <div className="flex flex-1 flex-col p-4 pt-4">
+        <div className="flex items-start justify-between gap-3">
+          <Skeleton className="h-5 w-3/5 rounded-sm" />
+          <Skeleton className="h-5 w-20 shrink-0 rounded-sm" />
+        </div>
+        <Skeleton className="mt-3 h-4 w-28 rounded-sm" />
+        <div className="mt-auto pt-5">
+          <Skeleton className="h-10 w-full rounded-md" />
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function HeroCardSkeleton({ className }) {
+  return (
+    <div className={`zl-hv pointer-events-none ${className}`}>
+      <div className="zl-hv-img">
+        <Skeleton className="h-16 w-16 rounded-lg" />
+      </div>
+      <div className="zl-hv-body">
+        <Skeleton className="h-2.5 w-16 rounded-sm" />
+        <Skeleton className="mt-2 h-3.5 w-full rounded-sm" />
+        <Skeleton className="mt-1.5 h-3.5 w-full rounded-sm" />
+        <Skeleton className="mt-2 h-3 w-24 rounded-sm" />
+      </div>
     </div>
   );
 }

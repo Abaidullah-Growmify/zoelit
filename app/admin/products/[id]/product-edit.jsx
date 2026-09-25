@@ -41,10 +41,17 @@ export function AdminProductEdit({ id }) {
     return <AdminPageHeader title="Product not found" description="We could not find the product you are looking for." />;
   }
 
+  const isIngram = product.source === "ingram";
+
   return (
     <Card className="p-5 sm:p-6">
-      <AdminPageHeader title={`Edit ${product.name || product.description || product.ingramPartNumber}`} description={`Update catalog content, pricing, stock, and image for ${product.ingramPartNumber}.`} />
-      <ProductForm product={product} mode="edit" />
+      <AdminPageHeader title={`Edit ${product.name || product.description || product.ingramPartNumber}`} description={`${isIngram ? "This product is synced from Ingram Micro and cannot be edited manually." : "Update catalog content, pricing, stock, and image for "}${product.ingramPartNumber}.`} />
+      {isIngram ? (
+        <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+          Ingram-synced products are read-only. You can activate, deactivate or delete them from the product list.
+        </p>
+      ) : null}
+      <ProductForm product={product} mode="edit" readOnly={isIngram} />
     </Card>
   );
 }
