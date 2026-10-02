@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, Check, CheckCircle2, RotateCcw, ShieldCheck, Star, Truck } from "lucide-react";
-import { getFeaturedProducts, getServerProduct } from "@/lib/server-catalog";
+import { ArrowRight, Check, CheckCircle2, RotateCcw, ShieldCheck, Star, Truck, XCircle } from "lucide-react";
+import { getFeaturedProducts, getServerProduct, getStoreConfig } from "@/lib/server-catalog";
 import { money } from "@/lib/utils";
 import { ProductBuy } from "./product-buy";
 import { ProductTabs } from "./product-tabs";
@@ -13,8 +13,8 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }) {
   const { id } = await params;
-  const product = await getServerProduct(id);
-  return { title: product ? `${product.name} | ZoeLit Commerce` : "Product" };
+  const [product, config] = await Promise.all([getServerProduct(id), getStoreConfig()]);
+  return { title: product ? `${product.name} | ${config.name}` : "Product" };
 }
 
 function TrustTiles({ product }) {
@@ -59,7 +59,7 @@ function YouMayAlsoLike({ currentId, products }) {
 
 export default async function ProductDetailPage({ params }) {
   const { id } = await params;
-  const product = await getServerProduct(id);
+  const [product, storeConfig] = await Promise.all([getServerProduct(id), getStoreConfig()]);
   if (!product) notFound();
 
   const featured = await getFeaturedProducts();
@@ -90,10 +90,17 @@ export default async function ProductDetailPage({ params }) {
                 <span className="text-label-sm font-bold text-on-surface">{product.rating}</span>
               </span>
             ) : null}
-            <span className="inline-flex items-center gap-1.5 text-label-sm font-bold text-tertiary">
-              <CheckCircle2 className="size-4" />
-              {product.stock} in stock
-            </span>
+            {product.isSellable === false ? (
+              <span className="inline-flex items-center gap-1.5 text-label-sm font-bold text-error">
+                <XCircle className="size-4" />
+                {product.availability || "Out of Stock"}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 text-label-sm font-bold text-tertiary">
+                <CheckCircle2 className="size-4" />
+                {product.stock} in stock
+              </span>
+            )}
           </div>
 
           <h1 className="mt-4 max-w-2xl text-balance font-heading text-headline-md font-extrabold leading-tight tracking-[-0.03em] text-on-surface sm:text-headline-lg">
@@ -101,7 +108,7 @@ export default async function ProductDetailPage({ params }) {
           </h1>
 
           <div className="mt-5 flex items-end gap-4">
-            <span className="font-heading text-headline-lg font-extrabold tabular-nums tracking-[-0.03em] text-on-surface">{money(product.price)}</span>
+            <span className="font-heading text-headline-lg font-extrabold tabular-nums tracking-[-0.03em] text-on-surface">{money(product.price, storeConfig.currency)}</span>
             <span className="pb-1 text-label-md font-semibold text-on-surface-variant">Tax and shipping at checkout</span>
           </div>
 

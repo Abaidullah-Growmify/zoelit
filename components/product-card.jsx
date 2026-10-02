@@ -9,6 +9,9 @@ import { useCartStore } from "@/store/cart-store";
 import { useAuthStore } from "@/store/auth-store";
 import { useWishlistStore } from "@/store/wishlist-store";
 import { Button, Card } from "@/components/ui";
+import { resolveAvailability } from "@/lib/product-availability";
+
+const IMAGE_AREA_CLASS = "h-[180px] p-4";
 
 export function ProductCard({
   product,
@@ -39,6 +42,10 @@ export function ProductCard({
   const isWishlisted = isClientReady && (controlledWishlisted ?? storedWishlisted);
   const effectiveCartQuantity = isClientReady ? cartQuantity : 0;
   const remainingStock = Math.max((Number(stockCount) || 0) - effectiveCartQuantity, 0);
+  // Resolved client-side so a manual product the admin has just switched off
+  // stops showing "in stock" the moment the page renders.
+  const availability = product ? resolveAvailability(product) : remainingStock > 0 ? "In Stock" : "Out of Stock";
+  const sellable = availability === "In Stock";
   const hasDetailLink = Boolean(productId);
   const detailHref = hasDetailLink ? `/products/${productId}` : undefined;
 
@@ -136,44 +143,47 @@ export function ProductCard({
   const imageNode = (
     <div
       ref={imageRef}
-      className="relative mx-auto flex aspect-[4/3] w-[74%] items-center justify-center overflow-hidden rounded-xl bg-transparent p-2"
+      className={cn("relative w-full overflow-hidden", IMAGE_AREA_CLASS)}
     >
-      <Image
-        src={image}
-        alt={title}
-        width={700}
-        height={525}
-        className="h-full w-full rounded-xl object-contain transition-transform duration-300 ease-out motion-reduce:transform-none group-hover:scale-[1.03]"
-      />
+      <div className="flex items-center justify-center h-full">
+        <Image
+          src={image}
+          alt={title}
+          width={300}
+          height={220}
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          className="object-contain transition-transform duration-300 ease-out motion-reduce:transform-none group-hover:scale-[1.03]"
+        />
+      </div>
     </div>
   );
 
   return (
     <Card className="group relative flex h-full cursor-pointer flex-col border-[rgba(0,0,0,0.06)] p-0 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_4px_12px_rgba(16,24,40,0.06)] transition-all duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:shadow-[0_8px_20px_rgba(16,24,40,0.10)] hover:-translate-y-0.5">
-      <button
-        type="button"
-        onClick={handleWishlistToggle}
-        aria-pressed={isWishlisted}
-        aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-        className={cn(
-          "absolute right-4 top-4 z-20 grid size-9 place-items-center rounded-full border bg-surface-container-lowest/95 shadow-sm backdrop-blur transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15 motion-reduce:transition-colors motion-reduce:hover:scale-100",
-          isWishlisted
-            ? "border-error-container bg-error-container text-error animate-[wishlistBounce_220ms_ease-out] motion-reduce:animate-none"
-            : "border-outline-variant text-on-surface-variant hover:scale-110 hover:border-primary hover:text-primary",
-        )}
-      >
-        <Heart className="size-4" fill={isWishlisted ? "currentColor" : "none"} />
-      </button>
+      {isClientReady && token ? (
+        <button
+          type="button"
+          onClick={handleWishlistToggle}
+          aria-pressed={isWishlisted}
+          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          className={cn(
+            "absolute right-4 top-4 z-20 grid size-9 place-items-center rounded-full border bg-surface-container-lowest/95 shadow-sm backdrop-blur transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15 motion-reduce:transition-colors motion-reduce:hover:scale-100",
+            isWishlisted
+              ? "border-error-container bg-error-container text-error animate-[wishlistBounce_220ms_ease-out] motion-reduce:animate-none"
+              : "border-outline-variant text-on-surface-variant hover:scale-110 hover:border-primary hover:text-primary",
+          )}
+        >
+          <Heart className="size-4" fill={isWishlisted ? "currentColor" : "none"} />
+        </button>
+      ) : null}
 
-      <div className="p-4 pb-0">
-        <div className="relative flex h-[185px] items-center justify-center rounded-xl bg-[#F4F4F5] p-5 dark:bg-slate-800 sm:h-[185px]">
-          {category ? (
-              <span className="absolute left-4 top-4 inline-block max-w-[60%] truncate rounded-full bg-surface-container-low px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.02em] text-on-surface-variant">
-              {category}
-            </span>
-          ) : null}
-          {hasDetailLink ? <Link href={detailHref} className="block w-full focus-visible:outline-none">{imageNode}</Link> : <div className="block w-full">{imageNode}</div>}
-        </div>
+      <div className={cn("relative overflow-hidden rounded-t-xl bg-transparent", IMAGE_AREA_CLASS)}>
+        {category ? (
+          <span className="absolute left-4 top-4 z-10 inline-block max-w-[60%] truncate rounded-full bg-surface-container-low px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.02em] text-on-surface-variant">
+            {category}
+          </span>
+        ) : null}
+        {hasDetailLink ? <Link href={detailHref} className="block w-full focus-visible:outline-none">{imageNode}</Link> : <div className="block w-full">{imageNode}</div>}
       </div>
 
       <div className="flex flex-1 flex-col p-4 pt-4">
@@ -185,9 +195,9 @@ export function ProductCard({
         </div>
 
         <div className="mt-3 flex items-center gap-2">
-          <span className={cn("inline-flex size-2 shrink-0 rounded-full", remainingStock > 0 ? "bg-emerald-500" : "bg-rose-500")} />
-          <span className="text-sm font-medium text-on-surface-variant">
-            {remainingStock > 0 ? `${remainingStock} in stock` : "Out of stock"}
+          <span className={cn("inline-flex size-2 shrink-0 rounded-full", sellable ? "bg-emerald-500" : "bg-rose-500")} />
+          <span className="text-xs font-medium text-on-surface-variant">
+            {sellable ? `${remainingStock} in stock` : availability}
           </span>
         </div>
 
@@ -195,13 +205,13 @@ export function ProductCard({
 
         <div className="mt-auto pt-5">
           <Button
-             className="h-10 w-full rounded-md bg-[#2563EB] text-white hover:bg-[#1d4ed8]"
+            className="h-10 w-full rounded-md bg-[#2563EB] text-white hover:bg-[#1d4ed8]"
             onClick={handleAddToCart}
             aria-label={`Add ${title} to cart`}
-            disabled={remainingStock <= 0}
+            disabled={!sellable || remainingStock <= 0}
           >
-              <ShoppingBasket className="size-4 transition-transform duration-200 ease-out group-hover/cta:translate-x-0.5 motion-reduce:transition-none" />
-            Add to cart
+            <ShoppingBasket className="size-4 transition-transform duration-200 ease-out group-hover/cta:translate-x-0.5 motion-reduce:transition-none" />
+            {sellable ? "Add to cart" : "Out of stock"}
           </Button>
         </div>
       </div>

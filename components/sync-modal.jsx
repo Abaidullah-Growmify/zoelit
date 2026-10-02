@@ -169,7 +169,7 @@ export function SyncModal({ open, onClose, title, type, items, onSync, syncing, 
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center">
         <div className="fixed inset-0 bg-inverse-surface/40 backdrop-blur-sm" onClick={onClose} />
-        <div className="relative z-10 flex w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-outline-variant bg-surface shadow-2xl" style={{ height: "85vh" }}>
+        <div className="relative z-10 flex w-full max-w-2xl flex-col overflow-hidden rounded-lg border border-outline-variant bg-surface shadow-2xl" style={{ height: "85vh" }}>
           <div className="flex items-center justify-between border-b border-outline-variant px-5 py-4">
             <h2 className="font-heading text-lg font-semibold text-on-surface">{title}</h2>
             <button onClick={onClose} className="icon-btn size-8">
@@ -214,7 +214,7 @@ export function SyncModal({ open, onClose, title, type, items, onSync, syncing, 
                   const expanded = expandedCategory === catName;
                   const alreadyAdded = Boolean(cat.alreadyAdded);
                   return (
-                    <div key={`${catName}-${index}`} className="rounded-sm">
+                    <div key={`${catName}-${index}`} className="rounded-md">
                       <div className="flex items-start gap-2 px-3 py-3 hover:bg-surface-container-low">
                         <button
                           type="button"
@@ -239,7 +239,7 @@ export function SyncModal({ open, onClose, title, type, items, onSync, syncing, 
                             <p className="py-4 text-body-sm text-on-surface-variant">No products found in this category</p>
                           ) : (
                             <>
-                              <label className="flex cursor-pointer items-center gap-3 rounded-sm py-2 pr-3 hover:bg-surface-container-low" onClick={handleToggleAllExpandedProducts}>
+                              <label className="flex cursor-pointer items-center gap-3 rounded-md py-2 pr-3 hover:bg-surface-container-low" onClick={handleToggleAllExpandedProducts}>
                                 <span className={`flex size-5 shrink-0 items-center justify-center rounded border ${allExpandedProductsSelected ? "border-primary bg-primary text-white" : "border-outline-variant bg-surface-container-lowest"}`}>
                                   {allExpandedProductsSelected && <Check className="size-3.5" />}
                                 </span>
@@ -251,7 +251,7 @@ export function SyncModal({ open, onClose, title, type, items, onSync, syncing, 
                                  const alreadyAdded = Boolean(product.alreadyAdded);
                                  const checked = selected.has(key);
                                  return (
-                                   <label key={`${expandedCategory}-${key}-${index}`} className={`flex items-center gap-3 rounded-sm py-2 pr-3 ${alreadyAdded ? "cursor-not-allowed opacity-65" : "cursor-pointer hover:bg-surface-container-low"}`} onClick={() => { if (!alreadyAdded) handleToggleItem(key); }}>
+                                   <label key={`${expandedCategory}-${key}-${index}`} className={`flex items-center gap-3 rounded-md py-2 pr-3 ${alreadyAdded ? "cursor-not-allowed opacity-65" : "cursor-pointer hover:bg-surface-container-low"}`} onClick={() => { if (!alreadyAdded) handleToggleItem(key); }}>
                                     <span className={`flex size-5 shrink-0 items-center justify-center rounded border ${checked ? "border-primary bg-primary text-white" : "border-outline-variant bg-surface-container-lowest"}`}>
                                       {checked && <Check className="size-3.5" />}
                                     </span>
@@ -329,7 +329,7 @@ export function SyncModal({ open, onClose, title, type, items, onSync, syncing, 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-inverse-surface/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 flex h-[min(85vh,760px)] max-h-[calc(100vh-2rem)] w-[calc(100%-2rem)] max-w-4xl flex-col overflow-hidden rounded-2xl border border-outline-variant bg-surface shadow-2xl">
+      <div className="relative z-10 flex h-[min(85vh,760px)] max-h-[calc(100vh-2rem)] w-[calc(100%-2rem)] max-w-4xl flex-col overflow-hidden rounded-lg border border-outline-variant bg-surface shadow-2xl">
         <div className="flex items-center justify-between border-b border-outline-variant px-5 py-4">
           <h2 className="font-heading text-lg font-semibold text-on-surface">{title}</h2>
           <button onClick={onClose} className="icon-btn size-8">
@@ -350,7 +350,7 @@ export function SyncModal({ open, onClose, title, type, items, onSync, syncing, 
         </div>}
 
         <div className={`min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden px-4 py-3 sm:px-6 ${emptyCategoryState ? "flex items-center justify-center" : ""}`}>
-          {!emptyCategoryState && <label className="flex cursor-pointer items-center gap-3 rounded-sm px-3 py-2.5 hover:bg-surface-container-low" onClick={handleToggleAll}>
+          {!emptyCategoryState && <label className="flex cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 hover:bg-surface-container-low" onClick={handleToggleAll}>
             <span className={`flex size-5 shrink-0 items-center justify-center rounded border ${allSelected ? "border-primary bg-primary text-white" : "border-outline-variant bg-surface-container-lowest"}`}>
               {allSelected && <Check className="size-3.5" />}
             </span>
@@ -380,7 +380,7 @@ export function SyncModal({ open, onClose, title, type, items, onSync, syncing, 
           ) : (
             type === "category" ? (
               <div className="w-full py-2">
-                <div className="mb-4 rounded-xl border border-primary/15 bg-primary/5 px-4 py-4">
+                <div className="mb-4 rounded-lg border border-primary/15 bg-primary/5 px-4 py-4">
                   <p className="text-base font-semibold text-on-surface">Ingram categories</p>
                   <p className="mt-1 text-sm text-on-surface-variant">These categories are available from Ingram and are not saved in your database yet. Select the categories you want to add.</p>
                   <p className="mt-2 text-xs font-semibold text-primary">{filtered.length} unsaved {filtered.length === 1 ? "category" : "categories"}</p>
@@ -396,7 +396,7 @@ export function SyncModal({ open, onClose, title, type, items, onSync, syncing, 
                       type="button"
                       aria-pressed={checked}
                       onClick={() => handleToggleItem(key)}
-                      className={`mb-3 flex w-full min-w-0 items-start gap-3 rounded-xl border px-4 py-3 text-left transition ${checked ? "border-primary bg-primary/10 shadow-sm" : "border-outline-variant bg-surface hover:border-primary/60 hover:bg-surface-container-low"}`}
+                      className={`mb-3 flex w-full min-w-0 items-start gap-3 rounded-lg border px-4 py-3 text-left transition ${checked ? "border-primary bg-primary/10 shadow-sm" : "border-outline-variant bg-surface hover:border-primary/60 hover:bg-surface-container-low"}`}
                     >
                       <span className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded border ${checked ? "border-primary bg-primary text-white" : "border-outline-variant bg-surface-container-lowest"}`}>
                         {checked && <Check className="size-3.5" />}

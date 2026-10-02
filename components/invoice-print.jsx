@@ -7,8 +7,10 @@ export function InvoicePrint({ order }) {
   const billing = order?.billing || {};
   const items = order?.lineItems || order?.items || [];
 
-  const invoiceNumber =
-    order?.invoiceNumber || order?.customerOrderNumber || order?.orderNumber || "—";
+  const publicOrderId =
+    order?.publicOrderId || order?.orderNumber || order?.ingramOrderNumber || order?.id || "—";
+
+  const invoiceNumber = order?.invoiceNumber || publicOrderId;
 
   const orderDate = order?.date ? shortDate(order.date) : "—";
   const dueDate = order?.date ? shortDate(addDays(order.date, 7)) : "—";

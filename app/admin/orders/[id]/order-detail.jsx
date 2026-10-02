@@ -118,7 +118,7 @@ export function AdminOrderDetail({ id }) {
   return (
     <>
       <Card className="print:hidden space-y-6 p-6">
-        <AdminPageHeader title={`Order #${order.orderNumber}`} description={`Placed by ${customer.name || "Unknown"} on ${shortDate(order.date)}. Review fulfilment details and print the invoice.`} action={<Button variant="outline" onClick={() => window.print()}><Printer className="size-4" />Print invoice</Button>} />
+        <AdminPageHeader title={`Order ${order.publicOrderId || order.orderNumber || order.id}`} description={`Placed by ${customer.name || "Unknown"} on ${shortDate(order.date)}. Review fulfilment details and print the invoice.`} action={<Button variant="outline" onClick={() => window.print()}><Printer className="size-4" />Print invoice</Button>} />
 
         <div className="mt-8 grid gap-6 xl:grid-cols-[1fr_380px]">
           <div className="space-y-6">

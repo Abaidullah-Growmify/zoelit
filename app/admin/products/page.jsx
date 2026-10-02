@@ -1,28 +1,25 @@
 "use client";
 
 import Image from "next/image";
-import { Eye, Pencil, Trash2, RefreshCw, Search, ChevronDown, Plus } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { Eye, Pencil, RefreshCw, Search, ChevronDown, Plus } from "lucide-react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
 import { AdminTable } from "@/components/admin-table";
 import { Button, Card, FilterTabs, Input, SourceBadge } from "@/components/ui";
 import { AddItemModal } from "@/components/add-item-modal";
 import { AdminProductsSkeleton } from "@/components/skeletons";
-import { ConfirmActionDialog, TransparentActionLoader, InfoActionDialog } from "@/components/action-feedback";
+import { InfoActionDialog } from "@/components/action-feedback";
 import {
    getAdminProducts,
    getAdminCategories,
    startPriceSync,
   createManualProduct,
   toggleProductActive,
-  setProductPriority,
   getSyncStatus,
-  deleteAdminProduct,
 } from "@/lib/api";
 import { FALLBACK_IMAGE } from "@/lib/product-mapper";
 import { money } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
-import { PriorityToggle } from "@/components/priority-toggle";
 
 const PAGE_SIZE = 10;
 const MIN_SKELETON_MS = 650;
@@ -42,8 +39,6 @@ const [syncing, setSyncing] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [sourceFilter, setSourceFilter] = useState("all");
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  const [actionLoading, setActionLoading] = useState("");
   const [categoryError, setCategoryError] = useState("");
   const pollRef = useRef(null);
 
@@ -52,16 +47,23 @@ const [syncing, setSyncing] = useState(false);
     return () => clearTimeout(timer);
   }, [keyword]);
 
+  const productQuery = useCallback(() => ({
+    page,
+    limit: PAGE_SIZE,
+    keyword: debouncedKeyword || undefined,
+    source: sourceFilter !== "all" ? sourceFilter : undefined,
+  }), [page, debouncedKeyword, sourceFilter]);
+
   useEffect(() => {
     let active = true;
     if (!token) return;
     Promise.all([
-      getAdminProducts({ page, limit: PAGE_SIZE, keyword: debouncedKeyword || undefined, source: sourceFilter !== "all" ? sourceFilter : undefined }, token),
+      getAdminProducts(productQuery(), token),
       new Promise((resolve) => window.setTimeout(resolve, MIN_SKELETON_MS)),
     ])
       .then(([data]) => {
         if (!active) return;
-        setRows((data.products || []).map((product, index) => toRow(product, (page - 1) * PAGE_SIZE + index + 1)));
+        setRows(toRows(data.products, page, PAGE_SIZE));
         setTotalPages(data.pagination?.totalPages ?? 1);
         setTotalItems(data.pagination?.total ?? 0);
         setError("");
@@ -72,7 +74,8 @@ const [syncing, setSyncing] = useState(false);
         setRows([]);
       });
     return () => { active = false; };
-  }, [token, page, debouncedKeyword, sourceFilter]);
+  }, [token, page, productQuery]);
+
 
   function handleSearchChange(value) {
     setKeyword(value);
@@ -151,9 +154,9 @@ async function handlePriceSync() {
 
   function refreshProducts() {
     if (!token) return;
-    getAdminProducts({ page, limit: PAGE_SIZE, keyword: debouncedKeyword || undefined, source: sourceFilter !== "all" ? sourceFilter : undefined }, token)
+    getAdminProducts(productQuery(), token)
       .then((data) => {
-        setRows((data.products || []).map(toRow));
+        setRows(toRows(data.products, page, PAGE_SIZE));
         setTotalPages(data.pagination?.totalPages ?? 1);
         setTotalItems(data.pagination?.total ?? 0);
       })
@@ -174,35 +177,6 @@ async function handleToggleProduct(ingramPartNumber) {
     }
   }
 
-async function handlePriorityChange(product, isPriority = true) {
-    try {
-      await setProductPriority(product.sku, isPriority, token);
-      toast.success(isPriority ? "Priority product updated" : "Product priority removed");
-      refreshProducts();
-    } catch (err) {
-      toast.error(err.message || "Could not update product priority");
-    }
-  }
-
-  function handleDeleteProduct(product) {
-    setDeleteTarget(product);
-  }
-
-  async function confirmDeleteProduct() {
-    if (!deleteTarget) return;
-    setActionLoading("Deleting product...");
-    try {
-      const data = await deleteAdminProduct(deleteTarget.id, token);
-      toast.success(data.message || "Product permanently deleted from the database");
-      setDeleteTarget(null);
-      refreshProducts();
-    } catch (err) {
-      toast.error(err.message || "Could not delete product");
-    } finally {
-      setActionLoading("");
-    }
-  }
-
   const columns = [
     { key: "serial", header: "#", sortable: true, accessor: "serial", cellClassName: "font-semibold tabular-nums text-on-surface" },
     {
@@ -218,10 +192,27 @@ async function handlePriorityChange(product, isPriority = true) {
       accessor: "source",
       render: (product) => <SourceBadge source={product.source} />,
     },
-    { key: "category", header: "Category", sortable: true, accessor: "category" },
+    {
+      key: "category",
+      header: "Category",
+      sortable: true,
+      accessor: "category",
+      render: (product) => (
+        <span className="flex flex-wrap items-center gap-1.5">
+          <span>{product.category}</span>
+          {product.categorySynced === false ? (
+            <span
+              title="This category is not saved in the database. Sync it from Ingram to link these products."
+              className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-amber-700 dark:bg-amber-500/15 dark:text-amber-300"
+            >
+              Not synced
+            </span>
+          ) : null}
+        </span>
+      ),
+    },
     { key: "price", header: "Price", sortable: true, accessor: "price", cellClassName: "font-semibold tabular-nums text-on-surface", render: (product) => money(product.price) },
-    { key: "stock", header: "Stock", sortable: true, accessor: "stock", cellClassName: "tabular-nums" },
-    { key: "priority", header: "Priority", accessor: "isPriority", render: (product) => <PriorityToggle checked={Boolean(product.isPriority)} onChange={(value) => handlePriorityChange(product, value)} label={`${product.isPriority ? "Remove priority from" : "Prioritize"} ${product.name}`} /> },
+{ key: "stock", header: "Stock", sortable: true, accessor: "stock", cellClassName: "tabular-nums" },
     {
       key: "status",
       header: "Status",
@@ -280,15 +271,17 @@ async function handlePriorityChange(product, isPriority = true) {
              inlineToolbar
              toolbarInHeader
              secondaryToolbar={(
-               <FilterTabs
-                 value={sourceFilter}
-                 onChange={(value) => { setSourceFilter(value); setPage(1); }}
-                 tabs={[
-                   { value: "all", label: "All" },
-                   { value: "manual", label: "Manual" },
-                   { value: "ingram", label: "Ingram" },
-                 ]}
-               />
+               <div className="flex flex-wrap items-center gap-3">
+                  <FilterTabs
+                    value={sourceFilter}
+                    onChange={(value) => { setSourceFilter(value); setPage(1); }}
+                    tabs={[
+                      { value: "all", label: "All" },
+                      { value: "manual", label: "Manual" },
+                      { value: "ingram", label: "Ingram" },
+                    ]}
+                  />
+                </div>
              )}
 rowActions={(product) => [
               { label: "View", ariaLabel: `View ${product.name}`, href: `/admin/products/${encodeURIComponent(product.id)}`, icon: Eye },
@@ -300,11 +293,11 @@ rowActions={(product) => [
                 disabled: product.source === "ingram",
                 disabledTitle: "Ingram products cannot be edited (read-only)",
               },
-              { label: "Delete", ariaLabel: `Delete ${product.name}`, onClick: () => handleDeleteProduct(product), icon: Trash2, tone: "danger" },
             ]}
           />
         </>
       )}
+
 
       <AddItemModal
         open={addModalOpen}
@@ -314,18 +307,6 @@ rowActions={(product) => [
         onSubmit={handleCreateProduct}
         submitting={submitting}
       />
-
-      <ConfirmActionDialog
-        open={Boolean(deleteTarget)}
-        title="Delete product"
-        message="Are you sure you want to delete this product?"
-        confirmLabel="Delete"
-        loading={Boolean(actionLoading)}
-        onCancel={() => setDeleteTarget(null)}
-        onConfirm={confirmDeleteProduct}
-      />
-
-      <TransparentActionLoader open={Boolean(actionLoading)} label={actionLoading} />
 
       <InfoActionDialog
         open={Boolean(categoryError)}
@@ -337,6 +318,15 @@ rowActions={(product) => [
   );
 }
 
+// Row numbers are always the real position in the paginated list. Building them
+// in one place keeps a freshly created product from showing a placeholder 0
+// until the page is reloaded.
+function toRows(products, pageNumber, pageSize) {
+  return (Array.isArray(products) ? products : []).map(
+    (product, index) => toRow(product, (Number(pageNumber) - 1) * pageSize + index + 1)
+  );
+}
+
 function toRow(product, serial) {
   return {
     id: product.ingramPartNumber,
@@ -344,12 +334,12 @@ function toRow(product, serial) {
     name: product.name || product.description || product.ingramPartNumber || "Unnamed product",
     sku: product.ingramPartNumber || "—",
     category: product.category || "Uncategorized",
+    categorySynced: product.categorySynced !== false,
     price: product.price || 0,
     stock: product.stock || 0,
     image: product.imageUrl || FALLBACK_IMAGE,
-    isActive: product.isActive,
+isActive: product.isActive,
     source: product.source || "manual",
-    isPriority: Boolean(product.isPriority),
     status: !product.isActive
       ? "Paused"
       : product.imageStatus === "failed"
@@ -365,7 +355,7 @@ function toRow(product, serial) {
 function ProductCell({ product }) {
   return (
     <div className="flex max-w-64 items-center gap-3">
-      <Image src={product.image} alt={product.name} width={48} height={48} className="size-10 shrink-0 rounded-xl object-cover ring-1 ring-outline-variant" />
+      <Image src={product.image} alt={product.name} width={48} height={48} className="size-10 shrink-0 rounded-lg object-cover ring-1 ring-outline-variant" />
        <div className="min-w-0">
          <p title={product.name} className="truncate text-base font-bold text-on-surface">{product.name}</p>
         <p className="mt-0.5 truncate text-meta font-normal text-on-surface-variant">{product.sku}</p>

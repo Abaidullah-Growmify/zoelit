@@ -105,6 +105,10 @@ const cartSlice = createSlice({
       state.items = state.items.filter((item) => item.productId !== action.payload);
     },
     clearCart: (state) => {
+      // Return the same state when the cart is already empty so dispatching this
+      // from a mount effect cannot ping-pong: new state -> rerender -> new action
+      // identity -> effect runs again.
+      if (state.items.length === 0) return;
       state.items = [];
     },
   },

@@ -16,11 +16,15 @@ export function ProductBuy({ product }) {
   const remainingStock = Math.max((Number(product.stock) || 0) - cartQuantity, 0);
   const max = Math.max(remainingStock, 1);
 
+  // A product the admin paused can still show a stock count on record, so the
+  // stored availability label has to be honoured here as well.
+  const availability = product.availability || (product.isSellable ? "In Stock" : "Out of Stock");
+  const outOfStock = product.isSellable === false || availability !== "In Stock";
+  const soldOut = outOfStock && Number(product.stock) <= 0;
+
   function change(delta) {
     setQuantity((value) => Math.min(max, Math.max(1, value + delta)));
   }
-
-  const outOfStock = product.stock <= 0;
 
   function handleAdd() {
     if (remainingStock <= 0) return;
@@ -41,7 +45,7 @@ export function ProductBuy({ product }) {
           {product.price > 0 && quantity > 1 ? <p className="mt-1 text-label-sm font-semibold text-on-surface-variant">{money(product.price)} each</p> : null}
         </div>
         {outOfStock ? (
-          <span className="inline-flex items-center gap-1.5 text-label-sm font-semibold text-error">Out of stock</span>
+          <span className="inline-flex items-center gap-1.5 text-label-sm font-semibold text-error">{availability}</span>
         ) : (
           <span className="inline-flex items-center gap-1.5 text-label-sm font-semibold text-tertiary">
             <PackageCheck className="size-4" />
@@ -75,7 +79,7 @@ export function ProductBuy({ product }) {
 
         <Button onClick={handleAdd} disabled={outOfStock || remainingStock <= 0} className="h-12 flex-1 text-label-md text-white">
           <ShoppingBasket className="size-4" />
-          {outOfStock || remainingStock <= 0 ? "Limit reached" : justAdded ? "Added to cart" : "Add to cart"}
+          {outOfStock ? (soldOut ? "Out of stock" : "Unavailable") : remainingStock <= 0 ? "Limit reached" : justAdded ? "Added to cart" : "Add to cart"}
         </Button>
       </div>
     </>

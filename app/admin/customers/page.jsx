@@ -255,7 +255,7 @@ function EditCustomerModal({ customer, token, onClose, onUpdated }) {
             <div className="grid size-11 shrink-0 place-items-center rounded-lg bg-primary-container/10 text-primary"><Edit3 className="size-5" /></div>
             <div><h2 className="font-heading text-headline-md font-semibold tracking-[-0.02em] text-on-surface">Edit customer</h2><p className="mt-1 text-body-md text-on-surface-variant">Update account details and login credentials.</p></div>
           </div>
-          <button type="button" onClick={onClose} className="grid size-9 shrink-0 place-items-center rounded-sm border border-outline-variant text-on-surface-variant transition hover:bg-surface-container-low hover:text-on-surface" aria-label="Close edit customer modal"><X className="size-4" /></button>
+          <button type="button" onClick={onClose} className="grid size-9 shrink-0 place-items-center rounded-md border border-outline-variant text-on-surface-variant transition hover:bg-surface-container-low hover:text-on-surface" aria-label="Close edit customer modal"><X className="size-4" /></button>
         </div>
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 p-6" noValidate>
           <div className="grid gap-4 md:grid-cols-2">
@@ -289,10 +289,11 @@ function CustomerStatusSelect({ customer, onChange }) {
         value={status}
         onChange={(event) => onChange(customer, event.target.value)}
         aria-label={`Change status for ${customer.name}`}
-        className={`h-7 w-fit max-w-full appearance-none rounded-md border-0 py-0 pl-2 pr-6 text-[10px] font-semibold uppercase tracking-[0.08em] shadow-none outline-none ring-0 transition focus:ring-2 ${status === "active" ? "bg-emerald-100 text-emerald-700 focus:ring-emerald-500/20 dark:bg-emerald-950/50 dark:text-emerald-300" : "bg-rose-100 text-rose-700 focus:ring-rose-500/20 dark:bg-rose-950/50 dark:text-rose-300"}`}
+        className={`h-7 w-fit max-w-full appearance-none rounded-md border-0 py-0 pl-2 pr-6 text-[10px] font-semibold uppercase tracking-[0.08em] shadow-none outline-none ring-0 transition focus:ring-2 ${status === "active" ? "bg-emerald-100 text-emerald-700 focus:ring-emerald-500/20 dark:bg-emerald-950/50 dark:text-emerald-300" : status === "unverified" ? "bg-amber-100 text-amber-700 focus:ring-amber-500/20 dark:bg-amber-950/50 dark:text-amber-300" : "bg-rose-100 text-rose-700 focus:ring-rose-500/20 dark:bg-rose-950/50 dark:text-rose-300"}`}
       >
         <option value="active">Active</option>
         <option value="inactive">Inactive</option>
+        <option value="unverified" disabled>Unverified</option>
       </select>
       <ChevronDown className="pointer-events-none absolute right-1.5 size-3 text-current" />
     </span>
@@ -347,7 +348,7 @@ function NewCustomerModal({ open, token, onClose, onCreated }) {
               <p className="mt-1 text-body-md text-on-surface-variant">Create a login account.</p>
             </div>
           </div>
-          <button type="button" onClick={closeModal} className="grid size-9 shrink-0 place-items-center rounded-sm border border-outline-variant text-on-surface-variant transition hover:bg-surface-container-low hover:text-on-surface" aria-label="Close add customer modal">
+          <button type="button" onClick={closeModal} className="grid size-9 shrink-0 place-items-center rounded-md border border-outline-variant text-on-surface-variant transition hover:bg-surface-container-low hover:text-on-surface" aria-label="Close add customer modal">
             <X className="size-4" />
           </button>
         </div>

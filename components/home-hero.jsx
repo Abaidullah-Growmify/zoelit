@@ -6,35 +6,55 @@ import { useEffect, useState } from "react";
 import { ArrowUp } from "lucide-react";
 import { money } from "@/lib/utils";
 
-export function HomeHero({ products, productCount = 0 }) {
+const DEFAULT_CONTENT = {
+  eyebrow: "ZoeLit · Thoughtfully chosen",
+  title: "Better technology, thoughtfully chosen for you.",
+  lead: "Explore a considered collection of electronics, accessories, and everyday essentials selected for quality, value, and ease.",
+};
+
+export function HomeHero({ products, productCount = 0, content, explicit = false }) {
+  const heroContent = { ...DEFAULT_CONTENT, ...content };
   const [activeIndex, setActiveIndex] = useState(0);
+
   useEffect(() => {
-    if (!products || products.length < 2) return undefined;
+    if (!products || products.length < 2 || explicit) return undefined;
     const interval = window.setInterval(() => setActiveIndex((index) => (index + 1) % products.length), 4200);
     return () => window.clearInterval(interval);
-  }, [products]);
+  }, [products, explicit]);
 
-  if (!products?.length) return null;
+  const picks = explicit ? products : null;
 
   const freeDeliveryProducts = products.filter((product) => Number(product.price) > 150);
   const priceSortedProducts = [...products].filter((product) => Number(product.price) > 0).sort((a, b) => Number(a.price) - Number(b.price));
   const lowShippingProducts = priceSortedProducts.filter((product) => Number(product.price) <= 150);
-  const first = freeDeliveryProducts.length
-    ? freeDeliveryProducts[activeIndex % freeDeliveryProducts.length]
-    : products[activeIndex % products.length];
-  const second = lowShippingProducts.length
-    ? lowShippingProducts[activeIndex % lowShippingProducts.length]
-    : priceSortedProducts[0] || products[(activeIndex + 1) % products.length] || first;
-  const third = products[(activeIndex + 2) % products.length] || second;
-  const secondShippingLabel = Number(second.price) <= 150 ? "Low shipping rate" : "Reasonable shipping";
-  const rating = Number(first.rating) > 0 ? Number(first.rating) : 4.8;
+
+  const displayed = picks
+    ? products.slice(0, 3)
+    : freeDeliveryProducts.length
+      ? [freeDeliveryProducts[activeIndex % freeDeliveryProducts.length], lowShippingProducts[activeIndex % lowShippingProducts.length], products[(activeIndex + 2) % products.length]].filter(Boolean).slice(0, 3)
+      : products.slice(activeIndex % products.length).concat(products.slice(0, activeIndex % products.length)).slice(0, 3);
+
+  const first = displayed[0] || null;
+  const second = displayed[1] || null;
+  const third = displayed[2] || null;
+
+  const rating = Number(first?.rating) > 0 ? Number(first.rating) : 4.8;
+
+  const titleLines = String(heroContent.title || "")
+    .split("\n")
+    .filter((line) => line.trim());
+  const firstLine = titleLines[0] || DEFAULT_CONTENT.title.split("\n")[0];
+  const restLines = titleLines.slice(1).join("\n");
 
   return (
     <section className="zl-hero">
       <div className="zl-hero-left">
-        <div className="zl-eyebrow">ZoeLit · Thoughtfully chosen</div>
-        <h1 className="zl-h1">Better technology,<br /><span>thoughtfully chosen for you.</span></h1>
-        <p className="zl-lead">Explore a considered collection of electronics, accessories, and everyday essentials selected for quality, value, and ease.</p>
+        <div className="zl-eyebrow">{heroContent.eyebrow}</div>
+        <h1 className="zl-h1 whitespace-pre-line">
+          {firstLine}
+          {restLines ? (<><br /><span>{restLines}</span></>) : null}
+        </h1>
+        <p className="zl-lead">{heroContent.lead}</p>
         <div className="zl-cta">
           <Link className="zl-btn" href="/products">Shop the Store <ArrowUp className="zl-ic" /></Link>
         </div>
@@ -46,12 +66,24 @@ export function HomeHero({ products, productCount = 0 }) {
       </div>
 
       <div className="zl-hero-right">
-        <HeroProduct product={second} className="zl-hv1" shippingLabel={secondShippingLabel} badge={secondShippingLabel} />
-        <HeroProduct product={third} className="zl-hv2" shippingLabel="Popular pick" badge="Popular pick" />
-        <HeroProduct product={first} className="zl-hv3" featured shippingLabel={freeDeliveryProducts.length ? "Free delivery" : "Low shipping rate"} badge={freeDeliveryProducts.length ? "Free delivery" : "Low shipping rate"} />
+        {second ? <HeroProduct product={second} className="zl-hv1" shippingLabel={Number(second.price) <= 150 ? "Low shipping rate" : "Reasonable shipping"} badge={secondBadge(second)} /> : null}
+        {third ? <HeroProduct product={third} className="zl-hv2" shippingLabel="Popular pick" badge={thirdBadge(third)} /> : null}
+        {first ? <HeroProduct product={first} className="zl-hv3" featured shippingLabel={Number(first.price) > 150 ? "Free delivery" : "Low shipping rate"} badge={firstBadge(first)} /> : null}
       </div>
     </section>
   );
+}
+
+function firstBadge(product) {
+  return product.heroBadge || (Number(product.price) > 150 ? "Free delivery" : "Low shipping rate");
+}
+
+function secondBadge(product) {
+  return product.heroBadge || (Number(product.price) <= 150 ? "Low shipping rate" : "Reasonable shipping");
+}
+
+function thirdBadge(product) {
+  return product.heroBadge || "Popular pick";
 }
 
 function AnimatedStat({ target, suffix, label, divisor = 1, decimal = false }) {

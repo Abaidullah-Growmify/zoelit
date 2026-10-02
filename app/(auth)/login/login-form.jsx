@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Loader2, UserRound } from "lucide-react";
+import { Eye, EyeOff, Loader2, MailCheck, UserRound } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -19,19 +19,29 @@ const schema = z.object({
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
+  const [autofillBlocked, setAutofillBlocked] = useState(true);
   const router = useRouter();
   const params = useSearchParams();
   const user = useAuthStore((state) => state.user);
   const ready = useAuthStore((state) => state.hasHydrated);
   const login = useAuthStore((state) => state.login);
+  const verifiedNotice = params.get("verified") === "success";
   const form = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { email: "avery@example.com", password: "password123", remember: true },
+    defaultValues: { email: "", password: "", remember: true },
   });
 
   useEffect(() => {
     if (ready && user) router.replace(params.get("next") || "/dashboard");
   }, [ready, user, router, params]);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      setAutofillBlocked(false);
+      form.reset();
+    });
+    return () => cancelAnimationFrame(id);
+  }, [form]);
 
   async function onSubmit(values) {
     try {
@@ -39,6 +49,11 @@ export function LoginForm() {
       toast.success("Welcome back");
       router.push(params.get("next") || "/dashboard");
     } catch (error) {
+      if (error.code === "EMAIL_UNVERIFIED") {
+        toast.error("Please activate your account before signing in");
+        router.push(`/verify-email?email=${encodeURIComponent(values.email)}`);
+        return;
+      }
       toast.error(error.message || "Sign in failed");
     }
   }
@@ -55,10 +70,11 @@ export function LoginForm() {
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-on-surface">Welcome back</h1>
           <p className="mt-2 text-sm text-on-surface-variant">Sign in to your shopping account.</p>
         </div>
+        {verifiedNotice ? <div className="mt-4 flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-800"><MailCheck className="mt-0.5 size-4 shrink-0" /><span>Email verified — your account is now active. Sign in to continue.</span></div> : null}
         <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-4" noValidate>
           <div className="space-y-2">
             <Label>Email</Label>
-            <Input type="email" autoComplete="email" placeholder="you@example.com" {...form.register("email")} />
+            <Input type="email" autoComplete="email" placeholder="you@example.com" readOnly={autofillBlocked} {...form.register("email")} />
             <ErrorText>{form.formState.errors.email?.message}</ErrorText>
           </div>
           <div className="space-y-2">
@@ -67,7 +83,7 @@ export function LoginForm() {
                <Link href="/forgot-password" className="text-body-md font-semibold text-primary hover:text-primary-container">Forgot password?</Link>
             </div>
             <div className="relative">
-              <Input type={showPassword ? "text" : "password"} autoComplete="current-password" placeholder="Enter password" className="pr-10" {...form.register("password")} />
+              <Input type={showPassword ? "text" : "password"} autoComplete="current-password" placeholder="Enter password" className="pr-10" readOnly={autofillBlocked} {...form.register("password")} />
               <button type="button" tabIndex={-1} onClick={() => setShowPassword((value) => !value)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-on-surface-variant transition hover:text-on-surface" aria-label={showPassword ? "Hide password" : "Show password"}>
                 {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>

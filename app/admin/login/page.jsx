@@ -43,9 +43,9 @@ export default function AdminLoginPage() {
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-white p-4 dark:bg-slate-950">
       <div className="pointer-events-none absolute inset-0 opacity-40 [background-image:linear-gradient(to_right,rgba(37,99,235,.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(37,99,235,.12)_1px,transparent_1px)] [background-size:34px_34px] dark:opacity-20" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(37,99,235,.16),transparent_34%),radial-gradient(circle_at_20%_80%,rgba(14,165,233,.12),transparent_28%)]" />
-      <section className="relative z-10 w-full max-w-md rounded-2xl border border-outline-variant/70 bg-surface/90 p-6 shadow-xl backdrop-blur-xl">
+      <section className="relative z-10 w-full max-w-md rounded-lg border border-outline-variant/70 bg-surface/90 p-6 shadow-xl backdrop-blur-xl">
         <div className="flex flex-col items-center pb-2 text-center">
-          <Link href="/" className="mb-3 flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <Link href="/" className="mb-3 flex size-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <ShieldCheck className="size-6" />
           </Link>
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-on-surface">Admin sign in</h1>

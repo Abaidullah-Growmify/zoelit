@@ -40,7 +40,12 @@ export default function OrdersPage() {
     api
       .getOrders(token)
       .then((res) => {
-        setOrders(res.orders.map((order) => ({ ...order, id: order._id })));
+        const ordersWithIndex = res.orders.map((order, index) => ({
+          ...order,
+          id: order._id,
+          rowNumber: index + 1,
+        }));
+        setOrders(ordersWithIndex);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -52,12 +57,13 @@ export default function OrdersPage() {
 
   usePolling(load, [token], 30000, !loading);
 
-  const columns = [
-    { key: "orderNumber", header: "Order Number", sortable: true, accessor: "orderNumber", cellClassName: "font-bold tabular-nums text-slate-950 dark:text-white", render: (order) => `#${order.customerOrderNumber || order.orderNumber}` },
+const columns = [
+    { key: "rowNumber", header: "#", sortable: true, accessor: "rowNumber", cellClassName: "font-bold tabular-nums text-slate-950 dark:text-white" },
+    { key: "orderNumber", header: "Order ID", sortable: true, accessor: "orderNumber", cellClassName: "font-bold tabular-nums text-slate-950 dark:text-white", render: (order) => order.publicOrderId || order.orderNumber },
     { key: "date", header: "Date", sortable: true, accessor: "date", render: (order) => shortDate(order.date) },
     { key: "status", header: "Status", accessor: "status", render: (order) => <AdminStatusBadge>{order.status}</AdminStatusBadge> },
     { key: "payment", header: "Payment", accessor: "payment", render: (order) => <AdminStatusBadge>{order.payment}</AdminStatusBadge> },
-    { key: "notes", header: "Notes", accessor: "notes", render: (order) => <OrderNotesDialog notes={order.notes} label={`View notes for order ${order.customerOrderNumber || order.orderNumber}`} /> },
+    { key: "notes", header: "Notes", accessor: "notes", render: (order) => <OrderNotesDialog notes={order.notes} label={`View notes for order ${order.publicOrderId || order.orderNumber}`} /> },
     { key: "tracking", header: "Tracking", accessor: "tracking", render: (order) => order.tracking || "Not available" },
     { key: "total", header: "Total Amount", sortable: true, accessor: "total", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => money(order.total) },
   ];

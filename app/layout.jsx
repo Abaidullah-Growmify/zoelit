@@ -1,5 +1,6 @@
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { Toaster } from "sonner";
+import { StoreConfigProvider } from "@/components/store-config-provider";
 import { StoreHydration } from "@/components/store-hydration";
 import { ReduxProvider } from "@/store/provider";
 import "./globals.css";
@@ -34,7 +35,7 @@ export default function RootLayout({ children }) {
       >
         <ReduxProvider>
           <StoreHydration />
-          {children}
+          <StoreConfigProvider>{children}</StoreConfigProvider>
           <Toaster closeButton richColors position="top-right" />
         </ReduxProvider>
       </body>

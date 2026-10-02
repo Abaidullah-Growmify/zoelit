@@ -1,13 +1,14 @@
 "use client";
 
-import { ChevronDown, Eye, Search } from "lucide-react";
+import { ChevronDown, Eye, Loader2, Pencil, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { AdminOrderEditDialog } from "@/components/admin-order-edit-dialog";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminTable } from "@/components/admin-table";
 import { Card, Input, Select } from "@/components/ui";
 import { AdminOrdersSkeleton } from "@/components/skeletons";
-import { getAdminOrders, updateAdminOrderStatus } from "@/lib/api";
+import { getAdminOrders, getAdminOrder, updateAdminOrderStatus } from "@/lib/api";
 import { money, shortDate } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
 import { minimumLoadingDelay } from "@/lib/utils";
@@ -41,6 +42,8 @@ export default function AdminOrdersPage() {
   const [debouncedKeyword, setDebouncedKeyword] = useState("");
   const [status, setStatus] = useState("All statuses");
   const [error, setError] = useState("");
+  const [editingOrder, setEditingOrder] = useState(null);
+  const [pendingOrderId, setPendingOrderId] = useState("");
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedKeyword(keyword.trim()), 400);
@@ -91,15 +94,31 @@ export default function AdminOrdersPage() {
 
   async function handleOrderStatusChange(order, nextStatus) {
     const previousOrders = orders;
+    setPendingOrderId(order.id);
     setOrders((current) => current.map((row) => row.id === order.id ? { ...row, status: nextStatus } : row));
 
     try {
-      await updateAdminOrderStatus(order.id, { status: nextStatus, note: "Status updated from orders list" }, token);
-      toast.success("Order status updated");
+      const result = await updateAdminOrderStatus(order.id, { status: nextStatus, note: "Status updated from orders list" }, token);
+      toast.success(result?.order?.status === nextStatus ? `Order status updated to ${nextStatus}` : "Order status updated");
       load();
     } catch (statusError) {
       setOrders(previousOrders);
       toast.error(statusError.message || "Could not update order status");
+    } finally {
+      setPendingOrderId("");
+    }
+  }
+
+  // The list payload already carries billing and line items, but re-fetching
+  // guarantees the edit form always opens on the stored order rather than a
+  // stale list snapshot. The returned promise is what keeps the row-action
+  // loader on screen while the request is in flight.
+  async function openEditOrder(order) {
+    try {
+      const data = await getAdminOrder(order.id, token);
+      setEditingOrder(data.order || order);
+    } catch (editError) {
+      toast.error(editError.message || "Could not load order details");
     }
   }
 
@@ -112,13 +131,13 @@ export default function AdminOrdersPage() {
 
   const columns = [
     { key: "serial", header: "#", sortable: true, accessor: "serial", cellClassName: "w-16 font-semibold tabular-nums text-on-surface" },
-    { key: "orderNumber", header: "Order ID", sortable: true, accessor: "orderNumber", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => `#${order.orderNumber || order.ingramOrderNumber || order.id}` },
+    { key: "orderNumber", header: "Order ID", sortable: true, accessor: "publicOrderId", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => order.publicOrderId || order.orderNumber || order.ingramOrderNumber || order.id },
     { key: "customer", header: "Customer", sortable: true, accessor: (order) => order.customer?.name || "—", cellClassName: "min-w-0 whitespace-normal font-semibold" },
     { key: "payment", header: "Payment", accessor: "payment", render: (order) => <AdminStatusBadge className="text-label-md font-normal text-on-surface-variant">{order.payment}</AdminStatusBadge> },
     { key: "total", header: "Total", sortable: true, accessor: "total", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => money(order.total) },
     { key: "commissionTotal", header: "Commission", sortable: true, accessor: "commissionTotal", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => money(order.commissionTotal || 0) },
     { key: "date", header: "Date", sortable: true, accessor: "date", render: (order) => shortDate(order.date) },
-    { key: "status", header: "Status", accessor: "status", render: (order) => <OrderStatusSelect order={order} onChange={handleOrderStatusChange} /> },
+    { key: "status", header: "Status", accessor: "status", render: (order) => <OrderStatusSelect order={order} pending={pendingOrderId === order.id} onChange={handleOrderStatusChange} /> },
   ];
 
   return (
@@ -155,16 +174,25 @@ export default function AdminOrdersPage() {
             hideSearch
             disableInitialSort
             rowActions={(order) => [
-              { label: `View order ${order.orderNumber}`, href: `/admin/orders/${order.id}`, icon: Eye },
+              { label: "View", href: `/admin/orders/${order.id}`, icon: Eye, ariaLabel: "View order" },
+              { label: "Edit order", icon: Pencil, ariaLabel: "Edit order", onClick: () => openEditOrder(order) },
             ]}
           />
         </>
       )}
+
+      {editingOrder ? (
+        <AdminOrderEditDialog
+          order={editingOrder}
+          onClose={() => setEditingOrder(null)}
+          onSaved={load}
+        />
+      ) : null}
     </div>
   );
 }
 
-function OrderStatusSelect({ order, onChange }) {
+function OrderStatusSelect({ order, pending, onChange }) {
   const status = order.status || "Pending";
 
   return (
@@ -172,13 +200,20 @@ function OrderStatusSelect({ order, onChange }) {
       <select
         value={status}
         onChange={(event) => onChange(order, event.target.value)}
-        disabled={Boolean(order.fulfillmentGroups?.length)}
+        disabled={pending}
+        aria-busy={pending || undefined}
         aria-label={`Change status for order ${order.orderNumber || order.id}`}
-        className={`h-8 w-fit appearance-none rounded-lg border-0 py-0 pl-3 pr-8 text-label-sm font-semibold shadow-none outline-none ring-0 transition focus:ring-2 disabled:cursor-not-allowed disabled:opacity-70 ${statusClassName(status)}`}
+        className={`h-8 w-fit appearance-none rounded-md border-0 py-0 pl-3 pr-8 text-label-sm font-semibold shadow-none outline-none ring-0 transition focus:ring-2 disabled:cursor-wait disabled:opacity-60 ${statusClassName(status)}`}
       >
         {ORDER_STATUS_OPTIONS.map((option) => <option key={option}>{option}</option>)}
       </select>
-      <ChevronDown className="pointer-events-none absolute right-3 size-3.5 text-current" />
+      {pending ? (
+        <span className="absolute -left-6 inline-flex items-center" role="status" aria-label="Saving order status">
+          <Loader2 className="size-3.5 animate-spin text-primary" />
+        </span>
+      ) : (
+        <ChevronDown className="pointer-events-none absolute right-3 size-3.5 text-current" />
+      )}
     </span>
   );
 }

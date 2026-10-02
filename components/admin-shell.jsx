@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Bell, ChevronDown, LayoutDashboard, Mail, Maximize2, Minimize2, Package, PanelLeftClose, PanelLeftOpen, Settings, ShoppingBag, Tags, Users, Menu, X, Percent } from "lucide-react";
+import { Bell, ChevronDown, Home, LayoutDashboard, Mail, Maximize2, Minimize2, Package, PanelLeftClose, PanelLeftOpen, Settings, ShoppingBag, Tags, Users, Menu, X, Percent } from "lucide-react";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { BrandLogo } from "@/components/brand-logo";
@@ -19,6 +19,7 @@ const items = [
   { href: "/admin/commissions", label: "Commissions", icon: Percent },
   { href: "/admin/customers", label: "Customers", icon: Users },
   { href: "/admin/email-templates", label: "Email templates", icon: Mail },
+  { href: "/admin/home", label: "Home customization", icon: Home },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
@@ -124,20 +125,20 @@ export function AdminShell({ children }) {
                 <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-primary" />
               </button>
               <div className="relative" ref={profileRef}>
-                <button type="button" onClick={() => setProfileOpen((open) => !open)} className="flex h-10 items-center gap-2 rounded-xl border border-outline-variant bg-surface px-2 text-left transition hover:bg-surface-container-low" aria-expanded={profileOpen} aria-haspopup="menu">
+                <button type="button" onClick={() => setProfileOpen((open) => !open)} className="flex h-10 items-center gap-2 rounded-md border border-outline-variant bg-surface px-2 text-left transition hover:bg-surface-container-low" aria-expanded={profileOpen} aria-haspopup="menu">
                   <span className="grid size-7 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary">{initials}</span>
                   <span className="hidden max-w-28 truncate text-sm font-medium text-on-surface lg:block">{admin?.name || "ZoeLit Admin"}</span>
                   <ChevronDown className="size-4 text-on-surface-variant" />
                 </button>
                 {profileOpen ? (
-                  <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-outline-variant bg-surface p-1.5 shadow-xl" role="menu">
+                  <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-lg border border-outline-variant bg-surface p-1.5 shadow-xl" role="menu">
                     <div className="border-b border-outline-variant px-3 py-2.5">
                       <p className="truncate text-sm font-semibold text-on-surface">{admin?.name || "ZoeLit Admin"}</p>
                       <p className="mt-0.5 text-xs text-on-surface-variant">Admin account</p>
                     </div>
                     <div className="mt-1">
-                      <Link href="/admin/profile" onClick={() => setProfileOpen(false)} className="block rounded-xl px-3 py-2 text-sm text-on-surface-variant transition hover:bg-surface-container-low hover:text-on-surface" role="menuitem">Profile</Link>
-                      <button type="button" onClick={handleLogout} className="block w-full rounded-xl px-3 py-2 text-left text-sm text-error transition hover:bg-error-container" role="menuitem">Sign out</button>
+                      <Link href="/admin/profile" onClick={() => setProfileOpen(false)} className="block rounded-md px-3 py-2 text-sm text-on-surface-variant transition hover:bg-surface-container-low hover:text-on-surface" role="menuitem">Profile</Link>
+                      <button type="button" onClick={handleLogout} className="block w-full rounded-md px-3 py-2 text-left text-sm text-error transition hover:bg-error-container" role="menuitem">Sign out</button>
                     </div>
                   </div>
                 ) : null}

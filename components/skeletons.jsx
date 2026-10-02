@@ -2,15 +2,13 @@ import { Card, Skeleton } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { SecureAccessLoader } from "@/components/auth-loading";
 
-export function ProductGridSkeleton({ count = 8 }) {
+export function ProductGridSkeleton({ count = 8, columns = "sm:grid-cols-2 lg:grid-cols-3" }) {
   return (
-    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <div className={cn("grid gap-5", columns)}>
       {Array.from({ length: count }).map((_, i) => (
         <Card key={i} className="group relative flex h-full flex-col border-[rgba(0,0,0,0.06)] p-0 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_4px_12px_rgba(16,24,40,0.06)]">
-          <div className="p-4 pb-0">
-            <div className="relative flex h-[185px] items-center justify-center rounded-xl bg-[#F4F4F5] p-5 dark:bg-slate-800">
-              <Skeleton className="aspect-[4/3] w-[74%] rounded-xl" />
-            </div>
+          <div className="relative h-[220px] overflow-hidden rounded-t-xl border-b-2 border-[rgba(0,0,0,0.08)] bg-gradient-to-br from-[#eaf1fe] to-[#dce8fd] dark:border-slate-700 dark:from-slate-800 dark:to-slate-900 sm:h-[220px]">
+            <Skeleton className="absolute inset-0 rounded-none" />
           </div>
           <div className="flex flex-1 flex-col p-4 pt-4">
             <div className="flex items-start justify-between gap-3">
@@ -799,57 +797,62 @@ export function AdminFormSkeleton() {
   );
 }
 
-// Mirrors the storefront home page layout ("(shop)/page.jsx") using real DB
-// counts so the skeleton only shows as many tiles/cards as actually exist.
-export function HomePageSkeleton({ categoryCount = 0, productCount = 0 }) {
-  const categoryTiles = Math.max(0, Math.min(categoryCount, 6));
-  const cardsPerSection = Math.min(4, Math.max(1, productCount));
-  const sectionLabels = ["Top Sale", "New Arrivals", "Trending"];
+// Mirrors the storefront home page layout ("(shop)/page.jsx") using the saved
+// homepage config so the skeleton only shows as many tiles/cards as the admin
+// actually picked per section.
+export function HomePageSkeleton({ display = {} }) {
+  const { heroEnabled = false, heroCount = 0, categoriesEnabled = false, catCount = 0, sections = [] } = display;
+  const categoryTiles = categoriesEnabled ? Math.max(0, Math.min(catCount, 6)) : 0;
+  const heroCards = heroEnabled ? Math.max(0, Math.min(heroCount, 3)) : 0;
 
   return (
     <>
-      <section className="zl-hero">
-        <div className="zl-hero-left">
-          <Skeleton className="h-3 w-44 rounded-sm" />
-          <Skeleton className="mt-4 h-11 w-full max-w-md rounded-sm" />
-          <Skeleton className="mt-2 h-11 w-80 max-w-full rounded-sm" />
-          <Skeleton className="mt-5 h-4 w-full max-w-lg rounded-sm" />
-          <Skeleton className="mt-2 h-4 w-96 max-w-full rounded-sm" />
-          <Skeleton className="mt-7 h-12 w-40 rounded-xl" />
-          <div className="zl-stats">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <div key={index} className="zl-stat">
-                <Skeleton className="h-5 w-20 rounded-sm" />
+      {heroCards > 0 ? (
+        <section className="zl-hero">
+          <div className="zl-hero-left">
+            <Skeleton className="h-3 w-44 rounded-sm" />
+            <Skeleton className="mt-4 h-11 w-full max-w-md rounded-sm" />
+            <Skeleton className="mt-2 h-11 w-80 max-w-full rounded-sm" />
+            <Skeleton className="mt-5 h-4 w-full max-w-lg rounded-sm" />
+            <Skeleton className="mt-2 h-4 w-96 max-w-full rounded-sm" />
+            <Skeleton className="mt-7 h-12 w-40 rounded-xl" />
+            <div className="zl-stats">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="zl-stat">
+                  <Skeleton className="h-5 w-20 rounded-sm" />
+                  <Skeleton className="mt-1.5 h-3 w-16 rounded-sm" />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="zl-hero-right">
+            {Array.from({ length: heroCards }).map((_, index) => (
+              <HeroCardSkeleton key={index} className={index === heroCards - 1 ? "zl-hv3" : index === 0 ? "zl-hv1" : "zl-hv2"} />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {categoryTiles > 0 ? (
+        <section className="container-page pb-4 pt-8 sm:pt-10">
+          <div className="mb-6 flex items-end justify-between gap-4">
+            <Skeleton className="h-7 w-52 rounded-sm" />
+            <Skeleton className="h-4 w-16 rounded-sm" />
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {Array.from({ length: categoryTiles }).map((_, index) => (
+              <div key={index} className="flex min-h-[116px] flex-col items-center justify-center rounded-[14px] border border-outline-variant bg-surface px-3 py-5 text-center">
+                <Skeleton className="size-7 rounded-sm" />
+                <Skeleton className="mt-3 h-4 w-24 rounded-sm" />
                 <Skeleton className="mt-1.5 h-3 w-16 rounded-sm" />
               </div>
             ))}
           </div>
-        </div>
-        <div className="zl-hero-right">
-          <HeroCardSkeleton className="zl-hv1" />
-          <HeroCardSkeleton className="zl-hv2" />
-          <HeroCardSkeleton className="zl-hv3" />
-        </div>
-      </section>
+        </section>
+      ) : null}
 
-      <section className="container-page pb-4 pt-8 sm:pt-10">
-        <div className="mb-6 flex items-end justify-between gap-4">
-          <Skeleton className="h-7 w-52 rounded-sm" />
-          <Skeleton className="h-4 w-16 rounded-sm" />
-        </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          {Array.from({ length: categoryTiles }).map((_, index) => (
-            <div key={index} className="flex min-h-[116px] flex-col items-center justify-center rounded-[14px] border border-outline-variant bg-surface px-3 py-5 text-center">
-              <Skeleton className="size-7 rounded-sm" />
-              <Skeleton className="mt-3 h-4 w-24 rounded-sm" />
-              <Skeleton className="mt-1.5 h-3 w-16 rounded-sm" />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {sectionLabels.map((label, index) => (
-        <section key={label} className={`container-page ${index === 0 ? "section-fade-up py-16" : "pb-16"}`}>
+      {sections.map((section, index) => (
+        <section key={section.id} className={`container-page ${index === 0 ? "section-fade-up py-16" : "pb-16"}`}>
           <div className="mb-8 flex items-end justify-between gap-4">
             <div className="min-w-0">
               <Skeleton className="h-4 w-24 rounded-sm" />
@@ -858,7 +861,7 @@ export function HomePageSkeleton({ categoryCount = 0, productCount = 0 }) {
             <Skeleton className="h-9 w-24 shrink-0 rounded-sm" />
           </div>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {Array.from({ length: cardsPerSection }).map((_, productIndex) => (
+            {Array.from({ length: section.count }).map((_, productIndex) => (
               <HomeCardSkeleton key={productIndex} />
             ))}
           </div>
@@ -888,10 +891,8 @@ export function HomePageSkeleton({ categoryCount = 0, productCount = 0 }) {
 function HomeCardSkeleton() {
   return (
     <Card className="group relative flex h-full flex-col border-[rgba(0,0,0,0.06)] p-0 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_4px_12px_rgba(16,24,40,0.06)]">
-      <div className="p-4 pb-0">
-        <div className="relative flex h-[185px] items-center justify-center rounded-xl bg-[#F4F4F5] p-5 dark:bg-slate-800">
-          <Skeleton className="aspect-[4/3] w-[74%] rounded-xl" />
-        </div>
+      <div className="relative h-[220px] overflow-hidden rounded-t-xl border-b-2 border-[rgba(0,0,0,0.08)] bg-gradient-to-br from-[#eaf1fe] to-[#dce8fd] dark:border-slate-700 dark:from-slate-800 dark:to-slate-900 sm:h-[220px]">
+        <Skeleton className="absolute inset-0 rounded-none" />
       </div>
       <div className="flex flex-1 flex-col p-4 pt-4">
         <div className="flex items-start justify-between gap-3">
@@ -911,7 +912,7 @@ function HeroCardSkeleton({ className }) {
   return (
     <div className={`zl-hv pointer-events-none ${className}`}>
       <div className="zl-hv-img">
-        <Skeleton className="h-16 w-16 rounded-lg" />
+        <Skeleton className="absolute inset-0 rounded-none" />
       </div>
       <div className="zl-hv-body">
         <Skeleton className="h-2.5 w-16 rounded-sm" />

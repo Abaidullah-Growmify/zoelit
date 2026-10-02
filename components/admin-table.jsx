@@ -195,21 +195,22 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
               {columns.map((column) => (
                 <th key={column.key} className={cn("whitespace-nowrap px-4 py-3 text-xs font-medium", column.className)}>
                   {column.sortable ? (
-                     <button type="button" onClick={() => toggleSort(column)} className="inline-flex items-center gap-1.5 rounded-lg transition hover:text-on-surface focus:outline-none focus:ring-4 focus:ring-primary/10">
+                     <button type="button" onClick={() => toggleSort(column)} className="inline-flex items-center gap-1.5 rounded-md transition hover:text-on-surface focus:outline-none focus:ring-4 focus:ring-primary/10">
                       {column.header}
                       {sort?.key === column.key ? sort.direction === "asc" ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" /> : <ChevronDown className="size-3.5 opacity-30" />}
                     </button>
                   ) : column.header}
                 </th>
               ))}
-                {hasActions ? <th className="whitespace-nowrap px-4 py-3 text-center text-xs font-medium">Actions</th> : null}
+                {hasActions ? <th className="sticky right-0 whitespace-nowrap bg-surface-container-low/60 px-4 py-3 text-center text-xs font-medium backdrop-blur">Actions</th> : null}
             </tr>
           </thead>
           <tbody className="divide-y divide-outline-variant/40 dark:divide-outline-variant/40">
             {pageItems.map((row, rowIndex) => (
               <AdminTableRow key={row.id || row.productId || row.key || rowIndex} zebra={zebra} index={rowIndex}>
                 {columns.map((column) => <AdminTableCell key={column.key} className={column.cellClassName}>{column.render ? column.render(row) : getColumnValue(column, row)}</AdminTableCell>)}
-                {hasActions ? <AdminTableCell className="text-center"><AdminTableActions actions={rowActions(row)} label={`Actions for ${row.name || row.productName || row.id || "row"}`} /></AdminTableCell> : null}
+                {/* Pinned to the right edge so a long cell can never push the actions off screen. */}
+                {hasActions ? <AdminTableCell className={cn("sticky right-0 text-center", zebra && rowIndex % 2 === 1 ? "bg-surface-container-low/40" : "bg-surface", "hover:bg-surface-container-low/80")}><AdminTableActions actions={rowActions(row)} label={`Actions for ${row.name || row.productName || row.id || "row"}`} /></AdminTableCell> : null}
               </AdminTableRow>
             ))}
             {!pageItems.length ? (
@@ -312,7 +313,7 @@ export function AdminTableActions({ actions, label = "Row actions" }) {
           ref={triggerRef}
           type="button"
           onClick={handleToggle}
-          className={`inline-grid size-8 cursor-pointer place-items-center rounded-lg border transition ${open ? "border-primary text-primary" : "border-outline-variant bg-surface text-on-surface-variant hover:border-primary/40 hover:text-primary"}`}
+          className={`inline-grid size-8 cursor-pointer place-items-center rounded-md border transition ${open ? "border-primary text-primary" : "border-outline-variant bg-surface text-on-surface-variant hover:border-primary/40 hover:text-primary"}`}
           aria-label={label}
           aria-expanded={open}
         >
@@ -336,7 +337,21 @@ export function AdminTableActions({ actions, label = "Row actions" }) {
                 );
                 if (!isDisabled && action.href) {
                   return (
-                    <Link key={action.label} href={action.href} onClick={() => { handleClose(); setLoadingLabel(action.loadingLabel || `${action.label}...`); }} aria-label={action.ariaLabel || action.label} title={action.ariaLabel || action.label} className={baseClassName}>
+                    <Link
+                      key={action.label}
+                      href={action.href}
+                      onClick={() => {
+                        handleClose();
+                        const label = action.loadingLabel || `${action.label}...`;
+                        setLoadingLabel(label);
+                        // Navigation unmounts this table, but if the route never
+                        // changes the overlay would otherwise stay up forever.
+                        window.setTimeout(() => setLoadingLabel(""), 800);
+                      }}
+                      aria-label={action.ariaLabel || action.label}
+                      title={action.ariaLabel || action.label}
+                      className={baseClassName}
+                    >
                       {content}
                     </Link>
                   );

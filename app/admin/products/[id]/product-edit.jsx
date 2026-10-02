@@ -48,7 +48,7 @@ export function AdminProductEdit({ id }) {
       <AdminPageHeader title={`Edit ${product.name || product.description || product.ingramPartNumber}`} description={`${isIngram ? "This product is synced from Ingram Micro and cannot be edited manually." : "Update catalog content, pricing, stock, and image for "}${product.ingramPartNumber}.`} />
       {isIngram ? (
         <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-          Ingram-synced products are read-only. You can activate, deactivate or delete them from the product list.
+          Ingram-synced products are read-only. You can activate or deactivate them from the product list.
         </p>
       ) : null}
       <ProductForm product={product} mode="edit" readOnly={isIngram} />

@@ -65,7 +65,7 @@ export function OrderDetail({ id }) {
           <div className="flex flex-col gap-5 p-5 sm:p-7 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Account / Order details</p>
-              <h1 className="mt-2 font-heading text-2xl font-bold tracking-tight text-on-surface sm:text-3xl">Order #{order.customerOrderNumber || order.orderNumber}</h1>
+              <h1 className="mt-2 font-heading text-2xl font-bold tracking-tight text-on-surface sm:text-3xl">Order {order.publicOrderId || order.orderNumber}</h1>
               <p className="mt-2 text-sm text-on-surface-variant">Placed {shortDate(order.date)} · Review your order and delivery progress.</p>
             </div>
             <div className="flex items-center gap-3">

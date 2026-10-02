@@ -43,10 +43,10 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
 
   const orderColumns = [
     { key: "serial", header: "#", sortable: true, accessor: "serial", cellClassName: "font-semibold tabular-nums text-on-surface" },
-    { key: "orderNumber", header: "Order", sortable: true, accessor: "orderNumber", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => `#${order.orderNumber || order.id || order.ingramOrderNumber}` },
+    { key: "orderNumber", header: "Order", sortable: true, accessor: "publicOrderId", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => order.publicOrderId || order.orderNumber || order.id || order.ingramOrderNumber },
     { key: "customer", header: "Customer", sortable: true, accessor: (order) => order.customer?.name || "—", cellClassName: "min-w-0 whitespace-normal font-semibold text-on-surface" },
     { key: "payment", header: "Payment", accessor: "payment", render: (order) => <AdminStatusBadge className="text-label-md font-normal text-on-surface-variant">{order.payment}</AdminStatusBadge> },
-    { key: "notes", header: "Notes", accessor: "notes", render: (order) => <OrderNotesDialog notes={order.notes} label={`View notes for order ${order.orderNumber || order.id}`} /> },
+    { key: "notes", header: "Notes", accessor: "notes", render: (order) => <OrderNotesDialog notes={order.notes} label={`View notes for order ${order.publicOrderId || order.orderNumber || order.id}`} /> },
     { key: "total", header: "Total", sortable: true, accessor: "total", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => money(order.total) },
     { key: "date", header: "Date", sortable: true, accessor: "date", render: (order) => shortDate(order.date) },
     { key: "status", header: "Status", accessor: "status", render: (order) => <OrderStatusSelect order={order} onChange={handleOrderStatusChange} /> },
@@ -64,7 +64,7 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
             </div>
             {trend ? <span className="rounded-lg bg-tertiary-container px-3 py-1 text-label-sm font-semibold tabular-nums text-on-tertiary">{trend}</span> : null}
           </div>
-          <div className="mt-6 min-h-60 flex-1 rounded-2xl bg-surface-container-low/70 p-3 ring-1 ring-outline-variant/70">
+          <div className="mt-6 min-h-60 flex-1 rounded-lg bg-surface-container-low/70 p-3 ring-1 ring-outline-variant/70">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={salesOverview} margin={{ left: 0, right: 10, top: 12, bottom: 0 }}>
                 <defs>
@@ -88,7 +88,7 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
           <div className="mt-4 space-y-3">
             {lowStock.length ? (
               lowStock.map((item) => (
-                <div key={item.productId} className="flex items-center justify-between gap-3 rounded-xl border border-amber-200/70 bg-amber-50/80 p-3 dark:border-amber-500/20 dark:bg-amber-500/10">
+                <div key={item.productId} className="flex items-center justify-between gap-3 rounded-lg border border-amber-200/70 bg-amber-50/80 p-3 dark:border-amber-500/20 dark:bg-amber-500/10">
                   <div className="flex min-w-0 items-center gap-3">
                     {item.image ? (
                       <Image src={item.image} alt={item.productName} width={40} height={40} className="size-10 shrink-0 rounded-md object-cover ring-1 ring-amber-200 dark:ring-amber-500/30" />
@@ -118,11 +118,11 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {topProducts.length ? (
             topProducts.map((product, index) => (
-              <div key={`${product.productId}-${index}`} className="flex items-center gap-3 rounded-xl border border-outline-variant bg-surface-container-low/60 p-3">
+              <div key={`${product.productId}-${index}`} className="flex items-center gap-3 rounded-lg border border-outline-variant bg-surface-container-low/60 p-3">
                 {product.image ? (
-                  <Image src={product.image} alt={product.name} width={56} height={56} className="size-12 shrink-0 rounded-xl object-cover ring-1 ring-outline-variant" />
+                  <Image src={product.image} alt={product.name} width={56} height={56} className="size-12 shrink-0 rounded-lg object-cover ring-1 ring-outline-variant" />
                 ) : (
-                  <div className="grid size-12 shrink-0 place-items-center rounded-xl bg-surface-container text-xs font-semibold text-on-surface-variant">IT</div>
+                  <div className="grid size-12 shrink-0 place-items-center rounded-lg bg-surface-container text-xs font-semibold text-on-surface-variant">IT</div>
                 )}
                 <div className="min-w-0">
                     <p className="truncate text-body-md font-medium text-on-surface">{product.name}</p>
@@ -167,7 +167,7 @@ function OrderStatusSelect({ order, onChange }) {
         onChange={(event) => onChange(order, event.target.value)}
         disabled={Boolean(order.fulfillmentGroups?.length)}
         aria-label={`Change status for order ${order.orderNumber || order.id}`}
-        className={`h-8 w-fit appearance-none rounded-lg border-0 py-0 pl-3 pr-8 text-label-sm font-semibold shadow-none outline-none ring-0 transition focus:ring-2 disabled:cursor-not-allowed disabled:opacity-70 ${statusClassName(status)}`}
+        className={`h-8 w-fit appearance-none rounded-md border-0 py-0 pl-3 pr-8 text-label-sm font-semibold shadow-none outline-none ring-0 transition focus:ring-2 disabled:cursor-not-allowed disabled:opacity-70 ${statusClassName(status)}`}
       >
         {statuses.map((option) => <option key={option}>{option}</option>)}
       </select>

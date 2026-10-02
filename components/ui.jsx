@@ -162,7 +162,7 @@ export function EmptyState({ title, description, action, icon: Icon }) {
   return (
     <Card className="flex flex-col items-center justify-center py-14 text-center">
       {Icon ? (
-        <div className="mb-4 grid size-12 place-items-center rounded-2xl bg-surface-container-low text-on-surface-variant ring-1 ring-outline-variant">
+        <div className="mb-4 grid size-12 place-items-center rounded-lg bg-surface-container-low text-on-surface-variant ring-1 ring-outline-variant">
           <Icon className="size-5" aria-hidden="true" />
         </div>
       ) : (

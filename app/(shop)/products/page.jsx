@@ -12,17 +12,25 @@ import { EmptyState, Input, Select } from "@/components/ui";
 import { ProductGridSkeleton } from "@/components/skeletons";
 
 const SORT_QUERY = {
-  featured: "newest",
+  newest: "newest",
   "price-low": "priceLow",
   "price-high": "priceHigh",
 };
 
 const PAGE_SIZE = 12;
 
+function sortProducts(products, sortKey) {
+  const sorted = [...products];
+  if (sortKey === "price-low") sorted.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
+  else if (sortKey === "price-high") sorted.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
+  else if (sortKey === "newest") sorted.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  return sorted;
+}
+
 export default function ProductsPage() {
   const params = useSearchParams();
   const initialCategory = params.get("category");
-  const [sort, setSort] = useState("featured");
+  const [sort, setSort] = useState("newest");
   const [categories, setCategories] = useState(["All"]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +50,14 @@ export default function ProductsPage() {
         if (!active) return;
         const names = (data.categories || []).map((item) => item.name).filter(Boolean);
         setCategories(["All", ...names]);
+        // Drop any category from the URL that no longer exists in the database,
+        // otherwise the page would filter to an empty result with no visible
+        // control to clear it.
+        setSelectedCategories((current) => {
+          const known = new Set(names.map((name) => String(name).trim().toLowerCase()));
+          const valid = current.filter((name) => known.has(String(name).trim().toLowerCase()));
+          return valid.length === current.length ? current : valid;
+        });
       })
       .catch(() => {});
 
@@ -58,7 +74,9 @@ export default function ProductsPage() {
       : getPublicProducts({ category: selectedCategories[0], keyword: deferredKeyword.trim() || undefined, sort: SORT_QUERY[sort] || "newest", page, limit: PAGE_SIZE });
     request.then((data) => {
         if (!active) return;
-        setProducts((data.products || []).map(mapProduct).filter(Boolean));
+        // Multi-category fetches pull one page per category in parallel, so the
+        // combined list must be re-sorted here to keep the chosen order global.
+        setProducts(sortProducts((data.products || []).map(mapProduct).filter(Boolean), sort));
         setTotalPages(selectedCategories.length > 1 ? Math.max(1, Math.ceil((data.products || []).length / PAGE_SIZE)) : Math.max(1, data.pagination?.totalPages || 1));
         setLoading(false);
       })
@@ -112,7 +130,7 @@ export default function ProductsPage() {
           <div className="mt-5 border-t border-outline-variant pt-5"><h3 className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-on-surface-variant">Rating</h3>{[[0, "Any rating"], [4, "4.0 & up"], [4.5, "4.5 & up"]].map(([value, label]) => <label key={value} className="mb-3 flex cursor-pointer items-center gap-2 text-sm text-on-surface-variant"><input type="radio" name="rating" value={value} checked={minRating === value} onChange={() => { setMinRating(value); setPage(1); }} className="size-4 accent-primary" /><span>{value > 0 ? "★ " : ""}{label}</span></label>)}</div>
         </aside>
         <div>
-          <div className="mb-5 flex items-center justify-between gap-4 border-b border-outline-variant pb-4"><span className="text-sm text-on-surface-variant"><strong className="text-on-surface">{visibleProducts.length}</strong> products</span><div className="flex shrink-0 items-center gap-2"><label htmlFor="sort" className="whitespace-nowrap text-sm text-on-surface-variant">Sort by</label><Select id="sort" value={sort} onChange={(e) => changeSort(e.target.value)} aria-label="Sort products" className="h-10"><option value="featured">Featured</option><option value="price-low">Price: Low to High</option><option value="price-high">Price: High to Low</option></Select></div></div>
+          <div className="mb-5 flex items-center justify-between gap-4 border-b border-outline-variant pb-4"><span className="text-sm text-on-surface-variant"><strong className="text-on-surface">{visibleProducts.length}</strong> products</span><div className="flex shrink-0 items-center gap-2"><label htmlFor="sort" className="whitespace-nowrap text-sm text-on-surface-variant">Sort by</label><Select id="sort" value={sort} onChange={(e) => changeSort(e.target.value)} aria-label="Sort products" className="h-10"><option value="newest">Newest</option><option value="price-low">Price: Low to High</option><option value="price-high">Price: High to Low</option></Select></div></div>
           {loading ? <ProductGridSkeleton count={3} /> : displayProducts.length ? <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{displayProducts.map((product) => <ProductCard key={product.id} product={product} />)}</div> : <EmptyState title="No products found" description="No products match your search. Try a different filter." />}
         {!loading && displayProducts.length ? (
           <div className="mt-6 border-t border-outline-variant/70 pt-5">

@@ -426,7 +426,7 @@ button, a[href], summary, select {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  border-radius: 0.75rem;
+  border-radius: 0.375rem;
   padding: 0.6rem 0.85rem;
   font-size: 0.925rem;
   font-weight: 600;

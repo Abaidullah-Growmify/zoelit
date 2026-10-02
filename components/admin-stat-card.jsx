@@ -26,7 +26,7 @@ export function AdminStatCard({ label, value, icon: Icon, helper, tone = "blue",
           <p className="text-sm font-medium text-on-surface-variant">{label}</p>
           <p className="mt-1.5 truncate font-heading text-xl font-semibold tabular-nums tracking-tight text-on-surface">{value}</p>
         </div>
-        <span className={cn("grid size-9 shrink-0 place-items-center rounded-xl", iconClass)}>
+        <span className={cn("grid size-9 shrink-0 place-items-center rounded-lg", iconClass)}>
           <Icon className="size-4" />
         </span>
       </div>

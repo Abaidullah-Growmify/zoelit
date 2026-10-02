@@ -1,19 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import { RefreshCw, Search, ChevronDown, Plus, ArrowLeft, Eye, Pencil, Trash2, Save } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { RefreshCw, Search, ChevronDown, Plus, ArrowLeft, Eye, Pencil, Save } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AdminTable, AdminTableActions } from "@/components/admin-table";
-import { ConfirmActionDialog, TransparentActionLoader } from "@/components/action-feedback";
+import { TransparentActionLoader } from "@/components/action-feedback";
 import { Button, Card, FilterTabs, Input, Textarea, Label, SourceBadge, Badge } from "@/components/ui";
 import { AddItemModal } from "@/components/add-item-modal";
 import { AdminCategoriesSkeleton } from "@/components/skeletons";
-import { getAdminCategories, getCategoryProducts, startProductSync, createManualCategory, toggleCategoryActive, setCategoryPriority, updateAdminCategory, deleteAdminCategory, getSyncStatus } from "@/lib/api";
+import { getAdminCategories, getCategoryProducts, createManualCategory, toggleCategoryActive, updateAdminCategory, getSyncStatus, bulkUpdateSubCategoryStatus } from "@/lib/api";
 import { FALLBACK_IMAGE } from "@/lib/product-mapper";
 import { money } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
-import { PriorityToggle } from "@/components/priority-toggle";
 
 const PAGE_SIZE = 10;
 const MIN_SKELETON_MS = 650;
@@ -32,12 +31,10 @@ export default function AdminCategoriesPage() {
   const [syncProgress, setSyncProgress] = useState({ percent: 0, label: "" });
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [sourceFilter, setSourceFilter] = useState("all");
-  const [selectedProducts, setSelectedProducts] = useState(new Set());
-const [actionLoading, setActionLoading] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState(null);
+const [sourceFilter, setSourceFilter] = useState("all");
+  const [actionLoading, setActionLoading] = useState("");
   const [editTarget, setEditTarget] = useState(null);
-  const pollRef = useRef(null);
+
 
   const checkSyncStatus = useCallback(async () => {
     if (!token) return false;
@@ -85,8 +82,7 @@ setRows((data.categories || []).map((category) => ({
           source: category.source || "manual",
            lastSyncedAt: category.lastSyncedAt,
            ingramCategoryId: category.ingramCategoryId || "",
-           createdAt: category.createdAt,
-           isPriority: Boolean(category.isPriority),
+createdAt: category.createdAt,
          })));
         setError("");
       })
@@ -110,7 +106,6 @@ setRows((data.categories || []).map((category) => ({
     try {
       const data = await getCategoryProducts(categoryName, { page: 1, limit: 50 }, token);
       setCategoryProducts(data.products || []);
-      setSelectedProducts(new Set());
     } catch (err) {
       toast.error(err.message || "Could not load category products");
       setCategoryProducts([]);
@@ -141,104 +136,6 @@ setRows((data.categories || []).map((category) => ({
     setView("list");
     setSelectedCategory(null);
     setCategoryProducts(null);
-    setSelectedProducts(new Set());
-  }
-
-  async function handleSyncCategoryProducts() {
-    if (!selectedCategory) return;
-    const isRunning = await checkSyncStatus();
-    if (isRunning) return;
-
-    setSyncing(true);
-    setSyncProgress({ percent: 0, label: `Syncing ${selectedCategory.name}...` });
-    try {
-    await startProductSync({ category: selectedCategory.name }, token);
-      toast.success(`Sync started for ${selectedCategory.name}`);
-      pollSyncProgress();
-    } catch (syncError) {
-      toast.error(syncError.message || "Could not start sync");
-      setSyncing(false);
-      setSyncProgress({ percent: 0, label: "" });
-    }
-  }
-
-  async function handleSyncSelectedProducts() {
-    if (selectedProducts.size === 0) return;
-    const isRunning = await checkSyncStatus();
-    if (isRunning) return;
-
-    setSyncing(true);
-    setSyncProgress({ percent: 0, label: `Syncing ${selectedProducts.size} products...` });
-    try {
-      const skus = [...selectedProducts];
-      for (let i = 0; i < skus.length; i++) {
-        await startProductSync({
-          ingramPartNumber: skus[i],
-          category: selectedCategory?.name || "",
-          categoryId: selectedCategory?.ingramCategoryId || selectedCategory?.id || "",
-          addOnly: true,
-        }, token);
-        const percent = Math.round(((i + 1) / skus.length) * 100);
-        setSyncProgress({ percent, label: `Syncing ${i + 1}/${skus.length}` });
-      }
-      toast.success(`Sync started for ${selectedProducts.size} products`);
-      pollSyncProgress();
-    } catch (syncError) {
-      toast.error(syncError.message || "Could not start sync");
-      setSyncing(false);
-      setSyncProgress({ percent: 0, label: "" });
-    }
-  }
-
-  function toggleProductSelection(ingramPartNumber) {
-    setSelectedProducts((prev) => {
-      const next = new Set(prev);
-      if (next.has(ingramPartNumber)) next.delete(ingramPartNumber);
-      else next.add(ingramPartNumber);
-      return next;
-    });
-  }
-
-  function toggleAllProducts() {
-    if (!categoryProducts) return;
-    if (selectedProducts.size === categoryProducts.length) {
-      setSelectedProducts(new Set());
-    } else {
-      setSelectedProducts(new Set(categoryProducts.map((p) => p.ingramPartNumber)));
-    }
-  }
-
-  function pollSyncProgress() {
-    if (pollRef.current) clearInterval(pollRef.current);
-    let attempts = 0;
-    const maxAttempts = 120;
-    pollRef.current = setInterval(async () => {
-      attempts++;
-      try {
-      const data = await getSyncStatus(token);
-        const catalog = data.sync?.catalog;
-        if (catalog?.status === "completed" || catalog?.status === "failed" || attempts >= maxAttempts) {
-          clearInterval(pollRef.current);
-          pollRef.current = null;
-          setSyncing(false);
-          setSyncProgress({ percent: 100, label: catalog?.status === "completed" ? "Done!" : "Sync ended" });
-          loadCategories();
-          if (selectedCategory) loadCategoryProducts(selectedCategory.name);
-          setTimeout(() => setSyncProgress({ percent: 0, label: "" }), 2000);
-        } else if (catalog?.status === "processing") {
-          const processed = catalog.totalProcessed || 0;
-          const percent = Math.min(95, Math.round((processed / Math.max(processed, 10)) * 100));
-          setSyncProgress({ percent, label: `Processed ${processed} products` });
-        }
-      } catch {
-        if (attempts >= maxAttempts) {
-          clearInterval(pollRef.current);
-          pollRef.current = null;
-          setSyncing(false);
-          setSyncProgress({ percent: 0, label: "" });
-        }
-      }
-    }, 3000);
   }
 
   async function handleCreateCategory(payload) {
@@ -268,20 +165,7 @@ setRows((data.categories || []).map((category) => ({
     }
   }
 
-async function handlePriorityChange(category, isPriority = true) {
-    setActionLoading("Updating category priority...");
-    try {
-      await setCategoryPriority(category.name, isPriority, token);
-      toast.success(isPriority ? "Priority category updated" : "Category priority removed");
-      loadCategories();
-    } catch (err) {
-      toast.error(err.message || "Could not update category priority");
-    } finally {
-      setActionLoading("");
-    }
-  }
-
-  function handleEditCategory(category) {
+function handleEditCategory(category) {
     setEditTarget(category);
   }
 
@@ -295,25 +179,6 @@ async function handlePriorityChange(category, isPriority = true) {
       loadCategories();
     } catch (err) {
       toast.error(err.message || "Could not update category");
-    } finally {
-      setActionLoading("");
-    }
-  }
-
-  function handleDeleteCategory(category) {
-    setDeleteTarget(category);
-  }
-
-  async function confirmDeleteCategory() {
-    if (!deleteTarget) return;
-    setActionLoading("Deleting category...");
-    try {
-      const data = await deleteAdminCategory(deleteTarget.name, token);
-      toast.success(data.message || "Category permanently deleted from the database");
-      setDeleteTarget(null);
-      loadCategories();
-    } catch (err) {
-      toast.error(err.message || "Could not delete category");
     } finally {
       setActionLoading("");
     }
@@ -368,8 +233,7 @@ async function handlePriorityChange(category, isPriority = true) {
         </span>
       ),
     },
-    { key: "priority", header: "Priority", accessor: "isPriority", render: (category) => <PriorityToggle checked={Boolean(category.isPriority)} onChange={(value) => handlePriorityChange(category, value)} label={`${category.isPriority ? "Remove priority from" : "Prioritize"} ${category.name}`} /> },
-    {
+{
       key: "status",
       header: "Status",
       accessor: "status",
@@ -378,7 +242,7 @@ async function handlePriorityChange(category, isPriority = true) {
           <select
             value={category.status === "Active" ? "active" : "inactive"}
             onChange={() => handleToggleCategory(category.name)}
-            className={`h-8 appearance-none rounded-lg border px-3 pr-7 text-xs font-medium transition-colors ${
+            className={`h-8 appearance-none rounded-md border px-3 pr-7 text-xs font-medium transition-colors ${
               category.status === "Active"
                 ? "border-emerald-200 bg-emerald-50 text-emerald-700 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
                 : "border-rose-200 bg-rose-50 text-rose-700 focus:border-rose-400 focus:ring-4 focus:ring-rose-500/10 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
@@ -407,7 +271,6 @@ async function handlePriorityChange(category, isPriority = true) {
               disabled: category.source === "ingram",
               disabledTitle: "Ingram categories cannot be edited (read-only)",
             },
-            { label: "Delete", ariaLabel: `Delete ${category.name}`, icon: Trash2, tone: "danger", onClick: () => handleDeleteCategory(category) },
           ]}
         />
       ),
@@ -416,19 +279,6 @@ async function handlePriorityChange(category, isPriority = true) {
 
   if (view === "products" && selectedCategory) {
     const productColumns = [
-      {
-        key: "select",
-        header: "Select",
-        render: (product) => (
-          <input
-            type="checkbox"
-            checked={selectedProducts.has(product.ingramPartNumber)}
-            onChange={() => toggleProductSelection(product.ingramPartNumber)}
-            aria-label={`Select ${product.ingramPartNumber}`}
-            className="size-4 rounded border-outline-variant text-primary focus:ring-primary"
-          />
-        ),
-      },
       {
         key: "name",
         header: "Product",
@@ -442,7 +292,7 @@ async function handlePriorityChange(category, isPriority = true) {
               alt={product.name || product.description || product.ingramPartNumber}
               width={40}
               height={40}
-              className="size-10 shrink-0 rounded-xl object-cover ring-1 ring-outline-variant"
+              className="size-10 shrink-0 rounded-lg object-cover ring-1 ring-outline-variant"
             />
             <div className="min-w-0">
               <p className="truncate text-sm font-bold text-on-surface">{product.name || product.description || product.ingramPartNumber}</p>
@@ -451,8 +301,41 @@ async function handlePriorityChange(category, isPriority = true) {
           </div>
         ),
       },
+      {
+        key: "subCategory",
+        header: "Sub-Category",
+        sortable: true,
+        accessor: "subCategory",
+        render: (product) => (
+          <span className="text-sm text-on-surface">{product.subCategory || <span className="text-on-surface-variant">-</span>}</span>
+        ),
+      },
       { key: "price", header: "Price", sortable: true, accessor: "price", render: (product) => <span className="font-semibold tabular-nums text-on-surface">{money(product.price)}</span> },
       { key: "stock", header: "Stock", sortable: true, accessor: "stock", render: (product) => <StockCell stock={product.stock} /> },
+      {
+        key: "status",
+        header: "Status",
+        sortable: true,
+        accessor: "isActive",
+        render: (product) => (
+          <span className="relative inline-flex">
+            <select
+              value={product.isActive ? "active" : "inactive"}
+              onChange={(e) => handleToggleSubCategoryStatus(product.subCategory, e.target.value === "active")}
+              disabled={!product.subCategory || actionLoading}
+              className={`h-8 appearance-none rounded-md border px-3 pr-7 text-xs font-medium transition-colors ${
+                product.isActive
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+                  : "border-rose-200 bg-rose-50 text-rose-700 focus:border-rose-400 focus:ring-4 focus:ring-rose-500/10 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
+              } ${!product.subCategory ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+            <ChevronDown className={`pointer-events-none absolute right-2 top-1/2 size-3.5 -translate-y-1/2 ${product.isActive ? "text-emerald-600" : "text-rose-600"}`} />
+          </span>
+        ),
+      },
       {
         key: "source",
         header: "Source",
@@ -461,30 +344,31 @@ async function handlePriorityChange(category, isPriority = true) {
       },
     ];
 
+    async function handleToggleSubCategoryStatus(subCategory, isActive) {
+      if (!subCategory || !selectedCategory) return;
+      setActionLoading(`Updating sub-category "${subCategory}"...`);
+      try {
+        await bulkUpdateSubCategoryStatus(selectedCategory.name, subCategory, isActive, token);
+        toast.success(`Sub-category "${subCategory}" set to ${isActive ? "Active" : "Inactive"}`);
+        await loadCategoryProducts(selectedCategory.name);
+      } catch (err) {
+        toast.error(err.message || "Could not update sub-category status");
+      } finally {
+        setActionLoading("");
+      }
+    }
+
     return (
       <Card className="overflow-hidden p-0">
-        <div className="flex flex-col gap-4 border-b border-outline-variant px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="min-w-0 flex-1 lg:order-first">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="font-heading text-lg font-semibold text-on-surface">{selectedCategory.name}</h2>
-              <SourceBadge source={selectedCategory.source} />
-            </div>
-            <p className="text-sm text-on-surface-variant">{selectedCategory.count} products in this category</p>
+        <div className="flex flex-col gap-3 border-b border-outline-variant px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <h2 className="font-heading text-2xl font-bold tracking-tight text-on-surface">{selectedCategory.name}</h2>
+            <p className="mt-1 text-sm text-on-surface-variant">{selectedCategory.count} products in this category</p>
             {selectedCategory.description ? <p className="mt-1 max-w-2xl text-sm text-on-surface-variant">{selectedCategory.description}</p> : null}
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={handleSyncCategoryProducts} disabled={syncing} className="gap-1.5">
-              <RefreshCw className={`size-4 ${syncing ? "animate-spin" : ""}`} /> Sync All Products
-            </Button>
-            {selectedProducts.size > 0 ? (
-              <Button onClick={handleSyncSelectedProducts} disabled={syncing} className="gap-1.5">
-                <RefreshCw className={`size-4 ${syncing ? "animate-spin" : ""}`} /> Sync Selected ({selectedProducts.size})
-              </Button>
-            ) : null}
-            <Button variant="outline" onClick={handleBackToList} className="gap-1.5">
-              <ArrowLeft className="size-4" /> Back to Categories
-            </Button>
-          </div>
+          <Button variant="outline" onClick={handleBackToList} className="shrink-0 gap-1.5 self-start">
+            <ArrowLeft className="size-4" /> Back to Categories
+          </Button>
         </div>
 
         <div className="p-4 sm:p-5">
@@ -493,21 +377,10 @@ async function handlePriorityChange(category, isPriority = true) {
           ) : (
             <AdminTable
               title="Products"
-              description="Review pricing and stock, or select products to sync."
+              description="Review pricing, stock, and sub-category status."
               columns={productColumns}
               data={categoryProducts}
               pageSize={PAGE_SIZE}
-              toolbar={(
-                <label className="flex cursor-pointer items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={categoryProducts.length > 0 && selectedProducts.size === categoryProducts.length}
-                    onChange={toggleAllProducts}
-                    className="size-4 rounded border-outline-variant text-primary focus:ring-primary"
-                  />
-                  <span className="text-label-sm font-semibold text-on-surface">Select All ({categoryProducts.length})</span>
-                </label>
-              )}
               hideSearch
             />
           )}
@@ -581,16 +454,6 @@ async function handlePriorityChange(category, isPriority = true) {
         category={editTarget}
         onClose={() => setEditTarget(null)}
         onSubmit={confirmSaveCategory}
-      />
-
-      <ConfirmActionDialog
-        open={Boolean(deleteTarget)}
-        title="Delete category"
-        message="Are you sure you want to delete this category?"
-        confirmLabel="Delete"
-        loading={Boolean(actionLoading)}
-        onCancel={() => setDeleteTarget(null)}
-        onConfirm={confirmDeleteCategory}
       />
     </div>
   );

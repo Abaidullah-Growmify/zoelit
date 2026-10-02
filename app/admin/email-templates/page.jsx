@@ -24,6 +24,7 @@ const previewValues = {
   total: "$249.00",
   date: "September 1, 2026",
   resetUrl: "#",
+  verificationUrl: "#",
   expiresIn: "15 minutes",
   companyName: "ZoeLit Commerce",
   adminEmail: "ms.ayshrajpoot@gmail.com",
@@ -49,7 +50,7 @@ function formatHtmlForEditor(html) {
 }
 
 function EmailTemplatesSkeleton() {
-  return <Card className="space-y-6 p-6"><div className="flex flex-col justify-between gap-4 md:flex-row md:items-end"><div className="space-y-3"><Skeleton className="h-3 w-28 rounded-sm" /><Skeleton className="h-10 w-44 rounded-sm" /><Skeleton className="h-5 w-96 max-w-full rounded-sm" /></div><Skeleton className="h-10 w-56 rounded-md" /></div><div className="flex gap-1 border-b border-outline-variant/80"><Skeleton className="h-11 w-40 rounded-t-md" /><Skeleton className="h-11 w-48 rounded-t-md" /></div><Card className="overflow-hidden p-0"><div className="border-b border-outline-variant/80 px-5 py-4"><Skeleton className="h-6 w-44 rounded-sm" /><Skeleton className="mt-2 h-4 w-[30rem] max-w-full rounded-sm" /></div><div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left text-sm"><thead className="border-b border-outline-variant/70 bg-surface-container-low"><tr>{["w-8", "w-28", "w-32", "w-24", "w-16", "w-16"].map((width, index) => <th key={index} className="px-5 py-3"><Skeleton className={`h-3 ${width} rounded-sm`} /></th>)}</tr></thead><tbody className="divide-y divide-outline-variant/60">{Array.from({ length: 6 }).map((_, rowIndex) => <tr key={rowIndex}>{["w-8", "w-40", "w-36", "w-56", "w-24", "size-9"].map((width, cellIndex) => <td key={cellIndex} className="px-5 py-5"><Skeleton className={`${width === "size-9" ? "size-9 rounded-md" : `h-4 ${width} rounded-sm`}`} /></td>)}</tr>)}</tbody></table></div></Card></Card>;
+  return <Card className="space-y-6 p-6"><div className="flex flex-col justify-between gap-4 md:flex-row md:items-end"><div className="space-y-3"><Skeleton className="h-3 w-28 rounded-md" /><Skeleton className="h-10 w-44 rounded-md" /><Skeleton className="h-5 w-96 max-w-full rounded-md" /></div><Skeleton className="h-10 w-56 rounded-md" /></div><div className="flex gap-1 border-b border-outline-variant/80"><Skeleton className="h-11 w-40 rounded-t-md" /><Skeleton className="h-11 w-48 rounded-t-md" /></div><Card className="overflow-hidden p-0"><div className="border-b border-outline-variant/80 px-5 py-4"><Skeleton className="h-6 w-44 rounded-md" /><Skeleton className="mt-2 h-4 w-[30rem] max-w-full rounded-md" /></div><div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left text-sm"><thead className="border-b border-outline-variant/70 bg-surface-container-low"><tr>{["w-8", "w-28", "w-32", "w-24", "w-16", "w-16"].map((width, index) => <th key={index} className="px-5 py-3"><Skeleton className={`h-3 ${width} rounded-md`} /></th>)}</tr></thead><tbody className="divide-y divide-outline-variant/60">{Array.from({ length: 6 }).map((_, rowIndex) => <tr key={rowIndex}>{["w-8", "w-40", "w-36", "w-56", "w-24", "size-9"].map((width, cellIndex) => <td key={cellIndex} className="px-5 py-5"><Skeleton className={`${width === "size-9" ? "size-9 rounded-md" : `h-4 ${width} rounded-md`}`} /></td>)}</tr>)}</tbody></table></div></Card></Card>;
 }
 
 export default function EmailTemplatesPage() {
@@ -220,7 +221,7 @@ export default function EmailTemplatesPage() {
                         <button
                           type="button"
                           onClick={() => setSerialSort((direction) => (direction === "asc" ? "desc" : "asc"))}
-                          className="inline-flex items-center gap-1.5 rounded-lg transition hover:text-on-surface focus:outline-none focus:ring-4 focus:ring-primary/10"
+                          className="inline-flex items-center gap-1.5 rounded-md transition hover:text-on-surface focus:outline-none focus:ring-4 focus:ring-primary/10"
                         >
                           #
                           {serialSort === "asc" ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
@@ -290,7 +291,7 @@ export default function EmailTemplatesPage() {
                       <p className="font-mono text-[10px] text-on-surface-variant">Record #{index + 1}</p>
                       <p className="mt-1 font-mono text-xs text-on-surface-variant">{template.templateKey}</p>
                     </div>
-                    <button type="button" aria-label={`${template.isActive ? "Deactivate" : "Activate"} ${template.name}`} title={`Click to ${template.isActive ? "deactivate" : "activate"} this template`} onClick={(event) => requestStatusChange(template, event)} className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-sm transition hover:-translate-y-px hover:shadow ${template.isActive ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>
+                    <button type="button" aria-label={`${template.isActive ? "Deactivate" : "Activate"} ${template.name}`} title={`Click to ${template.isActive ? "deactivate" : "activate"} this template`} onClick={(event) => requestStatusChange(template, event)} className={`inline-flex cursor-pointer items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-semibold shadow-sm transition hover:-translate-y-px hover:shadow ${template.isActive ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>
                       {template.isActive ? <CheckCircle className="size-3.5" /> : <CircleOff className="size-3.5" />}
                       {template.isActive ? "Active" : "Inactive"}
                     </button>
@@ -368,7 +369,7 @@ export default function EmailTemplatesPage() {
 
       {activationTarget ? (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 px-4">
-          <Card className="w-full max-w-md space-y-5 rounded-2xl p-6 shadow-2xl">
+          <Card className="w-full max-w-md space-y-5 rounded-lg p-6 shadow-2xl">
             <div>
               <p className="font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">Change template status</p>
               <h2 className="mt-2 font-heading text-lg font-bold leading-7 text-black">
