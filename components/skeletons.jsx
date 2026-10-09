@@ -236,6 +236,131 @@ export function AdminProductsSkeleton() {
   );
 }
 
+export function AdminCaptureSkeleton() {
+  const headers = ["w-8", "w-32", "w-48", "w-20", "w-24", "w-20", "size-9"];
+  const cells = ["w-8", "w-32", "w-48", "w-20", "w-24", "w-20", "size-9"];
+
+  return (
+    <div className="space-y-6">
+      <AdminStatsSkeleton count={4} />
+      <Card className="overflow-hidden p-0 shadow-sm">
+        <div className="border-b border-outline-variant/70 px-5 py-4 sm:px-7">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <Skeleton className="h-7 w-44 rounded-sm" />
+              <Skeleton className="mt-1 h-4 w-[27rem] max-w-full rounded-sm" />
+            </div>
+            <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
+              <Skeleton className="h-10 w-full sm:w-72" />
+              <Skeleton className="h-10 w-full sm:w-44" />
+              <Skeleton className="h-10 w-full sm:w-40" />
+            </div>
+          </div>
+        </div>
+        <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <table className="w-full min-w-[1040px] text-left text-body">
+            <thead className="border-b border-outline-variant/70 bg-surface-container-low/60">
+              <tr>{headers.map((width, index) => <th key={index} className="whitespace-nowrap px-4 py-3"><Skeleton className={`h-3 ${width} rounded-sm`} /></th>)}</tr>
+            </thead>
+            <tbody className="divide-y divide-outline-variant/40">
+              {Array.from({ length: 8 }).map((_, rowIndex) => (
+                <tr key={rowIndex} className={rowIndex % 2 ? "bg-surface-container-low/40" : ""}>
+                  {cells.map((width, cellIndex) => (
+                    <td key={cellIndex} className="whitespace-nowrap px-4 py-3.5">
+                      <Skeleton className={`${width === "size-9" ? "size-9 rounded-md" : `h-4 ${width}`} inline-block rounded-sm`} />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colSpan={7} className="border-t border-outline-variant/70 px-5 py-4">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-4 w-40 rounded-sm" />
+                    <div className="flex gap-2">
+                      <Skeleton className="h-9 w-24 rounded-md" />
+                      <Skeleton className="h-9 w-9 rounded-md" />
+                      <Skeleton className="h-9 w-24 rounded-md" />
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+export function AdminCaptureDetailSkeleton() {
+  return (
+    <Card className="space-y-6 p-6">
+      <div className="w-full max-w-2xl">
+        <Skeleton className="h-4 w-28 rounded-sm" />
+        <Skeleton className="mt-3 h-9 w-64 max-w-full rounded-sm" />
+        <Skeleton className="mt-4 h-5 w-full max-w-lg rounded-sm" />
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Skeleton className="h-6 w-24 rounded-full" />
+        <Skeleton className="h-6 w-20 rounded-full" />
+        <Skeleton className="h-6 w-24 rounded-full" />
+        <Skeleton className="h-6 w-20 rounded-full" />
+      </div>
+      <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
+        <div className="space-y-6">
+          <Card className="p-5">
+            <Skeleton className="h-6 w-40 rounded-sm" />
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-11 w-full rounded-sm" />)}
+            </div>
+          </Card>
+          <Card className="p-5">
+            <Skeleton className="h-6 w-44 rounded-sm" />
+            <div className="mt-5 space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex items-center justify-between gap-3">
+                  <Skeleton className="h-4 w-48 rounded-sm" />
+                  <Skeleton className="h-4 w-20 rounded-sm" />
+                </div>
+              ))}
+            </div>
+            <div className="mt-5 space-y-2 border-t border-outline-variant pt-4">
+              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-4 w-full max-w-md rounded-sm" />)}
+            </div>
+          </Card>
+        </div>
+        <div className="space-y-6">
+          <Card className="p-5">
+            <Skeleton className="h-6 w-32 rounded-sm" />
+            <div className="mt-5 space-y-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <Skeleton className="mt-1.5 size-2 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-40 rounded-sm" />
+                    <Skeleton className="h-3 w-24 rounded-sm" />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-5 grid gap-3 border-t border-outline-variant pt-4 sm:grid-cols-2">
+              {Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-10 w-full rounded-sm" />)}
+            </div>
+          </Card>
+          <Card>
+            <Skeleton className="h-6 w-36 rounded-sm" />
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-11 w-full rounded-sm" />)}
+            </div>
+          </Card>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 export function AdminCategoriesSkeleton() {
   return (
     <Card className="overflow-hidden p-0 shadow-sm">

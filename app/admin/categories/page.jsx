@@ -9,7 +9,7 @@ import { TransparentActionLoader } from "@/components/action-feedback";
 import { Button, Card, FilterTabs, Input, Textarea, Label, SourceBadge, Badge } from "@/components/ui";
 import { AddItemModal } from "@/components/add-item-modal";
 import { AdminCategoriesSkeleton } from "@/components/skeletons";
-import { getAdminCategories, getCategoryProducts, createManualCategory, toggleCategoryActive, updateAdminCategory, getSyncStatus, bulkUpdateSubCategoryStatus } from "@/lib/api";
+import { getAdminCategories, getCategoryProducts, createManualCategory, toggleCategoryActive, toggleProductActive, updateAdminCategory, getSyncStatus } from "@/lib/api";
 import { FALLBACK_IMAGE } from "@/lib/product-mapper";
 import { money } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
@@ -321,13 +321,13 @@ function handleEditCategory(category) {
           <span className="relative inline-flex">
             <select
               value={product.isActive ? "active" : "inactive"}
-              onChange={(e) => handleToggleSubCategoryStatus(product.subCategory, e.target.value === "active")}
-              disabled={!product.subCategory || actionLoading}
+              onChange={() => handleToggleProductStatus(product.ingramPartNumber)}
+              disabled={Boolean(actionLoading)}
               className={`h-8 appearance-none rounded-md border px-3 pr-7 text-xs font-medium transition-colors ${
                 product.isActive
                   ? "border-emerald-200 bg-emerald-50 text-emerald-700 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
                   : "border-rose-200 bg-rose-50 text-rose-700 focus:border-rose-400 focus:ring-4 focus:ring-rose-500/10 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
-              } ${!product.subCategory ? "opacity-50 cursor-not-allowed" : ""}`}
+              } ${actionLoading ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
@@ -344,15 +344,15 @@ function handleEditCategory(category) {
       },
     ];
 
-    async function handleToggleSubCategoryStatus(subCategory, isActive) {
-      if (!subCategory || !selectedCategory) return;
-      setActionLoading(`Updating sub-category "${subCategory}"...`);
+    async function handleToggleProductStatus(ingramPartNumber) {
+      if (!ingramPartNumber || !selectedCategory) return;
+      setActionLoading("Updating product status...");
       try {
-        await bulkUpdateSubCategoryStatus(selectedCategory.name, subCategory, isActive, token);
-        toast.success(`Sub-category "${subCategory}" set to ${isActive ? "Active" : "Inactive"}`);
+        const data = await toggleProductActive(ingramPartNumber, token);
+        toast.success(data.message || "Product status updated");
         await loadCategoryProducts(selectedCategory.name);
       } catch (err) {
-        toast.error(err.message || "Could not update sub-category status");
+        toast.error(err.message || "Could not update product status");
       } finally {
         setActionLoading("");
       }

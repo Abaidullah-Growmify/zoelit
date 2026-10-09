@@ -83,29 +83,44 @@ function normalizeCategoryKey(value) {
   return String(value || "").trim().replace(/\s+/g, " ").toLowerCase();
 }
 
-// Number of cards a section will render: at least MIN_SECTION_CARDS, never
-// more than the section limit or the products the catalog actually has.
-function sectionCardTarget(limit, seedCount, productCount) {
+// Number of cards an automatic section will render: at least MIN_SECTION_CARDS,
+// never more than the section limit or the products the catalog actually has.
+function sectionCardTarget(limit, productCount) {
   const available = Math.max(1, Number(productCount) || 0);
-  return Math.max(1, Math.min(limit, Math.max(MIN_SECTION_CARDS, seedCount), available));
+  return Math.max(1, Math.min(limit, Math.max(MIN_SECTION_CARDS, limit), available));
+}
+
+// A section set to manual shows exactly what the admin picked in home
+// customization: no auto fill, no featured fallback and no padding up to
+// MIN_SECTION_CARDS. The old behavior padded short picks with random catalog
+// products, which is why a manual section used to show cards nobody selected.
+function isManualSection(config, picks) {
+  if (config?.mode === "auto") return false;
+  if (config?.mode === "manual") return true;
+  // Older saved configs may carry no mode; their picks mean "manual".
+  return picks.length > 0;
 }
 
 // Shared by the loading skeleton and the real page so both agree on whether a
-// section renders and how many cards it shows. A section is hidden only when it
-// is switched off; if its saved picks are gone from the catalog it falls back
-// to catalog products so a row never goes empty.
+// section renders and how many cards it shows. A manual section disappears
+// only when it is switched off or none of its picks resolve any more — it is
+// never replaced by random catalog products.
 function planProductSection(config, limit, resolvedList, productCount) {
   if (!config || config.enabled === false) return null;
   const picks = Array.isArray(config.productIds) ? config.productIds : [];
   const resolved = Array.isArray(resolvedList) ? resolvedList : [];
-  const auto = config.mode === "auto" || picks.length === 0 || resolved.length === 0;
-  const seed = auto ? limit : resolved.length;
-  return { auto, count: sectionCardTarget(limit, seed, productCount) };
+
+  if (isManualSection(config, picks)) {
+    if (!resolved.length) return null;
+    return { auto: false, count: Math.min(limit, resolved.length) };
+  }
+
+  return { auto: true, count: sectionCardTarget(limit, productCount) };
 }
 
-// Picks that still exist in the database, in the saved order. When a manual
-// section ends up with nothing valid the top categories are shown instead, so
-// switching the section on always shows something.
+// Picked categories that still exist in the database, in the saved order. A
+// manual category section shows only those tiles — it is never topped up with
+// unrelated catalog categories, and it is dropped when nothing was picked.
 function planCategories(config, dbCategories) {
   const cfg = config || {};
   if (cfg.enabled === false) return { enabled: false, categories: [] };
@@ -122,20 +137,7 @@ function planCategories(config, dbCategories) {
     picked.push(category);
   }
 
-  const useAuto = cfg.mode === "auto" || picked.length === 0;
-  const list = (useAuto ? db.slice(0, 6) : picked.slice(0, 6)).slice();
-
-  const minTiles = Math.min(MIN_SECTION_CARDS, db.length);
-  if (list.length < minTiles) {
-    for (const category of db) {
-      if (list.length >= minTiles) break;
-      const key = normalizeCategoryKey(category.name);
-      if (!seen.has(key)) {
-        seen.add(key);
-        list.push(category);
-      }
-    }
-  }
+  const list = isManualSection(cfg, picked) ? picked.slice(0, 6) : db.slice(0, 6);
 
   return { enabled: list.length > 0, categories: list };
 }
@@ -169,19 +171,18 @@ function homepageDisplay(home, dbCategories, picks, productCount) {
   };
 }
 
-// Resolves one section to exactly the card count the skeleton promised:
-// manual picks first, then other in-stock products for any shortfall (picks
-// can disappear when a product is removed from the catalog). The auto pool is
-// asked for the full target so a fill that collides with a pick still leaves
+// Resolves one section to its final card list. A manual section is exactly the
+// admin's picks — nothing is ever appended, which is what used to leak random
+// catalog products into sections with fewer picks than MIN_SECTION_CARDS.
+// Automatic sections fill from the in-stock auto pool first and the featured
+// feed second, and are asked for the full target so a duplicate still leaves
 // enough fresh products.
 async function fillSection(count, picked, auto, fetchType, featured = []) {
   if (count <= 0) return [];
+  if (!auto) return picked.slice(0, count);
 
-  const keep = auto ? [] : picked.slice(0, count);
-  if (keep.length >= count) return keep;
-
-  const seen = new Set(keep.map((product) => product.id));
-  const list = [...keep];
+  const seen = new Set();
+  const list = [];
   const addFrom = (products) => {
     for (const product of products || []) {
       if (list.length >= count) break;
@@ -198,8 +199,10 @@ async function fillSection(count, picked, auto, fetchType, featured = []) {
 }
 
 async function HomeCatalog({ categories, productCount, homepage, picks }) {
+  // The featured feed only carries in-stock products with a real image, so it
+  // can legitimately be empty while manual picks still have cards to render.
+  // The empty state is therefore decided after the sections are built.
   const featured = await getFeaturedProducts();
-  if (!featured.length) return <NoCatalog />;
 
   const home = homepage || {};
   const resolved = picks || {};
@@ -248,6 +251,10 @@ async function HomeCatalog({ categories, productCount, homepage, picks }) {
       };
     })
     .filter((section) => section.enabled);
+
+  if (!heroWithBadges.length && !categoryPlan.enabled && !productSections.length) {
+    return <NoCatalog />;
+  }
 
   return (
     <>

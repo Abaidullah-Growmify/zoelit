@@ -5,7 +5,7 @@ import { StoreHydration } from "@/components/store-hydration";
 import { ReduxProvider } from "@/store/provider";
 import "./globals.css";
 
-const plusJakartaSans = Plus_Jakarta_Sans({ variable: "--font-display", subsets: ["latin"], weight: ["400", "600", "700"] });
+const plusJakartaSans = Plus_Jakarta_Sans({ variable: "--font-display", subsets: ["latin"], weight: ["400", "600", "700"], display: "swap" });
 const inter = Inter({ variable: "--font-body", subsets: ["latin"], weight: ["400", "500", "600"] });
 
 export const metadata = {

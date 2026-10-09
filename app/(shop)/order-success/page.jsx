@@ -60,7 +60,9 @@ function OrderSuccessContent() {
         if (!active) return;
         if (res?.order?.publicOrderId || res?.order?.orderNumber) setOrderNumber(res.order.publicOrderId || res.order.orderNumber);
         if (res?.ingram?.ingramOrderNumber) setIngramOrderNumber(res.ingram.ingramOrderNumber);
-        if (res?.success || res?.order) fetchProducts().catch(() => {});
+        if (res?.success || res?.order) {
+          fetchProducts().catch(() => {});
+        }
       })
       .catch((error) => {
         if (!active) return;

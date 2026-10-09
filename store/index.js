@@ -14,6 +14,7 @@ const STORAGE_KEYS = {
   cartLegacy: "zoelit-cart",
   cartBackup: "zoelit-cart-backup",
   checkoutCompleted: "zoelit-checkout-completed",
+  voucher: "zoelit-checkout-voucher",
 };
 
 function getCartStorageKey(userId) {
@@ -63,6 +64,7 @@ function clearCompletedCheckoutStorage() {
 
     if (typeof sessionStorage !== "undefined") {
       sessionStorage.removeItem(STORAGE_KEYS.cartBackup);
+      sessionStorage.removeItem(STORAGE_KEYS.voucher);
     }
   } catch {
     // Storage may be unavailable. Ignore.

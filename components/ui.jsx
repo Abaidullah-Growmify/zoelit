@@ -127,6 +127,10 @@ export function SourceBadge({ source }) {
 const badgeTones = {
   Active: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
   Approved: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+  Scheduled: "bg-sky-500/10 text-sky-700 dark:text-sky-300",
+  Expired: "bg-rose-500/10 text-rose-700 dark:text-rose-300",
+  Exhausted: "bg-amber-500/10 text-amber-700 dark:text-amber-300",
+  Disabled: "bg-surface-container text-on-surface-variant",
   Delivered: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
   Paid: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
   "In Stock": "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
