@@ -121,7 +121,7 @@ export function AdminOrderDetail({ id }) {
         <AdminPageHeader title={`Order ${order.publicOrderId || order.orderNumber || order.id}`} description={`Placed by ${customer.name || "Unknown"} on ${shortDate(order.date)}. Review fulfilment details and print the invoice.`} action={<Button variant="outline" onClick={() => window.print()}><Printer className="size-4" />Print invoice</Button>} />
 
         <div className="mt-8 grid gap-6 xl:grid-cols-[1fr_380px]">
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
               <Card>
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
@@ -143,7 +143,7 @@ export function AdminOrderDetail({ id }) {
                        : "No commission applied";
 
                    return (
-                   <div key={item.productId} className="flex gap-4 rounded-md border border-slate-100 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-950/60">
+                    <div key={item.productId} className="flex flex-wrap gap-4 rounded-md border border-slate-100 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-950/60">
                     {item.image ? (
                       <Image src={item.image} alt={item.name} width={96} height={96} unoptimized className="size-24 shrink-0 rounded-md object-cover ring-1 ring-slate-200 dark:ring-slate-800" />
                     ) : (
@@ -153,7 +153,7 @@ export function AdminOrderDetail({ id }) {
                       <h3 className="font-heading text-h3 font-semibold text-slate-950 dark:text-white">{item.name}</h3>
                       <p className="mt-1 text-body font-regular tabular-nums text-slate-500 dark:text-slate-400">Qty {Math.floor(Number(item.quantity)) || 0}</p>
                     </div>
-                      <div className="min-w-44 text-right"><strong className="block font-semibold tabular-nums">{money(finalLineTotal)}</strong><span className="block text-xs text-on-surface-variant">Base: {money(baseLineTotal)}</span><span className="block text-xs font-semibold text-primary">{commissionLabel}</span></div>
+                      <div className="min-w-0 w-full text-right sm:w-auto sm:min-w-44 sm:shrink-0"><strong className="block font-semibold tabular-nums">{money(finalLineTotal)}</strong><span className="block text-xs text-on-surface-variant">Base: {money(baseLineTotal)}</span><span className="block text-xs font-semibold text-primary">{commissionLabel}</span></div>
                    </div>
                    );
                  })}
@@ -209,7 +209,7 @@ export function AdminOrderDetail({ id }) {
             </Card>
           </div>
 
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
             <Card>
               <h2 className="font-heading text-h2 font-semibold">Shipment controls</h2>
               <p className="mt-1 text-body font-regular text-slate-500 dark:text-slate-400">Update shipment details. Order status is changed from the orders table.</p>

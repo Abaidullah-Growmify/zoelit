@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { AdminTable } from "@/components/admin-table";
+import { AdminTable, AdminTableActions } from "@/components/admin-table";
 import { ConfirmActionDialog } from "@/components/action-feedback";
 import { Button, Card, ErrorText, Input, Label } from "@/components/ui";
 import { AdminCustomersSkeleton } from "@/components/skeletons";
@@ -14,6 +14,7 @@ import { createAdminCustomer, deleteAdminCustomer, getAdminCustomers, updateAdmi
 import { money, shortDate } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
 import { minimumLoadingDelay } from "@/lib/utils";
+import Pagination from "@/components/pagination";
 
 const PAGE_SIZE = 20;
 
@@ -148,37 +149,88 @@ export default function AdminCustomersPage() {
         <Card className="p-8 text-center text-body font-regular text-rose-600">{error}</Card>
       ) : (
         <>
-          <AdminTable
-            title={<span className="text-xl font-extrabold tracking-tight">Customers</span>}
-            description="All registered customers with their order history and lifetime spend."
-            columns={columns}
-            data={tableRows}
-            pageSize={PAGE_SIZE}
-            page={page}
-            onPageChange={setPage}
-            totalPages={totalPages}
-            totalItems={totalItems}
-            wrapperClassName="customer-table-scroll"
-            tableClassName="customer-table-compact"
-            action={(
-              <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="relative min-w-0 flex-1 sm:max-w-md lg:max-w-lg">
+          <div className="block">
+            <AdminTable
+              title={<span className="text-xl font-extrabold tracking-tight">Customers</span>}
+              description="All registered customers with their order history and lifetime spend."
+              columns={columns}
+              data={tableRows}
+              pageSize={PAGE_SIZE}
+              page={page}
+              onPageChange={setPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              wrapperClassName="customer-table-scroll"
+              tableClassName="customer-table-compact"
+              action={(
+                <div className="flex w-full flex-row items-center gap-2 sm:justify-between">
+                  <div className="relative min-w-0 flex-1 sm:max-w-md lg:max-w-lg">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
+                    <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search customers" aria-label="Search customers" className="h-10 pl-10 shadow-sm" />
+                  </div>
+                  <Button type="button" onClick={() => setModalOpen(true)} className="h-10 shrink-0 whitespace-nowrap">
+                    <Plus className="size-4" /> New customer
+                  </Button>
+                </div>
+              )}
+              hideSearch
+              disableInitialSort
+              rowActions={(customer) => [
+                { label: "View", ariaLabel: `View ${customer.name}`, href: `/admin/customers/${customer.id}`, icon: Eye },
+                { label: "Edit", ariaLabel: `Edit ${customer.name}`, onClick: () => setEditCustomer(customer), icon: Edit3 },
+                { label: "Delete", ariaLabel: `Delete ${customer.name}`, onClick: () => handleDeleteCustomer(customer), icon: Trash2, tone: "danger" },
+              ]}
+            />
+          </div>
+
+          <Card className="hidden overflow-hidden p-0 md:hidden">
+            <div className="border-b border-outline-variant/70 p-4">
+              <h1 className="text-xl font-extrabold tracking-tight text-on-surface">Customers</h1>
+              <p className="mt-1 text-sm leading-5 text-on-surface-variant">All registered customers with their order history and lifetime spend.</p>
+              <div className="mt-4 flex flex-col gap-2">
+                <div className="relative min-w-0">
                   <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
                   <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search customers" aria-label="Search customers" className="h-10 pl-10 shadow-sm" />
                 </div>
-                <Button type="button" onClick={() => setModalOpen(true)} className="ml-auto h-10 shrink-0">
+                <Button type="button" onClick={() => setModalOpen(true)} className="h-10 w-full whitespace-nowrap">
                   <Plus className="size-4" /> New customer
                 </Button>
               </div>
-            )}
-            hideSearch
-            disableInitialSort
-             rowActions={(customer) => [
-               { label: "View", ariaLabel: `View ${customer.name}`, href: `/admin/customers/${customer.id}`, icon: Eye },
-               { label: "Edit", ariaLabel: `Edit ${customer.name}`, onClick: () => setEditCustomer(customer), icon: Edit3 },
-               { label: "Delete", ariaLabel: `Delete ${customer.name}`, onClick: () => handleDeleteCustomer(customer), icon: Trash2, tone: "danger" },
-             ]}
-          />
+            </div>
+            <div className="divide-y divide-outline-variant/60">
+              {tableRows.length ? tableRows.map((customer) => (
+                <article key={customer.id} className="space-y-4 p-4">
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h2 className="truncate font-semibold text-on-surface">{customer.name}</h2>
+                      <p className="mt-1 break-all text-sm text-on-surface-variant">{customer.email}</p>
+                    </div>
+                    <CustomerStatusSelect customer={customer} onChange={handleStatusChange} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 rounded-lg bg-surface-container-low/60 p-3 text-sm">
+                    <CustomerMobileMetric label="Phone" value={customer.phone || "—"} />
+                    <CustomerMobileMetric label="Orders" value={customer.orders ?? 0} />
+                    <CustomerMobileMetric label="Spent" value={money(customer.totalSpent)} strong />
+                    <CustomerMobileMetric label="Joined" value={shortDate(customer.joined)} />
+                  </div>
+                  <div className="flex justify-end border-t border-outline-variant/60 pt-3">
+                    <AdminTableActions
+                      label={`Actions for ${customer.name}`}
+                      actions={[
+                        { label: "View", ariaLabel: `View ${customer.name}`, href: `/admin/customers/${customer.id}`, icon: Eye },
+                        { label: "Edit", ariaLabel: `Edit ${customer.name}`, onClick: () => setEditCustomer(customer), icon: Edit3 },
+                        { label: "Delete", ariaLabel: `Delete ${customer.name}`, onClick: () => handleDeleteCustomer(customer), icon: Trash2, tone: "danger" },
+                      ]}
+                    />
+                  </div>
+                </article>
+              )) : <p className="p-6 text-center text-sm text-on-surface-variant">No customers found.</p>}
+            </div>
+            <div className="flex flex-col items-center gap-3 border-t border-outline-variant/70 px-4 py-3 text-center text-xs sm:flex-row sm:justify-between">
+              <p className="text-on-surface-variant">Showing {totalItems ? (page - 1) * PAGE_SIZE + 1 : 0}-{Math.min(page * PAGE_SIZE, totalItems)} of {totalItems} results</p>
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+            </div>
+          </Card>
           <NewCustomerModal
             open={modalOpen}
             token={token}
@@ -280,16 +332,25 @@ function EditCustomerModal({ customer, token, onClose, onUpdated }) {
   );
 }
 
+function CustomerMobileMetric({ label, value, strong = false }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[11px] uppercase tracking-wide text-on-surface-variant">{label}</p>
+      <p className={`mt-1 truncate ${strong ? "font-semibold text-on-surface" : "text-on-surface"}`}>{value}</p>
+    </div>
+  );
+}
+
 function CustomerStatusSelect({ customer, onChange }) {
   const status = customer.status || "active";
 
   return (
-    <span className="relative inline-flex w-fit items-center">
+    <span className="relative inline-flex w-24 shrink-0 items-center">
       <select
         value={status}
         onChange={(event) => onChange(customer, event.target.value)}
         aria-label={`Change status for ${customer.name}`}
-        className={`h-7 w-fit max-w-full appearance-none rounded-md border-0 py-0 pl-2 pr-6 text-[10px] font-semibold uppercase tracking-[0.08em] shadow-none outline-none ring-0 transition focus:ring-2 ${status === "active" ? "bg-emerald-100 text-emerald-700 focus:ring-emerald-500/20 dark:bg-emerald-950/50 dark:text-emerald-300" : status === "unverified" ? "bg-amber-100 text-amber-700 focus:ring-amber-500/20 dark:bg-amber-950/50 dark:text-amber-300" : "bg-rose-100 text-rose-700 focus:ring-rose-500/20 dark:bg-rose-950/50 dark:text-rose-300"}`}
+        className={`h-8 w-full appearance-none rounded-md border-0 py-0 pl-2 pr-7 text-center text-[10px] font-semibold uppercase tracking-normal shadow-none outline-none ring-0 transition focus:ring-2 ${status === "active" ? "bg-emerald-100 text-emerald-700 focus:ring-emerald-500/20 dark:bg-emerald-950/50 dark:text-emerald-300" : status === "unverified" ? "bg-amber-100 text-amber-700 focus:ring-amber-500/20 dark:bg-amber-950/50 dark:text-amber-300" : "bg-rose-100 text-rose-700 focus:ring-rose-500/20 dark:bg-rose-950/50 dark:text-rose-300"}`}
       >
         <option value="active">Active</option>
         <option value="inactive">Inactive</option>

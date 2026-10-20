@@ -209,9 +209,9 @@ function handleEditCategory(category) {
   const categoryColumns = [
     { key: "serial", header: "#", sortable: true, accessor: "serial", cellClassName: "font-semibold tabular-nums text-on-surface" },
     { key: "name", header: "Name", sortable: true, accessor: "name", cellClassName: "font-semibold text-on-surface", render: (category) => (
-      <div className="max-w-72">
-         <p title={category.name} className="line-clamp-2 whitespace-normal text-base font-bold text-on-surface">{category.name}</p>
-        <p className="truncate text-meta font-normal text-on-surface-variant">{category.description || category.slug}</p>
+       <div className="max-w-[200px] min-w-0">
+          <p title={category.name} className="overflow-hidden text-ellipsis whitespace-nowrap text-base font-bold text-on-surface">{category.name}</p>
+         <p className="truncate text-meta font-normal text-on-surface-variant">{category.description || category.slug}</p>
       </div>
     ) },
     {
@@ -373,7 +373,7 @@ function handleEditCategory(category) {
 
         <div className="p-4 sm:p-5">
           {categoryProducts === null ? (
-            <AdminCategoriesSkeleton />
+            <AdminCategoriesSkeleton variant="products" />
           ) : (
             <AdminTable
               title="Products"
@@ -409,14 +409,14 @@ function handleEditCategory(category) {
             totalPages={totalPages}
             totalItems={filteredRows.length}
             toolbar={(
-               <div className="flex flex-wrap items-center justify-end gap-3">
-                  <div className="relative min-w-[14rem] flex-1 sm:max-w-md lg:max-w-md">
+               <div className="grid w-full grid-cols-2 items-center gap-2 md:flex md:justify-end md:gap-3">
+                  <div className="relative col-span-2 min-w-0 w-full flex-1 md:col-auto md:min-w-[14rem] md:max-w-md">
                    <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
                    <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search categories" aria-label="Search categories" className="h-10 pl-10 shadow-sm" />
                  </div>
-              <Button variant="outline" onClick={handleOpenAddModal} className="shrink-0 gap-1.5"><Plus className="size-4" /> Add Category</Button>
-                 <div className="relative shrink-0">
-                   <Button asChild href="/admin/categories/sync" className="min-w-[160px] whitespace-nowrap"><RefreshCw className="size-4" /> Sync from Ingram</Button>
+               <Button variant="outline" onClick={handleOpenAddModal} className="h-10 w-full min-w-0 gap-1 px-1 text-xs sm:px-3 sm:text-sm md:w-auto"><Plus className="size-3.5 shrink-0 sm:size-4" /> <span className="truncate">Add Category</span></Button>
+                  <div className="relative min-w-0 shrink-0">
+                    <Button asChild href="/admin/categories/sync" className="h-10 w-full min-w-0 gap-1 whitespace-nowrap px-1 text-xs sm:px-3 sm:text-sm md:min-w-[160px] md:w-auto"><RefreshCw className="size-3.5 shrink-0 sm:size-4" /><span className="truncate sm:hidden">Sync</span><span className="hidden truncate sm:inline">Sync from Ingram</span></Button>
                    {syncing && syncProgress.percent > 0 ? <div className="absolute bottom-0 left-0 h-1 w-full overflow-hidden rounded-b-md bg-primary/20"><div className="h-full bg-primary transition-all duration-300" style={{ width: `${syncProgress.percent}%` }} /></div> : null}
                  </div>
                </div>

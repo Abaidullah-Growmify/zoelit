@@ -239,7 +239,7 @@ async function handleCreate() {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-inverse-surface/40 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative z-10 flex w-full ${type === "category" ? "max-w-lg" : "max-w-2xl"} max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-lg border border-outline-variant bg-surface shadow-2xl`}>
+      <div className={`relative z-10 flex w-[calc(100vw-2rem)] ${type === "category" ? "max-w-lg" : "max-w-2xl"} max-h-[90vh] flex-col overflow-hidden rounded-lg border border-outline-variant bg-surface shadow-2xl`}>
 
         <div className="flex items-center justify-between border-b border-outline-variant px-5 py-4">
           <h2 className="font-heading text-lg font-semibold text-on-surface">

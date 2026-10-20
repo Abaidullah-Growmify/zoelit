@@ -52,7 +52,7 @@ export function AdminCustomerDetail({ id }) {
   return (
     <Card className="space-y-6 p-6">
       <AdminPageHeader title={customer.name} description="Customer account overview with profile, addresses, spend history, and orders." action={<Button asChild href="/admin/customers" variant="outline"><ArrowLeft className="size-4" /> Back to customers</Button>} />
-      <div className="mt-8 grid gap-4 md:grid-cols-3">
+      <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
         <AdminStatCard label="Total spent" value={money(customer.totalSpent || 0)} icon={Wallet} />
         <AdminStatCard label="Orders" value={customer.ordersCount ?? 0} icon={ShoppingBag} />
         <AdminStatCard label="Addresses" value={customer.addresses?.length ?? 0} icon={MapPin} />

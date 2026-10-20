@@ -177,7 +177,7 @@ export default function AdminCapturePage() {
         <Card className="p-8 text-center text-body font-regular text-rose-600">{error}</Card>
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
             <AdminStatCard label="Total visits" value={stats?.totalVisits ?? 0} icon={MousePointerClick} tone="blue" helper="Checkout page visits" />
             <AdminStatCard label="Converted" value={stats?.convertedVisits ?? 0} icon={ShoppingBag} tone="green" helper="Became an order" />
             <AdminStatCard label="Abandoned" value={abandoned} icon={ShoppingCart} tone="amber" helper="No order placed" />

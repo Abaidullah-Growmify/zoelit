@@ -72,7 +72,7 @@ export default function Pagination({
     <nav
       aria-label="Pagination"
       className={cn(
-        "flex items-center justify-center gap-1.5",
+        "flex flex-wrap items-center justify-center gap-1.5",
         className
       )}
     >

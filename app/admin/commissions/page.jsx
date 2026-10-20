@@ -5,6 +5,7 @@ import { AlertTriangle, Check, CheckCircle, ChevronDown, CircleOff, Eye, Pencil,
 import { toast } from "sonner";
 import { Button, Card, Input, Skeleton } from "@/components/ui";
 import { AdminTable } from "@/components/admin-table";
+import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { getAdminCategories, getAdminProduct, getCategoryProducts, getCommissionRules, createCommissionRule, updateCommissionRule, deleteCommissionRule } from "@/lib/api";
 import { usePolling } from "@/lib/use-polling";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
@@ -184,13 +185,12 @@ export default function AdminCommissionsPage() {
   const visibleRules = (ruleView === "active" ? filteredRules.filter((rule) => rule.isActive !== false) : filteredRules).map((rule, index) => ({ ...rule, serial: index + 1 }));
 
   if (loading) return <CommissionSkeleton />;
-  if (ruleView === "active") return <ActiveCommissionRules rules={visibleRules} search={ruleSearch} onSearch={setRuleSearch} onAdd={openAddForm} onAll={() => { setRuleView("all"); setFormOpen(false); }} onView={setViewTarget} onEdit={edit} onDelete={remove} onStatusChange={changeRuleStatus} statusSavingId={statusSavingId} deleteTarget={deleteTarget} deleting={deleting} onCancelDelete={() => setDeleteTarget(null)} onConfirmDelete={confirmDelete} viewTarget={viewTarget} onCloseView={() => setViewTarget(null)} />;
 
   return <div className="space-y-6">
      <Card className="overflow-visible p-0">
-      <div className="border-b border-outline-variant bg-surface-container-low/40 px-5 py-6 sm:px-7">
-         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"><div><h1 className="font-heading text-2xl font-semibold text-on-surface">Commissions</h1><p className="mt-1 max-w-3xl text-sm leading-6 text-on-surface-variant">Create and manage product, category, and general commission rules.</p></div><CommissionControls search={ruleSearch} onSearch={setRuleSearch} onAdd={openAddForm} /></div>
-         <div className="mt-5 flex gap-1 border-b border-outline-variant/80"><button type="button" onClick={() => { setRuleView("active"); setEditingId(""); setFormOpen(false); }} className={`border-b-2 px-4 py-2.5 text-sm font-semibold ${ruleView === "active" ? "border-primary text-primary" : "border-transparent text-on-surface-variant"}`}>Active commissions</button><button type="button" onClick={() => { setRuleView("all"); setEditingId(""); reset(); setFormOpen(false); }} className={`border-b-2 px-4 py-2.5 text-sm font-semibold ${ruleView === "all" ? "border-primary text-primary" : "border-transparent text-on-surface-variant"}`}>All commissions</button></div>
+      <div className="border-b border-outline-variant bg-surface-container-low/40 px-4 py-5 sm:px-5 sm:py-6 lg:px-7">
+         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"><div><h1 className="font-heading text-xl font-semibold text-on-surface sm:text-2xl">Commissions</h1><p className="mt-1 max-w-3xl text-sm leading-6 text-on-surface-variant">Create and manage product, category, and general commission rules.</p></div><CommissionControls search={ruleSearch} onSearch={setRuleSearch} onAdd={openAddForm} /></div>
+         <div className="sticky top-0 z-20 -mx-4 -mb-5 mt-5 flex gap-1 overflow-x-auto whitespace-nowrap border-b border-outline-variant/80 bg-surface-container-low/40 px-4 sm:-mx-5 sm:-mb-6 sm:px-5 lg:-mx-7 lg:px-7"><button type="button" onClick={() => { setRuleView("active"); setEditingId(""); setFormOpen(false); }} className={`border-b-2 px-3 py-2.5 text-sm font-semibold transition sm:px-4 ${ruleView === "active" ? "border-primary text-primary" : "border-transparent text-on-surface-variant hover:text-on-surface"}`}>Active commissions</button><button type="button" onClick={() => { setRuleView("all"); setEditingId(""); reset(); setFormOpen(false); }} className={`border-b-2 px-3 py-2.5 text-sm font-semibold transition sm:px-4 ${ruleView === "all" ? "border-primary text-primary" : "border-transparent text-on-surface-variant hover:text-on-surface"}`}>All commissions</button></div>
       </div>
         {formOpen ? <div className="fixed inset-0 z-40 grid place-items-center overflow-y-auto bg-inverse-surface/50 px-4 py-6 backdrop-blur-sm"><div className="w-full max-w-2xl rounded-lg border border-outline-variant bg-surface shadow-2xl"><div className="p-5 sm:p-6">
         <div className="mb-5 flex items-center justify-between gap-4"><h2 className="font-heading text-xl font-semibold text-on-surface">{editingId ? "Edit commission rule" : "Add commission rule"}</h2><button type="button" onClick={() => { reset(); setRuleView(formReturnView); setFormOpen(false); }} className="grid size-9 shrink-0 place-items-center rounded-md border border-outline-variant text-on-surface-variant transition hover:bg-surface-container-low hover:text-on-surface" aria-label="Close commission form"><X className="size-5" /></button></div>
@@ -207,14 +207,103 @@ export default function AdminCommissionsPage() {
           <div className="flex flex-col-reverse gap-2 border-t border-outline-variant pt-4 sm:flex-row sm:justify-end"><Button type="button" variant="outline" onClick={() => { reset(); setRuleView(formReturnView); setFormOpen(false); }}>Cancel</Button><Button disabled={saving} type="submit" className="min-w-36 gap-2"><Plus className="size-4" />{saving ? "Saving..." : editingId ? "Update rule" : "Add rule"}</Button></div>
        </form>
         </div></div></div> : null}
-        {ruleView === "all" && !formOpen ? <div><AllCommissionRules rules={rules} search={ruleSearch} onSearch={setRuleSearch} onAdd={openAddForm} onEdit={edit} onDelete={remove} onStatusChange={requestStatusChange} /></div> : null}
-      {ruleView === "active" ? <div className="border-t border-outline-variant">
-          <div className="flex flex-col gap-4 border-b border-outline-variant bg-surface-container-low/25 px-5 py-5 sm:px-7 lg:flex-row lg:items-end lg:justify-between"><div><h2 className="font-heading text-lg font-semibold text-on-surface">Active commission rules</h2><p className="mt-1 text-sm text-on-surface-variant">Active rules are applied automatically to new orders.</p></div><div className="relative w-full sm:w-64"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" /><Input value={ruleSearch} onChange={(event) => setRuleSearch(event.target.value)} placeholder="Search rules" aria-label="Search commission rules" className="h-10 pl-10" /></div></div>
-         {loading ? <p className="p-6 text-sm text-on-surface-variant">Loading...</p> : rules.length === 0 ? <p className="p-6 text-sm text-on-surface-variant">No commission rules configured.</p> : visibleRules.length === 0 ? <p className="p-6 text-sm text-on-surface-variant">No rules match your search.</p> : <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left text-sm"><thead className="border-b border-outline-variant bg-surface-container-low/20 text-xs uppercase tracking-wide text-on-surface-variant"><tr><th className="px-5 py-3 font-semibold sm:px-7">Type</th><th className="px-5 py-3 font-semibold">Applies to</th><th className="px-5 py-3 font-semibold">Priority</th><th className="px-5 py-3 font-semibold">Rate</th><th className="px-5 py-3 font-semibold">Status</th><th className="px-5 py-3 text-right font-semibold sm:px-7">Actions</th></tr></thead><tbody className="divide-y divide-outline-variant">{visibleRules.map((rule) => <tr key={rule._id} className="transition-colors hover:bg-surface-container-low/30"><td className="px-5 py-4 sm:px-7"><span className="rounded-lg bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary">{ruleTypeLabel(rule.type)}</span></td><td className="max-w-sm px-5 py-4 font-semibold text-on-surface">{ruleTargetLabel(rule)}{rule.name ? <span className="mt-1 block text-xs font-normal text-on-surface-variant">{rule.name}</span> : null}</td><td className="px-5 py-4 text-xs font-semibold text-on-surface-variant">{priorityLabel(rule)}</td><td className="px-5 py-4 font-semibold tabular-nums text-on-surface">{rule.rate}%</td><td className="px-5 py-4"><select value={rule.isActive === false ? "inactive" : "active"} disabled={statusSavingId === rule._id} onChange={(event) => changeRuleStatus(rule, event.target.value === "active")} className={`h-8 rounded-md border px-2 text-xs font-semibold ${rule.isActive === false ? "border-slate-300 bg-slate-50 text-slate-600" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}><option value="active">Active</option><option value="inactive">Inactive</option></select></td><td className="px-5 py-4 sm:px-7"><div className="flex justify-end gap-1"><Button variant="ghost" size="sm" onClick={() => edit(rule)} aria-label="Edit rule"><Pencil className="size-4" /></Button><Button variant="ghost" size="sm" onClick={() => remove(rule._id)} aria-label="Delete rule"><Trash2 className="size-4 text-error" /></Button></div></td></tr>)}</tbody></table></div>}
-       </div> : null}
-     </Card>
+        
+        {/* Tab Content */}
+        {ruleView === "active" && !formOpen ? (
+          <div className="mt-4 sm:mt-6">
+            <AdminTable
+              title="Active commission rules"
+              description="Active rules are applied automatically to new orders."
+              columns={[
+                { key: "serial", header: "#", accessor: "serial", cellClassName: "w-16 font-semibold tabular-nums text-on-surface" },
+                { key: "type", header: "Type", accessor: (rule) => ruleTypeLabel(rule.type), render: (rule) => <span className="rounded-lg bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary">{ruleTypeLabel(rule.type)}</span> },
+                { key: "target", header: "Applies to", accessor: ruleTargetLabel, render: (rule) => <span className="block max-w-[15rem] truncate font-semibold text-on-surface">{ruleTargetLabel(rule)}</span> },
+                { key: "priority", header: "Priority", accessor: priorityLabel, render: (rule) => <span className="whitespace-nowrap text-xs font-semibold text-on-surface-variant">{priorityLabel(rule)}</span> },
+                { key: "name", header: "Rule name", accessor: "name", render: (rule) => <span className="block max-w-[10rem] truncate text-on-surface-variant">{rule.name || "-"}</span> },
+                { key: "value", header: "Value", accessor: commissionValueLabel, render: (rule) => <span className="font-semibold tabular-nums text-on-surface">{commissionValueLabel(rule)}</span> },
+                { key: "status", header: "Status", accessor: () => "Active", render: (rule) => <select value="active" disabled={statusSavingId === rule._id} onChange={() => requestStatusChange(rule)} className="h-8 rounded-md border border-emerald-200 bg-emerald-50 px-2 text-xs font-semibold text-emerald-700"><option value="active">Active</option><option value="inactive">Inactive</option></select> },
+              ]}
+              data={visibleRules}
+              hideSearch
+              disableInitialSort
+              rowActions={(rule) => [
+                { label: "Edit rule", icon: Pencil, onClick: () => edit(rule) },
+                { label: "Delete", icon: Trash2, onClick: () => remove(rule._id), tone: "danger" },
+              ]}
+            />
+          </div>
+        ) : null}
+
+        {ruleView === "all" && !formOpen ? (
+          <div className="mt-4 sm:mt-6">
+            <Card className="overflow-hidden rounded-xl border p-0">
+              <div className="border-b border-outline-variant bg-surface-container-low/40 px-4 py-5 sm:px-6 lg:px-7">
+                <h2 className="font-heading text-lg font-semibold text-on-surface">All commission rules</h2>
+                <p className="mt-1 text-sm text-on-surface-variant">Every rule, including inactive ones.</p>
+              </div>
+              {loading ? (
+                <p className="py-8 text-center text-sm text-on-surface-variant">Loading...</p>
+              ) : rules.length === 0 ? (
+                <p className="py-8 text-center text-sm text-on-surface-variant">No commission rules configured.</p>
+              ) : visibleRules.length === 0 ? (
+                <p className="py-8 text-center text-sm text-on-surface-variant">No rules match your search.</p>
+              ) : (
+                <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-6 lg:grid-cols-3 lg:p-7">
+                  {visibleRules.map((rule) => (
+                    <div key={rule._id} className="flex min-h-56 flex-col justify-between rounded-lg border border-outline-variant bg-surface p-4 shadow-sm transition hover:border-primary/40 hover:shadow-md">
+                      <div className="min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="shrink-0 rounded-lg bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary">
+                            {ruleTypeLabel(rule.type)}
+                          </span>
+                        </div>
+                        <h3 className="mt-3 line-clamp-2 font-heading text-sm font-semibold text-on-surface" title={ruleTargetLabel(rule)}>
+                          {ruleTargetLabel(rule)}
+                        </h3>
+                        <p className="mt-2 line-clamp-1 text-xs text-on-surface-variant" title={rule.name || undefined}>
+                          {rule.name || "-"}
+                        </p>
+                      </div>
+                      <div className="mt-4 flex items-end justify-between gap-3 border-t border-outline-variant pt-4">
+                        <div className="min-w-0">
+                          <p className="text-xs uppercase tracking-wide text-on-surface-variant">Commission</p>
+                          <p className="mt-1 font-semibold tabular-nums leading-none text-on-surface">{commissionValueLabel(rule)}</p>
+                          <p className="mt-1 text-[11px] font-semibold text-on-surface-variant">{priorityLabel(rule)}</p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-1">
+                          <button type="button" onClick={() => edit(rule)} className="grid size-9 place-items-center rounded-md text-on-surface-variant transition hover:bg-surface-container-low hover:text-on-surface" aria-label="Edit commission">
+                            <Pencil className="size-4" />
+                          </button>
+                          <button type="button" onClick={() => remove(rule._id)} className="grid size-9 place-items-center rounded-md text-on-surface-variant transition hover:bg-error-container hover:text-error" aria-label="Delete commission">
+                            <Trash2 className="size-4" />
+                          </button>
+                        </div>
+                        <button
+                          type="button" 
+                          onClick={() => requestStatusChange(rule)} 
+                          disabled={statusSavingId === rule._id}
+                          className={`inline-flex cursor-pointer items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-semibold shadow-sm transition hover:-translate-y-px hover:shadow disabled:cursor-not-allowed disabled:opacity-50 ${
+                            rule.isActive === false
+                              ? "border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200"
+                              : "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                          }`}
+                          aria-label={`${rule.isActive === false ? "Activate" : "Deactivate"} commission`}
+                        >
+                          {rule.isActive === false ? <CircleOff className="size-3.5" /> : <CheckCircle className="size-3.5" />}
+                          {rule.isActive === false ? "Inactive" : "Active"}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </div>
+        ) : null}
+      </Card>
       <DeleteCommissionModal rule={deleteTarget} deleting={deleting} onCancel={() => setDeleteTarget(null)} onConfirm={confirmDelete} />
       <StatusCommissionModal rule={statusTarget} saving={Boolean(statusSavingId)} onCancel={() => setStatusTarget(null)} onConfirm={confirmStatusChange} />
+      <CommissionViewModal rule={viewTarget} onClose={() => setViewTarget(null)} />
       <DuplicateCommissionModal message={duplicateMessage} onClose={() => setDuplicateMessage("")} />
     </div>;
 }
@@ -272,14 +361,48 @@ function priorityLabel(rule) {
 }
 
 function CommissionControls({ search, onSearch, onAdd }) {
-  return <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto"><div className="relative min-w-0 flex-1 sm:w-72 lg:w-80"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" /><Input value={search} onChange={(event) => onSearch(event.target.value)} placeholder="Search commission rules" aria-label="Search commission rules" className="h-10 pl-10" /></div><Button type="button" onClick={onAdd} className="h-10 shrink-0 gap-2"><Plus className="size-4" />Add commission</Button></div>;
+  return <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-end lg:w-auto"><div className="relative min-w-0 flex-1 sm:w-64 lg:w-72"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" /><Input value={search} onChange={(event) => onSearch(event.target.value)} placeholder="Search commission rules" aria-label="Search commission rules" className="h-10 pl-10" /></div><Button type="button" onClick={onAdd} className="h-10 w-full shrink-0 gap-2 sm:w-auto"><Plus className="size-4" />Add commission</Button></div>;
 }
 
 function CommissionSkeleton() {
-  const headerWidths = ["w-8", "w-20", "w-32", "w-24", "w-16", "w-20", "w-20"];
-  const rowWidths = ["w-8", "w-20", "w-40", "w-24", "w-20", "w-20", "w-8"];
-
-  return <div className="space-y-6"><Card className="overflow-hidden p-0"><div className="border-b border-outline-variant bg-surface-container-low/40 px-5 py-6 sm:px-7"><div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between"><div className="w-full max-w-2xl"><Skeleton className="h-9 w-48 rounded-md" /><Skeleton className="mt-3 h-5 w-full max-w-xl rounded-md" /></div><div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto"><Skeleton className="h-10 w-full sm:w-72" /><Skeleton className="h-10 w-full sm:w-40" /></div></div><div className="mt-6 flex gap-6 border-b border-outline-variant/80"><Skeleton className="h-10 w-40 rounded-t-md" /><Skeleton className="h-10 w-32 rounded-t-md" /></div></div><div className="border-b border-outline-variant px-5 py-5 sm:px-7"><Skeleton className="h-7 w-56 rounded-md" /><Skeleton className="mt-3 h-4 w-full max-w-md rounded-md" /></div><div className="overflow-x-auto"><div className="flex min-w-[760px] gap-6 border-b border-outline-variant bg-surface-container-low/40 px-5 py-4 sm:px-7">{headerWidths.map((width, index) => <Skeleton key={`header-${index}`} className={`h-3 ${width} shrink-0 rounded-md`} />)}</div>{Array.from({ length: 6 }).map((_, index) => <div key={index} className="flex min-w-[760px] items-center gap-6 border-b border-outline-variant/60 px-5 py-5 sm:px-7">{rowWidths.map((width, cellIndex) => <Skeleton key={cellIndex} className={`h-4 ${width} shrink-0 rounded-md`} />)}</div>)}</div></Card></div>;
+  return (
+    <div className="space-y-6">
+      <Card className="overflow-hidden p-0">
+        <div className="border-b border-outline-variant bg-surface-container-low/40 px-4 py-5 sm:px-6 lg:px-7">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <Skeleton className="h-9 w-48 rounded-md" />
+              <Skeleton className="mt-3 h-5 w-full max-w-xl rounded-md" />
+            </div>
+            <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
+              <Skeleton className="h-10 w-full sm:w-72" />
+              <Skeleton className="h-10 w-full sm:w-40" />
+            </div>
+          </div>
+          <div className="mt-6 flex gap-6 border-b border-outline-variant/80">
+            <Skeleton className="h-10 w-40 rounded-t-md" />
+            <Skeleton className="h-10 w-32 rounded-t-md" />
+          </div>
+        </div>
+        <Card className="overflow-hidden rounded-xl border p-0">
+          <div className="border-b border-outline-variant px-4 py-5 sm:px-6">
+            <Skeleton className="h-7 w-56 rounded-md" />
+            <Skeleton className="mt-3 h-4 w-full max-w-md rounded-md" />
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[980px] text-left text-sm">
+              <thead className="border-b border-outline-variant bg-surface-container-low/60">
+                <tr>{Array.from({ length: 8 }).map((_, index) => <th key={index} className="whitespace-nowrap px-4 py-3"><Skeleton className="h-3 w-20 rounded-md" /></th>)}</tr>
+              </thead>
+              <tbody className="divide-y divide-outline-variant/60">
+                {Array.from({ length: 6 }).map((_, rowIndex) => <tr key={rowIndex}>{Array.from({ length: 8 }).map((_, columnIndex) => <td key={columnIndex} className="whitespace-nowrap px-4 py-4"><Skeleton className={columnIndex === 7 ? "size-8 rounded-md" : `h-4 ${columnIndex === 2 ? "w-40" : "w-24"} rounded-md`} /></td>)}</tr>)}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </Card>
+    </div>
+  );
 }
 
 function AllCommissionRules({ rules, search, onSearch, onAdd, onEdit, onDelete, onStatusChange }) {
@@ -290,26 +413,39 @@ function AllCommissionRules({ rules, search, onSearch, onAdd, onEdit, onDelete, 
 
   return (
     <div className="border-t border-outline-variant">
-      <div className="flex flex-col gap-4 border-b border-outline-variant bg-surface-container-low/25 px-5 py-5 sm:px-7 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h2 className="font-heading text-lg font-semibold text-on-surface">All commission rules</h2>
-          <p className="mt-1 text-sm text-on-surface-variant">Review and manage every commission rule.</p>
-        </div>
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <div className="relative w-full sm:w-64">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
-            <Input value={search} onChange={(event) => onSearch(event.target.value)} placeholder="Search rules" className="h-10 pl-10" />
-          </div>
-          <Button onClick={onAdd} className="gap-2"><Plus className="size-4" />Add commission</Button>
-        </div>
-      </div>
-      {visibleRules.length === 0 ? <p className="p-7 text-sm text-on-surface-variant">{rules.length === 0 ? "No commission rules configured." : "No rules match your search."}</p> : <CommissionCardGrid rules={visibleRules} onEdit={onEdit} onDelete={onDelete} onStatusChange={onStatusChange} />}
+      {visibleRules.length === 0 ? <p className="p-5 text-sm text-on-surface-variant sm:p-7">{rules.length === 0 ? "No commission rules configured." : "No rules match your search."}</p> : <CommissionTable rules={visibleRules} onEdit={onEdit} onDelete={onDelete} onStatusChange={onStatusChange} />}
     </div>
   );
 }
 
 function CommissionCardGrid({ rules, onEdit, onDelete, onStatusChange }) {
   return <div className="grid gap-5 p-5 sm:grid-cols-2 sm:p-7 lg:grid-cols-3">{rules.map((rule) => <div key={rule._id} className="flex min-h-56 flex-col justify-between rounded-lg border border-outline-variant bg-surface p-5 shadow-sm transition hover:border-primary/40 hover:shadow-md"><div><div className="flex items-start justify-between gap-3"><span className="rounded-lg bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary">{ruleTypeLabel(rule.type)}</span></div><h3 className="mt-5 line-clamp-2 font-heading text-lg font-semibold text-on-surface">{ruleTargetLabel(rule)}</h3><p className="mt-2 text-sm text-on-surface-variant">{rule.name || "No rule name"}</p></div><div className="mt-5 flex items-center justify-between gap-3 border-t border-outline-variant pt-4"><div className="shrink-0"><p className="text-xs uppercase tracking-wide text-on-surface-variant">Commission</p><p className="mt-1 font-semibold tabular-nums leading-none text-on-surface">{commissionValueLabel(rule)}</p><p className="mt-1 text-[11px] font-semibold text-on-surface-variant">{priorityLabel(rule)}</p></div><div className="flex shrink-0 items-center gap-1 self-center"><Button type="button" size="sm" variant="outline" onClick={() => onStatusChange(rule)} aria-label={`${rule.isActive === false ? "Activate" : "Deactivate"} commission`} title={`Click to ${rule.isActive === false ? "activate" : "deactivate"} this commission`} className={`inline-flex h-9 min-w-[7rem] cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap border text-center font-semibold leading-none shadow-sm transition hover:-translate-y-px hover:shadow ${rule.isActive === false ? "border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200" : "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"}`}>{rule.isActive === false ? <CircleOff className="size-3.5 shrink-0" /> : <CheckCircle className="size-3.5 shrink-0" />}{rule.isActive === false ? "Inactive" : "Active"}</Button><Button variant="ghost" size="sm" onClick={() => onEdit(rule)} aria-label="Edit rule"><Pencil className="size-4" /></Button><Button variant="ghost" size="sm" onClick={() => onDelete(rule._id)} aria-label="Delete rule"><Trash2 className="size-4 text-error" /></Button></div></div></div>)}</div>;
+}
+
+function CommissionTable({ rules, onEdit, onDelete, onStatusChange }) {
+  void CommissionCardGrid;
+  const columns = [
+    { key: "type", header: "Type", accessor: (rule) => ruleTypeLabel(rule.type), render: (rule) => <span className="rounded-lg bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary">{ruleTypeLabel(rule.type)}</span> },
+    { key: "target", header: "Applies to", accessor: ruleTargetLabel, render: (rule) => <span className="block max-w-[13rem] truncate font-semibold text-on-surface">{ruleTargetLabel(rule)}</span> },
+    { key: "name", header: "Rule name", accessor: "name", render: (rule) => <span className="block max-w-[10rem] truncate text-on-surface-variant">{rule.name || "-"}</span> },
+    { key: "priority", header: "Priority", accessor: priorityLabel, render: (rule) => <span className="whitespace-nowrap text-xs font-semibold text-on-surface-variant">{priorityLabel(rule)}</span> },
+    { key: "value", header: "Value", accessor: commissionValueLabel, render: (rule) => <span className="font-semibold tabular-nums text-on-surface">{commissionValueLabel(rule)}</span> },
+    { key: "status", header: "Status", accessor: (rule) => rule.isActive === false ? "Inactive" : "Active", render: (rule) => <AdminStatusBadge>{rule.isActive === false ? "Inactive" : "Active"}</AdminStatusBadge> },
+  ];
+
+  return <AdminTable
+    title=""
+    description=""
+    columns={columns}
+    data={rules}
+    hideSearch
+    disableInitialSort
+    rowActions={(rule) => [
+      { label: "Edit rule", icon: Pencil, onClick: () => onEdit(rule) },
+      { label: "Delete", icon: Trash2, onClick: () => onDelete(rule._id), tone: "danger" },
+      { label: rule.isActive === false ? "Activate" : "Deactivate", icon: rule.isActive === false ? CheckCircle : CircleOff, onClick: () => onStatusChange(rule) },
+    ]}
+  />;
 }
 
 function ActiveCommissionRules({ rules, search, onSearch, onAdd, onAll, onView, onEdit, onDelete, onStatusChange, statusSavingId, deleteTarget, deleting, onCancelDelete, onConfirmDelete, viewTarget, onCloseView }) {

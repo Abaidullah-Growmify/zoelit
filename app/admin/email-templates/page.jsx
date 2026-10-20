@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, CheckCircle, ChevronDown, ChevronUp, CircleOff, Eye, Mail, Pencil, Search, Trash2 } from "lucide-react";
+import { ArrowLeft, CheckCircle, CircleOff, Eye, Mail, Pencil, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Card, Input, Label, Skeleton, Textarea } from "@/components/ui";
 import { AdminTableActions } from "@/components/admin-table";
@@ -50,7 +50,34 @@ function formatHtmlForEditor(html) {
 }
 
 function EmailTemplatesSkeleton() {
-  return <Card className="space-y-6 p-6"><div className="flex flex-col justify-between gap-4 md:flex-row md:items-end"><div className="space-y-3"><Skeleton className="h-3 w-28 rounded-md" /><Skeleton className="h-10 w-44 rounded-md" /><Skeleton className="h-5 w-96 max-w-full rounded-md" /></div><Skeleton className="h-10 w-56 rounded-md" /></div><div className="flex gap-1 border-b border-outline-variant/80"><Skeleton className="h-11 w-40 rounded-t-md" /><Skeleton className="h-11 w-48 rounded-t-md" /></div><Card className="overflow-hidden p-0"><div className="border-b border-outline-variant/80 px-5 py-4"><Skeleton className="h-6 w-44 rounded-md" /><Skeleton className="mt-2 h-4 w-[30rem] max-w-full rounded-md" /></div><div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left text-sm"><thead className="border-b border-outline-variant/70 bg-surface-container-low"><tr>{["w-8", "w-28", "w-32", "w-24", "w-16", "w-16"].map((width, index) => <th key={index} className="px-5 py-3"><Skeleton className={`h-3 ${width} rounded-md`} /></th>)}</tr></thead><tbody className="divide-y divide-outline-variant/60">{Array.from({ length: 6 }).map((_, rowIndex) => <tr key={rowIndex}>{["w-8", "w-40", "w-36", "w-56", "w-24", "size-9"].map((width, cellIndex) => <td key={cellIndex} className="px-5 py-5"><Skeleton className={`${width === "size-9" ? "size-9 rounded-md" : `h-4 ${width} rounded-md`}`} /></td>)}</tr>)}</tbody></table></div></Card></Card>;
+  return (
+    <Card className="space-y-6 p-3 sm:p-5 lg:p-6">
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <div className="space-y-3">
+          <Skeleton className="h-3 w-28 rounded-md" />
+          <Skeleton className="h-10 w-44 rounded-md" />
+          <Skeleton className="h-5 w-96 max-w-full rounded-md" />
+        </div>
+        <Skeleton className="h-10 w-full rounded-md md:w-56" />
+      </div>
+
+      <div className="flex gap-1 overflow-x-auto whitespace-nowrap border-b border-outline-variant/80">
+        <Skeleton className="h-11 w-40 rounded-t-md" />
+        <Skeleton className="h-11 w-48 rounded-t-md" />
+      </div>
+
+      <div className="overflow-x-auto rounded-lg border border-outline-variant/80">
+        <table className="w-full min-w-[760px] text-left text-sm">
+          <thead className="border-b border-outline-variant/70 bg-surface-container-low">
+            <tr>{Array.from({ length: 6 }).map((_, index) => <th key={index} className="whitespace-nowrap px-5 py-3"><Skeleton className="h-3 w-20 rounded-md" /></th>)}</tr>
+          </thead>
+          <tbody className="divide-y divide-outline-variant/60">
+            {Array.from({ length: 6 }).map((_, rowIndex) => <tr key={rowIndex}>{Array.from({ length: 6 }).map((_, columnIndex) => <td key={columnIndex} className="whitespace-nowrap px-5 py-4"><Skeleton className={columnIndex === 5 ? "size-9 rounded-md" : `h-4 ${columnIndex === 1 ? "w-36" : "w-24"} rounded-md`} /></td>)}</tr>)}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+  );
 }
 
 export default function EmailTemplatesPage() {
@@ -61,7 +88,7 @@ export default function EmailTemplatesPage() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
   const [activationTarget, setActivationTarget] = useState(null);
-  const [serialSort, setSerialSort] = useState("asc");
+  const [serialSort] = useState("asc");
   const [saving, setSaving] = useState(false);
   const [activating, setActivating] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -168,7 +195,7 @@ export default function EmailTemplatesPage() {
   }
 
   return (
-    <Card className="space-y-6 p-6">
+    <Card className="space-y-6 p-3 sm:p-5 lg:p-6">
       <TransparentActionLoader open={Boolean(actionLoading)} label={actionLoading} />
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
@@ -176,13 +203,13 @@ export default function EmailTemplatesPage() {
           <h1 className="font-heading text-3xl font-semibold tracking-tight text-on-surface">Template</h1>
           <p className="mt-2 text-sm text-on-surface-variant">Manage the complete email communication library for ZoeLit.</p>
         </div>
-        <div className="relative w-56">
+        <div className="relative w-full md:w-56">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
           <Input className="pl-9" placeholder="Search templates" value={search} onChange={(event) => setSearch(event.target.value)} />
         </div>
       </div>
 
-      <div className="flex gap-1 border-b border-outline-variant/80">
+      <div className="flex gap-1 overflow-x-auto whitespace-nowrap border-b border-outline-variant/80">
         <button
           type="button"
           onClick={() => {
@@ -208,97 +235,107 @@ export default function EmailTemplatesPage() {
       {!selected ? (
         <>
           {view === "active" ? (
-            <Card className="overflow-hidden p-0">
-              <div className="border-b border-outline-variant/80 px-5 py-4">
-                <h2 className="font-heading text-lg font-semibold text-on-surface">Active templates</h2>
-                <p className="mt-1 text-sm text-on-surface-variant">Only these templates are eligible for email delivery. Use Edit to change content.</p>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[720px] text-left text-sm">
-                  <thead className="bg-surface-container-low text-xs uppercase tracking-wide text-on-surface-variant">
-                    <tr>
-                      <th className="px-5 py-3">
-                        <button
-                          type="button"
-                          onClick={() => setSerialSort((direction) => (direction === "asc" ? "desc" : "asc"))}
-                          className="inline-flex items-center gap-1.5 rounded-md transition hover:text-on-surface focus:outline-none focus:ring-4 focus:ring-primary/10"
-                        >
-                          #
-                          {serialSort === "asc" ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
-                        </button>
-                      </th>
-                      <th className="px-5 py-3">Template</th>
-                      <th className="px-5 py-3">Template key</th>
-                      <th className="px-5 py-3">Subject</th>
-                      <th className="px-5 py-3">Active</th>
-                      <th className="px-5 py-3 text-right">Action</th>
+            <div className="overflow-x-auto rounded-lg border border-outline-variant/80">
+              <table className="w-full min-w-[760px] text-left text-sm">
+                <thead className="border-b border-outline-variant/70 bg-surface-container-low text-xs uppercase tracking-wide text-on-surface-variant">
+                  <tr>
+                    <th className="px-5 py-3">#</th>
+                    <th className="px-5 py-3">Template</th>
+                    <th className="px-5 py-3">Template key</th>
+                    <th className="px-5 py-3">Subject</th>
+                    <th className="px-5 py-3">Status</th>
+                    <th className="px-5 py-3 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-outline-variant/60">
+                  {orderedTemplates.map((template, index) => (
+                    <tr key={template._id} className="transition-colors hover:bg-surface-container-low/60">
+                      <td className="px-5 py-4 font-semibold tabular-nums text-on-surface">{serialSort === "asc" ? index + 1 : orderedTemplates.length - index}</td>
+                      <td className="px-5 py-4 font-semibold text-on-surface">
+                        {template.name}
+                        <div className="mt-1 text-xs font-normal text-on-surface-variant">{template.description || template.subject}</div>
+                      </td>
+                      <td className="px-5 py-4 font-mono text-xs text-on-surface-variant">{template.templateKey}</td>
+                      <td className="max-w-xs px-5 py-4 text-on-surface-variant">{template.subject}</td>
+                      <td className="px-5 py-4">
+                        <select value="active" disabled={actionLoading === "Updating template status..."} onChange={(event) => requestStatusChange(template, event)} className="h-9 rounded-md border border-emerald-200 bg-emerald-50 px-3 text-sm font-semibold text-emerald-700">
+                          <option value="active">Active</option>
+                          <option value="inactive">Inactive</option>
+                        </select>
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <AdminTableActions
+                          label={`Actions for ${template.name}`}
+                          actions={[
+                            { label: "View", ariaLabel: `View ${template.name}`, icon: Eye, onClick: () => setSelected(template), loadingLabel: "Opening template..." },
+                            { label: "Edit", ariaLabel: `Edit ${template.name}`, icon: Pencil, onClick: () => openEditor(template), loadingLabel: "Opening editor..." },
+                            { label: "Delete", ariaLabel: `Delete ${template.name}`, icon: Trash2, tone: "danger", onClick: () => setDeleteTarget(template) },
+                          ]}
+                        />
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-outline-variant/60">
-                    {orderedTemplates.map((template, index) => (
-                      <tr key={template._id} className="hover:bg-surface-container-low/60">
-                        <td className="px-5 py-4 font-semibold tabular-nums text-on-surface">{serialSort === "asc" ? index + 1 : activeTemplates.length - index}</td>
-                        <td className="px-5 py-4 font-semibold text-on-surface">
-                          {template.name}
-                          <div className="mt-1 text-xs font-normal text-on-surface-variant">{template.description}</div>
-                        </td>
-                        <td className="px-5 py-4 font-mono text-xs text-on-surface-variant">{template.templateKey}</td>
-                        <td className="max-w-xs px-5 py-4 text-on-surface-variant">{template.subject}</td>
-                        <td className="px-5 py-4">
-                           <Button
-                             type="button"
-                             size="sm"
-                             variant="outline"
-                             aria-label={`${template.isActive ? "Deactivate" : "Activate"} ${template.name}`}
-                             onClick={(event) => requestStatusChange(template, event)}
-                             title={`Click to ${template.isActive ? "deactivate" : "activate"} this template`}
-                             className={`inline-flex cursor-pointer items-center gap-1.5 border font-semibold shadow-sm transition hover:-translate-y-px hover:shadow ${template.isActive ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200"}`}
-                           >
-                             {template.isActive ? <CheckCircle className="size-3.5" /> : <CircleOff className="size-3.5" />}
-                             {template.isActive ? "Active" : "Inactive"}
-                           </Button>
-                        </td>
-                        <td className="px-5 py-4 text-right">
-                          <AdminTableActions
-                            label={`Actions for ${template.name}`}
-                            actions={[
-                              { label: "View", ariaLabel: `View ${template.name}`, icon: Eye, onClick: () => setSelected(template) },
-                              { label: "Edit", ariaLabel: `Edit ${template.name}`, icon: Pencil, onClick: () => openEditor(template) },
-                              { label: "Delete", ariaLabel: `Delete ${template.name}`, icon: Trash2, tone: "danger", onClick: () => setDeleteTarget(template) },
-                            ]}
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
-            <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {visibleTemplates.map((template, index) => (
-                <div
-                  key={template._id}
-                  className="flex min-h-44 flex-col rounded-lg border border-outline-variant/80 bg-surface p-5 text-left transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
-                >
-                  <div className="grid size-10 place-items-center rounded-lg bg-surface-container-low text-on-surface-variant">
-                    <Mail className="size-5" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {orderedTemplates.map((template, index) => (
+              <div
+                key={template._id}
+                className="flex min-h-56 min-w-0 flex-col rounded-lg border border-outline-variant/80 bg-surface p-5 text-left transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+              >
+                {/* Icon area */}
+                <div className="grid size-10 place-items-center rounded-lg bg-surface-container-low text-on-surface-variant">
+                  <Mail className="size-5" />
+                </div>
+
+                {/* Title */}
+                <h3 className="mt-5 min-w-0 font-heading text-lg font-semibold text-on-surface">{template.name}</h3>
+
+                {/* Description/Subject */}
+                <p className="mt-2 min-w-0 line-clamp-2 text-sm text-on-surface-variant">{template.description || template.subject}</p>
+
+                {/* Divider and Footer */}
+                <div className="mt-auto flex flex-col gap-3 border-t border-outline-variant/70 pt-4">
+                  {/* Record info */}
+                  <div>
+                    <p className="font-mono text-[10px] text-on-surface-variant">Record #{serialSort === "asc" ? index + 1 : orderedTemplates.length - index}</p>
+                    <p className="mt-1 min-w-0 break-all font-mono text-xs text-on-surface-variant" title={template.templateKey}>
+                      {template.templateKey}
+                    </p>
                   </div>
-                  <h3 className="mt-5 font-heading text-lg font-semibold text-on-surface">{template.name}</h3>
-                  <p className="mt-2 line-clamp-2 text-sm text-on-surface-variant">{template.description || template.subject}</p>
-                  <div className="mt-auto flex items-end justify-between gap-3 border-t border-outline-variant/70 pt-4">
-                    <div>
-                      <p className="font-mono text-[10px] text-on-surface-variant">Record #{index + 1}</p>
-                      <p className="mt-1 font-mono text-xs text-on-surface-variant">{template.templateKey}</p>
-                    </div>
-                    <button type="button" aria-label={`${template.isActive ? "Deactivate" : "Activate"} ${template.name}`} title={`Click to ${template.isActive ? "deactivate" : "activate"} this template`} onClick={(event) => requestStatusChange(template, event)} className={`inline-flex cursor-pointer items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-semibold shadow-sm transition hover:-translate-y-px hover:shadow ${template.isActive ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>
+
+                  {/* Status and Actions */}
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      aria-label={`${template.isActive ? "Deactivate" : "Activate"} ${template.name}`}
+                      title={`Click to ${template.isActive ? "deactivate" : "activate"} this template`}
+                      onClick={(event) => requestStatusChange(template, event)}
+                      className={`inline-flex cursor-pointer items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-semibold shadow-sm transition hover:-translate-y-px hover:shadow ${
+                        template.isActive
+                          ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                          : "border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
+                    >
                       {template.isActive ? <CheckCircle className="size-3.5" /> : <CircleOff className="size-3.5" />}
                       {template.isActive ? "Active" : "Inactive"}
                     </button>
                   </div>
                 </div>
-              ))}
-            </section>
+              </div>
+            ))}
+          </div>
+          )}
+
+          {orderedTemplates.length === 0 && (
+            <div className="rounded-lg border border-outline-variant/70 bg-surface-container-low/30 px-6 py-12 text-center">
+              <Mail className="mx-auto size-12 text-on-surface-variant/50" />
+              <p className="mt-3 text-sm text-on-surface-variant">
+                {view === "active" ? "No active templates yet." : "No templates found."}
+              </p>
+            </div>
           )}
         </>
       ) : (

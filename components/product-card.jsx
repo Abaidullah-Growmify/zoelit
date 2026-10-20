@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRef, useSyncExternalStore } from "react";
-import { Heart, ShoppingBasket } from "lucide-react";
+import { ArrowRight, Heart, ShoppingBasket, Star } from "lucide-react";
 import { cn, money } from "@/lib/utils";
 import { useCartStore } from "@/store/cart-store";
 import { useAuthStore } from "@/store/auth-store";
@@ -19,6 +19,7 @@ export function ProductCard({
   title = product?.name,
   price = product?.price,
   category = product?.category,
+  badge = category,
   stockCount = product?.stock,
   description = product?.description,
   isPriceOnRequest = product ? Number(product.price) <= 0 : false,
@@ -132,34 +133,32 @@ export function ProductCard({
     <Link
       href={detailHref}
       title={title}
-      className="min-w-0 line-clamp-2 text-overflow-unset font-heading text-base font-bold uppercase leading-tight tracking-[-0.02em] text-on-surface transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:text-primary group-hover:text-primary"
+      className="zl-card-title min-h-10 min-w-0 line-clamp-2 text-overflow-unset [overflow-wrap:anywhere] font-heading text-base font-bold leading-tight tracking-[-0.02em] text-on-surface transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:text-primary group-hover:text-primary"
     >
       {title}
     </Link>
   ) : (
-    <span className="min-w-0 line-clamp-2 text-overflow-unset font-heading text-base font-bold uppercase leading-tight tracking-[-0.02em] text-on-surface">{title}</span>
+    <span className="zl-card-title min-h-10 min-w-0 line-clamp-2 text-overflow-unset [overflow-wrap:anywhere] font-heading text-base font-bold leading-tight tracking-[-0.02em] text-on-surface">{title}</span>
   );
 
+  // Shown only in the mobile home list rows (see .grid-home rules in globals.css).
+  const ratingValue = Number(product?.rating) > 0 ? Number(product.rating) : 4.8;
+
   const imageNode = (
-    <div
-      ref={imageRef}
-      className={cn("relative w-full overflow-hidden", IMAGE_AREA_CLASS)}
-    >
-      <div className="flex items-center justify-center h-full">
-        <Image
-          src={image}
-          alt={title}
-          width={300}
-          height={220}
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          className="object-contain transition-transform duration-300 ease-out motion-reduce:transform-none group-hover:scale-[1.03]"
-        />
-      </div>
+    <div className="flex h-full w-full items-center justify-center">
+      <Image
+        src={image}
+        alt={title}
+        width={300}
+        height={220}
+        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+        className="h-full w-full object-contain p-2 transition-transform duration-300 ease-out motion-reduce:transform-none group-hover:scale-[1.02]"
+      />
     </div>
   );
 
   return (
-    <Card className="group relative flex h-full cursor-pointer flex-col border-[rgba(0,0,0,0.06)] p-0 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_4px_12px_rgba(16,24,40,0.06)] transition-all duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:shadow-[0_8px_20px_rgba(16,24,40,0.10)] hover:-translate-y-0.5">
+    <Card className="zl-card group relative flex h-full cursor-pointer flex-col border-[rgba(0,0,0,0.06)] p-0 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.12)] transition-all duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-1 hover:border-primary/20 hover:shadow-[0_16px_32px_-12px_rgba(16,24,40,0.22)]">
       {isClientReady && token ? (
         <button
           type="button"
@@ -167,7 +166,7 @@ export function ProductCard({
           aria-pressed={isWishlisted}
           aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
           className={cn(
-            "absolute right-4 top-4 z-20 grid size-9 place-items-center rounded-full border bg-surface-container-lowest/95 shadow-sm backdrop-blur transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15 motion-reduce:transition-colors motion-reduce:hover:scale-100",
+            "zl-card-wish absolute right-4 top-4 z-20 grid size-10 place-items-center rounded-full border bg-surface-container-lowest/95 shadow-sm backdrop-blur transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15 motion-reduce:transition-colors motion-reduce:hover:scale-100",
             isWishlisted
               ? "border-error-container bg-error-container text-error animate-[wishlistBounce_220ms_ease-out] motion-reduce:animate-none"
               : "border-outline-variant text-on-surface-variant hover:scale-110 hover:border-primary hover:text-primary",
@@ -177,44 +176,52 @@ export function ProductCard({
         </button>
       ) : null}
 
-      <div className={cn("relative overflow-hidden rounded-t-xl bg-transparent", IMAGE_AREA_CLASS)}>
-        {category ? (
-          <span className="absolute left-4 top-4 z-10 inline-block max-w-[60%] truncate rounded-full bg-surface-container-low px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.02em] text-on-surface-variant">
-            {category}
-          </span>
-        ) : null}
-        {hasDetailLink ? <Link href={detailHref} className="block w-full focus-visible:outline-none">{imageNode}</Link> : <div className="block w-full">{imageNode}</div>}
+      {badge ? (
+        <span className="zl-card-badge absolute left-4 top-4 z-20 inline-block max-w-[calc(100%-2rem)] break-words">
+          {badge}
+        </span>
+      ) : null}
+      <div ref={imageRef} className={cn("zl-card-img relative overflow-hidden rounded-t-xl border-b-2 border-[rgba(0,0,0,0.08)] bg-transparent dark:border-slate-700", IMAGE_AREA_CLASS)}>
+        {hasDetailLink ? <Link href={detailHref} className="block h-full w-full focus-visible:outline-none">{imageNode}</Link> : <div className="block h-full w-full">{imageNode}</div>}
       </div>
 
-      <div className="flex flex-1 flex-col p-4 pt-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">{titleNode}</div>
-           <div className="shrink-0 text-right">
-             <span className={cn("block whitespace-nowrap font-heading text-body-lg font-extrabold tabular-nums tracking-[-0.02em]", isPriceOnRequest ? "text-on-surface-variant" : "text-on-surface")}>{isPriceOnRequest ? "On request" : money(Number(price) || 0)}</span>
-          </div>
-        </div>
+      <div className="zl-card-body flex min-w-0 flex-1 flex-col p-4 pt-4">
+        <div className="min-w-0">{titleNode}</div>
 
-        <div className="mt-3 flex items-center gap-2">
+        {description ? <p className="zl-card-desc mt-2 line-clamp-2 break-words text-sm leading-5 text-on-surface-variant">{description}</p> : null}
+
+        <span className={cn("zl-card-price mt-3 block whitespace-nowrap font-heading text-body-lg font-extrabold tabular-nums tracking-[-0.02em]", isPriceOnRequest ? "text-on-surface-variant" : "text-on-surface")}>{isPriceOnRequest ? "On request" : money(Number(price) || 0)}</span>
+
+        <span className="zl-card-rating">
+          <Star className="size-3.5" fill="currentColor" aria-hidden="true" />
+          {ratingValue.toFixed(1)}
+        </span>
+
+        <div className="zl-card-stock mt-2 flex items-center gap-2">
           <span className={cn("inline-flex size-2 shrink-0 rounded-full", sellable ? "bg-emerald-500" : "bg-rose-500")} />
           <span className="text-xs font-medium text-on-surface-variant">
             {sellable ? `${remainingStock} in stock` : availability}
           </span>
         </div>
 
-        {description ? <p className="mt-2 truncate text-sm text-on-surface-variant">{description}</p> : null}
-
-        <div className="mt-auto pt-5">
+        <div className="zl-card-actions mt-auto pt-5">
           <Button
             className="h-10 w-full rounded-md bg-[#2563EB] text-white hover:bg-[#1d4ed8]"
             onClick={handleAddToCart}
             aria-label={`Add ${title} to cart`}
             disabled={!sellable || remainingStock <= 0}
           >
-            <ShoppingBasket className="size-4 transition-transform duration-200 ease-out group-hover/cta:translate-x-0.5 motion-reduce:transition-none" />
+            <ShoppingBasket className="size-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5 motion-reduce:transition-none" />
             {sellable ? "Add to cart" : "Out of stock"}
           </Button>
         </div>
       </div>
+
+      {hasDetailLink ? (
+        <Link href={detailHref} className="zl-card-arrow" aria-label={`View ${title}`}>
+          <ArrowRight className="size-4" />
+        </Link>
+      ) : null}
     </Card>
   );
 }

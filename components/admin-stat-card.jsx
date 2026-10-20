@@ -24,7 +24,7 @@ export function AdminStatCard({ label, value, icon: Icon, helper, tone = "blue",
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-medium text-on-surface-variant">{label}</p>
-          <p className="mt-1.5 truncate font-heading text-xl font-semibold tabular-nums tracking-tight text-on-surface">{value}</p>
+          <p className="mt-1.5 truncate font-heading text-base font-semibold tabular-nums tracking-tight text-on-surface sm:text-xl">{value}</p>
         </div>
         <span className={cn("grid size-9 shrink-0 place-items-center rounded-lg", iconClass)}>
           <Icon className="size-4" />

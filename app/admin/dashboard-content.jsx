@@ -44,7 +44,7 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
   const orderColumns = [
     { key: "serial", header: "#", sortable: true, accessor: "serial", cellClassName: "font-semibold tabular-nums text-on-surface" },
     { key: "orderNumber", header: "Order", sortable: true, accessor: "publicOrderId", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => order.publicOrderId || order.orderNumber || order.id || order.ingramOrderNumber },
-    { key: "customer", header: "Customer", sortable: true, accessor: (order) => order.customer?.name || "—", cellClassName: "min-w-0 whitespace-normal font-semibold text-on-surface" },
+    { key: "customer", header: "Customer", sortable: true, accessor: (order) => order.customer?.name || "—", cellClassName: "max-w-[200px] truncate font-semibold text-on-surface" },
     { key: "payment", header: "Payment", accessor: "payment", render: (order) => <AdminStatusBadge className="text-label-md font-normal text-on-surface-variant">{order.payment}</AdminStatusBadge> },
     { key: "notes", header: "Notes", accessor: "notes", render: (order) => <OrderNotesDialog notes={order.notes} label={`View notes for order ${order.publicOrderId || order.orderNumber || order.id}`} /> },
     { key: "total", header: "Total", sortable: true, accessor: "total", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => money(order.total) },
@@ -118,14 +118,14 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {topProducts.length ? (
             topProducts.map((product, index) => (
-              <div key={`${product.productId}-${index}`} className="flex items-center gap-3 rounded-lg border border-outline-variant bg-surface-container-low/60 p-3">
+              <div key={`${product.productId}-${index}`} className="flex min-w-0 items-center gap-3 rounded-lg border border-outline-variant bg-surface-container-low/60 p-3">
                 {product.image ? (
                   <Image src={product.image} alt={product.name} width={56} height={56} className="size-12 shrink-0 rounded-lg object-cover ring-1 ring-outline-variant" />
                 ) : (
                   <div className="grid size-12 shrink-0 place-items-center rounded-lg bg-surface-container text-xs font-semibold text-on-surface-variant">IT</div>
                 )}
                 <div className="min-w-0">
-                    <p className="truncate text-body-md font-medium text-on-surface">{product.name}</p>
+                    <p className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-body-md font-medium text-on-surface" title={product.name}>{product.name}</p>
                     <p className="mt-1 text-label-sm font-semibold tabular-nums text-on-surface-variant">
                       {product.fallback ? `${product.qty} in stock · ${money(product.revenue)}` : `${product.qty} sold · ${money(product.revenue)}`}
                     </p>

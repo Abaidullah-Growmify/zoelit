@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Flame, Layers, Loader2, Plus, RotateCcw, Save, Sparkles, Tags, Trash2, TrendingUp } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeft, CheckCircle2, Flame, Layers, Loader2, Plus, RotateCcw, Save, Sparkles, Tags, Trash2, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Card, Input, Label, Skeleton, Textarea } from "@/components/ui";
 import { ConfirmActionDialog, TransparentActionLoader } from "@/components/action-feedback";
@@ -12,6 +12,8 @@ import { CategoryPicker } from "@/components/home-manager/category-picker";
 import { getAdminCategories, getAdminHomepage, getAdminProducts, getAdminProductsByIds, updateAdminHomepage } from "@/lib/api";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
 import { cn } from "@/lib/utils";
+import { useRouter, useSearchParams } from "next/navigation";
+import { AdminTableActions } from "@/components/admin-table";
 
 const MIN_SKELETON_MS = 650;
 
@@ -19,13 +21,13 @@ const DEFAULTS = {
   hero: {
     enabled: true,
     eyebrow: "ZoeLit · Thoughtfully chosen",
-    title: "Better technology, thoughtfully chosen for you.",
+      title: "Better technology, thoughtfully chosen for you",
     lead: "Explore a considered collection of electronics, accessories, and everyday essentials selected for quality, value, and ease.",
     mode: "manual",
     productIds: [],
   },
   categories: { enabled: true, mode: "manual", categoryNames: [] },
-  bestDeals: { enabled: true, eyebrow: "Top Sale", title: "Best deals this week", mode: "manual", productIds: [] },
+  bestDeals: { enabled: true, eyebrow: "", title: "Featured Products", mode: "manual", productIds: [] },
   newArrivals: { enabled: true, eyebrow: "New Arrivals", title: "Fresh picks just landed", mode: "manual", productIds: [] },
   trending: { enabled: true, eyebrow: "Trending", title: "Popular right now", mode: "manual", productIds: [] },
   customSections: [],
@@ -206,10 +208,15 @@ export default function AdminHomePage() {
   const [productTotal, setProductTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState("");
-  const [activeId, setActiveId] = useState("hero");
+  const pillsRef = useRef(null);
   const [savedFlash, setSavedFlash] = useState("");
   const [resetOpen, setResetOpen] = useState(false);
   const [switching, setSwitching] = useState(false);
+  const [discardOpen, setDiscardOpen] = useState(false);
+  const historyGuardRef = useRef(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const sectionParam = searchParams.get("section");
 
   const load = useCallback(() => {
     let active = true;
@@ -288,6 +295,20 @@ export default function AdminHomePage() {
     });
   };
 
+  const selectSection = useCallback((id) => {
+    router.push(`/admin/home?section=${encodeURIComponent(id)}`, { scroll: false });
+    setSwitching(true);
+    window.setTimeout(() => setSwitching(false), 400);
+    requestAnimationFrame(() => {
+      const container = pillsRef.current;
+      if (!container || container.scrollWidth <= container.clientWidth) return;
+      const pill = container.querySelector(`[data-section-id="${id}"]`);
+      if (!pill) return;
+      const target = pill.offsetLeft - (container.clientWidth - pill.offsetWidth) / 2;
+      container.scrollTo({ left: Math.max(0, target), behavior: "smooth" });
+    });
+  }, [router]);
+
   const addSection = () => {
     setHomepage((previous) => {
       if (!previous) return previous;
@@ -301,10 +322,10 @@ export default function AdminHomePage() {
     setHomepage((previous) => {
       if (!previous) return previous;
       const customSections = (previous.customSections || []).filter((_, sectionIndex) => sectionIndex !== index);
-      if (activeId === `custom:${index}`) selectSection("bestDeals");
+      if (sectionParam === `custom:${index}`) selectSection("bestDeals");
       return { ...previous, customSections };
     });
-  }, [activeId]);
+  }, [sectionParam, selectSection]);
 
   const persist = async () => {
     if (!token || !homepage) throw new Error("Admin session expired");
@@ -369,12 +390,6 @@ export default function AdminHomePage() {
     }
   };
 
-  const selectSection = (id) => {
-    setActiveId(id);
-    setSwitching(true);
-    window.setTimeout(() => setSwitching(false), 400);
-  };
-
   const restoreDefaults = () => {
     setHomepage(JSON.parse(JSON.stringify(DEFAULTS)));
     setResetOpen(false);
@@ -409,13 +424,73 @@ export default function AdminHomePage() {
     return items;
   }, [homepage, removeSection]);
 
-  const activeItem = navItems.find((item) => item.id === activeId);
+  const activeId = navItems.some((item) => item.id === sectionParam) ? sectionParam : (navItems[0]?.id || "hero");
+  const hasSelectedSection = Boolean(sectionParam && navItems.some((item) => item.id === sectionParam));
+  const activeItem = navItems.find((item) => item.id === activeId) || navItems[0] || { icon: Sparkles, label: "Hero section" };
   const activeMeta = SECTION_META[activeId];
+  const mobileDescription = activeId === "hero"
+    ? "Headline, intro, 3 cards"
+    : activeId === "categories"
+      ? "Category picks"
+      : activeId === "bestDeals"
+        ? "Featured deals"
+        : activeId === "newArrivals"
+          ? "Latest products"
+          : activeId === "trending"
+            ? "Popular products"
+            : "Custom section";
+
+  const goToList = () => {
+    if (hasDirty && hasSelectedSection) {
+      setDiscardOpen(true);
+      return;
+    }
+    router.push("/admin/home", { scroll: false });
+  };
+
+  const discardChanges = () => {
+    setDiscardOpen(false);
+    historyGuardRef.current = false;
+    router.push("/admin/home", { scroll: false });
+  };
+
+  useEffect(() => {
+    if (!hasSelectedSection || !hasDirty || typeof window === "undefined") {
+      historyGuardRef.current = false;
+      return undefined;
+    }
+    if (!historyGuardRef.current) {
+      window.history.pushState({ homeUnsavedGuard: true }, "", window.location.href);
+      historyGuardRef.current = true;
+    }
+    const handlePopState = () => {
+      window.history.pushState({ homeUnsavedGuard: true }, "", window.location.href);
+      setDiscardOpen(true);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [hasSelectedSection, hasDirty]);
 
   if (loading) {
     return (
-      <Card className="overflow-visible p-0">
-        <div className="border-b border-outline-variant bg-surface-container-low/40 px-5 py-6 sm:px-7">
+      <>
+       <div className="home-mobile-flow lg:hidden px-4 py-3">
+         {sectionParam ? (
+           <div className="mx-auto max-w-2xl">
+             <div className="-mx-4 flex h-12 items-center gap-3 border-b border-outline-variant px-4"><Skeleton className="size-9 rounded-md" /><Skeleton className="h-5 w-40 rounded-md" /><Skeleton className="ml-auto size-8 rounded-md" /></div>
+             <Skeleton className="mt-4 h-4 w-48 rounded-md" />
+             <div className="mt-3 rounded-xl border border-outline-variant p-4"><EditorSkeleton activeId={sectionParam} /></div>
+           </div>
+         ) : (
+           <div className="mx-auto max-w-2xl">
+             <Skeleton className="h-6 w-48 rounded-md" /><Skeleton className="mt-2 h-4 w-40 rounded-md" />
+             <div className="mt-4 overflow-hidden rounded-xl border border-outline-variant">{Array.from({ length: 6 }).map((_, index) => <div key={index} className="flex min-h-14 items-center gap-3 border-b border-outline-variant/70 px-3 py-3.5 last:border-b-0"><Skeleton className="size-9 rounded-lg" /><div className="min-w-0 flex-1"><Skeleton className="h-4 w-32 rounded-md" /><Skeleton className="mt-1 h-3 w-40 max-w-full rounded-md" /></div><Skeleton className="size-4 rounded-md" /></div>)}</div>
+             <Skeleton className="mt-3 h-11 w-full rounded-lg" />
+           </div>
+         )}
+       </div>
+       <Card className="hidden overflow-visible p-0 lg:block">
+       <div className="border-b border-outline-variant bg-surface-container-low/40 px-3 py-5 sm:px-5 sm:py-6 lg:px-7">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <Skeleton className="h-8 w-72 max-w-full rounded-md" />
@@ -445,7 +520,7 @@ export default function AdminHomePage() {
               </div>
             </div>
             <div className="mt-7 space-y-4">
-              <div className="grid gap-6 sm:grid-cols-2">
+              <div className="grid grid-cols-1 min-w-0 gap-6 [&>*]:min-w-0 sm:grid-cols-2">
                 <Skeleton className="h-10 w-full rounded-md" />
                 <Skeleton className="h-10 w-full rounded-md" />
                 <Skeleton className="h-28 w-full rounded-md sm:col-span-2" />
@@ -456,42 +531,112 @@ export default function AdminHomePage() {
           </div>
         </div>
       </Card>
+      </>
     );
   }
 
   return (
-    <Card className="overflow-visible p-0">
+    <>
       <TransparentActionLoader open={switching || Boolean(saving)} />
-      <div className="border-b border-outline-variant bg-surface-container-low/40 px-5 py-6 sm:px-7">
+
+      <div className="home-mobile-flow lg:hidden">
+        {!hasSelectedSection ? (
+          <div className="mx-auto max-w-2xl px-4 py-3">
+            <div className="mb-4">
+              <h1 className="truncate text-lg font-semibold text-on-surface">Home customization</h1>
+              <p className="truncate text-sm text-on-surface-variant">Choose what to edit.</p>
+            </div>
+            <div className="overflow-hidden rounded-xl border border-outline-variant/80 bg-surface">
+              {navItems.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => selectSection(item.id)}
+                    className={cn("flex min-h-14 w-full items-center gap-3 px-3 py-3.5 text-left active:bg-slate-50", index < navItems.length - 1 && "border-b border-outline-variant/70")}
+                  >
+                    <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                      <Icon className="size-4" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium text-on-surface">{item.label}</span>
+                      <span className="block truncate text-xs text-on-surface-variant">
+                        {item.id === "hero" ? "Headline, intro, 3 cards" : item.id === "categories" ? "Category picks" : item.id === "bestDeals" ? "Featured deals" : item.id === "newArrivals" ? "Latest products" : item.id === "trending" ? "Popular products" : "Custom section"}
+                      </span>
+                    </span>
+                    <span aria-hidden="true" className="shrink-0 text-lg leading-none text-on-surface-variant">›</span>
+                  </button>
+                );
+              })}
+            </div>
+            <button type="button" onClick={addSection} className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-primary text-sm font-semibold text-primary">
+              <Plus className="size-4" /> Add new section
+            </button>
+          </div>
+        ) : (
+          <div className="home-mobile-detail min-h-screen bg-background pb-28">
+            <div className="sticky top-14 z-30 flex h-12 items-center gap-2 border-b border-outline-variant/70 bg-surface px-4">
+              <button type="button" onClick={goToList} className="grid size-11 shrink-0 place-items-center rounded-md text-on-surface-variant" aria-label="Back to home sections">
+                <ArrowLeft className="size-5" />
+              </button>
+              <h1 className="min-w-0 flex-1 truncate text-base font-semibold text-on-surface">{activeItem.label}</h1>
+              <AdminTableActions
+                label="Section actions"
+                actions={[{ label: "Restore defaults", icon: RotateCcw, onClick: () => setResetOpen(true) }]}
+              />
+            </div>
+            <div className="mx-auto max-w-2xl px-4 py-3">
+              <p className="truncate text-sm text-on-surface-variant">{mobileDescription}</p>
+              <div className="home-mobile-editor mt-3 rounded-xl border border-outline-variant/80 bg-surface p-4">
+                {switching ? <EditorSkeleton activeId={activeId} /> : <EditorBody activeId={activeId} homepage={homepage} categories={categories} limits={limits} token={token} patchSection={patchSection} patchCustom={patchCustom} />}
+              </div>
+            </div>
+            <div className="fixed inset-x-0 bottom-0 z-30 border-t border-outline-variant/70 bg-surface p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+              <div className="mx-auto max-w-2xl">
+                <Button onClick={saveSection} disabled={saving || !isSectionDirty(activeId)} className="h-11 w-full">
+                  {saving === activeId ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+                  {saving === activeId ? "Saving..." : "Save changes"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+    <Card className="hidden overflow-visible p-0 lg:block">
+      <div className="border-b border-outline-variant bg-surface-container-low/40 px-4 py-5 sm:px-5 sm:py-6 lg:px-7">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <h1 className="font-heading text-2xl font-semibold text-on-surface">Homepage customization</h1>
+            <h1 className="font-heading text-xl font-semibold text-on-surface sm:text-2xl">Homepage customization</h1>
             <p className="mt-1 max-w-3xl text-sm leading-6 text-on-surface-variant">Control what customers see on the home page: hero message, section picks and categories. Any change applies immediately after saving.</p>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <Button variant="ghost" onClick={() => setResetOpen(true)} disabled={loading || saving}>
+            <div className="grid w-full grid-cols-2 gap-2 lg:flex lg:w-auto lg:items-center">
+             <Button variant="ghost" onClick={() => setResetOpen(true)} disabled={loading || saving} className="h-10 w-full whitespace-nowrap text-xs sm:text-sm lg:w-auto">
               <RotateCcw className="size-4" />
-              Restore defaults
+              <span className="hidden sm:inline">Restore defaults</span>
+              <span className="sm:hidden">Restore</span>
             </Button>
-            <Button onClick={saveAll} disabled={loading || saving || !hasDirty}>
+             <Button onClick={saveAll} disabled={loading || saving || !hasDirty} className="h-10 w-full whitespace-nowrap text-xs sm:text-sm lg:w-auto">
               {saving === "all" ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-              {saving === "all" ? "Saving..." : "Save all changes"}
+              <span className="hidden sm:inline">{saving === "all" ? "Saving..." : "Save all changes"}</span>
+              <span className="sm:hidden">{saving === "all" ? "Saving..." : "Save all"}</span>
             </Button>
           </div>
         </div>
       </div>
 
       <div className="flex flex-col lg:flex-row lg:items-stretch">
-        <aside className="flex w-full shrink-0 flex-col gap-1 border-outline-variant px-5 py-6 sm:px-7 lg:w-64 lg:border-r">
+         <aside ref={pillsRef} className="admin-pill-nav sticky top-0 z-20 flex w-full shrink-0 flex-row gap-2 overflow-x-auto whitespace-nowrap border-b border-outline-variant bg-surface px-3 py-3 sm:px-4 lg:static lg:w-64 lg:flex-col lg:gap-1 lg:overflow-visible lg:border-b-0 lg:border-r lg:bg-transparent lg:px-5 lg:py-6">
           {navItems.map((item) => {
             const active = item.id === activeId;
             return (
-              <div key={item.id} className="relative">
+              <div key={item.id} data-section-id={item.id} className="relative shrink-0">
                 <button
                   type="button"
                   onClick={() => selectSection(item.id)}
-                  className={cn(
-                    "flex w-full items-center justify-between gap-3 rounded-md px-3.5 py-2.5 text-left text-sm font-semibold transition",
+                   className={cn(
+                     "flex min-h-10 w-auto items-center justify-between gap-3 rounded-full px-3.5 py-2.5 text-left text-sm font-semibold transition lg:w-full lg:rounded-md",
                     active ? "bg-primary text-white shadow-sm" : "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface",
                     item.onRemove && "pr-10"
                   )}
@@ -524,13 +669,13 @@ export default function AdminHomePage() {
           <button
             type="button"
             onClick={addSection}
-            className="mt-3 flex min-h-10 w-full items-center justify-center gap-2 rounded-md border border-dashed border-outline-variant text-sm font-semibold text-on-surface-variant transition hover:border-primary hover:text-primary"
+            className="flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-md border border-dashed border-outline-variant px-3 text-sm font-semibold text-on-surface-variant transition hover:border-primary hover:text-primary lg:mt-3 lg:w-full"
           >
             <Plus className="size-4" /> Add new section
           </button>
         </aside>
 
-        <div className="min-w-0 flex-1 px-5 py-6 sm:px-7">
+         <div className="min-w-0 flex-1 px-3 py-5 sm:px-5 sm:py-6 lg:px-7">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-start gap-3">
               <span className="grid size-11 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
@@ -588,6 +733,7 @@ export default function AdminHomePage() {
         </div>
       </div>
 
+    </Card>
       <ConfirmActionDialog
         open={resetOpen}
         title="Restore defaults?"
@@ -597,7 +743,16 @@ export default function AdminHomePage() {
         onConfirm={restoreDefaults}
         onCancel={() => setResetOpen(false)}
       />
-    </Card>
+      <ConfirmActionDialog
+        open={discardOpen}
+        title="Discard changes?"
+        message="Your unsaved changes will be lost."
+        confirmLabel="Discard"
+        loading={false}
+        onConfirm={discardChanges}
+        onCancel={() => setDiscardOpen(false)}
+      />
+    </>
   );
 }
 
@@ -611,7 +766,7 @@ function EditorBody({ activeId, homepage, categories, limits, token, patchSectio
     const autoMeta = autoToggleMeta("hero", autoMode);
 
     return (
-      <div className="grid gap-6 sm:grid-cols-2">
+          <div className="grid grid-cols-1 min-w-0 gap-6 [&>*]:min-w-0 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <ToggleRow
             label={autoMeta.name}
@@ -625,7 +780,7 @@ function EditorBody({ activeId, homepage, categories, limits, token, patchSectio
         </Field>
         <div className="sm:col-span-2">
           <Field label="Headline">
-            <Textarea rows={2} value={homepage.hero.title} onChange={(event) => patchSection("hero", { title: event.target.value })} placeholder="Better technology, thoughtfully chosen for you." />
+             <Textarea rows={2} value={homepage.hero.title} onChange={(event) => patchSection("hero", { title: event.target.value })} placeholder="Better technology, thoughtfully chosen for you" />
           </Field>
         </div>
         <div className="sm:col-span-2">
@@ -669,7 +824,7 @@ function EditorBody({ activeId, homepage, categories, limits, token, patchSectio
     const autoMeta = autoToggleMeta("categories", autoMode);
 
     return (
-      <div className="grid gap-6 sm:grid-cols-2">
+      <div className="grid grid-cols-1 min-w-0 gap-6 [&>*]:min-w-0 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <ToggleRow
             label={autoMeta.name}
@@ -711,7 +866,7 @@ function EditorBody({ activeId, homepage, categories, limits, token, patchSectio
   const autoMeta = autoToggleMeta(activeId, autoMode);
 
   return (
-    <div className="grid gap-6 sm:grid-cols-2">
+    <div className="grid grid-cols-1 min-w-0 gap-6 [&>*]:min-w-0 sm:grid-cols-2">
       <div className="sm:col-span-2">
         <ToggleRow
           label={autoMeta.name}
@@ -767,7 +922,7 @@ function RequirementHint({ count, max, min = 3, empty }) {
 function EditorSkeleton({ activeId }) {
   if (activeId === "categories") {
     return (
-      <div className="grid gap-6 sm:grid-cols-2" aria-busy="true" aria-label="Loading Shop by category">
+      <div className="grid grid-cols-1 min-w-0 gap-6 [&>*]:min-w-0 sm:grid-cols-2" aria-busy="true" aria-label="Loading Shop by category">
         <Skeleton className="h-14 w-full rounded-md sm:col-span-2" />
         <Skeleton className="h-14 w-full rounded-md sm:col-span-2" />
         <Skeleton className="h-12 w-full rounded-md sm:col-span-2" />
@@ -776,7 +931,7 @@ function EditorSkeleton({ activeId }) {
   }
   if (activeId === "hero") {
     return (
-      <div className="grid gap-6 sm:grid-cols-2" aria-busy="true" aria-label="Loading Hero section">
+      <div className="grid grid-cols-1 min-w-0 gap-6 [&>*]:min-w-0 sm:grid-cols-2" aria-busy="true" aria-label="Loading Hero section">
         <Skeleton className="h-14 w-full rounded-md sm:col-span-2" />
         <Skeleton className="h-10 w-full rounded-md" />
         <Skeleton className="h-10 w-full rounded-md sm:col-span-2" />
@@ -787,7 +942,7 @@ function EditorSkeleton({ activeId }) {
     );
   }
   return (
-    <div className="grid gap-6 sm:grid-cols-2" aria-busy="true" aria-label="Loading section">
+    <div className="grid grid-cols-1 min-w-0 gap-6 [&>*]:min-w-0 sm:grid-cols-2" aria-busy="true" aria-label="Loading section">
       <Skeleton className="h-14 w-full rounded-md sm:col-span-2" />
       <Skeleton className="h-10 w-full rounded-md" />
       <Skeleton className="h-10 w-full rounded-md" />
@@ -799,10 +954,10 @@ function EditorSkeleton({ activeId }) {
 
 function ToggleRow({ label, hint, checked, onChange }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-md border border-outline-variant bg-surface-container-low/50 px-4 py-3">
-      <div>
+    <div className="flex items-start justify-between gap-3 rounded-md border border-outline-variant bg-surface-container-low/50 px-4 py-3">
+      <div className="min-w-0">
         <p className="text-sm font-semibold text-on-surface">{label}</p>
-        <p className="text-xs text-on-surface-variant">{hint}</p>
+        <p className="break-words text-xs text-on-surface-variant">{hint}</p>
       </div>
       <PriorityToggle checked={checked} onChange={onChange} label={label} />
     </div>

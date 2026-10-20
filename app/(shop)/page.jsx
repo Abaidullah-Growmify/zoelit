@@ -1,21 +1,15 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { ArrowRight, Mail, PackageCheck, PackageSearch, ShieldCheck, Truck } from "lucide-react";
+import { ArrowRight, ChevronRight, PackageSearch, Truck } from "lucide-react";
 import { getAutoSectionProducts, getFeaturedProducts, getHomepageConfig, getProductCategories, getProductCount, resolvePickedProducts } from "@/lib/server-catalog";
 import { HomeHero } from "@/components/home-hero";
 import { ProductCard } from "@/components/product-card";
-import { Button, Card, EmptyState, SectionHeader } from "@/components/ui";
-import { NewsletterSignup } from "@/components/newsletter-signup";
+import { Button, EmptyState, SectionHeader } from "@/components/ui";
 import { HomeCategories } from "@/components/home-categories";
 import { HomePageSkeleton } from "@/components/skeletons";
+import { Container } from "@/components/container";
 
 export const dynamic = "force-dynamic";
-
-const FEATURE_ITEMS = [
-  { icon: Truck, title: "Clear fulfillment", text: "Shipping cost is visible before checkout and free shipping unlocks automatically." },
-  { icon: ShieldCheck, title: "Secure checkout", text: "Required fields, validation, and payment choice stay clear until order placement." },
-  { icon: PackageCheck, title: "Account control", text: "Customers can review orders, addresses, and profile details after purchase." },
-];
 
 // Every section renders at least this many cards, so a short row never looks
 // like a broken layout.
@@ -30,20 +24,22 @@ const SECTION_LIMITS = {
 };
 
 const SECTION_DEFAULTS = {
-  bestDeals: { eyebrow: "Top Sale", title: "Best deals this week" },
+  bestDeals: { eyebrow: "", title: "Featured Products" },
   newArrivals: { eyebrow: "New Arrivals", title: "Fresh picks just landed" },
   trending: { eyebrow: "Trending", title: "Popular right now" },
 };
 
 function NoCatalog() {
   return (
-    <section className="container-page py-16">
-      <EmptyState
-        icon={PackageSearch}
-        title="No products in the catalog yet"
-        description="The catalog has not been loaded yet. Please check back shortly or contact support."
-        action={<Button asChild href="/admin/products"><ArrowRight className="size-4" />Go to admin</Button>}
-      />
+    <section>
+      <Container className="py-16">
+        <EmptyState
+          icon={PackageSearch}
+          title="No products in the catalog yet"
+          description="The catalog has not been loaded yet. Please check back shortly or contact support."
+          action={<Button asChild href="/admin/products"><ArrowRight className="size-4" />Go to admin</Button>}
+        />
+      </Container>
     </section>
   );
 }
@@ -72,7 +68,6 @@ export default async function HomePage() {
       ) : (
         <NoCatalog />
       )}
-      <section className="container-page grid gap-4 pb-16 md:grid-cols-3">{FEATURE_ITEMS.map((item) => <Card key={item.title} className="shadow-sm"><item.icon className="size-8 text-primary" /><h3 className="mt-5 font-heading text-headline-md font-semibold tracking-[-0.02em] text-on-surface">{item.title}</h3><p className="mt-2 text-body-md font-normal text-on-surface-variant">{item.text}</p></Card>)}</section>
     </>
   );
 }
@@ -245,8 +240,12 @@ async function HomeCatalog({ categories, productCount, homepage, picks }) {
       return {
         key: id,
         enabled: config.enabled !== false && sectionProducts[index].length > 0,
-        eyebrow: config.eyebrow || defaults.eyebrow || "Featured",
-        title: config.title || defaults.title || `Section ${Number(id.split(":")[1] || 0) + 1}`,
+        eyebrow: id === "bestDeals" && config.title === "Best deals this week"
+          ? defaults.eyebrow || "Featured"
+          : config.eyebrow || defaults.eyebrow || "Featured",
+        title: id === "bestDeals" && config.title === "Best deals this week"
+          ? defaults.title
+          : config.title || defaults.title || `Section ${Number(id.split(":")[1] || 0) + 1}`,
         products: sectionProducts[index],
       };
     })
@@ -267,37 +266,30 @@ async function HomeCatalog({ categories, productCount, homepage, picks }) {
         />
       ) : null}
       {categoryPlan.enabled ? (
-        <section className="container-page pb-4 pt-8 sm:pt-10">
-          <SectionHeader title="Shop by Category" action={<Link href="/products" className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">View all<ArrowRight className="size-4" /></Link>} className="mb-6" />
-          <HomeCategories categories={categoryPlan.categories} />
+        <section className="home-categories-section py-10 md:py-16">
+          <Container>
+            <SectionHeader title="Shop by Category" action={<Link href="/products" className="inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold text-primary hover:underline">View all<ArrowRight className="size-4" /></Link>} className="zl-sec-head mb-6" />
+            <HomeCategories categories={categoryPlan.categories} />
+          </Container>
         </section>
       ) : null}
       {productSections.map((section, index) => (
-        <section key={section.key} className={`container-page ${index === 0 ? "section-fade-up py-16" : "pb-16"}`}>
-          <SectionHeader eyebrow={section.eyebrow} title={section.title} action={<Link href="/products" aria-label="View all products" className="inline-flex h-9 items-center gap-2 rounded-sm px-3 text-label-md font-semibold text-primary transition duration-200 ease-out hover:bg-surface-container-low dark:hover:bg-surface-container-low">View all<ArrowRight className="size-4" /></Link>} className="mb-8" />
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{section.products.map((product, productIndex) => <ProductCard key={`${product.id}-${productIndex}`} product={product} />)}</div>
+        <section key={section.key} className={`py-10 md:py-16 ${index === 0 ? "section-fade-up" : ""}`}>
+          <Container>
+            <SectionHeader eyebrow={section.eyebrow} title={section.title} action={<Link href="/products" aria-label="View all products" className="inline-flex min-h-10 items-center gap-2 rounded-sm px-3 text-label-md font-semibold text-primary transition duration-200 ease-out hover:bg-surface-container-low dark:hover:bg-surface-container-low">View all<ArrowRight className="size-4" /></Link>} className="zl-sec-head mb-8" />
+            <div className="product-grid grid-home">{section.products.map((product, productIndex) => <ProductCard key={`${product.id}-${productIndex}`} product={product} badge={product.heroBadge || (Number(product.price) > 150 ? "Free delivery" : "Popular pick")} />)}</div>
+          </Container>
         </section>
       ))}
-      <section className="container-page pb-16">
-        <Card className="relative overflow-hidden p-6 sm:p-8 lg:p-10">
-          <div className="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-primary/10 blur-3xl" aria-hidden="true" />
-          <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)] lg:items-center">
-            <div>
-              <span className="inline-flex items-center gap-2 rounded-sm bg-primary/10 px-3 py-1.5 text-label-sm font-bold uppercase tracking-[0.12em] text-primary ring-1 ring-primary/10">
-                <Mail className="size-4" />
-                Newsletter
-              </span>
-              <h2 className="mt-5 max-w-2xl text-balance font-heading text-headline-lg-mobile font-bold tracking-[-0.03em] text-on-surface sm:text-headline-lg">
-                Subscribe for Latest Trends & Offers
-              </h2>
-              <p className="mt-4 max-w-xl text-body-md leading-7 text-on-surface-variant">
-                Get fresh arrivals, limited-time deals, and smart shopping notes delivered straight to your inbox.
-              </p>
-            </div>
-            <NewsletterSignup />
+      <div className="md:hidden">
+        <Container>
+          <div className="zl-ship-banner">
+            <span className="zl-ship-ic"><Truck className="size-5" /></span>
+            <span className="zl-ship-text">Free shipping on orders over $150</span>
+            <ChevronRight className="zl-ship-chev size-5" aria-hidden="true" />
           </div>
-        </Card>
-      </section>
+        </Container>
+      </div>
     </>
   );
 }

@@ -257,13 +257,15 @@ async function handleToggleProduct(ingramPartNumber) {
             totalItems={totalItems}
             toolbar={(
               <>
-                 <div className="relative min-w-[14rem] flex-1 sm:max-w-md lg:max-w-sm">
+                 <div className="relative min-w-0 w-full flex-1 sm:max-w-md lg:max-w-sm">
                    <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
                    <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search products, SKU or category" aria-label="Search products" className="h-10 pl-10 shadow-sm" />
                  </div>
-                 <Button onClick={handleOpenAddModal} className="shrink-0 gap-1.5"><Plus className="size-4" /> Add Product</Button>
-                 <Button asChild href="/admin/products/sync" className="shrink-0 whitespace-nowrap"><RefreshCw className="size-4" /> Sync from Ingram</Button>
-                 <Button onClick={handlePriceSync} disabled={syncing} className="shrink-0 gap-2 whitespace-nowrap"><RefreshCw className={`size-4 ${syncing ? "animate-spin" : ""}`} /> Sync prices</Button>
+                 <div className="grid w-full grid-cols-3 gap-2 md:contents">
+                   <Button onClick={handleOpenAddModal} className="h-10 w-full min-w-0 gap-1 px-1 text-xs sm:px-3 sm:text-sm md:w-auto"><Plus className="size-3.5 shrink-0 sm:size-4" /> <span className="truncate">Add product</span></Button>
+                   <Button asChild href="/admin/products/sync" className="h-10 w-full min-w-0 gap-1 whitespace-nowrap px-1 text-xs sm:px-3 sm:text-sm md:w-auto"><RefreshCw className="size-3.5 shrink-0 sm:size-4" /><span className="truncate sm:hidden">Sync</span><span className="hidden truncate sm:inline">Sync from Ingram</span></Button>
+                   <Button onClick={handlePriceSync} disabled={syncing} className="h-10 w-full min-w-0 gap-1 whitespace-nowrap px-1 text-xs sm:px-3 sm:text-sm md:w-auto"><RefreshCw className={`size-3.5 shrink-0 sm:size-4 ${syncing ? "animate-spin" : ""}`} /><span className="truncate">Sync prices</span></Button>
+                 </div>
                </>
             )}
              hideSearch
@@ -271,7 +273,7 @@ async function handleToggleProduct(ingramPartNumber) {
              inlineToolbar
              toolbarInHeader
              secondaryToolbar={(
-               <div className="flex flex-wrap items-center gap-3">
+                <div className="w-full overflow-x-auto whitespace-nowrap">
                   <FilterTabs
                     value={sourceFilter}
                     onChange={(value) => { setSourceFilter(value); setPage(1); }}
@@ -354,10 +356,10 @@ isActive: product.isActive,
 
 function ProductCell({ product }) {
   return (
-    <div className="flex max-w-64 items-center gap-3">
+    <div className="flex min-w-0 max-w-64 items-center gap-3">
       <Image src={product.image} alt={product.name} width={48} height={48} className="size-10 shrink-0 rounded-lg object-cover ring-1 ring-outline-variant" />
        <div className="min-w-0">
-         <p title={product.name} className="truncate text-base font-bold text-on-surface">{product.name}</p>
+         <p title={product.name} className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-base font-bold text-on-surface">{product.name}</p>
         <p className="mt-0.5 truncate text-meta font-normal text-on-surface-variant">{product.sku}</p>
       </div>
     </div>

@@ -112,8 +112,15 @@ export function makeStore() {
       getDefaultMiddleware().concat((store) => (next) => (action) => {
         const result = next(action);
         const state = store.getState();
-        persistSlice(STORAGE_KEYS.auth, { user: state.auth.user, token: state.auth.token });
-        persistSlice(STORAGE_KEYS.adminAuth, { admin: state.adminAuth.admin, token: state.adminAuth.token });
+        // Only persist after hydration: a dispatch that lands before the
+        // hydrate* reducers run would otherwise overwrite the stored session
+        // with the initial null state (random logouts on refresh).
+        if (state.auth.hasHydrated) {
+          persistSlice(STORAGE_KEYS.auth, { user: state.auth.user, token: state.auth.token });
+        }
+        if (state.adminAuth.hasHydrated) {
+          persistSlice(STORAGE_KEYS.adminAuth, { admin: state.adminAuth.admin, token: state.adminAuth.token });
+        }
 
         const actionType = String(action.type || "");
 

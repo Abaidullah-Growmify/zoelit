@@ -24,9 +24,9 @@ export function NewsletterSignup() {
 
   return (
     <form onSubmit={handleSubmit} className="rounded-lg border border-outline-variant/70 bg-surface-container-low p-3 shadow-sm dark:bg-surface-container" aria-label="Subscribe for latest trends and offers">
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <Input type="email" name="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Enter your email" aria-label="Email address" className="h-12 flex-1 bg-surface-container-lowest" />
-        <Button type="submit" disabled={status.type === "loading"} className="h-12 px-6 text-white">
+      <div className="flex flex-wrap gap-3">
+        <Input type="email" name="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Enter your email" aria-label="Email address" className="h-12 min-w-0 flex-1 basis-full bg-surface-container-lowest sm:basis-auto" />
+        <Button type="submit" disabled={status.type === "loading"} className="h-12 w-full justify-center px-6 text-white sm:w-auto">
           {status.type === "loading" ? "Subscribing..." : "Subscribe"}
           {status.type !== "loading" ? <ArrowRight className="size-4" /> : null}
         </Button>

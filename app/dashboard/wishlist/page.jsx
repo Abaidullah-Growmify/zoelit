@@ -39,7 +39,7 @@ export default function WishlistPage() {
       <DashboardSectionBanner eyebrow="Account / Wishlist" title="Wishlist" description="Keep your favorite products saved for later." />
       <div className="mt-6">
         {products.length ? (
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          <div className="product-grid grid-home grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {products.map((product) => (
               <ProductCard key={product.productId} product={product} />
             ))}

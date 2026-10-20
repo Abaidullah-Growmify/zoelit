@@ -48,13 +48,14 @@ export function AdminTable({
   if (!data) {
     return (
       <Card className={cn("overflow-hidden p-0 shadow-sm", className)}>
-        <div className={cn("overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", wrapperClassName)}>
-            <table className={cn("w-full text-left text-label-md", tableClassName)}>
+        <div className={cn("w-full overflow-x-auto rounded-lg border border-outline-variant/70 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-on-surface-variant/40", wrapperClassName)}>
+            <table className={cn("w-full min-w-[720px] text-left text-label-md", tableClassName)}>
             <thead className="sticky top-0 z-10 border-b border-outline-variant/70 bg-surface/95 text-xs font-medium text-on-surface-variant backdrop-blur">
               <tr>{columns.map((column) => <th key={column} className="whitespace-nowrap px-4 py-3 font-medium">{column}</th>)}</tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/40">{children}</tbody>
-          </table>
+            </table>
+          <p className="px-4 py-2 text-xs text-on-surface-variant md:hidden">Swipe to see more columns</p>
         </div>
       </Card>
     );
@@ -142,35 +143,35 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
   }
 
   const tableControls = (
-    <div className="flex min-w-0 flex-wrap items-center justify-end gap-3">
+    <div className="flex min-w-0 flex-wrap items-center justify-start gap-2 md:justify-end md:gap-3">
       {toolbar}
       {!hideSearch ? (
-        <div className={cn("relative min-w-[16rem] flex-1 shrink-0 sm:max-w-md lg:max-w-xl", searchWrapperClassName)}>
+        <div className={cn("relative min-w-0 w-full grow basis-full sm:basis-48 sm:max-w-md md:min-w-[14rem] lg:max-w-xl", searchWrapperClassName)}>
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
           <Input value={query} onChange={(event) => updateQuery(event.target.value)} placeholder={searchPlaceholder} aria-label={searchPlaceholder} className="h-10 pl-10 shadow-sm" />
         </div>
       ) : null}
       {filters.map((filter) => (
-        <div key={filter.key} className={filterWrapperClassName}>
-          <Select value={filterValues[filter.key]} onChange={(event) => updateFilter(filter.key, event.target.value)} aria-label={filter.label} className={cn("h-10 shadow-sm", filterClassName)}>
+        <div key={filter.key} className={cn("w-full sm:w-auto", filterWrapperClassName)}>
+          <Select value={filterValues[filter.key]} onChange={(event) => updateFilter(filter.key, event.target.value)} aria-label={filter.label} className={cn("h-10 w-full shadow-sm", filterClassName)}>
             <option>{filter.allLabel || "All"}</option>
             {filter.options.map((option) => <option key={option}>{option}</option>)}
           </Select>
         </div>
       ))}
-      {filters.length > 0 && !hideReset ? <Button variant="secondary" size="sm" onClick={resetControls} className={cn("h-10 shrink-0 shadow-sm", resetButtonClassName)}>Reset</Button> : null}
+      {filters.length > 0 && !hideReset ? <Button variant="secondary" size="sm" onClick={resetControls} className={cn("h-10 w-full shrink-0 shadow-sm sm:w-auto", resetButtonClassName)}>Reset</Button> : null}
     </div>
   );
 
   return (
     <Card className={cn("overflow-hidden p-0 shadow-sm", className)}>
       {title || description ? (
-        <div className="border-b border-outline-variant/70 px-5 py-4">
+        <div className="border-b border-outline-variant/70 px-4 py-4 sm:px-5 lg:px-6">
             <div className={cn("flex gap-4", inlineToolbar ? "flex-col lg:flex-row lg:items-center lg:justify-between" : "")}> 
             {title || description ? (
             <div className="mb-0">
               <div>
-                 {title ? <h2 className="font-heading text-lg font-bold tracking-tight text-on-surface">{title}</h2> : null}
+                 {title ? <h2 className="font-heading text-base font-bold tracking-tight text-on-surface sm:text-lg">{title}</h2> : null}
                 {description ? <p className="mt-1 text-sm text-on-surface-variant">{description}</p> : null}
               </div>
             </div>
@@ -180,7 +181,7 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
         </div>
       ) : null}
       {hasToolbar && !toolbarInHeader ? (
-        <div className="border-b border-outline-variant/70 p-4">
+        <div className="border-b border-outline-variant/70 p-3 sm:p-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             {tableControls}
             {action && !inlineToolbar ? <div className="flex shrink-0 flex-wrap items-center gap-3 lg:justify-end">{action}</div> : null}
@@ -188,12 +189,12 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
         </div>
       ) : null}
       {secondaryToolbar ? <div className="flex justify-start border-b border-outline-variant/70 px-4 py-3">{secondaryToolbar}</div> : null}
-      <div className={cn("overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", wrapperClassName)}>
-        <table className={cn("w-full text-left text-label-md", tableClassName)}>
-          <thead className="sticky top-0 z-10 border-b border-outline-variant/70 bg-surface-container-low/60 text-xs font-medium text-on-surface-variant backdrop-blur">
+      <div className={cn("w-full overflow-x-auto rounded-lg border border-outline-variant/70 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-on-surface-variant/40 [&::-webkit-scrollbar-track]:bg-surface-container-low/20", wrapperClassName)}>
+        <table className={cn("w-full min-w-[960px] text-left text-label-md", tableClassName)}>
+          <thead className="sticky top-0 z-10 border-b border-outline-variant/70 bg-surface-container-low/95 text-xs font-medium text-on-surface-variant backdrop-blur-sm">
             <tr>
               {columns.map((column) => (
-                <th key={column.key} className={cn("whitespace-nowrap px-4 py-3 text-xs font-medium", column.className)}>
+                <th key={column.key} className={cn("whitespace-nowrap px-3 py-3 text-xs font-medium sm:px-4", column.className)}>
                   {column.sortable ? (
                      <button type="button" onClick={() => toggleSort(column)} className="inline-flex items-center gap-1.5 rounded-md transition hover:text-on-surface focus:outline-none focus:ring-4 focus:ring-primary/10">
                       {column.header}
@@ -202,18 +203,14 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
                   ) : column.header}
                 </th>
               ))}
-                {/* Opaque on purpose: this cell is sticky, so when the table overflows it floats over the
-                    Status column - a translucent background would let that text show through it. */}
-                {hasActions ? <th className="sticky right-0 whitespace-nowrap bg-surface-container-low px-4 py-3 text-center text-xs font-medium">Actions</th> : null}
+                {hasActions ? <th className="sticky right-0 whitespace-nowrap bg-surface-container-low/95 px-3 py-3 text-center text-xs font-medium backdrop-blur-sm sm:px-4">Actions</th> : null}
             </tr>
           </thead>
           <tbody className="divide-y divide-outline-variant/40 dark:divide-outline-variant/40">
             {pageItems.map((row, rowIndex) => (
               <AdminTableRow key={row.id || row.productId || row.key || rowIndex} zebra={zebra} index={rowIndex}>
                 {columns.map((column) => <AdminTableCell key={column.key} className={column.cellClassName}>{column.render ? column.render(row) : getColumnValue(column, row)}</AdminTableCell>)}
-                {/* Pinned to the right edge so a long cell can never push the actions off screen. The
-                    background must be opaque: the cell overlaps the Status column while scrolled. */}
-                {hasActions ? <AdminTableCell className={cn("sticky right-0 text-center", zebra && rowIndex % 2 === 1 ? "bg-surface-container-low" : "bg-surface", "hover:bg-surface-container")}><AdminTableActions actions={rowActions(row)} label={`Actions for ${row.name || row.productName || row.id || "row"}`} /></AdminTableCell> : null}
+                {hasActions ? <AdminTableCell className={cn("sticky right-0 text-center", zebra && rowIndex % 2 === 1 ? "bg-surface-container-low/40" : "bg-surface")}><AdminTableActions actions={rowActions(row)} label={`Actions for ${row.name || row.productName || row.id || "row"}`} /></AdminTableCell> : null}
               </AdminTableRow>
             ))}
             {!pageItems.length ? (
@@ -222,19 +219,16 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
               </tr>
             ) : null}
           </tbody>
-          {!hidePagination ? (
-            <tfoot>
-              <tr>
-                <th colSpan={columnCount} className="border-t border-outline-variant/70 bg-surface/60 px-4 py-3 text-sm font-normal normal-case tracking-normal">
-                  <div className="flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-                    <p className="text-on-surface-variant">Showing {showingStart}-{showingEnd} of {totalItems} results</p>
-                    <Pagination page={safePage} totalPages={totalPages} onPageChange={setPage} />
-                  </div>
-                </th>
-              </tr>
-            </tfoot>
-          ) : null}
         </table>
+        {!hidePagination ? (
+          <div className="flex flex-col items-center gap-3 border-t border-outline-variant/70 bg-surface/60 px-3 py-3 text-center text-xs sm:flex-row sm:justify-between sm:px-4 sm:text-sm sm:text-left">
+            <p className="text-on-surface-variant">Showing {showingStart}-{showingEnd} of {totalItems} results</p>
+            <div className="w-full md:w-auto">
+              <Pagination page={safePage} totalPages={totalPages} onPageChange={setPage} className="md:justify-end" />
+            </div>
+          </div>
+        ) : null}
+        <p className="px-3 py-2 text-xs text-on-surface-variant sm:px-4 md:hidden">Swipe to see more columns</p>
       </div>
     </Card>
   );
@@ -245,7 +239,7 @@ export function AdminTableRow({ children, zebra = true, index = 0 }) {
 }
 
 export function AdminTableCell({ children, className }) {
-  return <td className={cn("whitespace-nowrap px-4 py-3.5 align-middle text-sm text-on-surface-variant", className)}>{children}</td>;
+  return <td className={cn("whitespace-nowrap px-3 py-3.5 align-middle text-sm text-on-surface-variant sm:px-4", className)}>{children}</td>;
 }
 
 export function AdminTableActions({ actions, label = "Row actions" }) {
@@ -325,13 +319,13 @@ export function AdminTableActions({ actions, label = "Row actions" }) {
       </div>
       {open && anchor && typeof document !== "undefined"
         ? createPortal(
-            <div data-row-actions-menu style={{ position: "fixed", top: anchor.top, left: anchor.left, zIndex: 100 }} className="w-44 overflow-hidden rounded-lg border border-outline-variant bg-surface py-1 shadow-xl">
+             <div data-row-actions-menu style={{ position: "fixed", top: anchor.top, left: anchor.left, zIndex: 100 }} className="w-52 max-w-[calc(100vw-1rem)] overflow-hidden rounded-lg border border-outline-variant bg-surface py-1 shadow-xl">
               {actions.map((action) => {
                 const Icon = action.icon || Eye;
                 const isDisabled = Boolean(action.disabled);
                 const baseClassName = isDisabled
-                  ? "flex w-full cursor-not-allowed items-center gap-2 px-4 py-2.5 text-left text-label-md font-normal text-on-surface-variant/60"
-                  : cn("flex w-full items-center gap-2 px-4 py-2.5 text-left text-label-md font-normal text-on-surface-variant transition hover:bg-surface-container-low", action.tone === "danger" && "text-error");
+                   ? "flex w-full cursor-not-allowed items-center gap-2 whitespace-nowrap px-4 py-2.5 text-left text-label-md font-normal text-on-surface-variant/60"
+                   : cn("flex w-full items-center gap-2 whitespace-nowrap px-4 py-2.5 text-left text-label-md font-normal text-on-surface-variant transition hover:bg-surface-container-low", action.tone === "danger" && "text-error");
                 const content = (
                   <>
                     <Icon className={isDisabled ? "size-4 opacity-60" : "size-4"} />

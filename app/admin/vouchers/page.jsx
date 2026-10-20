@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { AlertTriangle, Check, CheckCircle, ChevronDown, CircleOff, Eye, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { AlertTriangle, Check, CheckCircle, ChevronDown, Eye, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminTable } from "@/components/admin-table";
@@ -1322,131 +1322,79 @@ function InactiveVoucherGrid({ vouchers, totalCount, search, onStatusChange, onE
     );
   }
 
-  return (
-    <div className="grid gap-5 p-5 sm:grid-cols-2 sm:p-7 lg:grid-cols-3">
-      {vouchers.map((voucher) => {
-        const id = voucher._id || voucher.id;
-        const saving = statusSavingId === id;
+  const columns = [
+    { key: "code", header: "Code", accessor: "code", sortable: true, render: (voucher) => <span className="rounded-lg bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary">{voucher.code}</span> },
+    { key: "name", header: "Name", accessor: "name", sortable: true, render: (voucher) => <div className="max-w-[12rem]"><p className="truncate font-semibold text-on-surface">{voucher.name || "-"}</p><p className="truncate text-xs text-on-surface-variant">{voucher.description || ""}</p></div> },
+    { key: "discount", header: "Discount", accessor: discountLabel, sortable: true, render: (voucher) => <span className="font-semibold tabular-nums text-on-surface">{discountLabel(voucher)}</span> },
+    { key: "appliesTo", header: "Applies to", accessor: (voucher) => appliesToLabel(voucher, productNames, categories), sortable: true, render: (voucher) => <span className="block max-w-[12rem] truncate text-xs font-semibold text-on-surface-variant">{appliesToLabel(voucher, productNames, categories)}</span> },
+    { key: "usage", header: "Usage", accessor: (voucher) => Number(voucher.usageCount) || 0, sortable: true, render: (voucher) => <span className="font-semibold tabular-nums text-on-surface">{usageLabel(voucher)}</span> },
+    { key: "period", header: "Period", accessor: (voucher) => voucher.expiresAt || "", sortable: true, render: (voucher) => <span className="text-xs text-on-surface-variant">{periodLabel(voucher)}</span> },
+    { key: "status", header: "Status", accessor: "status", render: (voucher) => <AdminStatusBadge>{voucher.status}</AdminStatusBadge> },
+  ];
 
-        return (
-          <div
-            key={id}
-            className="flex min-h-56 flex-col justify-between rounded-lg border border-outline-variant bg-surface p-5 shadow-sm transition hover:border-primary/40 hover:shadow-md"
-          >
-            <div>
-              <div className="flex items-start justify-between gap-3">
-                <span className="rounded-lg bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary">
-                  {voucher.code}
-                </span>
-                <AdminStatusBadge>{voucher.status}</AdminStatusBadge>
-              </div>
-              <h3 className="mt-5 line-clamp-2 font-heading text-lg font-semibold text-on-surface">
-                {voucher.name || "-"}
-              </h3>
-              <p className="mt-2 text-sm text-on-surface-variant">
-                {discountLabel(voucher)} · {appliesToLabel(voucher, productNames, categories)}
-              </p>
-              {voucher.description ? (
-                <p className="mt-1.5 line-clamp-2 text-xs text-on-surface-variant">{voucher.description}</p>
-              ) : null}
-              <dl className="mt-3 space-y-1 text-xs text-on-surface-variant">
-                {Number(voucher.usageLimit) > 0 ? (
-                  <div className="flex justify-between gap-3">
-                    <dt>Usage limit</dt>
-                    <dd className="font-semibold tabular-nums text-on-surface">{voucher.usageLimit}</dd>
-                  </div>
-                ) : null}
-                {Number(voucher.usageLimitPerCustomer) > 0 ? (
-                  <div className="flex justify-between gap-3">
-                    <dt>Per customer</dt>
-                    <dd className="font-semibold tabular-nums text-on-surface">{voucher.usageLimitPerCustomer}</dd>
-                  </div>
-                ) : null}
-                <div className="flex justify-between gap-3">
-                  <dt>Period</dt>
-                  <dd className="text-right font-semibold text-on-surface">{periodLabel(voucher)}</dd>
-                </div>
-              </dl>
-            </div>
-            <div className="mt-5 flex items-center justify-between gap-3 border-t border-outline-variant pt-4">
-              <div className="flex shrink-0 gap-1">
-                <button
-                  type="button"
-                  onClick={() => onEdit(voucher)}
-                  className="grid size-9 place-items-center rounded-md border border-outline-variant text-on-surface-variant transition hover:bg-surface-container-low hover:text-on-surface"
-                  aria-label="Edit voucher"
-                  title="Edit voucher"
-                >
-                  <Pencil className="size-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onDelete(voucher)}
-                  disabled={(Number(voucher.usageCount) || 0) > 0 || saving}
-                  className="grid size-9 place-items-center rounded-md border border-outline-variant text-on-surface-variant transition hover:border-error/40 hover:bg-error-container/40 hover:text-error disabled:cursor-not-allowed disabled:opacity-50"
-                  aria-label="Delete voucher"
-                  title={
-                    (Number(voucher.usageCount) || 0) > 0
-                      ? "A used voucher cannot be deleted. Activate it instead."
-                      : "Delete voucher"
-                  }
-                >
-                  <Trash2 className="size-4" />
-                </button>
-              </div>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={saving}
-                onClick={() => onStatusChange(voucher)}
-                aria-label="Activate voucher"
-                title="Click to activate this voucher"
-                className="inline-flex h-9 min-w-[7rem] cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap border border-slate-300 bg-slate-100 text-center text-sm font-semibold leading-none text-slate-700 shadow-sm transition hover:-translate-y-px hover:bg-slate-200 hover:shadow"
-              >
-                <CircleOff className="size-3.5 shrink-0" />
-                {saving ? "Updating..." : "Inactive"}
-              </Button>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
+  return <AdminTable
+    title="Inactive vouchers"
+    description="Disabled vouchers that checkout will not accept."
+    columns={columns}
+    data={vouchers.map((voucher, index) => ({ ...voucher, serial: index + 1 }))}
+    hideSearch
+    disableInitialSort
+    rowActions={(voucher) => [
+      { label: "Edit", icon: Pencil, onClick: () => onEdit(voucher) },
+      { label: "Delete", icon: Trash2, onClick: () => onDelete(voucher), disabled: (Number(voucher.usageCount) || 0) > 0 || statusSavingId === (voucher._id || voucher.id) },
+      { label: "Activate", icon: CheckCircle, onClick: () => onStatusChange(voucher) },
+    ]}
+  />;
 }
 
 function VoucherSkeleton() {
-  const headerWidths = ["w-8", "w-24", "w-32", "w-32", "w-24", "w-20", "w-32", "w-24"];
-  const rowWidths = ["w-8", "w-24", "w-40", "w-32", "w-24", "w-20", "w-40", "w-24"];
+  const headerWidths = ["w-8", "w-24", "w-32", "w-32", "w-24", "w-20", "w-32", "w-24", "size-8"];
+  const rowWidths = ["w-8", "w-24", "w-40", "w-32", "w-24", "w-20", "w-40", "w-24", "size-8"];
 
   return (
     <div className="space-y-6">
       <Card className="overflow-hidden p-0">
-        <div className="border-b border-outline-variant px-5 py-6 sm:px-7">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-            <div className="w-full max-w-2xl">
-              <Skeleton className="h-9 w-48 rounded-md" />
-              <Skeleton className="mt-3 h-5 w-full max-w-xl rounded-md" />
+        <div className="border-b border-outline-variant bg-surface-container-low/40 px-4 py-5 sm:px-7 sm:py-6">
+          <Skeleton className="h-8 w-40 max-w-full rounded-md" />
+          <Skeleton className="mt-2 h-4 w-full max-w-xl rounded-sm" />
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-b border-outline-variant/80">
+            <div className="flex gap-1">
+              <Skeleton className="h-9 w-32 rounded-t-md" />
+              <Skeleton className="h-9 w-36 rounded-t-md" />
             </div>
-            <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
-              <Skeleton className="h-10 w-full sm:w-72" />
-              <Skeleton className="h-10 w-full sm:w-40" />
+            <div className="ml-auto flex w-full items-center gap-2 sm:w-auto sm:gap-3">
+              <Skeleton className="h-9 min-w-0 flex-1 rounded-md sm:w-64" />
+              <Skeleton className="h-9 w-28 shrink-0 rounded-md" />
             </div>
           </div>
         </div>
+        <div className="border-b border-outline-variant/70 px-4 py-4 sm:px-5 lg:px-6">
+          <Skeleton className="h-5 w-36 rounded-sm" />
+          <Skeleton className="mt-2 h-4 w-full max-w-md rounded-sm" />
+        </div>
         <div className="overflow-x-auto">
-          <div className="flex min-w-[900px] gap-6 border-b border-outline-variant bg-surface-container-low/40 px-5 py-4 sm:px-7">
+          <div className="flex min-w-[900px] gap-6 border-b border-outline-variant bg-surface-container-low/40 px-4 py-3 sm:px-7">
             {headerWidths.map((width, index) => (
               <Skeleton key={`header-${index}`} className={`h-3 ${width} shrink-0 rounded-md`} />
             ))}
           </div>
           {Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="flex min-w-[900px] items-center gap-6 border-b border-outline-variant/60 px-5 py-5 sm:px-7">
+            <div key={index} className="flex min-w-[900px] items-center gap-6 border-b border-outline-variant/60 px-4 py-4 sm:px-7">
               {rowWidths.map((width, cellIndex) => (
                 <Skeleton key={cellIndex} className={`h-4 ${width} shrink-0 rounded-md`} />
               ))}
             </div>
           ))}
+          <div className="flex flex-col items-center gap-3 border-t border-outline-variant/70 bg-surface/60 px-3 py-3 text-center text-xs sm:flex-row sm:justify-between sm:px-4 sm:text-sm sm:text-left">
+            <Skeleton className="h-4 w-44 max-w-full rounded-sm" />
+            <div className="flex flex-wrap items-center justify-center gap-1.5 md:justify-end">
+              <Skeleton className="h-10 w-24 rounded-md" />
+              <Skeleton className="h-10 w-10 rounded-md" />
+              <Skeleton className="h-10 w-10 rounded-md" />
+              <Skeleton className="h-10 w-24 rounded-md" />
+            </div>
+          </div>
+          <p className="px-3 py-2 text-xs text-on-surface-variant sm:px-4 md:hidden">Swipe to see more columns</p>
         </div>
       </Card>
     </div>

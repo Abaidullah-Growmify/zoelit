@@ -9,8 +9,8 @@ export function Button({ asChild, className, variant = "primary", size = "md", .
 
 export function buttonClasses({ variant = "primary", size = "md" } = {}) {
   return cn(
-    "inline-flex items-center justify-center gap-2 rounded-md font-semibold tracking-tight transition duration-150 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15 disabled:pointer-events-none disabled:opacity-60",
-    size === "sm" ? "h-9 px-3.5 text-sm" : "h-10 px-4 text-sm",
+    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-semibold tracking-tight transition duration-150 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15 disabled:pointer-events-none disabled:opacity-60",
+    size === "sm" ? "h-8 min-h-8 px-3 text-sm" : "h-9 min-h-9 px-3 text-sm sm:px-3.5",
     variant === "primary" && "bg-primary text-white shadow-sm hover:bg-primary-container",
      variant === "secondary" && "bg-primary text-white shadow-sm hover:bg-primary-container",
      variant === "outline" && "border border-primary bg-primary text-white shadow-sm hover:bg-primary-container",
@@ -20,19 +20,19 @@ export function buttonClasses({ variant = "primary", size = "md" } = {}) {
 }
 
 export function Card({ className, ...props }) {
-  return <div className={cn("rounded-lg border border-outline-variant/80 bg-surface p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_4px_12px_rgba(0,0,0,0.04)] dark:bg-surface-container", className)} {...props} />;
+  return <div className={cn("min-w-0 rounded-xl border border-outline-variant/80 bg-surface p-4 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_4px_12px_rgba(0,0,0,0.04)] sm:p-5 dark:bg-surface-container", className)} {...props} />;
 }
 
 export function PageHeader({ eyebrow, title, description, action, align = "left", className, titleClassName, descriptionClassName }) {
   const centered = align === "center";
   return (
-    <div className={cn(centered ? "mx-auto max-w-3xl text-center" : "flex flex-col justify-between gap-4 md:flex-row md:items-end", className)}>
-      <div className={cn(centered ? "mx-auto" : "")}>
+    <div className={cn(centered ? "mx-auto max-w-3xl text-center" : "flex min-w-0 flex-col justify-between gap-3 sm:gap-4 md:flex-row md:items-end", className)}>
+      <div className={cn("min-w-0", centered ? "mx-auto" : "")}>
         {eyebrow ? <p className="mb-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-primary">{eyebrow}</p> : null}
-        <h1 aria-label={eyebrow ? `${eyebrow}: ${title}` : undefined} className={cn("max-w-4xl text-balance font-heading text-2xl font-semibold tracking-tight text-on-surface sm:text-3xl", titleClassName)}>{title}</h1>
+        <h1 aria-label={eyebrow ? `${eyebrow}: ${title}` : undefined} className={cn("max-w-4xl text-balance break-words font-heading text-xl font-semibold tracking-tight text-on-surface sm:text-2xl", titleClassName)}>{title}</h1>
         {description ? <p className={cn("mt-2 max-w-2xl text-sm leading-6 text-on-surface-variant", centered ? "mx-auto" : "", descriptionClassName)}>{description}</p> : null}
       </div>
-      {action ? <div className={cn(centered ? "mt-5" : "shrink-0")}>{action}</div> : null}
+      {action ? <div className={cn("panel-actions", centered ? "mt-5 justify-center" : "w-full md:w-auto md:justify-end")}>{action}</div> : null}
     </div>
   );
 }
@@ -40,12 +40,12 @@ export function PageHeader({ eyebrow, title, description, action, align = "left"
 export function SectionHeader({ eyebrow, title, action, align = "left", className }) {
   const centered = align === "center";
   return (
-    <div className={cn(centered ? "mx-auto max-w-2xl text-center" : "flex items-end justify-between gap-4", className)}>
-      <div>
+    <div className={cn(centered ? "mx-auto max-w-2xl text-center" : "flex flex-wrap items-end justify-between gap-x-3 gap-y-2", className)}>
+      <div className="min-w-0 w-full sm:w-auto">
         {eyebrow ? <p className="mb-1 text-sm font-semibold uppercase tracking-[0.16em] text-primary">{eyebrow}</p> : null}
-        <h2 aria-label={eyebrow ? `${eyebrow}: ${title}` : undefined} className="text-balance font-heading text-xl font-semibold tracking-tight text-on-surface">{title}</h2>
+        <h2 aria-label={eyebrow ? `${eyebrow}: ${title}` : undefined} className="text-balance break-words font-heading text-lg font-semibold tracking-tight text-on-surface sm:text-xl">{title}</h2>
       </div>
-      {action ? <div className="shrink-0">{action}</div> : null}
+      {action ? <div className="panel-actions w-full sm:w-auto sm:justify-end">{action}</div> : null}
     </div>
   );
 }
@@ -54,7 +54,7 @@ export function Input({ className, ...props }) {
   return (
     <input
       className={cn(
-        "h-10 w-full rounded-md border border-outline-variant bg-surface px-3.5 text-sm text-on-surface transition placeholder:text-on-surface-variant/80 focus:border-primary focus:ring-4 focus:ring-primary/10 dark:bg-surface-container-low",
+        "h-9 w-full rounded-md border border-outline-variant bg-surface px-3.5 text-sm text-on-surface transition placeholder:text-on-surface-variant/80 focus:border-primary focus:ring-4 focus:ring-primary/10 dark:bg-surface-container-low",
         "aria-[invalid=true]:border-error aria-[invalid=true]:ring-1 aria-[invalid=true]:ring-error/30",
         className
       )}
@@ -71,7 +71,7 @@ export function Select({ className, style, ...props }) {
   return (
     <span className="relative flex w-full">
       <select
-        className={cn("h-10 w-full appearance-none rounded-md border border-outline-variant bg-surface py-0 pl-3.5 pr-10 text-sm font-medium text-on-surface focus:border-primary focus:ring-4 focus:ring-primary/10 dark:bg-surface-container-low", className)}
+        className={cn("h-9 w-full appearance-none rounded-md border border-outline-variant bg-surface py-0 pl-3.5 pr-10 text-sm font-medium text-on-surface focus:border-primary focus:ring-4 focus:ring-primary/10 dark:bg-surface-container-low", className)}
         style={style}
         {...props}
       />
@@ -91,14 +91,14 @@ export function ErrorText({ children }) {
 
 export function FilterTabs({ tabs, value, onChange }) {
   return (
-    <div className="filter-tabs">
+    <div className="filter-tabs w-full sm:w-fit">
       {tabs.map((tab) => (
         <button
           key={tab.value}
           type="button"
           data-active={value === tab.value}
           onClick={() => onChange(tab.value)}
-          className="filter-tab"
+          className="filter-tab min-h-10 flex-1 whitespace-nowrap sm:flex-none"
         >
           {tab.label}
         </button>

@@ -1,5 +1,5 @@
-import { AdminPageSkeleton } from "@/components/skeletons";
+import { AdminProfileSkeleton } from "@/components/skeletons";
 
 export default function AdminProfileLoading() {
-  return <AdminPageSkeleton variant="form" />;
+  return <AdminProfileSkeleton />;
 }

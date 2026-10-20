@@ -196,7 +196,7 @@ export function HeroProductPicker({
           {productItems.map((item, index) => {
             const product = known[item.productId];
             return (
-              <li key={item.productId} className="flex items-center gap-2 rounded-md border border-outline-variant bg-surface px-2 py-2">
+              <li key={item.productId} className="home-hero-product-item flex items-center gap-2 rounded-md border border-outline-variant bg-surface px-2 py-2">
                 <div className="relative size-9 shrink-0 overflow-hidden rounded-lg bg-surface-container-low">
                   <Image src={product?.imageUrl || product?.image || FALLBACK_IMAGE} alt="" fill sizes="36px" className="object-cover" />
                 </div>

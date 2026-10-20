@@ -1,5 +1,5 @@
-import { AdminPageSkeleton } from "@/components/skeletons";
+import { AdminProductEditSkeleton } from "@/components/skeletons";
 
 export default function NewProductLoading() {
-  return <AdminPageSkeleton variant="form" />;
+  return <AdminProductEditSkeleton />;
 }

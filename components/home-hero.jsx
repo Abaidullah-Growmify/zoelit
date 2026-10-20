@@ -1,26 +1,49 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowUp } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Package, Star, Truck, Users } from "lucide-react";
 import { money } from "@/lib/utils";
+import { CleanProductImage } from "@/components/clean-product-image";
+import { Container } from "@/components/container";
 
 const DEFAULT_CONTENT = {
   eyebrow: "ZoeLit · Thoughtfully chosen",
-  title: "Better technology, thoughtfully chosen for you.",
+  title: "Better technology, thoughtfully chosen for you",
   lead: "Explore a considered collection of electronics, accessories, and everyday essentials selected for quality, value, and ease.",
 };
 
 export function HomeHero({ products, productCount = 0, content, explicit = false }) {
   const heroContent = { ...DEFAULT_CONTENT, ...content };
   const [activeIndex, setActiveIndex] = useState(0);
+  const [slide, setSlide] = useState(0);
+  const [mobileIndex, setMobileIndex] = useState(0);
 
   useEffect(() => {
-    if (!products || products.length < 2 || explicit) return undefined;
-    const interval = window.setInterval(() => setActiveIndex((index) => (index + 1) % products.length), 4200);
+    if (!products || products.length < 2) return undefined;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
+    const interval = window.setInterval(() => {
+      setSlide((current) => (current + 1) % Math.min(products.length, 3));
+      setActiveIndex((prev) => (prev + 1) % products.length);
+    }, 3600);
     return () => window.clearInterval(interval);
-  }, [products, explicit]);
+  }, [products]);
+
+  // Mobile banner: the hero cards keep rotating like a promo banner. Pauses
+  // when there is a single slide or the visitor prefers reduced motion.
+  useEffect(() => {
+    if (!products || products.length < 2) return undefined;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
+    const timer = window.setInterval(() => {
+      setMobileIndex((current) => (current + 1) % Math.max(1, products.length));
+    }, 3200);
+    return () => window.clearInterval(timer);
+  }, [products]);
+
+  const goToMobile = (index) => {
+    const count = Math.max(1, products.length);
+    setMobileIndex(((index % count) + count) % count);
+  };
 
   const picks = explicit ? products : null;
 
@@ -35,41 +58,107 @@ export function HomeHero({ products, productCount = 0, content, explicit = false
       : products.slice(activeIndex % products.length).concat(products.slice(0, activeIndex % products.length)).slice(0, 3);
 
   const first = displayed[0] || null;
-  const second = displayed[1] || null;
-  const third = displayed[2] || null;
 
   const rating = Number(first?.rating) > 0 ? Number(first.rating) : 4.8;
 
-  const titleLines = String(heroContent.title || "")
+  const titleValue = String(heroContent.title || "").replace(
+    /^Better technology,\s+thoughtfully chosen for you\.?$/i,
+    "Better technology,\nthoughtfully chosen for you"
+  );
+  const titleLines = titleValue
     .split("\n")
     .filter((line) => line.trim());
   const firstLine = titleLines[0] || DEFAULT_CONTENT.title.split("\n")[0];
   const restLines = titleLines.slice(1).join("\n");
 
-  return (
-    <section className="zl-hero">
-      <div className="zl-hero-left">
-        <div className="zl-eyebrow">{heroContent.eyebrow}</div>
-        <h1 className="zl-h1 whitespace-pre-line">
-          {firstLine}
-          {restLines ? (<><br /><span>{restLines}</span></>) : null}
-        </h1>
-        <p className="zl-lead">{heroContent.lead}</p>
-        <div className="zl-cta">
-          <Link className="zl-btn" href="/products">Shop the Store <ArrowUp className="zl-ic" /></Link>
-        </div>
-        <div className="zl-stats">
-          <AnimatedStat target={50000} suffix="k+" label="Happy customers" divisor={1000} />
-          <AnimatedStat target={productCount} suffix="" label={productCount === 1 ? "Product" : "Products"} />
-          <AnimatedStat target={rating} suffix="" label="Average rating" decimal />
-        </div>
-      </div>
+  const mobileTotal = Math.max(1, displayed.length);
+  const mobileActive = mobileIndex % mobileTotal;
+  const desktopActive = slide % mobileTotal;
+  const desktopProducts = displayed.map((_, offset) => displayed[(desktopActive + offset) % mobileTotal]).filter(Boolean);
 
-      <div className="zl-hero-right">
-        {second ? <HeroProduct product={second} className="zl-hv1" shippingLabel={Number(second.price) <= 150 ? "Low shipping rate" : "Reasonable shipping"} badge={secondBadge(second)} /> : null}
-        {third ? <HeroProduct product={third} className="zl-hv2" shippingLabel="Popular pick" badge={thirdBadge(third)} /> : null}
-        {first ? <HeroProduct product={first} className="zl-hv3" featured shippingLabel={Number(first.price) > 150 ? "Free delivery" : "Low shipping rate"} badge={firstBadge(first)} /> : null}
-      </div>
+  return (
+    <section className="hero-section">
+      <Container className="hero-inner">
+        <div className="hero-copy">
+          <div className="hero-eyebrow">{heroContent.eyebrow}</div>
+          <h1 className="hero-title min-w-0 max-w-full break-words">
+            <HeroTitleLine value={firstLine} />
+            {restLines ? (<><br /><HeroTitleLine value={restLines} /></>) : null}
+          </h1>
+          <p className="hero-lead">{heroContent.lead}</p>
+          <div className="hero-cta">
+            <Link className="hero-btn" href="/products">Shop the Store <ArrowRight className="h-4 w-4" /></Link>
+          </div>
+          <div className="hero-stats">
+            <AnimatedStat target={50000} suffix="k+" label="Happy customers" divisor={1000} />
+            <AnimatedStat target={productCount} suffix="" label={productCount === 1 ? "Product" : "Products"} />
+            <AnimatedStat target={rating} suffix="" label="Average rating" decimal />
+          </div>
+        </div>
+
+        {/* Mobile-only: the hero cards render as one full-width promo banner that
+            keeps rotating, with the stats card underneath (mock design). The
+            headline text block above is hidden on phones by CSS. */}
+        <div className="hero-mobile">
+          <div className="zl-mhero">
+            <div className="zl-mhero-stage">
+              {displayed.map((product, index) => (
+                <article
+                  key={product.id ?? index}
+                  className={`zl-mhero-slide${index === mobileActive ? " is-active" : ""}`}
+                  aria-hidden={index !== mobileActive}
+                >
+                  <div className="zl-mhero-copy">
+                    <span className="zl-mhero-badge">{product.heroBadge || (Number(product.price) > 150 ? "Free delivery" : "Popular pick")}</span>
+                    <h2 className="zl-mhero-title">{product.name}</h2>
+                    <p className="zl-mhero-sub">{product.category || "Featured"}</p>
+                    <div className="zl-mhero-bottom">
+                      <span className="zl-mhero-price">{money(product.price)}</span>
+                      <Link className="zl-mhero-cta" href={`/products/${product.id}`}>View <ArrowRight className="h-3.5 w-3.5" /></Link>
+                    </div>
+                  </div>
+                  <div className="zl-mhero-img">
+                    {product.image ? (
+                      <CleanProductImage src={product.image} alt={product.name} />
+                    ) : (
+                      <span className="zl-mhero-fallback">★</span>
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
+            <div className="zl-mhero-nav">
+              <button type="button" className="zl-mhero-arrow" onClick={() => goToMobile(mobileActive - 1)} aria-label="Previous banner">
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <div className="zl-mhero-dots">
+                {displayed.map((product, index) => (
+                  <button
+                    key={product.id ?? index}
+                    type="button"
+                    className={`zl-mhero-dot${index === mobileActive ? " is-active" : ""}`}
+                    onClick={() => goToMobile(index)}
+                    aria-label={`Show banner ${index + 1}`}
+                    aria-current={index === mobileActive}
+                  />
+                ))}
+              </div>
+              <button type="button" className="zl-mhero-arrow" onClick={() => goToMobile(mobileActive + 1)} aria-label="Next banner">
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="zl-mstats">
+              <AnimatedStat icon={Users} target={50000} suffix="k+" label="Happy customers" divisor={1000} variant="mobile" />
+              <AnimatedStat icon={Package} target={productCount} suffix="" label={productCount === 1 ? "Product" : "Products"} variant="mobile" />
+              <AnimatedStat icon={Star} target={rating} suffix="" label="Average rating" decimal variant="mobile" />
+            </div>
+          </div>
+        </div>
+
+        <div className="hero-card-col">
+          {desktopProducts[0] ? <HeroProduct product={desktopProducts[0]} shippingLabel={Number(desktopProducts[0].price) > 150 ? "Free delivery" : "Low shipping rate"} badge={firstBadge(desktopProducts[0])} /> : null}
+        </div>
+      </Container>
     </section>
   );
 }
@@ -78,15 +167,7 @@ function firstBadge(product) {
   return product.heroBadge || (Number(product.price) > 150 ? "Free delivery" : "Low shipping rate");
 }
 
-function secondBadge(product) {
-  return product.heroBadge || (Number(product.price) <= 150 ? "Low shipping rate" : "Reasonable shipping");
-}
-
-function thirdBadge(product) {
-  return product.heroBadge || "Popular pick";
-}
-
-function AnimatedStat({ target, suffix, label, divisor = 1, decimal = false }) {
+function AnimatedStat({ target, suffix, label, divisor = 1, decimal = false, icon: Icon, variant }) {
   const [value, setValue] = useState(0);
 
   useEffect(() => {
@@ -104,25 +185,49 @@ function AnimatedStat({ target, suffix, label, divisor = 1, decimal = false }) {
   }, [target]);
 
   const display = decimal ? value.toFixed(1) : Math.floor(value / divisor);
-  return <div className="zl-stat"><b>{display}{suffix}</b><span>{label}</span></div>;
+  if (variant !== "mobile") {
+    return (
+      <div className="hero-stat">
+        <b className="hero-stat-value">{display}{suffix}</b>
+        <span className="hero-stat-label">{label}</span>
+      </div>
+    );
+  }
+  return (
+    <div className="zl-stat">
+      <div className="zl-stat-top">
+        {Icon ? <Icon className="zl-stat-ic" aria-hidden="true" /> : null}
+        <b>{display}{suffix}</b>
+      </div>
+      <span>{label}</span>
+    </div>
+  );
 }
 
-function HeroProduct({ product, className, featured = false, shippingLabel, badge }) {
+function HeroProduct({ product, shippingLabel, badge }) {
   return (
-    <article className={`zl-hv ${className}`}>
-      <div className="zl-hv-img">
-        {product.image ? <Image src={product.image} alt={product.name} fill sizes="250px" className="object-cover" /> : <span className="zl-hv-fallback">{featured ? "★" : "◌"}</span>}
-        <span className="zl-card-badge">{badge}</span>
-      </div>
-      <div className="zl-hv-body">
-        <small>{product.category || "Featured"}</small>
-        <b>{product.name}</b>
-        <div className="zl-hv-row">
-          <span className="zl-hv-price">{money(product.price)} {product.oldPrice ? <s>{money(product.oldPrice)}</s> : null}</span>
-          <Link className={`zl-hv-view ${featured ? "" : "zl-hv-view2"}`} href={`/products/${product.id}`}>View</Link>
+    <article className="hero-card">
+      <div className="hero-card-body">
+        {badge && <span className="hero-badge">{badge}</span>}
+        <small className="hero-category">{product.category || "Featured"}</small>
+        <b className="hero-name">{product.name}</b>
+        <div className="hero-price-row">
+          <span className="hero-price">{money(product.price)} {product.oldPrice ? <s>{money(product.oldPrice)}</s> : null}</span>
+          <Link className="hero-view" href={`/products/${product.id}`}>View <ArrowRight className="h-3.5 w-3.5" /></Link>
         </div>
-        <small className="zl-shipping-label">{shippingLabel || (Number(product.price) > 150 ? "Free delivery" : "Low shipping rate")}</small>
+        <div className="hero-shipping">
+          <Truck className="h-4 w-4" />
+          <span>{shippingLabel || (Number(product.price) > 150 ? "Free delivery" : "Low shipping rate")}</span>
+        </div>
+      </div>
+      <div className="hero-media">
+        {product.image ? <CleanProductImage src={product.image} alt={product.name} /> : <span className="hero-media-fallback">★</span>}
       </div>
     </article>
   );
+}
+
+function HeroTitleLine({ value }) {
+  const parts = String(value || "").split(/(thoughtfully[\s\S]*)/i);
+  return parts.map((part, index) => /^thoughtfully/i.test(part) ? <span key={index}>{part}</span> : part);
 }

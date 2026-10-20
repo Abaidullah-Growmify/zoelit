@@ -132,7 +132,7 @@ export default function AdminOrdersPage() {
   const columns = [
     { key: "serial", header: "#", sortable: true, accessor: "serial", cellClassName: "w-16 font-semibold tabular-nums text-on-surface" },
     { key: "orderNumber", header: "Order ID", sortable: true, accessor: "publicOrderId", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => order.publicOrderId || order.orderNumber || order.ingramOrderNumber || order.id },
-    { key: "customer", header: "Customer", sortable: true, accessor: (order) => order.customer?.name || "—", cellClassName: "min-w-0 whitespace-normal font-semibold" },
+    { key: "customer", header: "Customer", sortable: true, accessor: (order) => order.customer?.name || "—", cellClassName: "max-w-[200px] truncate font-semibold" },
     { key: "payment", header: "Payment", accessor: "payment", render: (order) => <AdminStatusBadge className="text-label-md font-normal text-on-surface-variant">{order.payment}</AdminStatusBadge> },
     { key: "total", header: "Total", sortable: true, accessor: "total", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => money(order.total) },
     { key: "commissionTotal", header: "Commission", sortable: true, accessor: "commissionTotal", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => money(order.commissionTotal || 0) },
@@ -159,12 +159,12 @@ export default function AdminOrdersPage() {
             totalPages={totalPages}
             totalItems={totalItems}
             action={(
-              <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+              <div className="flex w-full items-center gap-2">
                 <div className="relative min-w-0 flex-1 sm:max-w-md lg:w-80">
                   <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
                   <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search order, customer or tracking" aria-label="Search orders" className="h-10 pl-10 shadow-sm" />
                 </div>
-                <div className="w-full shrink-0 sm:w-56">
+                <div className="w-36 shrink-0 sm:w-56">
                   <Select value={status} onChange={(event) => handleFilterStatusChange(event.target.value)} aria-label="Filter orders by status" className="h-10 shadow-sm">
                     {STATUS_OPTIONS.map((option) => <option key={option}>{option}</option>)}
                   </Select>

@@ -133,7 +133,7 @@ export function AdminOrderEditDialog({ order, onClose, onSaved }) {
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm">
-      <div className="max-h-[calc(100vh-2rem)] w-full max-w-3xl overflow-y-auto rounded-lg border border-outline-variant bg-surface-container-lowest shadow-2xl dark:bg-surface-container">
+      <div className="max-h-[90vh] w-[calc(100vw-2rem)] max-w-3xl overflow-y-auto rounded-lg border border-outline-variant bg-surface-container-lowest shadow-2xl dark:bg-surface-container">
         <div className="flex items-start justify-between gap-4 border-b border-outline-variant/70 p-6">
           <div className="flex items-start gap-4">
             <div className="grid size-11 shrink-0 place-items-center rounded-lg bg-primary-container/10 text-primary">

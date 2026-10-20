@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Bell,
+  ArrowLeft,
   CheckCircle2,
   CreditCard,
   Eye,
@@ -21,6 +22,8 @@ import { getAdminSettings, updateAdminSettings } from "@/lib/api";
 import { TransparentActionLoader } from "@/components/action-feedback";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
 import { cn } from "@/lib/utils";
+import { useRouter, useSearchParams } from "next/navigation";
+import { AdminTableActions } from "@/components/admin-table";
 
 const CURRENCIES = [
   { value: "USD", label: "USD — US Dollar" },
@@ -199,7 +202,6 @@ function mergeSettings(raw) {
 
 export default function AdminSettingsPage() {
   const token = useAdminAuthStore((state) => state.token);
-  const [activeId, setActiveId] = useState("store");
   const [values, setValues] = useState({});
   const [loaded, setLoaded] = useState({});
   const [configured, setConfigured] = useState(() => new Set());
@@ -207,8 +209,20 @@ export default function AdminSettingsPage() {
   const [saving, setSaving] = useState("");
   const [savedFlash, setSavedFlash] = useState("");
   const [visibleKeys, setVisibleKeys] = useState({});
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const sectionParam = searchParams.get("section");
+  const activeId = SECTIONS.some((section) => section.id === sectionParam) ? sectionParam : "store";
 
   const activeSection = SECTIONS.find((section) => section.id === activeId) || SECTIONS[0];
+
+  function selectSection(id) {
+    router.push(`/admin/settings?section=${encodeURIComponent(id)}`, { scroll: false });
+  }
+
+  function goToList() {
+    router.push("/admin/settings", { scroll: false });
+  }
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -310,20 +324,60 @@ export default function AdminSettingsPage() {
   }
 
   if (loading) {
-    return <SettingsSkeleton />;
+    return <SettingsSkeleton sectionParam={sectionParam} />;
   }
 
   return (
-    <Card className="overflow-visible p-0">
+    <>
       <TransparentActionLoader open={Boolean(saving)} />
-      <div className="border-b border-outline-variant bg-surface-container-low/40 px-5 py-6 sm:px-7">
+      <div className="settings-mobile-flow lg:hidden">
+        {!sectionParam ? (
+          <div className="mx-auto max-w-2xl px-4 py-3">
+            <div className="mb-4">
+              <h1 className="truncate text-lg font-semibold text-on-surface">Settings</h1>
+              <p className="truncate text-sm text-on-surface-variant">Choose what to manage.</p>
+            </div>
+            <div className="overflow-hidden rounded-xl border border-outline-variant/80 bg-surface">
+              {SECTIONS.map((section, index) => {
+                const Icon = section.icon;
+                return (
+                  <button key={section.id} type="button" onClick={() => selectSection(section.id)} className={cn("flex min-h-14 w-full items-center gap-3 px-3 py-3.5 text-left active:bg-slate-50", index < SECTIONS.length - 1 && "border-b border-outline-variant/70")}>
+                    <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"><Icon className="size-4" /></span>
+                    <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium text-on-surface">{section.label}</span><span className="block truncate text-xs text-on-surface-variant">{section.description}</span></span>
+                    <span aria-hidden="true" className="shrink-0 text-lg leading-none text-on-surface-variant">›</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="settings-mobile-detail min-h-screen bg-background pb-28">
+            <div className="sticky top-14 z-30 flex h-12 items-center gap-2 border-b border-outline-variant/70 bg-surface px-4">
+              <button type="button" onClick={goToList} className="grid size-11 shrink-0 place-items-center rounded-md text-on-surface-variant" aria-label="Back to settings sections"><ArrowLeft className="size-5" /></button>
+              <h1 className="min-w-0 flex-1 truncate text-base font-semibold text-on-surface">{activeSection.label}</h1>
+              <AdminTableActions label="Section actions" actions={[{ label: "Revert changes", icon: RotateCcw, disabled: !dirtySections[activeSection.id], onClick: revertSection }]} />
+            </div>
+            <div className="mx-auto max-w-2xl px-4 py-3">
+              <p className="truncate text-sm text-on-surface-variant">{activeSection.description}</p>
+              <div className="settings-mobile-editor mt-3 rounded-xl border border-outline-variant/80 bg-surface p-4">
+                <SettingsFields activeSection={activeSection} values={values} setValue={setValue} visibleKeys={visibleKeys} toggleVisible={toggleVisible} configured={configured} />
+              </div>
+            </div>
+            <div className="fixed inset-x-0 bottom-0 z-30 border-t border-outline-variant/70 bg-surface p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+              <div className="mx-auto max-w-2xl"><Button onClick={saveSection} disabled={saving || !dirtySections[activeSection.id]} className="h-11 w-full">{saving === activeSection.id ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}{saving === activeSection.id ? "Saving..." : "Save changes"}</Button></div>
+            </div>
+          </div>
+        )}
+      </div>
+      <Card className="hidden overflow-visible p-0 lg:block">
+      <div className="border-b border-outline-variant bg-surface-container-low/40 px-4 py-5 sm:px-5 sm:py-6 lg:px-7">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <h1 className="font-heading text-2xl font-semibold text-on-surface">Settings</h1>
+            <h1 className="font-heading text-xl font-semibold text-on-surface sm:text-2xl">Settings</h1>
             <p className="mt-1 max-w-3xl text-sm leading-6 text-on-surface-variant">Manage store, payment, catalog and email preferences for ZoeLit.</p>
           </div>
           <div className="shrink-0">
-            <Button onClick={saveAll} disabled={loading || saving || !hasDirty}>
+            <Button onClick={saveAll} disabled={loading || saving || !hasDirty} className="h-10 w-full sm:w-auto">
               {saving === "all" ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
               {saving === "all" ? "Saving..." : "Save all changes"}
             </Button>
@@ -332,29 +386,29 @@ export default function AdminSettingsPage() {
       </div>
 
       <div className="flex flex-col lg:flex-row lg:items-stretch">
-        <aside className="flex w-full shrink-0 flex-col gap-1 border-outline-variant px-5 py-6 sm:px-7 lg:w-64 lg:border-r">
+        <aside className="flex w-full shrink-0 flex-col gap-1 border-b border-outline-variant px-4 py-4 sm:px-5 sm:py-5 lg:w-64 lg:border-b-0 lg:border-r lg:py-6">
           {SECTIONS.map((section) => (
             <button
               key={section.id}
               type="button"
-              onClick={() => setActiveId(section.id)}
+              onClick={() => selectSection(section.id)}
               className={cn(
-                "flex items-center justify-between gap-3 rounded-md px-3.5 py-2.5 text-left text-sm font-semibold transition",
+                "flex items-center justify-between gap-2 rounded-md px-3 py-2.5 text-left text-sm font-semibold transition sm:gap-3 sm:px-3.5",
                 activeId === section.id ? "bg-primary text-white shadow-sm" : "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface"
               )}
             >
-              <span className="flex items-center gap-3">
-                <section.icon className={cn("size-4", activeId === section.id ? "text-white" : "text-on-surface-variant")} />
+              <span className="flex min-w-0 items-center gap-2 sm:gap-3">
+                <section.icon className={cn("size-4 shrink-0", activeId === section.id ? "text-white" : "text-on-surface-variant")} />
                 <span className="truncate">{section.label}</span>
               </span>
               {dirtySections[section.id] ? (
-                <span className={cn("size-2 rounded-full", activeId === section.id ? "bg-white/80" : "bg-primary")} title="Unsaved changes" />
+                <span className={cn("size-2 shrink-0 rounded-full", activeId === section.id ? "bg-white/80" : "bg-primary")} title="Unsaved changes" />
               ) : null}
             </button>
           ))}
         </aside>
 
-        <div className="min-w-0 flex-1 px-5 py-6 sm:px-7">
+        <div className="min-w-0 flex-1 px-4 py-5 sm:px-5 sm:py-6 lg:px-7">
               <>
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex items-start gap-3">
@@ -374,22 +428,7 @@ export default function AdminSettingsPage() {
                   ) : null}
                 </div>
 
-                <div className="mt-7 grid gap-6 sm:grid-cols-2">
-                  {activeSection.fields.map((field) =>
-                    field.type === "toggle" ? (
-                      <div key={field.key} className="sm:col-span-2">
-                        <ToggleRow field={field} value={values[field.key]} onChange={(value) => setValue(field.key, value)} />
-                      </div>
-                    ) : (
-                      <div key={field.key} className={field.span ? "sm:col-span-2" : ""}>
-                        <FieldLabel field={field} />
-                        <div className="mt-2">
-                          <FieldControl field={field} value={values[field.key]} onChange={(value) => setValue(field.key, value)} visible={Boolean(visibleKeys[field.key])} onToggleVisible={() => toggleVisible(field.key)} configured={configured.has(field.key)} />
-                        </div>
-                      </div>
-                    )
-                  )}
-                </div>
+                <SettingsFields activeSection={activeSection} values={values} setValue={setValue} visibleKeys={visibleKeys} toggleVisible={toggleVisible} configured={configured} />
 
                 <div className="mt-7 flex flex-col-reverse items-stretch justify-between gap-3 border-t border-outline-variant pt-5 sm:flex-row sm:items-center">
                   {dirtySections[activeSection.id] ? (
@@ -416,7 +455,27 @@ export default function AdminSettingsPage() {
               </>
           </div>
         </div>
-    </Card>
+      </Card>
+    </>
+  );
+}
+
+function SettingsFields({ activeSection, values, setValue, visibleKeys, toggleVisible, configured }) {
+  return (
+    <div className="mt-7 grid gap-6 sm:grid-cols-2">
+      {activeSection.fields.map((field) => field.type === "toggle" ? (
+        <div key={field.key} className="sm:col-span-2">
+          <ToggleRow field={field} value={values[field.key]} onChange={(value) => setValue(field.key, value)} />
+        </div>
+      ) : (
+        <div key={field.key} className={field.span ? "sm:col-span-2" : ""}>
+          <FieldLabel field={field} />
+          <div className="mt-2">
+            <FieldControl field={field} value={values[field.key]} onChange={(value) => setValue(field.key, value)} visible={Boolean(visibleKeys[field.key])} onToggleVisible={() => toggleVisible(field.key)} configured={configured.has(field.key)} />
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -513,9 +572,43 @@ function Toggle({ checked, onChange }) {
   );
 }
 
-function SettingsSkeleton() {
+function SettingsSkeleton({ sectionParam }) {
   return (
-    <Card className="overflow-visible p-0">
+    <>
+      <div className="lg:hidden">
+        {sectionParam ? (
+          <div className="settings-mobile-detail min-h-screen bg-background pb-28">
+            <div className="sticky top-14 z-30 flex h-12 items-center gap-2 border-b border-outline-variant/70 bg-surface px-4">
+              <Skeleton className="size-11 shrink-0 rounded-md" />
+              <Skeleton className="h-5 min-w-0 flex-1 rounded-md" />
+              <Skeleton className="size-9 shrink-0 rounded-md" />
+            </div>
+            <div className="mx-auto max-w-2xl px-4 py-3">
+              <Skeleton className="h-4 w-48 max-w-full rounded-md" />
+              <div className="settings-mobile-editor mt-3 space-y-4 rounded-xl border border-outline-variant/80 bg-surface p-4">
+                <Skeleton className="h-4 w-28 rounded-md" />
+                <Skeleton className="h-10 w-full rounded-md" />
+                <Skeleton className="h-4 w-28 rounded-md" />
+                <Skeleton className="h-10 w-full rounded-md" />
+                <Skeleton className="h-4 w-28 rounded-md" />
+                <Skeleton className="h-14 w-full rounded-md" />
+              </div>
+            </div>
+            <div className="fixed inset-x-0 bottom-0 z-30 border-t border-outline-variant/70 bg-surface p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+              <div className="mx-auto max-w-2xl"><Skeleton className="h-11 w-full rounded-md" /></div>
+            </div>
+          </div>
+        ) : (
+          <div className="mx-auto max-w-2xl px-4 py-3">
+            <Skeleton className="h-6 w-32 rounded-md" />
+            <Skeleton className="mt-2 h-4 w-40 rounded-md" />
+            <div className="mt-4 overflow-hidden rounded-xl border border-outline-variant">
+              {Array.from({ length: 6 }).map((_, index) => <div key={index} className="flex min-h-14 items-center gap-3 border-b border-outline-variant/70 px-3 py-3.5 last:border-b-0"><Skeleton className="size-9 rounded-lg" /><div className="min-w-0 flex-1"><Skeleton className="h-4 w-32 rounded-md" /><Skeleton className="mt-1 h-3 w-44 max-w-full rounded-md" /></div><Skeleton className="size-4 rounded-md" /></div>)}
+            </div>
+          </div>
+        )}
+      </div>
+    <Card className="hidden overflow-visible p-0 lg:block">
       <div className="border-b border-outline-variant bg-surface-container-low/40 px-5 py-6 sm:px-7">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
@@ -577,5 +670,6 @@ function SettingsSkeleton() {
         </div>
       </div>
     </Card>
+    </>
   );
 }
