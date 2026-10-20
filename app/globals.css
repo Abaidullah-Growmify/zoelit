@@ -4502,6 +4502,10 @@ html, body { overflow-x: clip; }
   padding-block: 1rem 1.25rem;
 }
 
+@media (max-width: 767px) {
+  .hero-inner { padding-block: 2rem 2.5rem; }
+}
+
 .hero-mobile { display: block; }
 
 .hero-copy,
@@ -4784,7 +4788,7 @@ html, body { overflow-x: clip; }
     grid-template-columns: max-content minmax(0, 1fr);
     align-items: center;
     gap: 2.5rem;
-    padding-block: clamp(3rem, 4.4vw, 4rem);
+    padding-block: clamp(6rem, 7vw, 8rem);
   }
 
   .hero-card-col {
