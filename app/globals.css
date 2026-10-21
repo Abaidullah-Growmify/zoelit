@@ -3169,6 +3169,18 @@ html, body { overflow-x: clip; }
     padding: 10px;
   }
 
+  .home-categories-section .category-grid .zl-skel-cat {
+    height: 88px;
+    min-height: 88px;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .home-categories-section .category-grid .zl-skel-cat > .skeleton:first-child {
+    width: 34px;
+    height: 34px;
+  }
+
   .home-categories-section .category-grid > a svg {
     flex-basis: 34px;
     width: 34px;

@@ -38,7 +38,7 @@ export function ProductImageZoom({ product }) {
         onPointerMove={handlePointerMove}
         onPointerLeave={handlePointerLeave}
       >
-        <Image src={product.image} alt={product.name} width={1200} height={1200} priority className="aspect-square w-full object-cover transition duration-700 hover:scale-[1.02]" />
+        <Image src={product.image} alt={product.name} width={1200} height={1200} priority className="aspect-square w-full object-contain p-3 transition duration-700 hover:scale-[1.02] sm:p-6" />
         {isZooming ? (
           <div
             className="pointer-events-none absolute hidden rounded-lg border-2 border-surface-container-lowest/95 bg-surface-container-lowest/15 shadow-[0_16px_45px_rgb(0_63_177_/_0.28)] ring-1 ring-primary/40 backdrop-blur-[1px] md:block"

@@ -252,7 +252,7 @@ export function SiteHeader() {
       </div>
 
       {mobileNavOpen && (
-        <div className="fixed inset-0 z-[60] lg:hidden">
+        <div className="fixed inset-0 z-[100] lg:hidden">
           <div
             aria-hidden="true"
             onClick={() => setMobileNavOpen(false)}
@@ -263,10 +263,12 @@ export function SiteHeader() {
             role="dialog"
             aria-modal="true"
             aria-label="Menu"
-            className="absolute left-0 top-0 flex h-full w-72 max-w-[85vw] flex-col border-r border-outline-variant bg-surface shadow-2xl transition-transform"
+            className="absolute left-0 top-0 flex h-full w-[min(360px,88vw)] max-w-full flex-col border-r border-outline-variant bg-surface shadow-2xl transition-transform"
           >
             <div className="flex items-center justify-between border-b border-outline-variant px-4 py-3">
-              <span className="text-sm font-bold text-on-surface">Menu</span>
+              <Link href="/" onClick={() => setMobileNavOpen(false)} className="flex items-center">
+                <BrandLogo className="h-8 w-auto" priority />
+              </Link>
               <button 
                 type="button" 
                 onClick={() => setMobileNavOpen(false)} 

@@ -28,7 +28,7 @@ export function ProductGridSkeleton({ count = 8, columns = "product-grid" }) {
 
 export function ProductDetailSkeleton() {
   return (
-    <div className="space-y-8 sm:space-y-10">
+      <div className="space-y-8 sm:space-y-10">
       <div className="flex flex-wrap items-center gap-2"><Skeleton className="h-4 w-12 rounded-sm" /><Skeleton className="h-4 w-2 rounded-sm" /><Skeleton className="h-4 w-20 rounded-sm" /><Skeleton className="h-4 w-2 rounded-sm" /><Skeleton className="h-4 w-full max-w-[22rem] rounded-sm" /></div>
       <div className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,0.92fr)_minmax(360px,1.08fr)] lg:gap-14">
         <Skeleton className="aspect-square w-full rounded-2xl" />
@@ -42,7 +42,6 @@ export function ProductDetailSkeleton() {
         </div>
       </div>
       <Card className="overflow-hidden p-0"><div className="flex border-b border-outline-variant"><Skeleton className="h-12 flex-1" /><Skeleton className="h-12 flex-1" /></div><div className="space-y-3 p-5 sm:p-6"><Skeleton className="h-4 w-32 rounded-md" /><Skeleton className="h-4 w-full rounded-md" /><Skeleton className="h-4 w-4/5 rounded-md" /><Skeleton className="h-4 w-3/5 rounded-md" /></div></Card>
-      <div className="space-y-4"><div className="flex items-center justify-between"><div className="space-y-2"><Skeleton className="h-3 w-24 rounded-md" /><Skeleton className="h-7 w-40 rounded-md" /></div><Skeleton className="h-9 w-20 rounded-sm" /></div><div className="grid grid-cols-1 gap-3 min-[768px]:grid-cols-2 lg:grid-cols-3">{Array.from({ length: 4 }).map((_, index) => <Card key={index} className="relative flex h-[124px] min-w-0 flex-row gap-2.5 overflow-hidden rounded-[14px] p-2.5 min-[768px]:h-auto min-[768px]:min-h-[300px] min-[768px]:flex-col min-[768px]:gap-0 min-[768px]:rounded-xl min-[768px]:p-0"><Skeleton className="size-[104px] shrink-0 rounded-[10px] min-[768px]:h-[180px] min-[768px]:w-full min-[768px]:rounded-none" /><div className="min-w-0 flex-1 py-1 min-[768px]:flex-none min-[768px]:p-4"><Skeleton className="h-4 w-20 rounded-md min-[768px]:h-5 min-[768px]:w-24" /><Skeleton className="mt-2 h-4 w-full rounded-md min-[768px]:h-5" /><Skeleton className="mt-2 h-4 w-4/5 rounded-md min-[768px]:h-5" /><Skeleton className="mt-2 h-4 w-16 rounded-md min-[768px]:mt-3 min-[768px]:h-5" /><Skeleton className="mt-2 h-3 w-12 rounded-md min-[768px]:h-4" /><Skeleton className="mt-3 hidden h-10 w-full rounded-md min-[768px]:block" /></div><Skeleton className="absolute bottom-7 right-3 h-[30px] w-20 rounded-md" /></Card>)}</div></div>
     </div>
   );
 }
@@ -1242,7 +1241,8 @@ export function HomePageSkeleton({ display = {} }) {
       ) : null}
 
       {categoryTiles > 0 ? (
-        <section className="container-page py-10 md:py-16">
+        <section className="home-categories-section py-10 md:py-16">
+          <div className="container-page">
           <div className="zl-sec-head mb-6 flex items-end justify-between gap-x-3 gap-y-2">
             <div className="min-w-0 w-full sm:w-auto">
               <Skeleton className="h-6 w-52 max-w-full rounded-sm sm:h-7" />
@@ -1251,13 +1251,14 @@ export function HomePageSkeleton({ display = {} }) {
               <Skeleton className="h-10 w-16 rounded-sm" />
             </div>
           </div>
-          <div className="category-grid">
+          <div className="category-grid grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {Array.from({ length: categoryTiles }).map((_, index) => (
               <div key={index} className="zl-skel-cat flex min-w-0 flex-col items-center justify-center rounded-[14px] border border-outline-variant bg-surface px-3 py-5 text-center">
                 <Skeleton className="size-9 rounded-sm" />
                 <Skeleton className="mt-3 h-4 w-28 rounded-sm" />
               </div>
             ))}
+          </div>
           </div>
         </section>
       ) : null}
