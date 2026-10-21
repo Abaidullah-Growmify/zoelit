@@ -118,7 +118,7 @@ export default function CheckoutPage() {
   const [offersOpen, setOffersOpen] = useState(false);
   const [offers, setOffers] = useState([]);
   const [offersLoading, setOffersLoading] = useState(false);
-  const [manualEntryOpen, setManualEntryOpen] = useState(false);
+  const [manualEntryOpen, setManualEntryOpen] = useState(true);
   const [conflictOpen, setConflictOpen] = useState(false);
   const [conflictVoucher, setConflictVoucher] = useState(null);
   const offersRequestRef = useRef(0);
@@ -947,7 +947,7 @@ export default function CheckoutPage() {
             ) : (
               <div className="mb-5">
                 {!offersOpen ? (
-                  <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3.5 dark:border-slate-700 dark:bg-slate-900/40">
+                   <div className="hidden flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3.5 dark:border-slate-700 dark:bg-slate-900/40">
                     <span className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
                       <Ticket className="size-4" />
                       Have a voucher?

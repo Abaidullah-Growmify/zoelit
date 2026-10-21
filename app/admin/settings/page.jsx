@@ -122,6 +122,7 @@ const SECTIONS = [
       { key: "ingram.stockWebhookSecret", label: "Stock webhook secret", type: "password", placeholder: "Webhook secret" },
       { key: "ingram.orderWebhookSecret", label: "Order webhook secret", type: "password", placeholder: "Webhook secret" },
       { key: "ingram.autoCategoryDiscovery", label: "Automatic category discovery", type: "toggle" },
+      { key: "ingram.autoCatalogSyncEnabled", label: "Automatic catalog sync", type: "toggle" },
       { key: "ingram.syncImagesEnabled", label: "Sync product images", type: "toggle" },
       { key: "ingram.autoSyncEnabled", label: "Automatic price sync", type: "toggle" },
     ],
@@ -332,12 +333,12 @@ export default function AdminSettingsPage() {
       <TransparentActionLoader open={Boolean(saving)} />
       <div className="settings-mobile-flow lg:hidden">
         {!sectionParam ? (
-          <div className="mx-auto max-w-2xl px-4 py-3">
-            <div className="mb-4">
+           <div className="mx-auto max-w-2xl overflow-hidden rounded-xl border border-outline-variant/80 bg-surface px-4 py-3">
+             <div className="pb-3 pt-1">
               <h1 className="truncate text-lg font-semibold text-on-surface">Settings</h1>
               <p className="truncate text-sm text-on-surface-variant">Choose what to manage.</p>
             </div>
-            <div className="overflow-hidden rounded-xl border border-outline-variant/80 bg-surface">
+             <div className="-mx-4 border-t border-outline-variant/70">
               {SECTIONS.map((section, index) => {
                 const Icon = section.icon;
                 return (
@@ -599,10 +600,9 @@ function SettingsSkeleton({ sectionParam }) {
             </div>
           </div>
         ) : (
-          <div className="mx-auto max-w-2xl px-4 py-3">
-            <Skeleton className="h-6 w-32 rounded-md" />
-            <Skeleton className="mt-2 h-4 w-40 rounded-md" />
-            <div className="mt-4 overflow-hidden rounded-xl border border-outline-variant">
+           <div className="mx-auto max-w-2xl overflow-hidden rounded-xl border border-outline-variant/80 bg-surface px-4 py-3">
+             <div className="pb-3 pt-1"><Skeleton className="h-6 w-32 max-w-full rounded-md" /><Skeleton className="mt-2 h-4 w-40 max-w-full rounded-md" /></div>
+             <div className="-mx-4 border-t border-outline-variant/70">
               {Array.from({ length: 6 }).map((_, index) => <div key={index} className="flex min-h-14 items-center gap-3 border-b border-outline-variant/70 px-3 py-3.5 last:border-b-0"><Skeleton className="size-9 rounded-lg" /><div className="min-w-0 flex-1"><Skeleton className="h-4 w-32 rounded-md" /><Skeleton className="mt-1 h-3 w-44 max-w-full rounded-md" /></div><Skeleton className="size-4 rounded-md" /></div>)}
             </div>
           </div>

@@ -87,8 +87,8 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
           <p className="mt-1 text-sm text-on-surface-variant">Products that need quick attention.</p>
           <div className="mt-4 space-y-3">
             {lowStock.length ? (
-              lowStock.map((item) => (
-                <div key={item.productId} className="flex items-center justify-between gap-3 rounded-lg border border-amber-200/70 bg-amber-50/80 p-3 dark:border-amber-500/20 dark:bg-amber-500/10">
+              lowStock.map((item, index) => (
+                <div key={`${item.productId || item.sku || "low-stock"}-${item.sku || item.productName || index}-${index}`} className="flex items-center justify-between gap-3 rounded-lg border border-amber-200/70 bg-amber-50/80 p-3 dark:border-amber-500/20 dark:bg-amber-500/10">
                   <div className="flex min-w-0 items-center gap-3">
                     {item.image ? (
                       <Image src={item.image} alt={item.productName} width={40} height={40} className="size-10 shrink-0 rounded-md object-cover ring-1 ring-amber-200 dark:ring-amber-500/30" />

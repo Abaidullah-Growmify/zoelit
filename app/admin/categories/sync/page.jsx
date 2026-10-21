@@ -142,18 +142,18 @@ export default function AdminCategorySyncPage() {
     <div className="space-y-5">
       <Card className="overflow-hidden p-0">
           <div className="border-b border-outline-variant px-5 py-5 sm:px-6">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div className="min-w-0 flex-1">
                 <h1 className="font-heading text-lg font-semibold tracking-tight text-on-surface">Ingram Category Sync</h1>
                 <p className="mt-1 text-sm text-on-surface-variant">Only Ingram categories that are missing from your database are listed. Synced and deleted categories disappear from this list.</p>
               </div>
-              <div className="flex w-full shrink-0 flex-wrap items-center justify-end gap-2 lg:w-auto lg:flex-nowrap">
-                <div className="relative w-48 shrink-0">
+              <div className="grid w-full min-w-0 grid-cols-2 gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto] xl:w-auto xl:flex xl:flex-nowrap">
+                <div className="relative col-span-2 min-w-0 sm:col-span-1 sm:w-48 sm:shrink-0">
                   <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
                   <Input value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Search categories" className="h-9 w-full pl-9 text-sm" />
                 </div>
-                <Button onClick={syncSelected} disabled={syncing || selected.size === 0} size="sm" className="shrink-0 whitespace-nowrap"><RefreshCw className="size-3.5" /> Sync Selected ({selected.size})</Button>
-                <Button onClick={syncAll} disabled={syncing || addableCategories.length === 0} size="sm" className="shrink-0 whitespace-nowrap"><RefreshCw className="size-3.5" /> Sync All ({addableCategories.length})</Button>
+                <Button onClick={syncSelected} disabled={syncing || selected.size === 0} size="sm" className="w-full min-w-0 shrink-0 whitespace-nowrap px-2 text-xs sm:w-auto sm:px-3 sm:text-sm"><RefreshCw className="size-3.5 shrink-0" /> <span className="truncate">Sync Selected ({selected.size})</span></Button>
+                <Button onClick={syncAll} disabled={syncing || addableCategories.length === 0} size="sm" className="w-full min-w-0 shrink-0 whitespace-nowrap px-2 text-xs sm:w-auto sm:px-3 sm:text-sm"><RefreshCw className="size-3.5 shrink-0" /> <span className="truncate">Sync All ({addableCategories.length})</span></Button>
               </div>
             </div>
           </div>

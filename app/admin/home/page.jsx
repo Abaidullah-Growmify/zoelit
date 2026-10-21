@@ -33,6 +33,46 @@ const DEFAULTS = {
   customSections: [],
 };
 
+function normalizeHomepage(value) {
+  const source = value && typeof value === "object" ? value : {};
+  const section = (key) => {
+    const current = source[key] && typeof source[key] === "object" ? source[key] : {};
+    const defaults = DEFAULTS[key];
+    return {
+      ...defaults,
+      ...current,
+      productIds: Array.isArray(current.productIds) ? current.productIds : [...defaults.productIds],
+    };
+  };
+
+  return {
+    ...DEFAULTS,
+    ...source,
+    hero: section("hero"),
+    categories: {
+      ...DEFAULTS.categories,
+      ...(source.categories && typeof source.categories === "object" ? source.categories : {}),
+      categoryNames: Array.isArray(source.categories?.categoryNames)
+        ? source.categories.categoryNames
+        : [...DEFAULTS.categories.categoryNames],
+    },
+    bestDeals: section("bestDeals"),
+    newArrivals: section("newArrivals"),
+    trending: section("trending"),
+    customSections: Array.isArray(source.customSections)
+      ? source.customSections.map((item) => ({
+        enabled: true,
+        eyebrow: "Exclusive",
+        title: "New section",
+        mode: "manual",
+        productIds: [],
+        ...(item && typeof item === "object" ? item : {}),
+        productIds: Array.isArray(item?.productIds) ? item.productIds : [],
+      }))
+      : [],
+  };
+}
+
 const FIXED_META = [
   { id: "bestDeals", icon: Flame, label: "Best deals", description: "First section on the home page (3–4 products).", countKey: "bestDeals" },
   { id: "newArrivals", icon: Sparkles, label: "New arrivals", description: "Newest products section (3–4 products).", countKey: "newArrivals" },
@@ -229,7 +269,7 @@ export default function AdminHomePage() {
     ])
       .then(async ([data, categoryData, productData]) => {
         if (!active) return;
-        const merged = { ...DEFAULTS, ...data.homepage, customSections: data.homepage.customSections || [] };
+        const merged = normalizeHomepage(data?.homepage);
         const dbCategories = (categoryData.categories || []).filter((category) => category && category.name);
         const { homepage: cleaned, removed } = await sanitizePicks(merged, dbCategories, token);
         if (!active) return;
@@ -244,6 +284,9 @@ export default function AdminHomePage() {
       })
       .catch((error) => {
         if (!active) return;
+        // Keep the editor usable even if an empty homepage record is returned.
+        setHomepage(normalizeHomepage(null));
+        setSaved(normalizeHomepage(null));
         setLoading(false);
         toast.error(error.message || "Failed to load homepage settings");
       });
@@ -330,7 +373,7 @@ export default function AdminHomePage() {
   const persist = async () => {
     if (!token || !homepage) throw new Error("Admin session expired");
     const data = await updateAdminHomepage(homepage, token);
-    const merged = { ...DEFAULTS, ...data.homepage, customSections: data.homepage.customSections || [] };
+    const merged = normalizeHomepage(data?.homepage);
     setHomepage(merged);
     setSaved(merged);
     return merged;
@@ -482,10 +525,10 @@ export default function AdminHomePage() {
              <div className="mt-3 rounded-xl border border-outline-variant p-4"><EditorSkeleton activeId={sectionParam} /></div>
            </div>
          ) : (
-           <div className="mx-auto max-w-2xl">
-             <Skeleton className="h-6 w-48 rounded-md" /><Skeleton className="mt-2 h-4 w-40 rounded-md" />
-             <div className="mt-4 overflow-hidden rounded-xl border border-outline-variant">{Array.from({ length: 6 }).map((_, index) => <div key={index} className="flex min-h-14 items-center gap-3 border-b border-outline-variant/70 px-3 py-3.5 last:border-b-0"><Skeleton className="size-9 rounded-lg" /><div className="min-w-0 flex-1"><Skeleton className="h-4 w-32 rounded-md" /><Skeleton className="mt-1 h-3 w-40 max-w-full rounded-md" /></div><Skeleton className="size-4 rounded-md" /></div>)}</div>
-             <Skeleton className="mt-3 h-11 w-full rounded-lg" />
+            <div className="mx-auto max-w-2xl overflow-hidden rounded-xl border border-outline-variant/80 bg-surface">
+              <div className="px-4 pb-3 pt-4"><Skeleton className="h-6 w-48 max-w-full rounded-md" /><Skeleton className="mt-2 h-4 w-40 max-w-full rounded-md" /></div>
+              <div className="border-t border-outline-variant/70">{Array.from({ length: 6 }).map((_, index) => <div key={index} className="flex min-h-14 items-center gap-3 border-b border-outline-variant/70 px-3 py-3.5 last:border-b-0"><Skeleton className="size-9 rounded-lg" /><div className="min-w-0 flex-1"><Skeleton className="h-4 w-32 max-w-full rounded-md" /><Skeleton className="mt-1 h-3 w-40 max-w-full rounded-md" /></div><Skeleton className="size-4 rounded-md" /></div>)}</div>
+              <Skeleton className="mx-4 mb-4 mt-3 h-11 w-[calc(100%-2rem)] rounded-lg" />
            </div>
          )}
        </div>
@@ -541,12 +584,12 @@ export default function AdminHomePage() {
 
       <div className="home-mobile-flow lg:hidden">
         {!hasSelectedSection ? (
-          <div className="mx-auto max-w-2xl px-4 py-3">
-            <div className="mb-4">
+           <div className="mx-auto max-w-2xl overflow-hidden rounded-xl border border-outline-variant/80 bg-surface px-4 py-3">
+             <div className="pb-3 pt-1">
               <h1 className="truncate text-lg font-semibold text-on-surface">Home customization</h1>
               <p className="truncate text-sm text-on-surface-variant">Choose what to edit.</p>
             </div>
-            <div className="overflow-hidden rounded-xl border border-outline-variant/80 bg-surface">
+             <div className="-mx-4 border-t border-outline-variant/70">
               {navItems.map((item, index) => {
                 const Icon = item.icon;
                 return (
@@ -570,7 +613,7 @@ export default function AdminHomePage() {
                 );
               })}
             </div>
-            <button type="button" onClick={addSection} className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-primary text-sm font-semibold text-primary">
+             <button type="button" onClick={addSection} className="mx-0 mb-0 mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-primary text-sm font-semibold text-primary">
               <Plus className="size-4" /> Add new section
             </button>
           </div>
@@ -589,7 +632,7 @@ export default function AdminHomePage() {
             <div className="mx-auto max-w-2xl px-4 py-3">
               <p className="truncate text-sm text-on-surface-variant">{mobileDescription}</p>
               <div className="home-mobile-editor mt-3 rounded-xl border border-outline-variant/80 bg-surface p-4">
-                {switching ? <EditorSkeleton activeId={activeId} /> : <EditorBody activeId={activeId} homepage={homepage} categories={categories} limits={limits} token={token} patchSection={patchSection} patchCustom={patchCustom} />}
+                {switching || !homepage ? <EditorSkeleton activeId={activeId} /> : <EditorBody activeId={activeId} homepage={homepage} categories={categories} limits={limits} token={token} patchSection={patchSection} patchCustom={patchCustom} />}
               </div>
             </div>
             <div className="fixed inset-x-0 bottom-0 z-30 border-t border-outline-variant/70 bg-surface p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
@@ -695,7 +738,7 @@ export default function AdminHomePage() {
           </div>
 
           <div className="mt-7">
-            {switching ? <EditorSkeleton activeId={activeId} /> : (
+             {switching || !homepage ? <EditorSkeleton activeId={activeId} /> : (
               <EditorBody
                 activeId={activeId}
                 homepage={homepage}

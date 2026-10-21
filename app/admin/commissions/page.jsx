@@ -361,7 +361,7 @@ function priorityLabel(rule) {
 }
 
 function CommissionControls({ search, onSearch, onAdd }) {
-  return <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-end lg:w-auto"><div className="relative min-w-0 flex-1 sm:w-64 lg:w-72"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" /><Input value={search} onChange={(event) => onSearch(event.target.value)} placeholder="Search commission rules" aria-label="Search commission rules" className="h-10 pl-10" /></div><Button type="button" onClick={onAdd} className="h-10 w-full shrink-0 gap-2 sm:w-auto"><Plus className="size-4" />Add commission</Button></div>;
+  return <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-2 sm:flex sm:items-center sm:justify-end lg:w-auto"><div className="relative min-w-0 sm:w-64 lg:w-72"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" /><Input value={search} onChange={(event) => onSearch(event.target.value)} placeholder="Search commission rules" aria-label="Search commission rules" className="h-10 w-full pl-10" /></div><Button type="button" onClick={onAdd} className="h-10 min-w-0 shrink-0 gap-1.5 px-2 text-xs sm:w-auto sm:gap-2 sm:px-3 sm:text-sm"><Plus className="size-4 shrink-0" /><span className="truncate">Add commission</span></Button></div>;
 }
 
 function CommissionSkeleton() {
@@ -369,14 +369,14 @@ function CommissionSkeleton() {
     <div className="space-y-6">
       <Card className="overflow-hidden p-0">
         <div className="border-b border-outline-variant bg-surface-container-low/40 px-4 py-5 sm:px-6 lg:px-7">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div>
               <Skeleton className="h-9 w-48 rounded-md" />
               <Skeleton className="mt-3 h-5 w-full max-w-xl rounded-md" />
             </div>
-            <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
+            <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-2 xl:w-auto">
               <Skeleton className="h-10 w-full sm:w-72" />
-              <Skeleton className="h-10 w-full sm:w-40" />
+              <Skeleton className="h-10 w-40 max-w-full" />
             </div>
           </div>
           <div className="mt-6 flex gap-6 border-b border-outline-variant/80">

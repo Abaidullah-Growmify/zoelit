@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Eye, Pencil, RefreshCw, Search, ChevronDown, Plus } from "lucide-react";
+import { Check, Eye, Pencil, RefreshCw, Search, ChevronDown, Plus, X } from "lucide-react";
 import { useCallback, useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
 import { AdminTable } from "@/components/admin-table";
@@ -16,6 +16,8 @@ import {
   createManualProduct,
   toggleProductActive,
   getSyncStatus,
+  applyIngramSyncChange,
+  ignoreIngramSyncChange,
 } from "@/lib/api";
 import { FALLBACK_IMAGE } from "@/lib/product-mapper";
 import { money } from "@/lib/utils";
@@ -92,7 +94,7 @@ const [syncing, setSyncing] = useState(false);
     setAddModalOpen(true);
   }
 
-async function handlePriceSync() {
+  async function handlePriceSync() {
     setSyncing(true);
     setSyncProgress({ percent: 0, label: "Starting price sync..." });
     try {
@@ -103,6 +105,17 @@ async function handlePriceSync() {
       toast.error(syncError.message || "Could not start price sync");
       setSyncing(false);
       setSyncProgress({ percent: 0, label: "" });
+    }
+  }
+
+  async function handleSyncChange(change, action) {
+    try {
+      if (action === "apply") await applyIngramSyncChange(change._id, token);
+      else await ignoreIngramSyncChange(change._id, token);
+      toast.success(action === "apply" ? "Ingram update applied" : "Ingram change ignored");
+      refreshProducts();
+    } catch (changeError) {
+      toast.error(changeError.message || "Could not update sync change");
     }
   }
 
@@ -124,9 +137,13 @@ async function handlePriceSync() {
           setTimeout(() => setSyncProgress({ percent: 0, label: "" }), 2000);
          } else if (sync?.status === "processing" || sync?.status === "started") {
            const processed = sync.totalProcessed || 0;
-          const percent = Math.min(95, Math.round((processed / Math.max(processed, 10)) * 100));
-          setSyncProgress({ percent, label: `Processed ${processed} products` });
-        }
+           const percent = Math.min(95, Math.round((processed / Math.max(processed, 10)) * 100));
+           setSyncProgress({ percent, label: `Processed ${processed} products` });
+           // Reconciliation records are created batch-by-batch. Refresh while
+           // the worker is running so pending price/stock tags appear without
+           // waiting for the full catalog to finish.
+           refreshProducts();
+         }
       } catch {
         if (attempts >= maxAttempts) {
           clearInterval(pollRef.current);
@@ -211,9 +228,9 @@ async function handleToggleProduct(ingramPartNumber) {
         </span>
       ),
     },
-    { key: "price", header: "Price", sortable: true, accessor: "price", cellClassName: "font-semibold tabular-nums text-on-surface", render: (product) => money(product.price) },
-{ key: "stock", header: "Stock", sortable: true, accessor: "stock", cellClassName: "tabular-nums" },
-    {
+     { key: "price", header: "Price", sortable: true, accessor: "price", cellClassName: "font-semibold tabular-nums text-on-surface", render: (product) => <SyncValue value={money(product.price)} change={product.syncChange} field="price" /> },
+     { key: "stock", header: "Stock", sortable: true, accessor: "stock", cellClassName: "tabular-nums", render: (product) => <SyncValue value={product.stock} change={product.syncChange} field="stock" /> },
+               {
       key: "status",
       header: "Status",
       accessor: "status",
@@ -293,9 +310,13 @@ rowActions={(product) => [
                 href: `/admin/products/${encodeURIComponent(product.id)}`,
                 icon: Pencil,
                 disabled: product.source === "ingram",
-                disabledTitle: "Ingram products cannot be edited (read-only)",
-              },
-            ]}
+                 disabledTitle: "Ingram products cannot be edited (read-only)",
+               },
+               ...(product.syncChange ? [
+                 { label: "Update from Ingram", ariaLabel: `Apply Ingram update for ${product.name}`, icon: Check, onClick: () => handleSyncChange(product.syncChange, "apply") },
+                 { label: "Ignore Ingram change", ariaLabel: `Ignore Ingram change for ${product.name}`, icon: X, onClick: () => handleSyncChange(product.syncChange, "ignore"), tone: "danger" },
+               ] : []),
+             ]}
           />
         </>
       )}
@@ -339,6 +360,7 @@ function toRow(product, serial) {
     categorySynced: product.categorySynced !== false,
     price: product.price || 0,
     stock: product.stock || 0,
+    syncChange: product.syncChange || null,
     image: product.imageUrl || FALLBACK_IMAGE,
 isActive: product.isActive,
     source: product.source || "manual",
@@ -352,6 +374,20 @@ isActive: product.isActive,
             ? "No image"
             : "Active",
   };
+}
+
+function SyncValue({ value, change, field }) {
+  const changed = change && (field === "price" ? change.priceChanged : change.stockChanged);
+  const next = field === "price" ? change?.newPrice : change?.newStock;
+  if (!changed) return <span>{value}</span>;
+  return (
+    <span className="flex flex-col items-start gap-1">
+      <span>{value} <span className="text-on-surface-variant">→ {field === "price" ? money(next) : next}</span></span>
+      <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-amber-700">
+        {field === "price" ? "Price Changed" : "Stock Changed"}
+      </span>
+    </span>
+  );
 }
 
 function ProductCell({ product }) {

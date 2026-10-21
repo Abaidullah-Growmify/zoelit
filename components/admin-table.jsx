@@ -167,7 +167,7 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
     <Card className={cn("overflow-hidden p-0 shadow-sm", className)}>
       {title || description ? (
         <div className="border-b border-outline-variant/70 px-4 py-4 sm:px-5 lg:px-6">
-            <div className={cn("flex gap-4", inlineToolbar ? "flex-col lg:flex-row lg:items-center lg:justify-between" : "")}> 
+            <div className={cn("flex gap-4", inlineToolbar ? "flex-col xl:flex-row xl:items-center xl:justify-between" : "")}> 
             {title || description ? (
             <div className="mb-0">
               <div>
@@ -176,13 +176,13 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
               </div>
             </div>
             ) : null}
-            {toolbarInHeader ? <div className="w-full shrink-0 lg:w-auto">{tableControls}</div> : inlineToolbar && action ? <div className="shrink-0">{action}</div> : null}
+            {toolbarInHeader ? <div className="w-full shrink-0 xl:w-auto">{tableControls}</div> : inlineToolbar && action ? <div className="shrink-0">{action}</div> : null}
           </div>
         </div>
       ) : null}
       {hasToolbar && !toolbarInHeader ? (
         <div className="border-b border-outline-variant/70 p-3 sm:p-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+           <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
             {tableControls}
             {action && !inlineToolbar ? <div className="flex shrink-0 flex-wrap items-center gap-3 lg:justify-end">{action}</div> : null}
           </div>
@@ -203,14 +203,14 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
                   ) : column.header}
                 </th>
               ))}
-                {hasActions ? <th className="sticky right-0 whitespace-nowrap bg-surface-container-low/95 px-3 py-3 text-center text-xs font-medium backdrop-blur-sm sm:px-4">Actions</th> : null}
+                {hasActions ? <th className="sticky right-0 z-20 whitespace-nowrap bg-surface-container-low px-3 py-3 text-center text-xs font-medium shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)] sm:px-4">Actions</th> : null}
             </tr>
           </thead>
           <tbody className="divide-y divide-outline-variant/40 dark:divide-outline-variant/40">
             {pageItems.map((row, rowIndex) => (
               <AdminTableRow key={row.id || row.productId || row.key || rowIndex} zebra={zebra} index={rowIndex}>
                 {columns.map((column) => <AdminTableCell key={column.key} className={column.cellClassName}>{column.render ? column.render(row) : getColumnValue(column, row)}</AdminTableCell>)}
-                {hasActions ? <AdminTableCell className={cn("sticky right-0 text-center", zebra && rowIndex % 2 === 1 ? "bg-surface-container-low/40" : "bg-surface")}><AdminTableActions actions={rowActions(row)} label={`Actions for ${row.name || row.productName || row.id || "row"}`} /></AdminTableCell> : null}
+                {hasActions ? <AdminTableCell className={cn("sticky right-0 z-10 text-center shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)]", zebra && rowIndex % 2 === 1 ? "!bg-surface-container-low" : "!bg-surface")}><AdminTableActions actions={rowActions(row)} label={`Actions for ${row.name || row.productName || row.id || "row"}`} /></AdminTableCell> : null}
               </AdminTableRow>
             ))}
             {!pageItems.length ? (

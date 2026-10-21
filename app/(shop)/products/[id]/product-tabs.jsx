@@ -75,9 +75,9 @@ export function ProductTabs({ product }) {
           <div id={`${baseId}-details-panel`} role="tabpanel" aria-labelledby={`${baseId}-details-tab`} className="tab-reveal" key="details">
             <dl className="divide-y divide-outline-variant/40">
               {Object.entries(product.details).map(([key, value]) => (
-                <div key={key} className="flex min-w-0 items-center justify-between gap-6 py-3">
-                  <dt className="shrink-0 text-label-sm font-semibold text-on-surface-variant">{key}</dt>
-                  <dd className="min-w-0 break-words text-right text-label-sm font-semibold text-on-surface [overflow-wrap:anywhere]">{value}</dd>
+                <div key={key} className={cn("min-w-0 gap-3 py-3", key === "Details" ? "block" : "grid grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] items-start sm:flex sm:items-center sm:justify-between sm:gap-6")}>
+                  <dt className={cn("min-w-0 text-xs font-semibold text-on-surface-variant sm:text-label-sm", key === "Details" && "block")}>{key}</dt>
+                  <dd className={cn("min-w-0 break-words text-xs font-semibold text-on-surface [overflow-wrap:anywhere] sm:text-label-sm", key === "Details" ? "mt-1.5 text-left leading-5 sm:mt-2" : "text-right")}>{value}</dd>
                 </div>
               ))}
             </dl>

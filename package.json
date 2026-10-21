@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test:sync-ui": "node scripts/test-ingram-sync-state.mjs",
     "lint": "eslint"
   },
   "dependencies": {

@@ -325,7 +325,7 @@ function EditCustomerModal({ customer, token, onClose, onUpdated }) {
             <PasswordField label="New password" name="password" form={form} autoComplete="new-password" placeholder="Leave blank to keep current" show={showPassword} onToggle={() => setShowPassword((value) => !value)} />
             <PasswordField label="Confirm new password" name="confirmPassword" form={form} autoComplete="new-password" placeholder="Confirm new password" show={showConfirmPassword} onToggle={() => setShowConfirmPassword((value) => !value)} />
           </div>
-          <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-end"><Button type="button" variant="outline" onClick={onClose}>Cancel</Button><Button disabled={form.formState.isSubmitting}>{form.formState.isSubmitting ? <><Loader2 className="size-4 animate-spin" /> Saving...</> : "Save changes"}</Button></div>
+          <div className="flex gap-2 pt-2 sm:justify-end"><Button type="button" variant="outline" onClick={onClose} className="h-11 min-w-0 flex-1 sm:flex-none">Cancel</Button><Button disabled={form.formState.isSubmitting} className="h-11 min-w-0 flex-1 sm:flex-none">{form.formState.isSubmitting ? <><Loader2 className="size-4 animate-spin" /> Saving...</> : "Save changes"}</Button></div>
         </form>
       </div>
     </div>
@@ -427,9 +427,9 @@ function NewCustomerModal({ open, token, onClose, onCreated }) {
             <PasswordField label="Confirm password" name="confirmPassword" form={form} autoComplete="new-password" placeholder="Confirm password" show={showConfirmPassword} onToggle={() => setShowConfirmPassword((value) => !value)} />
           </div>
 
-          <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-end">
-            <Button type="button" variant="outline" onClick={closeModal}>Cancel</Button>
-            <Button disabled={form.formState.isSubmitting || !token}>
+          <div className="flex gap-2 pt-2 sm:justify-end">
+            <Button type="button" variant="outline" onClick={closeModal} className="h-11 min-w-0 flex-1 sm:flex-none">Cancel</Button>
+            <Button disabled={form.formState.isSubmitting || !token} className="h-11 min-w-0 flex-1 sm:flex-none">
               {form.formState.isSubmitting ? <><Loader2 className="size-4 animate-spin" /> Saving...</> : "Save customer"}
             </Button>
           </div>

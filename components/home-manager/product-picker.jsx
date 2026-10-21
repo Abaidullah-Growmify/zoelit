@@ -7,6 +7,11 @@ import { getAdminProducts, getAdminProductsByIds } from "@/lib/api";
 import { FALLBACK_IMAGE } from "@/lib/product-mapper";
 import { cn } from "@/lib/utils";
 
+function getStockQuantity(product) {
+  const value = Number(product?.stock ?? product?.quantity);
+  return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+}
+
 export function ProductPicker({
   token,
   value = [],
@@ -36,6 +41,7 @@ export function ProductPicker({
           next[product.ingramPartNumber] = {
             name: product.name || product.description || product.ingramPartNumber,
             image: product.imageUrl || product.image || "",
+            stock: getStockQuantity(product),
           };
         }
       }
@@ -176,7 +182,9 @@ export function ProductPicker({
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-on-surface">{known[id]?.name || id}</p>
-                <p className="truncate text-xs text-on-surface-variant">{id}</p>
+                <p className="truncate text-xs text-on-surface-variant">
+                  {id} · Stock quantity: {known[id] ? getStockQuantity(known[id]) : "—"}
+                </p>
               </div>
               <div className="flex items-center gap-1">
                 <button type="button" className="icon-btn" onClick={() => move(index, -1)} disabled={index === 0} aria-label={`Move ${known[id]?.name || id} up`}>
@@ -240,7 +248,9 @@ export function ProductPicker({
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-on-surface">{product.name || product.description || id}</p>
-                    <p className="truncate text-xs text-on-surface-variant">{id} {product.category ? `· ${product.category}` : ""}</p>
+                    <p className="truncate text-xs text-on-surface-variant">
+                      {id} {product.category ? `· ${product.category}` : ""} · Stock quantity: {getStockQuantity(product)}
+                    </p>
                   </div>
                   {selected ? <span className="shrink-0 text-xs font-semibold text-primary">Picked</span> : null}
                 </button>

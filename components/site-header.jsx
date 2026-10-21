@@ -90,7 +90,7 @@ export function SiteHeader() {
 
   return (
     <div className="sticky top-0 z-50">
-      <header className="w-full border-b border-outline-variant/70 bg-surface backdrop-blur-md">
+      <header className="w-full border-b border-outline-variant/70 bg-surface backdrop-blur-md lg:relative lg:z-[70]">
         <Container className="store-shell flex h-14 items-center gap-2 sm:h-16 md:grid md:h-16 md:grid-cols-[auto_1fr_auto] md:gap-4 lg:grid lg:h-16 lg:grid-cols-[1fr_auto_1fr] lg:gap-8">
           <div className="flex min-w-0 items-center gap-2">
             <button
@@ -159,7 +159,7 @@ export function SiteHeader() {
             </button>
 
             {user ? (
-              <div className="relative ml-2 lg:ml-3" ref={profileRef}>
+              <div className="relative ml-2 lg:z-[80] lg:ml-3" ref={profileRef}>
                 <button 
                   type="button" 
                   onClick={() => setProfileOpen((open) => !open)} 
@@ -170,8 +170,8 @@ export function SiteHeader() {
                   {user.name?.slice(0, 1).toUpperCase() || "U"}
                 </button>
                 {profileOpen && (
-                  <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-lg border border-outline-variant bg-surface p-1.5 shadow-xl">
-                    <div className="border-b border-outline-variant px-3 py-2">
+                  <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-lg border border-outline-variant bg-surface p-1.5 shadow-xl lg:z-[100] lg:w-36 lg:p-1">
+                    <div className="border-b border-outline-variant px-3 py-2 lg:hidden">
                       <p className="truncate text-sm font-semibold text-on-surface">{user.name || "User"}</p>
                       <p className="mt-0.5 text-xs text-on-surface-variant">{user.email}</p>
                     </div>
@@ -179,7 +179,7 @@ export function SiteHeader() {
                       <Link 
                         href="/dashboard" 
                         onClick={() => setProfileOpen(false)}
-                        className="block rounded-md px-3 py-2 text-sm font-medium text-on-surface-variant transition hover:bg-surface-container-low hover:text-on-surface"
+                        className="block rounded-md px-3 py-2 text-sm font-medium text-on-surface-variant transition hover:bg-surface-container-low hover:text-on-surface lg:hidden"
                       >
                         Dashboard
                       </Link>
