@@ -817,7 +817,10 @@ button, a[href], summary, select {
   .product-grid.grid-home .zl-card-img { width: 104px; height: 104px; flex: 0 0 104px; border: 0; border-radius: 10px; padding: 6px; }
   .product-grid.grid-home .zl-card-body { min-width: 0; padding: 4px 48px 4px 0; }
   .product-grid.grid-home .zl-card-title { min-height: 0; font-size: 14px; }
-  .product-grid.grid-home .zl-card-desc, .product-grid.grid-home .zl-card-stock, .product-grid.grid-home .zl-card-actions { display: none; }
+  .product-grid.grid-home .zl-card-desc, .product-grid.grid-home .zl-card-stock { display: none; }
+  .product-grid.grid-home .zl-card-actions { position: absolute; right: 12px; bottom: 26px; display: block; margin: 0; padding: 0; }
+  .product-grid.grid-home .zl-card-arrow { display: none; }
+  .product-grid.grid-home .zl-card-actions button { width: auto; height: 30px; min-width: 0; padding: 0 9px; border-radius: 8px; font-size: 11px; }
   .product-grid.grid-home .zl-card-price { margin-top: 7px; font-size: 15px; }
   .product-grid.grid-home .zl-card-rating { margin-top: 6px; }
   .product-grid.grid-home .zl-card-wish { display: none; }
@@ -1626,7 +1629,10 @@ button, a[href], summary, select {
   .product-grid.grid-home .zl-card { min-height: 124px; flex-direction: row; gap: 10px; border-radius: 14px; padding: 10px; }
   .product-grid.grid-home .zl-card-img { width: 104px; height: 104px; flex: 0 0 104px; border: 0; border-radius: 10px; padding: 6px; }
   .product-grid.grid-home .zl-card-body { min-width: 0; padding: 4px 48px 4px 0; }
-  .product-grid.grid-home .zl-card-actions, .product-grid.grid-home .zl-card-stock, .product-grid.grid-home .zl-card-wish { display: none; }
+  .product-grid.grid-home .zl-card-stock, .product-grid.grid-home .zl-card-wish { display: none; }
+  .product-grid.grid-home .zl-card-actions { position: absolute; right: 12px; bottom: 26px; display: block; margin: 0; padding: 0; }
+  .product-grid.grid-home .zl-card-arrow { display: none; }
+  .product-grid.grid-home .zl-card-actions button { width: auto; height: 30px; min-width: 0; padding: 0 9px; border-radius: 8px; font-size: 11px; }
   .product-grid.grid-home .zl-card-arrow { position: absolute; right: 12px; top: 50%; display: grid; width: 38px; height: 38px; place-items: center; border-radius: 999px; background: #1d4ed8; color: #fff; transform: translateY(-50%); }
   .site-header > div:first-child { min-height: 58px; padding-block: 7px; }
   .site-footer .container-page { padding-inline: 20px; }
@@ -1777,7 +1783,10 @@ html, body { overflow-x: clip; }
   .product-grid.grid-home .zl-card-img > span { top: 5px; left: 5px; max-width: calc(100% - 10px); padding: 4px 7px; font-size: 9px; }
   .product-grid.grid-home .zl-card-body { min-width: 0; padding: 7px 40px 5px 2px; }
   .product-grid.grid-home .zl-card-title { min-height: 0; font-size: 13px; line-height: 1.25; }
-  .product-grid.grid-home .zl-card-desc, .product-grid.grid-home .zl-card-stock, .product-grid.grid-home .zl-card-actions, .product-grid.grid-home .zl-card-wish { display: none; }
+  .product-grid.grid-home .zl-card-desc, .product-grid.grid-home .zl-card-stock, .product-grid.grid-home .zl-card-wish { display: none; }
+  .product-grid.grid-home .zl-card-actions { position: absolute; right: 12px; bottom: 24px; display: block; margin: 0; padding: 0; }
+  .product-grid.grid-home .zl-card-arrow { display: none; }
+  .product-grid.grid-home .zl-card-actions button { width: auto; height: 28px; min-width: 0; padding: 0 8px; border-radius: 7px; font-size: 10px; }
   .product-grid.grid-home .zl-card-price { margin-top: 6px; font-size: 15px; }
   .product-grid.grid-home .zl-card-rating { margin-top: 5px; font-size: 11px; }
   .product-grid.grid-home .zl-card-arrow { right: 12px; width: 36px; height: 36px; background: #e8f0ff; color: #2f6fed; box-shadow: 0 4px 10px rgb(47 111 237 / .16); }
@@ -1821,9 +1830,10 @@ html, body { overflow-x: clip; }
   .product-grid.grid-home .zl-card-desc, .product-grid.grid-home .zl-card-stock { display: none; }
   .product-grid.grid-home .zl-card-price { margin-top: 5px; color: #0874ed; font-size: 13px; }
   .product-grid.grid-home .zl-card-rating { margin-top: 4px; color: #2e6edc; font-size: 9px; }
-  .product-grid.grid-home .zl-card-actions { position: absolute; right: 10px; bottom: 9px; display: block; margin: 0; padding: 0; }
-  .product-grid.grid-home .zl-card-actions button { width: 25px; height: 25px; min-width: 25px; border: 1px solid #d7eaff; border-radius: 999px; background: #eff7ff; padding: 0; color: #0874ed; font-size: 0; }
+  .product-grid.grid-home .zl-card-actions { position: absolute; right: 12px; bottom: 24px; display: block; margin: 0; padding: 0; }
+  .product-grid.grid-home .zl-card-actions button { width: auto; height: 28px; min-width: 0; border: 0; border-radius: 7px; background: #2563eb; padding: 0 8px; color: #fff; font-size: 10px; }
   .product-grid.grid-home .zl-card-actions button svg { width: 12px; height: 12px; }
+  .product-grid.grid-home .zl-card-arrow { display: none; }
   .product-grid.grid-home .zl-card-wish { display: none; }
 }
 
@@ -2597,7 +2607,7 @@ html, body { overflow-x: clip; }
   top: clamp(10px, 1.2vw, 16px) !important;
   left: clamp(10px, 1.2vw, 16px) !important;
   max-width: calc(100% - 32px);
-  border-radius: 12px;
+  border-radius: 6px;
   border: 1px solid #2f6fed;
   background: #ffffff;
   padding: clamp(2px, .3vw, 4px) clamp(8px, .8vw, 10px);

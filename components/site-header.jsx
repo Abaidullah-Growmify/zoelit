@@ -89,8 +89,9 @@ export function SiteHeader() {
   }
 
   return (
-    <div className="sticky top-0 z-50">
-      <header className="w-full border-b border-outline-variant/70 bg-surface backdrop-blur-md lg:relative lg:z-[70]">
+    <div className={`relative z-50 ${user ? "h-24 sm:h-[108px]" : "h-14 sm:h-16"}`}>
+      <div className="fixed inset-x-0 top-0 z-[70]">
+      <header className="w-full border-b border-outline-variant/70 bg-surface backdrop-blur-md">
         <Container className="store-shell flex h-14 items-center gap-2 sm:h-16 md:grid md:h-16 md:grid-cols-[auto_1fr_auto] md:gap-4 lg:grid lg:h-16 lg:grid-cols-[1fr_auto_1fr] lg:gap-8">
           <div className="flex min-w-0 items-center gap-2">
             <button
@@ -234,7 +235,7 @@ export function SiteHeader() {
       </header>
 
       {user && (
-        <div className="sticky top-14 z-40 w-full border-b border-outline-variant/70 bg-gradient-to-r from-[#14213d] to-[#17479f] sm:top-16 lg:top-16">
+        <div className="w-full border-b border-outline-variant/70 bg-gradient-to-r from-[#14213d] to-[#17479f]">
           <Container className="store-shell flex h-10 items-center overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:h-11 lg:h-11">
             <div className="mx-auto flex w-max min-w-max items-center justify-center gap-4 lg:gap-6">
               <p className="hidden shrink-0 border-r border-white/20 pr-4 text-xs font-normal text-blue-200 md:block md:pr-5 md:text-[13px] lg:pr-6 lg:text-[13px] lg:font-medium">
@@ -248,6 +249,7 @@ export function SiteHeader() {
           </Container>
         </div>
       )}
+      </div>
 
       {mobileNavOpen && (
         <div className="fixed inset-0 z-[60] lg:hidden">
