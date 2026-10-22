@@ -75,7 +75,7 @@ function normalizeHomepage(value) {
 }
 
 const FIXED_META = [
-  { id: "bestDeals", icon: Flame, label: "Best deals", description: "First section on the home page (3–4 products).", countKey: "bestDeals" },
+  { id: "bestDeals", icon: Flame, label: "Featured", description: "Featured products section on the home page (3–4 products).", countKey: "bestDeals" },
   { id: "newArrivals", icon: Sparkles, label: "New arrivals", description: "Newest products section (3–4 products).", countKey: "newArrivals" },
   { id: "trending", icon: TrendingUp, label: "Trending", description: "Popular picks section (3–4 products).", countKey: "trending" },
 ];
@@ -227,7 +227,7 @@ function autoToggleMeta(activeId, isAuto) {
     };
   }
   const bySection = {
-    bestDeals: { name: "Fill deals automatically", noticeTitle: "Deals are chosen automatically" },
+    bestDeals: { name: "Fill featured products automatically", noticeTitle: "Featured products are chosen automatically" },
     newArrivals: { name: "Fill newest products automatically", noticeTitle: "Newest products are shown automatically" },
     trending: { name: "Fill trending products automatically", noticeTitle: "Trending products are chosen automatically" },
   };
@@ -606,7 +606,7 @@ export default function AdminHomePage() {
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-medium text-on-surface">{item.label}</span>
                       <span className="block truncate text-xs text-on-surface-variant">
-                        {item.id === "hero" ? "Headline, intro, 3 cards" : item.id === "categories" ? "Category picks" : item.id === "bestDeals" ? "Featured deals" : item.id === "newArrivals" ? "Latest products" : item.id === "trending" ? "Popular products" : "Custom section"}
+                        {item.id === "hero" ? "Headline, intro, 3 cards" : item.id === "categories" ? "Category picks" : item.id === "bestDeals" ? "Featured products" : item.id === "newArrivals" ? "Latest products" : item.id === "trending" ? "Popular products" : "Custom section"}
                       </span>
                     </span>
                     <span aria-hidden="true" className="shrink-0 text-lg leading-none text-on-surface-variant">›</span>
@@ -937,7 +937,7 @@ function EditorBody({ activeId, homepage, categories, limits, token, patchSectio
             <Input value={section.eyebrow || ""} onChange={(event) => setSection({ eyebrow: event.target.value })} placeholder="e.g. Top Sale" />
           </Field>
           <Field label="Title">
-            <Input value={section.title || ""} onChange={(event) => setSection({ title: event.target.value })} placeholder="e.g. Best deals this week" />
+            <Input value={section.title || ""} onChange={(event) => setSection({ title: event.target.value })} placeholder="e.g. Featured products this week" />
           </Field>
           <div className="sm:col-span-2">
             <ToggleRow label="Show this section" hint={section.enabled !== false ? "Visible on the storefront" : "Hidden from the storefront"} checked={section.enabled !== false} onChange={(value) => setSection({ enabled: value })} />
