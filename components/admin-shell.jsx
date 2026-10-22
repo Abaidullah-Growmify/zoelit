@@ -173,7 +173,7 @@ export function AdminShell({ children }) {
               </div>
             </div>
             <div className="flex items-center gap-2">
-               <ThemeToggle showLabel className="flex h-10 items-center rounded-md px-3 shadow-none ring-0" />
+               <ThemeToggle className="icon-btn shadow-none ring-0" />
               <button type="button" onClick={toggleFullscreen} className="icon-btn" aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"} title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}>
                 {isFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
               </button>
