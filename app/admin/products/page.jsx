@@ -351,6 +351,16 @@ function toRows(products, pageNumber, pageSize) {
 }
 
 function toRow(product, serial) {
+  const syncChange = product.syncChange || null;
+  const storedPrice = Number(product.price) || Number(product.originalPrice) || 0;
+  const storedStock = Number(product.stock) || 0;
+  const price = syncChange?.priceChanged && syncChange.newPrice != null
+    ? syncChange.newPrice
+    : storedPrice;
+  const stock = syncChange?.stockChanged && syncChange.newStock != null
+    ? syncChange.newStock
+    : storedStock;
+
   return {
     id: product.ingramPartNumber,
     serial,
@@ -358,9 +368,9 @@ function toRow(product, serial) {
     sku: product.ingramPartNumber || "—",
     category: product.category || "Uncategorized",
     categorySynced: product.categorySynced !== false,
-    price: product.price || 0,
-    stock: product.stock || 0,
-    syncChange: product.syncChange || null,
+    price,
+    stock,
+    syncChange,
     image: product.imageUrl || FALLBACK_IMAGE,
 isActive: product.isActive,
     source: product.source || "manual",
@@ -376,19 +386,9 @@ isActive: product.isActive,
   };
 }
 
-function SyncValue({ value, change, field }) {
-  const changed = change && (field === "price" ? change.priceChanged : change.stockChanged);
-  const next = field === "price" ? change?.newPrice : change?.newStock;
-  if (!changed) return <span>{value}</span>;
-  return (
-    <span className="flex flex-col items-start gap-1">
-      <span>{value} <span className="text-on-surface-variant">→ {field === "price" ? money(next) : next}</span></span>
-      <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-amber-700">
-        {field === "price" ? "Price Changed" : "Stock Changed"}
-      </span>
-    </span>
-  );
-}
+ function SyncValue({ value }) {
+  return <span>{value}</span>;
+ }
 
 function ProductCell({ product }) {
   return (
