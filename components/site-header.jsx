@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Heart, LogIn, LogOut, LayoutDashboard, Menu, Package, Search, Settings2, ShoppingCart, User, X } from "lucide-react";
+import { Heart, LogIn, LogOut, LayoutDashboard, Menu, Package, Search, Settings2, ShoppingCart, X } from "lucide-react";
 import { useCartStore } from "@/store/cart-store";
 import { useAuthStore } from "@/store/auth-store";
 import { BrandLogo } from "@/components/brand-logo";
@@ -194,7 +194,7 @@ export function SiteHeader() {
             ) : (
               <Link 
                 href="/login" 
-                className="ml-2 hidden h-9 items-center gap-2 whitespace-nowrap rounded-lg bg-primary px-4 text-sm font-medium text-white transition hover:bg-primary-container md:inline-flex md:ml-2 lg:ml-3"
+                  className="ml-1 inline-flex h-8 items-center gap-1 whitespace-nowrap rounded-lg bg-primary px-2.5 text-xs font-medium text-white transition hover:bg-primary-container sm:ml-2 sm:px-3 sm:text-sm md:h-9 md:px-4 lg:ml-3"
               >
                 <LogIn className="h-4 w-4" />
                 Sign In

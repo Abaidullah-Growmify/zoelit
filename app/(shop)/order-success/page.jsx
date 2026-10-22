@@ -78,17 +78,17 @@ function OrderSuccessContent() {
   }, [clearCart, fetchProducts, sessionId, token]);
 
   return (
-    <section className="container-page grid min-h-[70vh] place-items-center py-12">
-      <Card className="max-w-xl text-center">
-        <CheckCircle2 className="mx-auto size-16 text-tertiary" />
-        <h1 className="mt-6 font-heading text-display-xl font-extrabold">Order confirmed</h1>
-        <p className="mt-4 text-on-surface-variant">Payment successful. Your order is being processed.</p>
-        {loading ? <p className="mt-4 text-body-md font-medium text-on-surface-variant">Finalizing order...</p> : null}
-        {orderNumber ? <p className="mt-2 text-body-md font-semibold text-on-surface">Order {orderNumber}</p> : null}
-        {ingramOrderNumber ? <p className="mt-1 text-body-md font-normal text-on-surface-variant">Ingram order: {ingramOrderNumber}</p> : null}
-        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-          {showOrdersLink ? <Button asChild href="/dashboard/orders" aria-label="View orders"><Eye className="size-4" /></Button> : null}
-          <Button asChild href="/products" variant="outline">Continue Shopping</Button>
+    <section className="container-page grid min-h-[56vh] place-items-center py-8 sm:py-12">
+      <Card className="w-full max-w-lg p-5 text-center sm:p-8">
+        <CheckCircle2 className="mx-auto size-12 text-tertiary sm:size-14" />
+        <h1 className="mt-4 font-heading text-3xl font-extrabold tracking-tight sm:mt-5 sm:text-4xl">Order confirmed</h1>
+        <p className="mt-3 text-sm leading-6 text-on-surface-variant sm:mt-4 sm:text-base">Payment successful. Your order is being processed.</p>
+        {loading ? <p className="mt-3 text-sm font-medium text-on-surface-variant">Finalizing order...</p> : null}
+        {orderNumber ? <p className="mt-2 text-sm font-semibold text-on-surface">Order {orderNumber}</p> : null}
+        {ingramOrderNumber ? <p className="mt-1 text-sm text-on-surface-variant">Ingram order: {ingramOrderNumber}</p> : null}
+        <div className="mt-6 flex flex-col justify-center gap-3 sm:mt-7 sm:flex-row">
+          {showOrdersLink ? <Button asChild href="/dashboard/orders" className="w-full sm:w-auto"><Eye className="size-4" />View orders</Button> : null}
+          <Button asChild href="/products" variant="outline" className="w-full sm:w-auto">Continue Shopping</Button>
         </div>
       </Card>
     </section>
