@@ -1,70 +1,201 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-const lensSize = 34;
+const DESKTOP_LENS_SIZE = 80;
+const DESKTOP_PREVIEW_SIZE = 240;
 
-export function ProductImageZoom({ product }) {
-  const [position, setPosition] = useState({ x: 50, y: 50 });
-  const [isZooming, setIsZooming] = useState(false);
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
 
-  function handlePointerMove(event) {
-    if (event.pointerType === "touch") return;
+export function ProductImageZoom({ product, src = product?.image, alt = product?.name }) {
+  const containerRef = useRef(null);
+  const imageRef = useRef(null);
+  const frameRef = useRef(null);
+  const activePointerRef = useRef(null);
+  const lastPointRef = useRef(null);
+  const sizesRef = useRef({ lens: DESKTOP_LENS_SIZE, preview: DESKTOP_PREVIEW_SIZE });
+  const [imageArea, setImageArea] = useState(null);
+  const [sizes, setSizes] = useState({ lens: DESKTOP_LENS_SIZE, preview: DESKTOP_PREVIEW_SIZE });
+  const [lens, setLens] = useState(null);
 
-    const bounds = event.currentTarget.getBoundingClientRect();
-    const x = ((event.clientX - bounds.left) / bounds.width) * 100;
-    const y = ((event.clientY - bounds.top) / bounds.height) * 100;
+  const getRenderedImageArea = useCallback(() => {
+    const container = containerRef.current;
+    const image = imageRef.current;
+    if (!container || !image || !image.naturalWidth || !image.naturalHeight) return null;
 
-    setPosition({
-      x: Math.min(100, Math.max(0, x)),
-      y: Math.min(100, Math.max(0, y)),
+    const imageRect = image.getBoundingClientRect();
+    const styles = window.getComputedStyle(image);
+    const paddingLeft = Number.parseFloat(styles.paddingLeft) || 0;
+    const paddingRight = Number.parseFloat(styles.paddingRight) || 0;
+    const paddingTop = Number.parseFloat(styles.paddingTop) || 0;
+    const paddingBottom = Number.parseFloat(styles.paddingBottom) || 0;
+    const contentWidth = Math.max(0, imageRect.width - paddingLeft - paddingRight);
+    const contentHeight = Math.max(0, imageRect.height - paddingTop - paddingBottom);
+    const scale = Math.min(contentWidth / image.naturalWidth, contentHeight / image.naturalHeight);
+    const width = image.naturalWidth * scale;
+    const height = image.naturalHeight * scale;
+    const containerRect = container.getBoundingClientRect();
+
+    return {
+      left: imageRect.left - containerRect.left + paddingLeft + (contentWidth - width) / 2,
+      top: imageRect.top - containerRect.top + paddingTop + (contentHeight - height) / 2,
+      width,
+      height,
+    };
+  }, []);
+
+  const getResponsiveSizes = useCallback((width) => {
+    if (window.innerWidth >= 1024) return { lens: DESKTOP_LENS_SIZE, preview: DESKTOP_PREVIEW_SIZE };
+    if (window.innerWidth >= 640) {
+      const lens = width * 0.18;
+      return { lens, preview: lens * 2.8 };
+    }
+    const lens = width * 0.22;
+    return { lens, preview: width * 0.45 };
+  }, []);
+
+  const measure = useCallback(() => {
+    const area = getRenderedImageArea();
+    if (!area) return null;
+    const nextSizes = getResponsiveSizes(area.width);
+    sizesRef.current = nextSizes;
+    setImageArea(area);
+    setSizes(nextSizes);
+    return { area, sizes: nextSizes };
+  }, [getRenderedImageArea, getResponsiveSizes]);
+
+  const updateLens = useCallback((clientX, clientY, area, pointerType, currentSizes = sizesRef.current) => {
+    const container = containerRef.current;
+    if (!container || !area) return;
+
+    const rect = container.getBoundingClientRect();
+    const touchOffset = pointerType === "mouse" ? 0 : 40;
+    const cursorX = clientX - rect.left - area.left;
+    const cursorY = clientY - rect.top - area.top - touchOffset;
+    const lensX = clamp(cursorX - currentSizes.lens / 2, 0, Math.max(0, area.width - currentSizes.lens));
+    const lensY = clamp(cursorY - currentSizes.lens / 2, 0, Math.max(0, area.height - currentSizes.lens));
+    setLens({ x: lensX, y: lensY });
+  }, []);
+
+  const activatePointer = useCallback((event) => {
+    if (event.pointerType !== "mouse" && activePointerRef.current !== null) return;
+    const measured = measure();
+    if (!measured) return;
+
+    lastPointRef.current = { x: event.clientX, y: event.clientY, pointerType: event.pointerType };
+    if (event.pointerType !== "mouse") {
+      activePointerRef.current = event.pointerId;
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
+    updateLens(event.clientX, event.clientY, measured.area, event.pointerType, measured.sizes);
+  }, [measure, updateLens]);
+
+  const handlePointerMove = useCallback((event) => {
+    if (event.pointerType !== "mouse" && activePointerRef.current !== event.pointerId) return;
+    lastPointRef.current = { x: event.clientX, y: event.clientY, pointerType: event.pointerType };
+    if (frameRef.current) return;
+
+    frameRef.current = window.requestAnimationFrame(() => {
+      frameRef.current = null;
+      const point = lastPointRef.current;
+      const area = getRenderedImageArea();
+      if (point && area) updateLens(point.x, point.y, area, point.pointerType);
     });
-  }
+  }, [getRenderedImageArea, updateLens]);
 
-  function handlePointerEnter(event) {
-    if (event.pointerType !== "touch") setIsZooming(true);
-  }
+  const handlePointerUp = useCallback((event) => {
+    if (event.pointerType !== "mouse" && activePointerRef.current === event.pointerId) {
+      activePointerRef.current = null;
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+      lastPointRef.current = null;
+      setLens(null);
+    }
+  }, []);
 
-  function handlePointerLeave() {
-    setIsZooming(false);
-  }
+  const handlePointerLeave = useCallback((event) => {
+    if (event.pointerType === "mouse") {
+      setLens(null);
+      lastPointRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!lens) return undefined;
+
+    function handleResize() {
+      const measured = measure();
+      const point = lastPointRef.current;
+      if (measured && point) updateLens(point.x, point.y, measured.area, point.pointerType, measured.sizes);
+    }
+
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
+    };
+  }, [lens, measure, updateLens]);
+
+  useEffect(() => () => {
+    if (frameRef.current) window.cancelAnimationFrame(frameRef.current);
+  }, []);
+
+  const zoom = sizes.preview / sizes.lens;
+  const previewOnLeft = imageArea && lens ? lens.x + sizes.lens / 2 > imageArea.width / 2 : false;
 
   return (
     <div className="relative">
       <div
-        className="relative overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-low shadow-primary-elevated"
-        onPointerEnter={handlePointerEnter}
+        ref={containerRef}
+        className={`relative overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-low shadow-primary-elevated ${lens ? "touch-none select-none" : ""}`}
+        onPointerDown={activatePointer}
+        onPointerEnter={(event) => { if (event.pointerType === "mouse") activatePointer(event); }}
         onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
         onPointerLeave={handlePointerLeave}
       >
-        <Image src={product.image} alt={product.name} width={1200} height={1200} priority className="aspect-square w-full object-contain p-3 transition duration-700 hover:scale-[1.02] sm:p-6" />
-        {isZooming ? (
-          <div
-            className="pointer-events-none absolute hidden rounded-lg border-2 border-surface-container-lowest/95 bg-surface-container-lowest/15 shadow-[0_16px_45px_rgb(0_63_177_/_0.28)] ring-1 ring-primary/40 backdrop-blur-[1px] md:block"
-            style={{
-              left: `${position.x}%`,
-              top: `${position.y}%`,
-              width: `${lensSize}%`,
-              height: `${lensSize}%`,
-              transform: "translate(-50%, -50%)",
-            }}
-          />
-        ) : null}
+        <Image
+          ref={imageRef}
+          src={src}
+          alt={alt}
+          width={1200}
+          height={1200}
+          priority
+          onLoad={measure}
+          draggable={false}
+          className="aspect-square w-full object-contain p-3 select-none sm:p-6"
+          style={{ WebkitTouchCallout: "none" }}
+        />
 
-        {isZooming ? (
-          <div className="pointer-events-none absolute right-5 top-5 z-20 hidden aspect-square w-36 overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest shadow-2xl shadow-primary/20 md:block xl:w-44">
+        {lens && imageArea ? (
+          <>
             <div
-              className="size-full bg-cover bg-no-repeat"
+              className="pointer-events-none absolute z-10 border-2 border-primary/80 bg-primary/10 shadow-[0_0_0_1px_rgb(255_255_255_/_0.7)]"
               style={{
-                backgroundImage: `url(${product.image})`,
-                backgroundPosition: `${position.x}% ${position.y}%`,
-                backgroundSize: "245%",
+                left: imageArea.left + lens.x,
+                top: imageArea.top + lens.y,
+                width: sizes.lens,
+                height: sizes.lens,
               }}
             />
-          </div>
+            <div
+              className="pointer-events-none absolute top-3 z-20 overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-2xl"
+              style={{
+                ...(previewOnLeft ? { left: 12 } : { right: 12 }),
+                width: sizes.preview,
+                height: sizes.preview,
+                backgroundImage: `url(${src})`,
+                backgroundRepeat: "no-repeat",
+                backgroundSize: `${imageArea.width * zoom}px ${imageArea.height * zoom}px`,
+                backgroundPosition: `${-lens.x * zoom}px ${-lens.y * zoom}px`,
+              }}
+            />
+          </>
         ) : null}
-
       </div>
     </div>
   );

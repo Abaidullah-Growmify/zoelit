@@ -9,7 +9,7 @@ export function Button({ asChild, className, variant = "primary", size = "md", .
 
 export function buttonClasses({ variant = "primary", size = "md" } = {}) {
   return cn(
-    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-semibold tracking-tight transition duration-150 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15 disabled:pointer-events-none disabled:opacity-60",
+    "button-control inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-semibold tracking-tight transition duration-150 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15 disabled:pointer-events-none disabled:opacity-60",
     size === "sm" ? "h-8 min-h-8 px-3 text-sm" : "h-9 min-h-9 px-3 text-sm sm:px-3.5",
     variant === "primary" && "bg-primary text-white shadow-sm hover:bg-primary-container",
      variant === "secondary" && "bg-primary text-white shadow-sm hover:bg-primary-container",

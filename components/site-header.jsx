@@ -27,6 +27,7 @@ export function SiteHeader() {
   const count = useCartStore((state) => state.count());
   const openCart = useCartStore((state) => state.openCart);
   const user = useAuthStore((state) => state.user);
+  const hasHydratedAuth = useAuthStore((state) => state.hasHydrated);
   const logout = useAuthStore((state) => state.logout);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -34,6 +35,7 @@ export function SiteHeader() {
   const [searchValue, setSearchValue] = useState("");
   const [lastPathname, setLastPathname] = useState(pathname);
   const router = useRouter();
+  const showAccountStrip = Boolean(user) || !hasHydratedAuth;
 
   async function handleLogout() {
     await logout();
@@ -89,9 +91,9 @@ export function SiteHeader() {
   }
 
   return (
-    <div className={`relative z-50 ${user ? "h-24 sm:h-[108px]" : "h-14 sm:h-16"}`}>
-      <div className="fixed inset-x-0 top-0 z-[70]">
-      <header className="w-full border-b border-outline-variant/70 bg-surface backdrop-blur-md">
+    <div className={`relative z-50 ${showAccountStrip ? "h-24 sm:h-[108px]" : "h-14 sm:h-16"}`}>
+      <div className="fixed inset-x-0 top-0 z-[200]">
+      <header className="relative z-[300] w-full border-b border-outline-variant/70 bg-surface backdrop-blur-md">
         <Container className="store-shell flex h-14 items-center gap-2 sm:h-16 md:grid md:h-16 md:grid-cols-[auto_1fr_auto] md:gap-4 lg:grid lg:h-16 lg:grid-cols-[1fr_auto_1fr] lg:gap-8">
           <div className="flex min-w-0 items-center gap-2">
             <button
@@ -160,7 +162,7 @@ export function SiteHeader() {
             </button>
 
             {user ? (
-              <div className="relative ml-2 lg:z-[80] lg:ml-3" ref={profileRef}>
+              <div className="relative z-[120] ml-2 lg:ml-3" ref={profileRef}>
                 <button 
                   type="button" 
                   onClick={() => setProfileOpen((open) => !open)} 
@@ -171,30 +173,24 @@ export function SiteHeader() {
                   {user.name?.slice(0, 1).toUpperCase() || "U"}
                 </button>
                 {profileOpen && (
-                  <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-lg border border-outline-variant bg-surface p-1.5 shadow-xl lg:z-[100] lg:w-36 lg:p-1">
-                    <div className="border-b border-outline-variant px-3 py-2 lg:hidden">
-                      <p className="truncate text-sm font-semibold text-on-surface">{user.name || "User"}</p>
-                      <p className="mt-0.5 text-xs text-on-surface-variant">{user.email}</p>
-                    </div>
-                    <div className="mt-1 space-y-0.5">
-                      <Link 
-                        href="/dashboard" 
-                        onClick={() => setProfileOpen(false)}
-                        className="block rounded-md px-3 py-2 text-sm font-medium text-on-surface-variant transition hover:bg-surface-container-low hover:text-on-surface lg:hidden"
-                      >
-                        Dashboard
-                      </Link>
-                      <button 
-                        type="button" 
-                        onClick={handleLogout} 
-                        className="block w-full rounded-md px-3 py-2 text-left text-sm font-medium text-error transition hover:bg-error-container"
-                      >
-                        Sign out
-                      </button>
-                    </div>
+                  <div
+                    role="menu"
+                    className="absolute right-0 top-full z-[1000] mt-2 w-max max-w-[calc(100vw-1rem)] origin-top-right rounded-2xl border border-outline-variant bg-white p-1.5 shadow-xl transition-opacity duration-150 dark:bg-surface"
+                  >
+                    <span aria-hidden="true" className="absolute -top-1.5 right-3 size-3 rotate-45 border-l border-t border-outline-variant bg-surface" />
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="relative z-10 flex h-10 w-max items-center gap-2 whitespace-nowrap rounded-xl px-3 text-left text-sm font-semibold text-error transition hover:bg-error-container"
+                    >
+                      <LogOut className="size-4 shrink-0" />
+                      Sign out
+                    </button>
                   </div>
                 )}
               </div>
+            ) : !hasHydratedAuth ? (
+              <div aria-hidden="true" className="ml-2 size-9 animate-pulse rounded-full bg-surface-container-high" />
             ) : (
               <Link 
                 href="/login" 
@@ -234,25 +230,27 @@ export function SiteHeader() {
         )}
       </header>
 
-      {user && (
+      {showAccountStrip && (
         <div className="w-full border-b border-outline-variant/70 bg-gradient-to-r from-[#14213d] to-[#17479f]">
           <Container className="store-shell flex h-10 items-center overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:h-11 lg:h-11">
-            <div className="mx-auto flex w-max min-w-max items-center justify-center gap-4 lg:gap-6">
-              <p className="hidden shrink-0 border-r border-white/20 pr-4 text-xs font-normal text-blue-200 md:block md:pr-5 md:text-[13px] lg:pr-6 lg:text-[13px] lg:font-medium">
-                Hello, <span className="font-semibold text-white">{user.name || "there"}</span>
-              </p>
-              <AccountLink href="/dashboard" icon={LayoutDashboard} label="Dashboard" pathname={pathname} />
-              <AccountLink href="/dashboard/orders" icon={Package} label="My Orders" pathname={pathname} />
-              <AccountLink href="/dashboard/wishlist" icon={Heart} label="Wishlist" pathname={pathname} />
-              <AccountLink href="/dashboard/profile" icon={Settings2} label="Account Settings" pathname={pathname} />
-            </div>
+            {user ? (
+              <div className="mx-auto flex w-max min-w-max items-center justify-center gap-4 lg:gap-6">
+                <p className="hidden shrink-0 border-r border-white/20 pr-4 text-xs font-normal text-blue-200 md:block md:pr-5 md:text-[13px] lg:pr-6 lg:text-[13px] lg:font-medium">
+                  Hello, <span className="font-semibold text-white">{user.name || "there"}</span>
+                </p>
+                <AccountLink href="/dashboard" icon={LayoutDashboard} label="Dashboard" pathname={pathname} />
+                <AccountLink href="/dashboard/orders" icon={Package} label="My Orders" pathname={pathname} />
+                <AccountLink href="/dashboard/wishlist" icon={Heart} label="Wishlist" pathname={pathname} />
+                <AccountLink href="/dashboard/profile" icon={Settings2} label="Account Settings" pathname={pathname} />
+              </div>
+            ) : null}
           </Container>
         </div>
       )}
       </div>
 
       {mobileNavOpen && (
-        <div className="fixed inset-0 z-[100] lg:hidden">
+        <div className="fixed inset-0 z-[400] lg:hidden">
           <div
             aria-hidden="true"
             onClick={() => setMobileNavOpen(false)}
@@ -263,7 +261,7 @@ export function SiteHeader() {
             role="dialog"
             aria-modal="true"
             aria-label="Menu"
-            className="absolute left-0 top-0 flex h-full w-[min(360px,88vw)] max-w-full flex-col border-r border-outline-variant bg-surface shadow-2xl transition-transform"
+            className="absolute inset-y-0 left-0 flex h-full w-72 max-w-[85vw] flex-col bg-surface p-4 shadow-2xl transition-transform"
           >
             <div className="flex items-center justify-between border-b border-outline-variant px-4 py-3">
               <Link href="/" onClick={() => setMobileNavOpen(false)} className="flex items-center">
@@ -295,46 +293,6 @@ export function SiteHeader() {
                   </Link>
                 );
               })}
-              
-              {user && (
-                <>
-                  <div className="my-2 border-t border-outline-variant" />
-                  <Link
-                    href="/dashboard"
-                    onClick={() => setMobileNavOpen(false)}
-                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-on-surface-variant transition hover:bg-surface-container-low hover:text-on-surface"
-                  >
-                    <LayoutDashboard className="h-4 w-4" />
-                    Dashboard
-                  </Link>
-                  <Link
-                    href="/dashboard/orders"
-                    onClick={() => setMobileNavOpen(false)}
-                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-on-surface-variant transition hover:bg-surface-container-low hover:text-on-surface"
-                  >
-                    <Package className="h-4 w-4" />
-                    My Orders
-                  </Link>
-                  <Link
-                    href="/dashboard/wishlist"
-                    onClick={() => setMobileNavOpen(false)}
-                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-on-surface-variant transition hover:bg-surface-container-low hover:text-on-surface"
-                  >
-                    <Heart className="h-4 w-4" />
-                    Wishlist
-                  </Link>
-                  <Link
-                    href="/dashboard/profile"
-                    onClick={() => setMobileNavOpen(false)}
-                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-on-surface-variant transition hover:bg-surface-container-low hover:text-on-surface"
-                  >
-                    <Settings2 className="h-4 w-4" />
-                    Account Settings
-                  </Link>
-                </>
-              )}
-              
-              <div className="my-2 border-t border-outline-variant" />
               
               {user ? (
                 <button 

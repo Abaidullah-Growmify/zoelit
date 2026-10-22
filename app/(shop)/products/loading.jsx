@@ -1,7 +1,17 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import { ProductGridSkeleton } from "@/components/skeletons";
+import { ProductDetailSkeleton } from "@/components/skeletons";
 import { Card, Skeleton } from "@/components/ui";
 
 export default function Loading() {
+  const pathname = usePathname();
+
+  if (/^\/products\/[^/]+/.test(pathname || "")) {
+    return <section className="container-page py-12"><ProductDetailSkeleton /></section>;
+  }
+
   return (
     <section className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8 lg:py-14">
       <div className="mb-5 lg:mb-7">

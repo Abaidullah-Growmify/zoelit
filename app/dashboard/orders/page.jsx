@@ -89,9 +89,9 @@ const columns = [
            onPaginationChange={handlePaginationChange}
            disableInitialSort
            inlineToolbar
-           resetButtonClassName="border-primary bg-primary text-white hover:bg-primary/90"
-           searchWrapperClassName="min-w-[24rem]"
-           filterWrapperClassName="w-40"
+            searchWrapperClassName="min-w-0 basis-full md:w-auto md:basis-0 md:flex-1 lg:min-w-[24rem]"
+            filterWrapperClassName="w-auto min-w-0 flex-1 sm:w-40 sm:flex-none"
+            resetButtonClassName="w-auto min-w-0 flex-1 border-primary bg-primary text-white hover:bg-primary/90 sm:flex-none"
          />
       </div>
     </div>

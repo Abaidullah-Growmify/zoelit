@@ -135,7 +135,7 @@ export function AdminShell({ children }) {
                 <p className="mt-0.5 text-xs text-on-surface-variant">Admin account</p>
               </div>
               <div className="mt-1">
-                <ThemeToggle className="icon-btn mb-1 w-full justify-start px-3 shadow-none ring-0" />
+                 <ThemeToggle showLabel className="mb-1 flex w-full items-center justify-start rounded-md px-3 py-2 shadow-none ring-0" />
                 <Link href="/admin/profile" onClick={() => setProfileOpen(false)} className="block rounded-md px-3 py-2 text-sm text-on-surface-variant transition hover:bg-surface-container-low hover:text-on-surface" role="menuitem">Profile</Link>
                 <button type="button" onClick={handleLogout} className="block w-full rounded-md px-3 py-2 text-left text-sm text-error transition hover:bg-error-container" role="menuitem">Sign out</button>
               </div>
@@ -172,7 +172,7 @@ export function AdminShell({ children }) {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <ThemeToggle className="icon-btn shadow-none ring-0" />
+               <ThemeToggle showLabel className="flex h-10 items-center rounded-md px-3 shadow-none ring-0" />
               <button type="button" onClick={toggleFullscreen} className="icon-btn" aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"} title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}>
                 {isFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
               </button>

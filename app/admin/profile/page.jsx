@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { Button, Card, Input, Label } from "@/components/ui";
+import { DashboardSectionBanner } from "@/components/dashboard-section-banner";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
 
 export default function AdminProfilePage() {
@@ -14,8 +15,9 @@ export default function AdminProfilePage() {
   const adminInfo = { ...fallback, ...(admin || {}) };
 
   return (
-    <div>
-      <div className="grid items-stretch gap-6 xl:grid-cols-[360px_1fr]">
+    <div className="min-w-0">
+      <DashboardSectionBanner eyebrow="Admin / Account" title="Admin Profile" description="Manage your admin identity, contact details, and sign-in security." />
+      <div className="mt-6 grid min-w-0 items-start gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
         <AdminIdentityCard admin={adminInfo} />
         <div className="space-y-6">
           <AdminPersonalInfoCard admin={adminInfo} />
@@ -32,17 +34,14 @@ function AdminIdentityCard({ admin }) {
     { label: "Email", value: admin.email || "—" },
   ];
   return (
-    <Card className="h-full transition duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_26px_58px_-16px_rgb(0_63_177_/_0.12)] hover:shadow-primary/10 dark:hover:shadow-black/20">
-      <AvatarEditor initials={admin.name.slice(0, 1)} label="Edit admin photo" />
-      <h2 className="mt-5 font-heading text-headline-md font-semibold tracking-[-0.02em] text-on-surface">{admin.name}</h2>
-      <p className="mt-1 text-body-md font-normal text-on-surface-variant">{admin.email}</p>
-      <div className="mt-4"><AdminStatusBadge>{admin.role}</AdminStatusBadge></div>
-      <div className="mt-6 rounded-md bg-surface-container-low p-4 ring-1 ring-outline-variant/70 transition hover:bg-surface-container-lowest">
+    <Card className="h-full p-4 sm:p-5">
+      <div className="flex min-w-0 items-center gap-4"><AvatarEditor initials={admin.name.slice(0, 1)} label="Edit admin photo" /><div className="min-w-0"><h2 className="truncate font-heading text-xl font-semibold tracking-[-0.02em] text-on-surface sm:text-2xl">{admin.name}</h2><p className="mt-1 truncate text-sm text-on-surface-variant">{admin.email}</p><div className="mt-3"><AdminStatusBadge>{admin.role}</AdminStatusBadge></div></div></div>
+       <div className="mt-6 rounded-xl bg-surface-container-low p-4 ring-1 ring-outline-variant/70">
         <ShieldCheck className="size-6 text-primary" />
         <p className="mt-3 text-body-md font-semibold text-on-surface">Admin permissions</p>
         <p className="mt-1 text-meta font-normal leading-5 text-on-surface-variant">Full UI access for products, orders, customers, inventory, and settings.</p>
       </div>
-      <div className="mt-4 rounded-md border border-outline-variant bg-surface-container-lowest p-4">
+       <div className="mt-4 rounded-xl border border-outline-variant bg-surface-container-lowest p-4">
         <p className="text-meta font-semibold uppercase tracking-[0.14em] text-on-surface-variant">Account summary</p>
         <div className="mt-4 space-y-3">
           {accountSummary.map((item) => (
@@ -70,13 +69,13 @@ function AdminPersonalInfoCard({ admin }) {
 
   return (
     <Card className="transition duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_26px_58px_-16px_rgb(0_63_177_/_0.12)] hover:shadow-primary/10 dark:hover:shadow-black/20">
-      <div className="flex items-center gap-3"><UserRound className="size-5 text-primary" /><h2 className="font-heading text-headline-md font-semibold tracking-[-0.02em] text-on-surface">Personal info</h2></div>
+      <div className="flex items-center gap-3"><UserRound className="size-5 text-primary" /><h2 className="font-heading text-xl font-semibold tracking-[-0.02em] text-on-surface">Personal info</h2></div>
       <form onSubmit={form.handleSubmit(onSubmit)} className="mt-5 grid gap-4 md:grid-cols-2">
         <Field label="Name" name="name" form={form} autoComplete="name" />
         <Field label="Email" name="email" type="email" form={form} autoComplete="email" />
         <Field label="Phone" name="phone" form={form} autoComplete="tel" />
-        <div className="flex items-center gap-3 border-t border-outline-variant/40 pt-5 md:col-span-2">
-          <Button disabled={!form.formState.isDirty}>Save</Button>
+        <div className="flex flex-col items-stretch gap-3 border-t border-outline-variant/40 pt-5 sm:flex-row sm:items-center md:col-span-2">
+          <Button disabled={!form.formState.isDirty} className="w-full sm:w-fit">Save changes</Button>
           <SavedState show={saved} label="Saved" />
         </div>
       </form>
@@ -99,13 +98,13 @@ function AdminSecurityCard() {
 
   return (
     <Card className="transition duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_26px_58px_-16px_rgb(0_63_177_/_0.12)] hover:shadow-primary/10 dark:hover:shadow-black/20">
-      <div className="flex items-center gap-3"><KeyRound className="size-5 text-primary" /><h2 className="font-heading text-headline-md font-semibold tracking-[-0.02em] text-on-surface">Security</h2></div>
+      <div className="flex items-center gap-3"><KeyRound className="size-5 text-primary" /><h2 className="font-heading text-xl font-semibold tracking-[-0.02em] text-on-surface">Security</h2></div>
       <p className="mt-2 text-body-md font-normal leading-6 text-on-surface-variant">Change the password used to sign in to the admin panel.</p>
       <form onSubmit={form.handleSubmit(onSubmit)} className="mt-5 grid gap-4 md:grid-cols-2">
         <PasswordField label="Current password" name="currentPassword" form={form} autoComplete="current-password" placeholder="Current password" show={showCurrentPassword} onToggle={() => setShowCurrentPassword((value) => !value)} />
         <PasswordField label="New password" name="newPassword" form={form} autoComplete="new-password" placeholder="New password" show={showNewPassword} onToggle={() => setShowNewPassword((value) => !value)} />
-        <div className="flex items-center gap-3 border-t border-outline-variant/40 pt-5 md:col-span-2">
-          <Button variant="outline" disabled={!form.formState.isDirty}>Update</Button>
+        <div className="flex flex-col items-stretch gap-3 border-t border-outline-variant/40 pt-5 sm:flex-row sm:items-center md:col-span-2">
+          <Button variant="outline" disabled={!form.formState.isDirty} className="w-full sm:w-fit">Update password</Button>
           <SavedState show={saved} label="Saved" />
         </div>
       </form>
@@ -116,7 +115,7 @@ function AdminSecurityCard() {
 function AvatarEditor({ initials, label }) {
   return (
     <button type="button" aria-label={label} className="group relative grid size-20 place-items-center overflow-hidden rounded-full bg-primary-fixed/60 font-heading text-headline-md font-semibold text-primary ring-1 ring-primary/10 transition duration-200 ease-out hover:scale-[1.03] focus-visible:ring-4 focus-visible:ring-primary/15 dark:bg-primary-container/20 dark:text-primary-fixed dark:ring-primary/20">
-      <span>{initials}</span>
+      <span className="text-2xl">{initials}</span>
       <span className="absolute inset-0 grid place-items-center bg-inverse-surface/65 text-inverse-on-surface opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100"><Camera className="size-5" /></span>
     </button>
   );

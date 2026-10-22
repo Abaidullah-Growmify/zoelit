@@ -2,6 +2,19 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Keep labelled actions readable: text stays left and the action icon stays at the end. */
+button:not(.icon-btn):has(> svg),
+.button-control:has(> svg) {
+  justify-content: center !important;
+}
+
+button:not(.icon-btn):has(> svg) > svg,
+.button-control:has(> svg) > svg {
+  order: 2;
+  margin-left: 0;
+  flex-shrink: 0;
+}
+
 :root {
   --color-primary: #1d4ed8;
   --color-on-primary: #ffffff;

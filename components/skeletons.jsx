@@ -147,6 +147,8 @@ function renderToolbarSkeleton(variant) {
       return <><div className="flex min-w-0 flex-1 flex-wrap items-center gap-3 lg:flex-nowrap"><Skeleton className="h-10 w-64 shrink-0 rounded-md" />{productSearch}</div><div className="mr-4 flex w-full max-w-[36rem] min-w-0 shrink items-center gap-3">{productButton}{productButton}{productWideButton}</div></>;
     case "search-select":
       return <><div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">{search}</div>{select}</>;
+    case "search-select-reset":
+      return <><div className="flex min-w-0 w-full flex-1 basis-full flex-wrap items-center gap-3 md:w-auto md:basis-0">{search}</div><div className="flex w-full min-w-0 items-center gap-2 sm:w-auto"><Skeleton className="h-10 min-w-0 flex-1 rounded-md sm:w-40 sm:flex-none" /><Skeleton className="h-10 min-w-0 flex-1 rounded-md sm:w-24 sm:flex-none" /></div></>;
     case "search-only":
     default:
       return <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">{search}</div>;
@@ -175,7 +177,7 @@ function TableFrameSkeleton({ rows = 5, columns = 6, titleWidth, descWidth, tool
             </div>
           ) : null}
           <div className="border-b border-slate-200/80 p-4 dark:border-slate-800">
-            <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+             <div className={cn("flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between", toolbarVariant === "search-select-reset" && "md:flex-row md:items-center md:justify-between")}>
               {renderToolbarSkeleton(toolbarVariant)}
             </div>
           </div>
@@ -711,15 +713,15 @@ export function DashboardSkeleton() {
         <Skeleton className="mt-3 h-4 w-72 max-w-[90%] rounded-sm" />
       </div>
 
-      <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mb-8 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Card key={i} className="border-outline-variant/70 p-5 shadow-sm">
-            <div className="mb-5 flex items-start">
-              <Skeleton className="size-10 rounded-xl" />
+          <Card key={i} className="min-w-0 border-outline-variant/70 p-3 shadow-sm sm:p-5">
+            <div className="mb-4 flex items-start sm:mb-5">
+              <Skeleton className="size-9 rounded-xl sm:size-10" />
             </div>
-            <Skeleton className="h-8 w-24 rounded-sm" />
-            <Skeleton className="mt-2 h-4 w-28 max-w-[80%] rounded-sm" />
-            <Skeleton className="mt-2 h-3 w-36 max-w-[90%] rounded-sm" />
+            <Skeleton className="h-7 w-20 max-w-full rounded-sm sm:h-8 sm:w-24" />
+            <Skeleton className="mt-2 h-4 w-24 max-w-full rounded-sm" />
+            <Skeleton className="mt-2 h-3 w-32 max-w-full rounded-sm" />
           </Card>
         ))}
       </div>
@@ -787,9 +789,12 @@ export function AdminCategoryFormSkeleton() {
 
 export function AdminProfileSkeleton() {
   return (
-    <div className="grid items-stretch gap-6 xl:grid-cols-[360px_1fr]">
-      <Card className="p-5"><Skeleton className="size-20 rounded-full" /><Skeleton className="mt-5 h-7 w-40 rounded-sm" /><Skeleton className="mt-2 h-4 w-56 max-w-full rounded-sm" /><Skeleton className="mt-4 h-6 w-20 rounded-full" /><Skeleton className="mt-6 h-28 w-full rounded-md" /><Skeleton className="mt-4 h-32 w-full rounded-md" /></Card>
-      <div className="space-y-6"><Card className="p-5"><Skeleton className="h-6 w-40 rounded-sm" /><div className="mt-5 grid gap-4 md:grid-cols-2">{Array.from({ length: 3 }).map((_, index) => <Skeleton key={index} className="h-11 w-full rounded-sm" />)}</div><Skeleton className="mt-5 h-10 w-20 rounded-md" /></Card><Card className="p-5"><Skeleton className="h-6 w-32 rounded-sm" /><Skeleton className="mt-2 h-4 w-72 max-w-full rounded-sm" /><div className="mt-5 grid gap-4 md:grid-cols-2"><Skeleton className="h-11 w-full rounded-sm" /><Skeleton className="h-11 w-full rounded-sm" /></div><Skeleton className="mt-5 h-10 w-20 rounded-md" /></Card></div>
+    <div className="min-w-0">
+      <HeaderPanelSkeleton titleWidth="w-48" descWidth="w-full max-w-[34rem]" />
+      <div className="mt-6 grid min-w-0 items-start gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+        <Card className="p-4 sm:p-5"><div className="flex items-center gap-4"><Skeleton className="size-20 shrink-0 rounded-full" /><div className="min-w-0 flex-1"><Skeleton className="h-6 w-40 max-w-full rounded-sm" /><Skeleton className="mt-2 h-4 w-48 max-w-full rounded-sm" /><Skeleton className="mt-3 h-6 w-20 rounded-full" /></div></div><Skeleton className="mt-6 h-28 w-full rounded-xl" /><Skeleton className="mt-4 h-32 w-full rounded-xl" /></Card>
+        <div className="min-w-0 space-y-6"><Card className="p-4 sm:p-5"><Skeleton className="h-6 w-40 rounded-sm" /><div className="mt-5 grid gap-4 md:grid-cols-2">{Array.from({ length: 3 }).map((_, index) => <Skeleton key={index} className="h-11 w-full rounded-sm" />)}</div><Skeleton className="mt-5 h-11 w-full rounded-md sm:w-32" /></Card><Card className="p-4 sm:p-5"><Skeleton className="h-6 w-32 rounded-sm" /><Skeleton className="mt-2 h-4 w-full max-w-[28rem] rounded-sm" /><div className="mt-5 grid gap-4 md:grid-cols-2"><Skeleton className="h-11 w-full rounded-sm" /><Skeleton className="h-11 w-full rounded-sm" /></div><Skeleton className="mt-5 h-11 w-full rounded-md sm:w-36" /></Card></div>
+      </div>
     </div>
   );
 }
@@ -798,7 +803,7 @@ export function OrdersSkeleton() {
   return (
     <div className="space-y-6">
       <HeaderPanelSkeleton titleWidth="w-44" descWidth="w-80" />
-      <TableFrameSkeleton rows={4} columns={7} />
+      <TableFrameSkeleton rows={4} columns={7} toolbarVariant="search-select-reset" />
     </div>
   );
 }
