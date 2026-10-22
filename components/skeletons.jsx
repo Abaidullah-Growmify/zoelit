@@ -343,6 +343,15 @@ export function AdminCaptureSkeleton() {
   );
 }
 
+export function CartPageSkeleton() {
+  return (
+    <section className="container-page py-8 sm:py-12">
+      <div className="flex min-w-0 flex-col gap-3 sm:gap-4 md:flex-row md:items-end md:justify-between"><div className="min-w-0"><Skeleton className="h-4 w-32 rounded-sm" /><Skeleton className="mt-2 h-7 w-52 max-w-full rounded-sm sm:h-8" /><Skeleton className="mt-3 h-5 w-full max-w-xl rounded-sm" /></div><Skeleton className="h-10 w-full rounded-md sm:w-40" /></div>
+      <div className="mt-6 grid gap-6 sm:mt-8 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_390px]"><div className="space-y-4"><CartSkeleton /></div><Card className="h-fit overflow-hidden rounded-xl p-0"><div className="p-4 sm:p-6"><Skeleton className="h-8 w-44 max-w-full rounded-md" /><Skeleton className="mt-3 h-5 w-full max-w-xs rounded-md" /></div><div className="space-y-5 p-4 sm:p-6"><div className="space-y-3"><Skeleton className="h-5 w-full rounded-md" /><Skeleton className="h-5 w-full rounded-md" /><Skeleton className="mt-4 h-7 w-full rounded-md" /></div><Skeleton className="h-12 w-full rounded-md" /><Skeleton className="mx-auto h-4 w-48 max-w-full rounded-md" /></div></Card></div>
+    </section>
+  );
+}
+
 export function AdminCaptureDetailSkeleton() {
   return (
     <Card className="space-y-6 p-6">

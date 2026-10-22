@@ -4,9 +4,19 @@ import { money } from "@/lib/utils";
 import { useCartStore } from "@/store/cart-store";
 import { CartItemCard } from "@/components/cart-item-card";
 import { Button, Card, EmptyState, PageHeader } from "@/components/ui";
+import { CartPageSkeleton } from "@/components/skeletons";
+import { useSyncExternalStore } from "react";
 
 export default function CartPage() {
-  const { items, updateQuantity, removeItem, subtotal } = useCartStore();
+  const { items, updateQuantity, removeItem, subtotal, hasHydrated } = useCartStore();
+  const isClientReady = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+
+  if (!isClientReady || !hasHydrated) return <CartPageSkeleton />;
+
   const cartSubtotal = subtotal();
   const shipping = cartSubtotal > 150 ? 0 : 12;
   const total = cartSubtotal + shipping;
@@ -25,29 +35,29 @@ export default function CartPage() {
   }
 
   return (
-    <section className="container-page py-12">
+    <section className="container-page py-8 sm:py-12">
       <PageHeader
         eyebrow="Shopping Cart"
         title="Review your bag"
         description="Fine tune quantities, check shipping, and continue to secure checkout when everything looks right."
-          action={<Button asChild href="/products" variant="outline" className="w-full sm:w-auto text-primary">Continue shopping</Button>}
+          action={<Button asChild href="/products" variant="outline" className="w-full text-white sm:w-auto">Continue shopping</Button>}
       />
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_390px]">
+      <div className="mt-6 grid gap-6 sm:mt-8 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_390px]">
         <div className="space-y-4">
           {items.map((item) => <CartItemCard key={item.productId} item={item} updateQuantity={updateQuantity} removeItem={removeItem} />)}
         </div>
 
-        <Card className="h-fit overflow-hidden rounded-lg p-0 shadow-xl shadow-slate-950/5 lg:sticky lg:top-24">
-          <div className="panel-gradient p-6">
-            <h2 className="font-heading text-headline-lg font-extrabold tracking-[-0.03em] text-on-surface">Order summary</h2>
-            <p className="mt-2 text-label-md font-semibold leading-6 text-on-surface-variant">
+        <Card className="h-fit overflow-hidden rounded-xl p-0 shadow-xl shadow-slate-950/5 lg:sticky lg:top-24">
+          <div className="panel-gradient p-4 sm:p-6">
+            <h2 className="font-heading text-2xl font-extrabold tracking-[-0.03em] text-on-surface sm:text-headline-lg">Order summary</h2>
+            <p className="mt-2 text-sm font-semibold leading-6 text-on-surface-variant sm:text-label-md">
               {shipping === 0 ? "Free shipping unlocked for this order." : <><span className="tabular-nums">{money(freeShippingRemaining)}</span> away from free shipping.</>}
             </p>
           </div>
 
-          <div className="space-y-5 p-6">
-            <div className="space-y-3 text-label-md">
+          <div className="space-y-5 p-4 sm:p-6">
+            <div className="space-y-3 text-sm sm:text-label-md">
                 <div className="flex justify-between gap-4 text-on-surface-variant">
                 <span>Subtotal</span>
                 <span className="font-bold tabular-nums text-on-surface">{money(cartSubtotal)}</span>
@@ -57,7 +67,7 @@ export default function CartPage() {
                 <span className="font-bold tabular-nums text-on-surface">{shipping === 0 ? "Free" : money(shipping)}</span>
               </div>
               <div className="border-t border-outline-variant/40 pt-4">
-                <div className="flex justify-between gap-4 text-headline-md font-bold text-on-surface">
+                <div className="flex justify-between gap-4 text-xl font-bold text-on-surface sm:text-headline-md">
                   <span>Total</span>
                   <span className="tabular-nums">{money(total)}</span>
                 </div>
