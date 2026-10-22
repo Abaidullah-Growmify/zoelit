@@ -47,10 +47,15 @@ export default function ProductsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [keyword, setKeyword] = useState("");
   const [priceRange, setPriceRange] = useState("all");
-  const [minRating, setMinRating] = useState(0);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const deferredKeyword = useDeferredValue(keyword);
+  const [debouncedKeyword, setDebouncedKeyword] = useState("");
   const [selectedCategories, setSelectedCategories] = useState(initialCategory ? [initialCategory] : []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedKeyword(deferredKeyword), 500);
+    return () => window.clearTimeout(timer);
+  }, [deferredKeyword]);
 
   useEffect(() => {
     let active = true;
@@ -80,8 +85,8 @@ export default function ProductsPage() {
     let active = true;
 
     const request = selectedCategories.length > 1
-      ? Promise.all(selectedCategories.map((selectedCategory) => getPublicProducts({ category: selectedCategory, keyword: deferredKeyword.trim() || undefined, sort: SORT_QUERY[sort] || "newest", page: 1, limit: 100 }))).then((results) => ({ products: results.flatMap((result) => result.products || []), pagination: { totalPages: 1 } }))
-      : getPublicProducts({ category: selectedCategories[0], keyword: deferredKeyword.trim() || undefined, sort: SORT_QUERY[sort] || "newest", page, limit: PAGE_SIZE });
+      ? Promise.all(selectedCategories.map((selectedCategory) => getPublicProducts({ category: selectedCategory, keyword: debouncedKeyword.trim() || undefined, sort: SORT_QUERY[sort] || "newest", page: 1, limit: 100 }))).then((results) => ({ products: results.flatMap((result) => result.products || []), pagination: { totalPages: 1 } }))
+      : getPublicProducts({ category: selectedCategories[0], keyword: debouncedKeyword.trim() || undefined, sort: SORT_QUERY[sort] || "newest", page, limit: PAGE_SIZE });
     request.then((data) => {
         if (!active) return;
         // Multi-category fetches pull one page per category in parallel, so the
@@ -100,7 +105,7 @@ export default function ProductsPage() {
     return () => {
       active = false;
     };
-  }, [selectedCategories, deferredKeyword, sort, page]);
+  }, [selectedCategories, debouncedKeyword, sort, page]);
 
   // Mobile filter sheet: lock body scroll, close on Escape and when the viewport
   // crosses into the lg layout where the sidebar takes over.
@@ -142,7 +147,6 @@ export default function ProductsPage() {
 
   function clearAllFilters() {
     setPriceRange("all");
-    setMinRating(0);
     setSelectedCategories([]);
     setPage(1);
     setLoading(true);
@@ -156,10 +160,9 @@ export default function ProductsPage() {
 
   const visibleProducts = products.filter((product) => {
     const price = Number(product.price) || 0;
-    const rating = Number(product.rating) || 0;
     const priceMatch = priceRange === "all" || (priceRange === "under-2000" && price < 2000) || (priceRange === "2000-10000" && price >= 2000 && price <= 10000) || (priceRange === "over-10000" && price > 10000);
     const categoryMatch = !selectedCategories.length || selectedCategories.includes(product.category);
-    return priceMatch && rating >= minRating && categoryMatch;
+    return priceMatch && categoryMatch;
   });
   const displayProducts = selectedCategories.length > 1 ? visibleProducts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE) : visibleProducts;
   const effectiveTotalPages = selectedCategories.length > 1 ? Math.max(1, Math.ceil(visibleProducts.length / PAGE_SIZE)) : totalPages;
@@ -180,16 +183,6 @@ export default function ProductsPage() {
           },
         }]
       : []),
-    ...(minRating > 0
-      ? [{
-          key: "rating",
-          label: `${minRating}★ & up`,
-          onRemove: () => {
-            setMinRating(0);
-            setPage(1);
-          },
-        }]
-      : []),
   ];
 
   const filterPanelProps = {
@@ -202,11 +195,6 @@ export default function ProductsPage() {
       setPriceRange(value);
       setPage(1);
     },
-    minRating,
-    onRatingChange: (value) => {
-      setMinRating(value);
-      setPage(1);
-    },
   };
 
   return (
@@ -214,7 +202,7 @@ export default function ProductsPage() {
       <div className="mb-5 lg:mb-7">
         <div className="mb-4 flex items-center gap-2 text-xs text-on-surface-variant"><Link href="/" className="hover:text-on-surface">Home</Link><span>/</span><strong className="text-on-surface">All Products</strong></div>
         <h1 className="font-heading text-[clamp(1.4rem,1.1rem+1.5vw,2rem)] font-bold tracking-[-0.03em] text-on-surface">All Products</h1>
-        <p className="mt-2 text-sm text-on-surface-variant">Explore the complete collection - filter by category, price or rating.</p>
+        <p className="mt-2 text-sm text-on-surface-variant">Explore the complete collection - filter by category or price.</p>
       </div>
 
       <div className="relative mb-5 w-full max-w-none lg:mb-7 lg:max-w-xl">
@@ -260,8 +248,6 @@ export default function ProductsPage() {
         </div>
       ) : null}
 
-      <p className="mb-3 text-sm text-on-surface-variant lg:hidden"><strong className="text-on-surface">{visibleProducts.length}</strong> products</p>
-
       <div className="grid items-start gap-7 lg:grid-cols-[240px_minmax(0,1fr)]">
         {/* Desktop filter sidebar — unchanged from the original lg design. */}
         <aside className="min-w-0 rounded-[14px] border border-outline-variant bg-surface p-5 lg:block hidden">
@@ -271,7 +257,7 @@ export default function ProductsPage() {
 
         <div className="min-w-0">
           {/* Desktop toolbar — kept exactly as before. */}
-          <div className="mb-5 hidden items-center justify-between gap-4 border-b border-outline-variant pb-4 lg:flex"><span className="text-sm text-on-surface-variant"><strong className="text-on-surface">{visibleProducts.length}</strong> products</span><div className="flex shrink-0 items-center gap-2"><label htmlFor="sort" className="whitespace-nowrap text-sm text-on-surface-variant">Sort by</label><Select id="sort" value={sort} onChange={(e) => changeSort(e.target.value)} aria-label="Sort products" className="h-10"><option value="newest">Newest</option><option value="price-low">Price: Low to High</option><option value="price-high">Price: High to Low</option></Select></div></div>
+          <div className="mb-5 hidden items-center justify-end gap-4 border-b border-outline-variant pb-4 lg:flex"><div className="flex shrink-0 items-center gap-2"><label htmlFor="sort" className="whitespace-nowrap text-sm text-on-surface-variant">Sort by</label><Select id="sort" value={sort} onChange={(e) => changeSort(e.target.value)} aria-label="Sort products" className="h-10"><option value="newest">Newest</option><option value="price-low">Price: Low to High</option><option value="price-high">Price: High to Low</option></Select></div></div>
           {loading ? <ProductGridSkeleton count={PAGE_SIZE} columns={GRID_CLASSES} /> : displayProducts.length ? <div className={GRID_CLASSES}>{displayProducts.map((product) => <ProductCard key={product.id} product={product} />)}</div> : <EmptyState title="No products found" description="No products match your search. Try a different filter." />}
         {!loading && displayProducts.length ? (
           <div className="mt-6 border-t border-outline-variant/70 pt-5">

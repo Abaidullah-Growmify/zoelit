@@ -68,6 +68,8 @@ function normalizeHomepage(value) {
         mode: "manual",
         productIds: [],
         ...(item && typeof item === "object" ? item : {}),
+        // Custom sections are always storefront-visible once created.
+        enabled: true,
         productIds: Array.isArray(item?.productIds) ? item.productIds : [],
       }))
       : [],
@@ -94,7 +96,7 @@ const LIMITS = {
 };
 
 function sectionMax(id) {
-  if (id.startsWith("custom:")) return 6;
+  if (id.startsWith("custom:")) return 4;
   const limit = LIMITS[id];
   return limit ? limit.max : 0;
 }
@@ -354,21 +356,22 @@ export default function AdminHomePage() {
   }, [router]);
 
   const addSection = () => {
-    setHomepage((previous) => {
-      if (!previous) return previous;
-      const customSections = [...(previous.customSections || []), { enabled: true, eyebrow: "Exclusive", title: "New section", mode: "manual", productIds: [] }];
-      selectSection(`custom:${customSections.length - 1}`);
-      return { ...previous, customSections };
-    });
+    if (!homepage) return;
+    const nextIndex = (homepage.customSections || []).length;
+    setHomepage((previous) => previous
+      ? { ...previous, customSections: [...(previous.customSections || []), { enabled: true, eyebrow: "Exclusive", title: "New section", mode: "manual", productIds: [] }] }
+      : previous);
+    selectSection(`custom:${nextIndex}`);
   };
 
   const removeSection = useCallback((index) => {
+    const shouldNavigate = sectionParam === `custom:${index}`;
     setHomepage((previous) => {
       if (!previous) return previous;
       const customSections = (previous.customSections || []).filter((_, sectionIndex) => sectionIndex !== index);
-      if (sectionParam === `custom:${index}`) selectSection("bestDeals");
       return { ...previous, customSections };
     });
+    if (shouldNavigate) selectSection("bestDeals");
   }, [sectionParam, selectSection]);
 
   const persist = async () => {
@@ -939,9 +942,11 @@ function EditorBody({ activeId, homepage, categories, limits, token, patchSectio
           <Field label="Title">
             <Input value={section.title || ""} onChange={(event) => setSection({ title: event.target.value })} placeholder="e.g. Featured products this week" />
           </Field>
-          <div className="sm:col-span-2">
-            <ToggleRow label="Show this section" hint={section.enabled !== false ? "Visible on the storefront" : "Hidden from the storefront"} checked={section.enabled !== false} onChange={(value) => setSection({ enabled: value })} />
-          </div>
+          {!isCustom ? (
+            <div className="sm:col-span-2">
+              <ToggleRow label="Show this section" hint={section.enabled !== false ? "Visible on the storefront" : "Hidden from the storefront"} checked={section.enabled !== false} onChange={(value) => setSection({ enabled: value })} />
+            </div>
+          ) : null}
           <div className="sm:col-span-2">
             <Field label="Products" hint={<RequirementHint count={(section.productIds || []).length} max={currentMax} min={limits.minPicks} />}>
               <ProductPicker token={token} value={section.productIds || []} onChange={(value) => setSection({ productIds: value })} max={currentMax} activeOnly />

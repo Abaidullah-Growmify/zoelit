@@ -4,12 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRouter } from "nextjs-toploader/app";
 import { useEffect, useRef, useState } from "react";
-import { Heart, LogIn, LogOut, LayoutDashboard, Menu, Package, Search, Settings2, ShoppingCart, X } from "lucide-react";
+import { Heart, LogIn, LogOut, LayoutDashboard, Menu, Package, Settings2, ShoppingCart, X } from "lucide-react";
 import { useCartStore } from "@/store/cart-store";
 import { useAuthStore } from "@/store/auth-store";
 import { BrandLogo } from "@/components/brand-logo";
 import { Container } from "@/components/container";
-import { Input } from "@/components/ui";
 
 const nav = [
   { href: "/", label: "Home" },
@@ -23,7 +22,6 @@ export function SiteHeader() {
   const cartButtonRef = useRef(null);
   const mobileNavRef = useRef(null);
   const profileRef = useRef(null);
-  const searchInputRef = useRef(null);
   const cartHydrated = useCartStore((state) => state.hasHydrated);
   const count = useCartStore((state) => state.count());
   const openCart = useCartStore((state) => state.openCart);
@@ -32,8 +30,6 @@ export function SiteHeader() {
   const logout = useAuthStore((state) => state.logout);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
   const [lastPathname, setLastPathname] = useState(pathname);
   const router = useRouter();
   const showAccountStrip = Boolean(user) || !hasHydratedAuth;
@@ -41,13 +37,6 @@ export function SiteHeader() {
   async function handleLogout() {
     await logout();
     router.push("/");
-  }
-
-  function handleSearchSubmit(event) {
-    event.preventDefault();
-    const query = searchValue.trim();
-    setSearchOpen(false);
-    router.push(query ? `/products?search=${encodeURIComponent(query)}` : "/products");
   }
 
   useEffect(() => {
@@ -75,19 +64,8 @@ export function SiteHeader() {
     return () => document.removeEventListener("pointerdown", closeProfile);
   }, [profileOpen]);
 
-  useEffect(() => {
-    if (!searchOpen) return undefined;
-    searchInputRef.current?.focus();
-    const onKeyDown = (event) => {
-      if (event.key === "Escape") setSearchOpen(false);
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [searchOpen]);
-
   if (lastPathname !== pathname) {
     setLastPathname(pathname);
-    setSearchOpen(false);
     setProfileOpen(false);
   }
 
@@ -129,16 +107,6 @@ export function SiteHeader() {
           </nav>
 
           <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2 md:ml-0 md:justify-self-end md:gap-1 lg:ml-0 lg:justify-self-end lg:gap-2">
-            <button
-              type="button"
-              aria-label={searchOpen ? "Close search" : "Search"}
-              aria-expanded={searchOpen}
-              onClick={() => setSearchOpen((open) => !open)}
-              className="grid h-9 w-9 place-items-center rounded-full text-on-surface-variant transition hover:bg-slate-100 active:scale-95"
-            >
-              {searchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
-            </button>
-            
             <Link 
               href="/dashboard/wishlist" 
               aria-label="Wishlist" 
@@ -204,31 +172,6 @@ export function SiteHeader() {
           </div>
         </Container>
 
-        {searchOpen && (
-          <div className="border-t border-outline-variant/70">
-            <form onSubmit={handleSearchSubmit} role="search">
-              <Container className="store-shell flex items-center gap-3 py-3">
-                <div className="relative flex-1">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-on-surface-variant" />
-                <Input
-                  ref={searchInputRef}
-                  value={searchValue}
-                  onChange={(event) => setSearchValue(event.target.value)}
-                  placeholder="Search products..."
-                  aria-label="Search products"
-                  className="h-10 pl-10 text-sm"
-                />
-              </div>
-              <button 
-                type="submit" 
-                className="flex h-10 shrink-0 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-white transition hover:bg-primary-container"
-              >
-                  Search
-                </button>
-              </Container>
-            </form>
-          </div>
-        )}
       </header>
 
       {showAccountStrip && (

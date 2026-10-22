@@ -38,6 +38,7 @@ export default function ProfilePage() {
   const [addresses, setAddresses] = useState([]);
   const [addressForm, setAddressForm] = useState(EMPTY_ADDRESS);
   const [editingId, setEditingId] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [passwordError, setPasswordError] = useState(null);
@@ -100,10 +101,12 @@ export default function ProfilePage() {
     } catch (error) { toast.error(error.message || "Could not update default address"); }
   }
 
-  async function deleteAddress(id) {
+  async function confirmDeleteAddress() {
+    if (!deleteTarget) return;
     try {
-      await api.deleteAddress(id, token);
-      setAddresses((current) => current.filter((item) => item._id !== id));
+      await api.deleteAddress(deleteTarget._id, token);
+      setAddresses((current) => current.filter((item) => item._id !== deleteTarget._id));
+      setDeleteTarget(null);
       toast.success("Address deleted");
     } catch (error) { toast.error(error.message || "Could not delete address"); }
   }
@@ -111,6 +114,11 @@ export default function ProfilePage() {
   function editAddress(item) {
     setEditingId(item._id);
     setAddressForm({ label: item.label || "Home", name: item.name || "", line1: item.line1 || "", city: item.city || "", region: item.region || "", postal: item.postal || "" });
+  }
+
+  function requestDelete(itemOrId) {
+    const target = typeof itemOrId === "string" ? addresses.find((item) => item._id === itemOrId) : itemOrId;
+    if (target) setDeleteTarget(target);
   }
 
   async function savePassword({ currentPassword, newPassword, confirmPassword }) {
@@ -159,7 +167,7 @@ export default function ProfilePage() {
       <div className="md:col-span-2"><Button disabled={saving} className="inline-flex w-full md:w-fit">{saving ? "Saving..." : "Save Changes"}</Button></div>
     </form>
   ) : activeTab === "address" ? (
-    <AddressPanel addresses={addresses} form={addressForm} setForm={setAddressForm} editingId={editingId} setEditingId={setEditingId} onSubmit={saveAddress} onEdit={editAddress} onDefault={makeDefault} onDelete={deleteAddress} saving={saving} />
+    <AddressPanel addresses={addresses} form={addressForm} setForm={setAddressForm} editingId={editingId} setEditingId={setEditingId} onSubmit={saveAddress} onEdit={editAddress} onDefault={makeDefault} onDelete={requestDelete} saving={saving} />
   ) : (
     <PasswordForm onSubmit={savePassword} saving={saving} onDirty={setPasswordDirty} />
   );
@@ -171,11 +179,20 @@ export default function ProfilePage() {
       {isMobileMenu ? <nav className="mt-6 space-y-3 md:hidden">{TABS.map(({ id, label, subtitle, icon: Icon }) => <Link key={id} href={`${pathname}?section=${id}`} className="flex min-h-[68px] min-w-0 items-center gap-3 rounded-xl border border-outline-variant bg-surface px-4 active:bg-slate-50"><span className="grid size-9 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-700"><Icon className="size-4" /></span><span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium text-on-surface">{label}</span><span className="block truncate text-xs text-on-surface-variant">{subtitle}</span></span><ChevronRight className="size-4 shrink-0 text-on-surface-variant" /></Link>)}</nav> : null}
 
       <div className={`${isMobileMenu ? "hidden md:grid" : "grid"} mt-6 min-w-0 items-start gap-6 md:grid-cols-[220px_minmax(0,1fr)] lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-7`}>
-        <aside className="hidden rounded-[14px] border border-outline-variant bg-surface p-2 md:sticky md:top-4 md:block lg:static"><nav className="space-y-1">{TABS.map(({ id, label, icon: Icon }) => <button key={id} type="button" onClick={() => goToSection(id)} className={`flex h-11 min-h-11 w-full min-w-0 items-center gap-3 rounded-[10px] px-3 text-left text-sm font-medium transition lg:px-4 lg:py-3 ${activeTab === id ? "bg-primary text-white" : "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface"}`}><Icon className="size-4 shrink-0" />{label}</button>)}</nav></aside>
-        <Card className="min-w-0 p-4 md:p-6 lg:p-9"><div className="mb-1 flex items-center gap-2 md:hidden"><button type="button" onClick={goToMenu} className="grid size-10 shrink-0 place-items-center rounded-lg text-on-surface-variant hover:bg-surface-container-low" aria-label="Back to account settings"><ArrowLeft className="size-5" /></button><h2 className="font-heading text-lg font-semibold text-on-surface">{currentTab.label}</h2></div><div className="min-w-0">{sectionContent}</div>{passwordError ? <PasswordErrorModal error={passwordError} onClose={() => setPasswordError(null)} /> : null}</Card>
+        <aside className="profile-settings-nav hidden rounded-[14px] border border-outline-variant bg-surface p-2 md:sticky md:top-4 md:block lg:static"><nav className="space-y-1">{TABS.map(({ id, label, icon: Icon }) => <button key={id} type="button" onClick={() => goToSection(id)} className={`flex flex-row h-11 min-h-11 w-full min-w-0 items-center justify-start gap-1 rounded-[10px] px-3 text-left text-sm font-medium transition lg:px-4 lg:py-3 ${activeTab === id ? "bg-primary text-white" : "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface"}`}><Icon className="order-first size-4 shrink-0" /><span className="min-w-0 flex-1 text-left">{label}</span></button>)}</nav></aside>
+        <Card className="min-w-0 p-4 md:p-6 lg:p-9"><div className="mb-1 flex items-center gap-2 md:hidden"><button type="button" onClick={goToMenu} className="grid size-10 shrink-0 place-items-center rounded-lg text-on-surface-variant hover:bg-surface-container-low" aria-label="Back to account settings"><ArrowLeft className="size-5" /></button><h2 className="font-heading text-lg font-semibold text-on-surface">{currentTab.label}</h2></div><div className="min-w-0">{sectionContent}</div>{editingId ? <EditAddressModal form={addressForm} setForm={setAddressForm} onSubmit={saveAddress} saving={saving} onClose={() => { setEditingId(null); setAddressForm(EMPTY_ADDRESS); }} /> : null}{deleteTarget ? <DeleteAddressModal address={deleteTarget} onCancel={() => setDeleteTarget(null)} onConfirm={confirmDeleteAddress} /> : null}{passwordError ? <PasswordErrorModal error={passwordError} onClose={() => setPasswordError(null)} /> : null}</Card>
       </div>
     </section>
   );
+}
+
+function DeleteAddressModal({ address, onCancel, onConfirm }) {
+  return <div className="fixed inset-0 z-[90] grid place-items-center bg-slate-950/45 px-4 backdrop-blur-sm" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onCancel(); }}><div role="dialog" aria-modal="true" aria-labelledby="delete-address-title" className="w-full max-w-md rounded-2xl border border-outline-variant bg-surface p-6 shadow-2xl"><h2 id="delete-address-title" className="font-heading text-xl font-semibold text-on-surface">Delete address?</h2><p className="mt-2 text-sm leading-6 text-on-surface-variant">Are you sure you want to delete <strong>{address.label || address.name || "this address"}</strong>? This action cannot be undone.</p><div className="mt-6 flex justify-end gap-3"><Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button><Button type="button" variant="danger" onClick={onConfirm}>Delete Address</Button></div></div></div>;
+}
+
+function EditAddressModal({ form, setForm, onSubmit, saving, onClose }) {
+  const update = (key, value) => setForm((current) => ({ ...current, [key]: value }));
+  return <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/45 px-4 py-6 backdrop-blur-sm" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><div role="dialog" aria-modal="true" aria-labelledby="edit-address-title" className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-outline-variant bg-surface p-5 shadow-2xl sm:p-7"><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">Edit mode</p><h2 id="edit-address-title" className="mt-1 font-heading text-xl font-semibold text-on-surface">Edit shipping address</h2><p className="mt-1 text-sm text-on-surface-variant">Update the saved address details below.</p></div><button type="button" onClick={onClose} className="min-h-10 rounded-lg px-3 text-sm font-semibold text-on-surface-variant hover:bg-surface-container-low">Cancel</button></div><form onSubmit={onSubmit} className="mt-6 grid gap-5 md:grid-cols-2"><Field label="Label"><Input className="h-11 text-base" value={form.label} onChange={(event) => update("label", event.target.value)} required /></Field><Field label="Full name"><Input className="h-11 text-base" value={form.name} onChange={(event) => update("name", event.target.value)} required /></Field><Field label="Address" className="md:col-span-2"><Input className="h-11 text-base" value={form.line1} onChange={(event) => update("line1", event.target.value)} required /></Field><Field label="City"><Input className="h-11 text-base" value={form.city} onChange={(event) => update("city", event.target.value)} required /></Field><Field label="State / Region"><Input className="h-11 text-base" value={form.region} onChange={(event) => update("region", event.target.value)} /></Field><Field label="Postal code"><Input className="h-11 text-base" value={form.postal} onChange={(event) => update("postal", event.target.value)} required /></Field><div className="flex justify-end gap-3 md:col-span-2"><Button type="button" variant="secondary" onClick={onClose}>Cancel</Button><Button type="submit" disabled={saving}>{saving ? "Saving..." : "Save Changes"}</Button></div></form></div></div>;
 }
 
 function AddressPanel({ addresses, form, setForm, editingId, setEditingId, onSubmit, onEdit, onDefault, onDelete, saving }) {

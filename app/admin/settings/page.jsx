@@ -26,46 +26,6 @@ import { useSearchParams } from "next/navigation";
 import { useRouter } from "nextjs-toploader/app";
 import { AdminTableActions } from "@/components/admin-table";
 
-const CURRENCIES = [
-  { value: "USD", label: "USD — US Dollar" },
-  { value: "EUR", label: "EUR — Euro" },
-  { value: "GBP", label: "GBP — British Pound" },
-  { value: "PKR", label: "PKR — Pakistani Rupee" },
-  { value: "AED", label: "AED — UAE Dirham" },
-  { value: "AUD", label: "AUD — Australian Dollar" },
-  { value: "BDT", label: "BDT — Bangladeshi Taka" },
-  { value: "BRL", label: "BRL — Brazilian Real" },
-  { value: "CAD", label: "CAD — Canadian Dollar" },
-  { value: "CHF", label: "CHF — Swiss Franc" },
-  { value: "CNY", label: "CNY — Chinese Yuan" },
-  { value: "CZK", label: "CZK — Czech Koruna" },
-  { value: "DKK", label: "DKK — Danish Krone" },
-  { value: "EGP", label: "EGP — Egyptian Pound" },
-  { value: "HKD", label: "HKD — Hong Kong Dollar" },
-  { value: "IDR", label: "IDR — Indonesian Rupiah" },
-  { value: "ILS", label: "ILS — Israeli Shekel" },
-  { value: "INR", label: "INR — Indian Rupee" },
-  { value: "JPY", label: "JPY — Japanese Yen" },
-  { value: "KRW", label: "KRW — South Korean Won" },
-  { value: "LKR", label: "LKR — Sri Lankan Rupee" },
-  { value: "MAD", label: "MAD — Moroccan Dirham" },
-  { value: "MXN", label: "MXN — Mexican Peso" },
-  { value: "MYR", label: "MYR — Malaysian Ringgit" },
-  { value: "NGN", label: "NGN — Nigerian Naira" },
-  { value: "NOK", label: "NOK — Norwegian Krone" },
-  { value: "NZD", label: "NZD — New Zealand Dollar" },
-  { value: "PHP", label: "PHP — Philippine Peso" },
-  { value: "PLN", label: "PLN — Polish Zloty" },
-  { value: "SAR", label: "SAR — Saudi Riyal" },
-  { value: "SEK", label: "SEK — Swedish Krona" },
-  { value: "SGD", label: "SGD — Singapore Dollar" },
-  { value: "THB", label: "THB — Thai Baht" },
-  { value: "TRY", label: "TRY — Turkish Lira" },
-  { value: "TWD", label: "TWD — New Taiwan Dollar" },
-  { value: "VND", label: "VND — Vietnamese Dong" },
-  { value: "ZAR", label: "ZAR — South African Rand" },
-];
-
 const INGRAM_ENVS = [
   { value: "sandbox", label: "Sandbox" },
   { value: "production", label: "Production" },
@@ -78,6 +38,7 @@ const SECRET_KEYS = new Set([
   "ingram.stockWebhookSecret",
   "ingram.orderWebhookSecret",
   "stripe.secretKey",
+  "stripe.publishableKey",
   "stripe.webhookSecret",
   "email.smtpPassword",
 ]);
@@ -93,16 +54,16 @@ const SECTIONS = [
       { key: "store.email", label: "Contact email", type: "email", placeholder: "support@zoelit.com" },
       { key: "store.phone", label: "Support phone", type: "tel", placeholder: "+1 000 000 0000" },
       { key: "store.address", label: "Business address", type: "text", placeholder: "Street, City, Country", span: true },
-      { key: "store.currency", label: "Display currency", type: "select", options: CURRENCIES },
     ],
   },
   {
     id: "payments",
     label: "Payments",
     description: "Stripe keys, checkout and webhooks.",
-    icon: CreditCard,
+      icon: CreditCard,
     fields: [
       { key: "stripe.secretKey", label: "Secret key", type: "password", placeholder: "sk_live_..." },
+      { key: "stripe.publishableKey", label: "Publishable key", type: "password", placeholder: "pk_live_..." },
       { key: "stripe.webhookSecret", label: "Webhook signing secret", type: "password", placeholder: "whsec_..." },
       { key: "stripe.enabled", label: "Stripe checkout", type: "toggle" },
     ],
@@ -168,7 +129,6 @@ const SECTIONS = [
 
 const DEFAULTS = {
   "store.name": "ZoeLit Commerce",
-  "store.currency": "USD",
   "stripe.enabled": true,
   "commission.enabled": true,
   "ingram.autoSyncEnabled": true,

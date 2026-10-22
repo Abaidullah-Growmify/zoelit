@@ -2,14 +2,12 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { API_URL } from "@/lib/api";
-import { setDisplayCurrency } from "@/lib/utils";
 
 const FALLBACK = {
   name: "ZoeLit",
   email: "",
   phone: "",
   address: "",
-  currency: "USD",
 };
 
 const StoreConfigContext = createContext(FALLBACK);
@@ -29,10 +27,8 @@ export function StoreConfigProvider({ children }) {
             email: data.store.email || "",
             phone: data.store.phone || "",
             address: data.store.address || "",
-            currency: data.store.currency || "USD",
           };
           setConfig(next);
-          setDisplayCurrency(next.currency);
         })
         .catch(() => {});
     }, 0);

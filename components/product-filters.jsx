@@ -9,12 +9,6 @@ const PRICE_OPTIONS = [
   ["over-10000", "Rs 10,000 +"],
 ];
 
-const RATING_OPTIONS = [
-  [0, "Any rating"],
-  [4, "4.0 & up"],
-  [4.5, "4.5 & up"],
-];
-
 const HEADING_CLASS = "mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-on-surface-variant";
 const SHEET_VISIBLE_CATEGORIES = 6;
 
@@ -25,8 +19,6 @@ export function ProductFilters({
   onClearCategories,
   priceRange,
   onPriceChange,
-  minRating,
-  onRatingChange,
   variant = "sidebar",
 }) {
   const isSheet = variant === "sheet";
@@ -95,21 +87,6 @@ export function ProductFilters({
         ))}
       </div>
 
-      <div className={sectionClass}>
-        <h3 className={HEADING_CLASS}>Rating</h3>
-        {RATING_OPTIONS.map(([value, label]) => (
-          <label key={value} className={rowClass}>
-            <input
-              type="radio"
-              name={isSheet ? "rating-sheet" : "rating-sidebar"}
-              checked={minRating === value}
-              onChange={() => onRatingChange(value)}
-              className="size-4 shrink-0 accent-primary"
-            />
-            <span className="min-w-0">{value > 0 ? `★ ${label}` : label}</span>
-          </label>
-        ))}
-      </div>
     </div>
   );
 }

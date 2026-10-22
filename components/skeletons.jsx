@@ -15,7 +15,6 @@ export function ProductGridSkeleton({ count = 8, columns = "product-grid" }) {
             <Skeleton className="h-5 w-full max-w-[13rem] rounded-md" />
             <Skeleton className="mt-2 h-5 w-4/5 rounded-md" />
             <Skeleton className="zl-card-price mt-3 h-5 w-16 rounded-md" />
-            <Skeleton className="zl-card-rating mt-2 h-4 w-12 rounded-md" />
             <div className="zl-card-actions mt-auto pt-5">
               <Skeleton className="h-[30px] w-20 rounded-[7px] min-[768px]:h-10 min-[768px]:w-full min-[768px]:rounded-md" />
             </div>
@@ -1321,9 +1320,6 @@ function HomeCardSkeleton() {
         </div>
         <span className="zl-card-price mt-3 block">
           <Skeleton className="h-5 w-24 rounded-sm" />
-        </span>
-        <span className="zl-card-rating">
-          <Skeleton className="h-4 w-14 rounded-sm" />
         </span>
         <span className="zl-card-stock mt-2 flex items-center gap-2">
           <Skeleton className="size-2 shrink-0 rounded-full" />

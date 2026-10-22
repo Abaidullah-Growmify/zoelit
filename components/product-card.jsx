@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRef, useSyncExternalStore } from "react";
-import { ArrowRight, Heart, ShoppingBasket, Star } from "lucide-react";
+import { ArrowRight, Heart, ShoppingBasket } from "lucide-react";
 import { cn, money } from "@/lib/utils";
 import { useCartStore } from "@/store/cart-store";
 import { useAuthStore } from "@/store/auth-store";
@@ -141,9 +141,6 @@ export function ProductCard({
     <span className="zl-card-title min-h-10 min-w-0 line-clamp-2 text-overflow-unset [overflow-wrap:anywhere] font-heading text-base font-bold leading-tight tracking-[-0.02em] text-on-surface">{title}</span>
   );
 
-  // Shown only in the mobile home list rows (see .grid-home rules in globals.css).
-  const ratingValue = Number(product?.rating) > 0 ? Number(product.rating) : 4.8;
-
   const imageNode = (
     <div className="flex h-full w-full items-center justify-center">
       <Image
@@ -191,11 +188,6 @@ export function ProductCard({
         {description ? <p className="zl-card-desc mt-2 line-clamp-2 break-words text-sm leading-5 text-on-surface-variant">{description}</p> : null}
 
         <span className={cn("zl-card-price mt-3 block whitespace-nowrap font-heading text-body-lg font-extrabold tabular-nums tracking-[-0.02em]", isPriceOnRequest ? "text-on-surface-variant" : "text-on-surface")}>{isPriceOnRequest ? "On request" : money(Number(price) || 0)}</span>
-
-        <span className="zl-card-rating">
-          <Star className="size-3.5" fill="currentColor" aria-hidden="true" />
-          {ratingValue.toFixed(1)}
-        </span>
 
         <div className="zl-card-stock mt-2 flex items-center gap-2">
           <span className={cn("inline-flex size-2 shrink-0 rounded-full", sellable ? "bg-emerald-500" : "bg-rose-500")} />

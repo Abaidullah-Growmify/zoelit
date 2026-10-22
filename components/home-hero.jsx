@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowRight, ChevronLeft, ChevronRight, Package, Star, Truck, Users } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Layers3, Package, Truck, Users } from "lucide-react";
 import { money } from "@/lib/utils";
 import { CleanProductImage } from "@/components/clean-product-image";
 import { Container } from "@/components/container";
@@ -13,7 +13,7 @@ const DEFAULT_CONTENT = {
   lead: "Explore a considered collection of electronics, accessories, and everyday essentials selected for quality, value, and ease.",
 };
 
-export function HomeHero({ products, productCount = 0, content, explicit = false }) {
+export function HomeHero({ products, productCount = 0, categories = [], content, explicit = false }) {
   const heroContent = { ...DEFAULT_CONTENT, ...content };
   const [activeIndex, setActiveIndex] = useState(0);
   const [slide, setSlide] = useState(0);
@@ -46,6 +46,7 @@ export function HomeHero({ products, productCount = 0, content, explicit = false
   };
 
   const picks = explicit ? products : null;
+  const categoryCount = categories.length || new Set(products.map((product) => String(product.category || "General").trim()).filter(Boolean)).size;
 
   const freeDeliveryProducts = products.filter((product) => Number(product.price) > 150);
   const priceSortedProducts = [...products].filter((product) => Number(product.price) > 0).sort((a, b) => Number(a.price) - Number(b.price));
@@ -56,10 +57,6 @@ export function HomeHero({ products, productCount = 0, content, explicit = false
     : freeDeliveryProducts.length
       ? [freeDeliveryProducts[activeIndex % freeDeliveryProducts.length], lowShippingProducts[activeIndex % lowShippingProducts.length], products[(activeIndex + 2) % products.length]].filter(Boolean).slice(0, 3)
       : products.slice(activeIndex % products.length).concat(products.slice(0, activeIndex % products.length)).slice(0, 3);
-
-  const first = displayed[0] || null;
-
-  const rating = Number(first?.rating) > 0 ? Number(first.rating) : 4.8;
 
   const titleValue = String(heroContent.title || "").replace(
     /^Better technology,\s+thoughtfully chosen for you\.?$/i,
@@ -91,8 +88,8 @@ export function HomeHero({ products, productCount = 0, content, explicit = false
           </div>
           <div className="hero-stats">
             <AnimatedStat target={50000} suffix="k+" label="Happy customers" divisor={1000} />
-            <AnimatedStat target={productCount} suffix="" label={productCount === 1 ? "Product" : "Products"} />
-            <AnimatedStat target={rating} suffix="" label="Average rating" decimal />
+            <AnimatedStat target={Math.max(Number(productCount) || 0, 30000)} suffix="k+" label="Products" divisor={1000} />
+            <AnimatedStat target={categoryCount} suffix="+" label="Categories" />
           </div>
         </div>
 
@@ -148,9 +145,9 @@ export function HomeHero({ products, productCount = 0, content, explicit = false
               </button>
             </div>
             <div className="zl-mstats">
-              <AnimatedStat icon={Users} target={50000} suffix="k+" label="Happy customers" divisor={1000} variant="mobile" />
-              <AnimatedStat icon={Package} target={productCount} suffix="" label={productCount === 1 ? "Product" : "Products"} variant="mobile" />
-              <AnimatedStat icon={Star} target={rating} suffix="" label="Average rating" decimal variant="mobile" />
+               <AnimatedStat icon={Users} target={50000} suffix="k+" label="Happy customers" divisor={1000} variant="mobile" />
+                <AnimatedStat icon={Package} target={Math.max(Number(productCount) || 0, 30000)} suffix="k+" label="Products" divisor={1000} variant="mobile" />
+                 <AnimatedStat icon={Layers3} target={categoryCount} suffix="+" label="Categories" variant="mobile" />
             </div>
           </div>
         </div>
@@ -218,6 +215,10 @@ function HeroProduct({ product, shippingLabel, badge }) {
         <div className="hero-shipping">
           <Truck className="h-4 w-4" />
           <span>{shippingLabel || (Number(product.price) > 150 ? "Free delivery" : "Low shipping rate")}</span>
+        </div>
+        <div className="hero-shipping hero-stock">
+          <Package className="h-4 w-4" />
+          <span>{Number(product.stock) > 0 && product.isSellable !== false ? `${Number(product.stock)} in stock` : "Out of stock"}</span>
         </div>
       </div>
       <div className="hero-media">

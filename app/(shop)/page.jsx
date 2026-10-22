@@ -20,7 +20,7 @@ const SECTION_LIMITS = {
   bestDeals: 4,
   newArrivals: 4,
   trending: 4,
-  custom: 6,
+  custom: 4,
 };
 
 const SECTION_DEFAULTS = {
@@ -85,13 +85,14 @@ function sectionCardTarget(limit, productCount) {
   return Math.max(1, Math.min(limit, Math.max(MIN_SECTION_CARDS, limit), available));
 }
 
-// A section set to manual shows exactly what the admin picked in home
-// customization: no auto fill, no featured fallback and no padding up to
-// MIN_SECTION_CARDS. The old behavior padded short picks with random catalog
-// products, which is why a manual section used to show cards nobody selected.
+// A section with selected manual picks shows exactly those products. An empty
+// new section temporarily uses the catalog so it is visible immediately after
+// saving instead of disappearing until products are selected.
 function isManualSection(config, picks) {
   if (config?.mode === "auto") return false;
-  if (config?.mode === "manual") return true;
+  // A newly added manual section has no picks yet, so let it fill from the
+  // catalog until the admin chooses specific products.
+  if (config?.mode === "manual") return picks.length > 0;
   // Older saved configs may carry no mode; their picks mean "manual".
   return picks.length > 0;
 }
@@ -166,9 +167,9 @@ function homepageDisplay(home, dbCategories, picks, productCount) {
   };
 }
 
-// Resolves one section to its final card list. A manual section is exactly the
-// admin's picks — nothing is ever appended, which is what used to leak random
-// catalog products into sections with fewer picks than MIN_SECTION_CARDS.
+// Resolves one section to its final card list. A manual section with picks is
+// exactly the admin's selection; an empty section uses the automatic catalog
+// pool until the admin chooses products.
 // Automatic sections fill from the in-stock auto pool first and the featured
 // feed second, and are asked for the full target so a duplicate still leaves
 // enough fresh products.
@@ -261,6 +262,7 @@ async function HomeCatalog({ categories, productCount, homepage, picks }) {
         <HomeHero
           products={heroWithBadges}
           productCount={productCount}
+          categories={categories}
           explicit
           content={{ eyebrow: heroConfig.eyebrow, title: heroConfig.title, lead: heroConfig.lead }}
         />

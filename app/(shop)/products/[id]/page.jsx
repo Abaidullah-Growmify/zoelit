@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, Check, CheckCircle2, RotateCcw, ShieldCheck, Star, Truck, XCircle } from "lucide-react";
+import { ArrowRight, Check, CheckCircle2, RotateCcw, ShieldCheck, Truck, XCircle } from "lucide-react";
 import { getFeaturedProducts, getServerProduct, getStoreConfig } from "@/lib/server-catalog";
 import { money } from "@/lib/utils";
 import { ProductBuy } from "./product-buy";
@@ -59,7 +59,7 @@ function YouMayAlsoLike({ currentId, products }) {
 
 export default async function ProductDetailPage({ params }) {
   const { id } = await params;
-  const [product, storeConfig] = await Promise.all([getServerProduct(id), getStoreConfig()]);
+  const product = await getServerProduct(id);
   if (!product) notFound();
 
   const featured = await getFeaturedProducts();
@@ -84,12 +84,6 @@ export default async function ProductDetailPage({ params }) {
             <span className="inline-flex rounded-full bg-surface-container px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-on-surface-variant">
               {product.category}
             </span>
-            {product.rating > 0 ? (
-              <span className="inline-flex items-center gap-1.5">
-                <Star className="size-4 fill-secondary text-secondary" aria-hidden="true" />
-                <span className="text-label-sm font-bold text-on-surface">{product.rating}</span>
-              </span>
-            ) : null}
             {product.isSellable === false ? (
               <span className="inline-flex items-center gap-1.5 text-label-sm font-bold text-error">
                 <XCircle className="size-4" />
@@ -108,7 +102,7 @@ export default async function ProductDetailPage({ params }) {
           </h1>
 
           <div className="mt-5 flex items-end gap-4">
-            <span className="font-heading text-headline-lg font-extrabold tabular-nums tracking-[-0.03em] text-on-surface">{money(product.price, storeConfig.currency)}</span>
+            <span className="font-heading text-headline-lg font-extrabold tabular-nums tracking-[-0.03em] text-on-surface">{money(product.price)}</span>
             <span className="pb-1 text-label-md font-semibold text-on-surface-variant">Tax and shipping at checkout</span>
           </div>
 
