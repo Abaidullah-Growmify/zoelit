@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { Eye, EyeOff, LockKeyhole, ShieldCheck } from "lucide-react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "nextjs-toploader/app";
 import { useState } from "react";
 import { BrandLogo } from "@/components/brand-logo";
 import { Button, Card, Input, Label } from "@/components/ui";

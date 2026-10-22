@@ -1,4 +1,5 @@
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
+import NextTopLoader from "nextjs-toploader";
 import { Toaster } from "sonner";
 import { StoreConfigProvider } from "@/components/store-config-provider";
 import { StoreHydration } from "@/components/store-hydration";
@@ -33,6 +34,7 @@ export default function RootLayout({ children }) {
         className="min-h-screen bg-background font-sans text-body-md text-on-surface antialiased"
         suppressHydrationWarning
       >
+        <NextTopLoader color="#2563eb" initialPosition={0.08} crawlSpeed={200} height={3} crawl showSpinner={false} easing="ease" speed={200} shadow="0 0 10px #2563eb,0 0 5px #2563eb" zIndex={1600} showForHashAnchor={false} />
         <ReduxProvider>
           <StoreHydration />
           <StoreConfigProvider>{children}</StoreConfigProvider>

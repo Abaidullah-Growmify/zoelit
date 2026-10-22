@@ -12,7 +12,8 @@ import { CategoryPicker } from "@/components/home-manager/category-picker";
 import { getAdminCategories, getAdminHomepage, getAdminProducts, getAdminProductsByIds, updateAdminHomepage } from "@/lib/api";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
 import { cn } from "@/lib/utils";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "nextjs-toploader/app";
 import { AdminTableActions } from "@/components/admin-table";
 
 const MIN_SKELETON_MS = 650;

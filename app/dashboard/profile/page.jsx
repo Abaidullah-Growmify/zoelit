@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useRouter } from "nextjs-toploader/app";
 import { useEffect, useState } from "react";
 import { AlertTriangle, ArrowLeft, Check, ChevronRight, Eye, EyeOff, LockKeyhole, MapPin, Pencil, Plus, Trash2, UserRound } from "lucide-react";
 import { toast } from "sonner";
