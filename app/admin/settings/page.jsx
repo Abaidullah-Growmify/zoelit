@@ -31,6 +31,11 @@ const INGRAM_ENVS = [
   { value: "production", label: "Production" },
 ];
 
+const STRIPE_MODES = [
+  { value: "test", label: "Test mode" },
+  { value: "live", label: "Live mode" },
+];
+
 const SECRET_SENTINEL = "__SET__";
 const SECRET_KEYS = new Set([
   "ingram.clientId",
@@ -62,10 +67,13 @@ const SECTIONS = [
     description: "Stripe keys, checkout and webhooks.",
       icon: CreditCard,
     fields: [
-      { key: "stripe.secretKey", label: "Secret key", type: "password", placeholder: "sk_live_..." },
-      { key: "stripe.publishableKey", label: "Publishable key", type: "password", placeholder: "pk_live_..." },
+      { key: "stripe.mode", label: "Stripe mode", type: "select", options: STRIPE_MODES, span: true, widthClass: "w-full sm:max-w-sm" },
+      { key: "stripe.secretKey", label: "Secret key", type: "password", placeholder: "sk_test_... or sk_live_..." },
+      { key: "stripe.publishableKey", label: "Publishable key", type: "password", placeholder: "pk_test_... or pk_live_..." },
       { key: "stripe.webhookSecret", label: "Webhook signing secret", type: "password", placeholder: "whsec_..." },
-      { key: "stripe.enabled", label: "Stripe checkout", type: "toggle" },
+      { key: "stripe.webhookUrl", label: "Stripe webhook URL", type: "readonly", span: true, widthClass: "w-full sm:max-w-3xl" },
+      { key: "stripe.webhookEvents", label: "Configured webhook events", type: "event-list", span: true, widthClass: "w-full sm:max-w-3xl" },
+      { key: "stripe.enabled", label: "Stripe checkout", type: "toggle", span: true },
     ],
   },
   {
@@ -227,6 +235,7 @@ export default function AdminSettingsPage() {
   function buildPayload(section) {
     const payload = {};
     for (const field of section.fields) {
+      if (field.type === "readonly") continue;
       const raw = values[field.key];
       if (SECRET_KEYS.has(field.key)) {
         if (raw !== undefined && raw !== null && raw !== "") {
@@ -430,7 +439,7 @@ function SettingsFields({ activeSection, values, setValue, visibleKeys, toggleVi
           <ToggleRow field={field} value={values[field.key]} onChange={(value) => setValue(field.key, value)} />
         </div>
       ) : (
-        <div key={field.key} className={field.span ? "sm:col-span-2" : ""}>
+        <div key={field.key} className={cn(field.span ? "sm:col-span-2" : "", field.widthClass)}>
           <FieldLabel field={field} />
           <div className="mt-2">
             <FieldControl field={field} value={values[field.key]} onChange={(value) => setValue(field.key, value)} visible={Boolean(visibleKeys[field.key])} onToggleVisible={() => toggleVisible(field.key)} configured={configured.has(field.key)} />
@@ -460,6 +469,28 @@ function ToggleRow({ field, value, onChange }) {
 }
 
 function FieldControl({ field, value, onChange, visible, onToggleVisible, configured }) {
+  if (field.type === "event-list") {
+    const events = String(value || "").split(",").map((event) => event.trim()).filter(Boolean);
+    return (
+      <div className="grid min-w-0 gap-2">
+        {events.map((event) => (
+          <label key={event} className="flex min-h-11 w-full min-w-0 items-start gap-3 rounded-md border border-outline-variant bg-surface-container-low px-3.5 py-2.5 text-sm text-on-surface">
+            <input type="checkbox" checked readOnly disabled className="size-4 shrink-0 accent-primary" />
+            <span className="min-w-0 break-all font-mono text-xs leading-5">{event}</span>
+          </label>
+        ))}
+      </div>
+    );
+  }
+
+  if (field.type === "readonly") {
+    return (
+      <div className="min-w-0 break-all rounded-md border border-outline-variant bg-surface-container-low px-3.5 py-3 font-mono text-xs leading-5 text-on-surface-variant" role="textbox" aria-readonly="true">
+        {value || "Not configured"}
+      </div>
+    );
+  }
+
   if (field.type === "select") {
     return (
       <div>
