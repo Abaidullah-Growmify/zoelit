@@ -15,7 +15,6 @@ import { money } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
 
 const PAGE_SIZE = 10;
-const MIN_SKELETON_MS = 650;
 
 export default function AdminCategoriesPage() {
   const token = useAdminAuthStore((state) => state.token);
@@ -65,11 +64,8 @@ const [sourceFilter, setSourceFilter] = useState("all");
   const loadCategories = useCallback(() => {
     let active = true;
     if (!token) return () => { active = false; };
-    Promise.all([
-      getAdminCategories(token),
-      new Promise((resolve) => window.setTimeout(resolve, MIN_SKELETON_MS)),
-    ])
-      .then(([data]) => {
+    getAdminCategories(token)
+      .then((data) => {
         if (!active) return;
 setRows((data.categories || []).map((category) => ({
            name: category.name,

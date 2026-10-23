@@ -203,14 +203,14 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
                   ) : column.header}
                 </th>
               ))}
-                {hasActions ? <th className="sticky right-0 z-20 whitespace-nowrap bg-surface-container-low px-3 py-3 text-center text-xs font-medium shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)] sm:px-4">Actions</th> : null}
+                {hasActions ? <th className="sticky right-0 z-20 whitespace-nowrap bg-surface-container-low px-3 py-3 text-left text-xs font-medium shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)] sm:px-4">Actions</th> : null}
             </tr>
           </thead>
           <tbody className="divide-y divide-outline-variant/40 dark:divide-outline-variant/40">
             {pageItems.map((row, rowIndex) => (
               <AdminTableRow key={row.id || row.productId || row.key || rowIndex} zebra={zebra} index={rowIndex}>
                 {columns.map((column) => <AdminTableCell key={column.key} className={column.cellClassName}>{column.render ? column.render(row) : getColumnValue(column, row)}</AdminTableCell>)}
-                {hasActions ? <AdminTableCell className={cn("sticky right-0 z-10 text-center shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)]", zebra && rowIndex % 2 === 1 ? "!bg-surface-container-low" : "!bg-surface")}><AdminTableActions actions={rowActions(row)} label={`Actions for ${row.name || row.productName || row.id || "row"}`} /></AdminTableCell> : null}
+                {hasActions ? <AdminTableCell className={cn("sticky right-0 z-10 text-left shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)]", zebra && rowIndex % 2 === 1 ? "!bg-surface-container-low" : "!bg-surface")}><AdminTableActions actions={rowActions(row)} label={`Actions for ${row.name || row.productName || row.id || "row"}`} /></AdminTableCell> : null}
               </AdminTableRow>
             ))}
             {!pageItems.length ? (
@@ -284,6 +284,11 @@ export function AdminTableActions({ actions, label = "Row actions" }) {
   if (!actions?.length) return null;
 
   function handleToggle() {
+    if (open) {
+      handleClose();
+      return;
+    }
+
     const rect = triggerRef.current?.getBoundingClientRect();
     if (!rect) return;
     const width = 176;
@@ -293,7 +298,10 @@ export function AdminTableActions({ actions, label = "Row actions" }) {
     const top = spaceBelow >= menuHeight + gap
       ? rect.bottom + gap
       : Math.max(8, rect.bottom - menuHeight - gap);
-    const left = Math.max(8, Math.min(rect.right - width, window.innerWidth - width - 8));
+    // Keep the menu below the trigger instead of positioning its right edge
+    // over the preceding table column. Only shift it when the viewport edge
+    // would otherwise clip the menu.
+    const left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8));
     setAnchor({ top, left });
     setOpen(true);
   }
@@ -305,7 +313,7 @@ export function AdminTableActions({ actions, label = "Row actions" }) {
 
   return (
     <>
-      <div className="relative inline-block text-left">
+      <div className="relative inline-flex justify-start text-left">
         <button
           ref={triggerRef}
           type="button"
@@ -319,18 +327,18 @@ export function AdminTableActions({ actions, label = "Row actions" }) {
       </div>
       {open && anchor && typeof document !== "undefined"
         ? createPortal(
-             <div data-row-actions-menu style={{ position: "fixed", top: anchor.top, left: anchor.left, zIndex: 100 }} className="w-52 max-w-[calc(100vw-1rem)] overflow-hidden rounded-lg border border-outline-variant bg-surface py-1 shadow-xl">
+             <div data-row-actions-menu style={{ position: "fixed", top: anchor.top, left: anchor.left, zIndex: 100 }} className="w-40 max-w-[calc(100vw-1rem)] overflow-hidden rounded-lg border border-outline-variant bg-surface py-1 text-left shadow-xl">
               {actions.map((action) => {
                 const Icon = action.icon || Eye;
                 const isDisabled = Boolean(action.disabled);
                 const baseClassName = isDisabled
-                   ? "flex w-full cursor-not-allowed items-center gap-2 whitespace-nowrap px-4 py-2.5 text-left text-label-md font-normal text-on-surface-variant/60"
-                   : cn("flex w-full items-center gap-2 whitespace-nowrap px-4 py-2.5 text-left text-label-md font-normal text-on-surface-variant transition hover:bg-surface-container-low", action.tone === "danger" && "text-error");
+                   ? "grid w-full cursor-not-allowed grid-cols-[1rem_minmax(0,1fr)] items-center justify-start gap-2 whitespace-nowrap px-3 py-2.5 text-left text-label-md font-normal text-on-surface-variant/60"
+                   : cn("grid w-full grid-cols-[1rem_minmax(0,1fr)] items-center justify-start gap-2 whitespace-nowrap px-3 py-2.5 text-left text-label-md font-normal text-on-surface-variant transition hover:bg-surface-container-low", action.tone === "danger" && "text-error");
                 const content = (
-                  <>
-                    <Icon className={isDisabled ? "size-4 opacity-60" : "size-4"} />
-                    {action.label}
-                  </>
+                   <>
+                     <Icon className={isDisabled ? "size-4 shrink-0 opacity-60" : "size-4 shrink-0"} />
+                     {action.label}
+                   </>
                 );
                 if (!isDisabled && action.href) {
                   return (

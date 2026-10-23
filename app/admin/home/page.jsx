@@ -16,8 +16,6 @@ import { useSearchParams } from "next/navigation";
 import { useRouter } from "nextjs-toploader/app";
 import { AdminTableActions } from "@/components/admin-table";
 
-const MIN_SKELETON_MS = 650;
-
 const DEFAULTS = {
   hero: {
     enabled: true,
@@ -179,6 +177,8 @@ async function sanitizePicks(homepage, dbCategories, token) {
     ...cleaned.customSections.flatMap((section) => pickedIds(section?.productIds)),
   ];
 
+  if (!allIds.length) return { homepage: cleaned, removed };
+
   let existing = null;
   try {
     const data = await getAdminProductsByIds([...new Set(allIds)], token);
@@ -188,8 +188,6 @@ async function sanitizePicks(homepage, dbCategories, token) {
     // them on a transient error.
     return { homepage: cleaned, removed };
   }
-
-  if (!allIds.length) return { homepage: cleaned, removed };
 
   const keepId = (id) => {
     if (existing.has(id)) return true;
@@ -264,26 +262,38 @@ export default function AdminHomePage() {
   const load = useCallback(() => {
     let active = true;
     if (!token) return () => { active = false; };
-    Promise.all([
-      getAdminHomepage(token),
-      getAdminCategories(token),
-      getAdminProducts({ page: 1, limit: 1 }, token),
-      new Promise((resolve) => window.setTimeout(resolve, MIN_SKELETON_MS)),
-    ])
-      .then(async ([data, categoryData, productData]) => {
+    const homepageRequest = getAdminHomepage(token);
+    const categoriesRequest = getAdminCategories(token);
+    const productTotalRequest = getAdminProducts({ page: 1, limit: 1 }, token).catch(() => null);
+
+    // Render the editor as soon as its two required payloads arrive. Product
+    // totals and stale-pick cleanup are useful validation, but must not block
+    // the first usable screen.
+    Promise.all([homepageRequest, categoriesRequest])
+      .then(([data, categoryData]) => {
         if (!active) return;
         const merged = normalizeHomepage(data?.homepage);
         const dbCategories = (categoryData.categories || []).filter((category) => category && category.name);
-        const { homepage: cleaned, removed } = await sanitizePicks(merged, dbCategories, token);
-        if (!active) return;
-        setHomepage(cleaned);
-        setSaved(cleaned);
+        setHomepage(merged);
+        setSaved(merged);
         setCategories(dbCategories);
-        setProductTotal(Number(productData?.pagination?.total) || 0);
         setLoading(false);
-        if (removed > 0) {
-          toast.info(`Removed ${removed} saved ${removed === 1 ? "pick" : "picks"} that no longer exist in the catalog.`);
-        }
+
+        productTotalRequest
+          .then((productData) => {
+            if (active && productData) setProductTotal(Number(productData.pagination?.total) || 0);
+          });
+
+        sanitizePicks(merged, dbCategories, token).then(({ homepage: cleaned, removed }) => {
+          if (!active) return;
+          if (removed > 0) {
+            setHomepage(cleaned);
+            setSaved(cleaned);
+            toast.info(`Removed ${removed} saved ${removed === 1 ? "pick" : "picks"} that no longer exist in the catalog.`);
+          }
+        }).catch(() => {
+          // Keep the already-rendered homepage when background validation fails.
+        });
       })
       .catch((error) => {
         if (!active) return;

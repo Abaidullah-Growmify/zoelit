@@ -227,7 +227,8 @@ export default function AdminCommissionsPage() {
               hideSearch
               disableInitialSort
               rowActions={(rule) => [
-                { label: "Edit rule", icon: Pencil, onClick: () => edit(rule) },
+                { label: "View", icon: Eye, onClick: () => setViewTarget(rule) },
+                { label: "Edit", icon: Pencil, onClick: () => edit(rule) },
                 { label: "Delete", icon: Trash2, onClick: () => remove(rule._id), tone: "danger" },
               ]}
             />

@@ -684,8 +684,6 @@ async function save(event) {
                 icon: Trash2,
                 onClick: () => setDeleteTarget(voucher),
                 tone: "danger",
-                disabled: (Number(voucher.usageCount) || 0) > 0,
-                disabledTitle: "A used voucher cannot be deleted. Disable it instead.",
               },
             ]}
           />
@@ -1341,7 +1339,7 @@ function InactiveVoucherGrid({ vouchers, totalCount, search, onStatusChange, onE
     disableInitialSort
     rowActions={(voucher) => [
       { label: "Edit", icon: Pencil, onClick: () => onEdit(voucher) },
-      { label: "Delete", icon: Trash2, onClick: () => onDelete(voucher), disabled: (Number(voucher.usageCount) || 0) > 0 || statusSavingId === (voucher._id || voucher.id) },
+      { label: "Delete", icon: Trash2, onClick: () => onDelete(voucher), disabled: statusSavingId === (voucher._id || voucher.id) },
       { label: "Activate", icon: CheckCircle, onClick: () => onStatusChange(voucher) },
     ]}
   />;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState, useEffect } from "react";
-import { ArrowDown, ArrowUp, ChevronDown, Search, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, ChevronDown, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function CategoryPicker({ categories = [], value = [], onChange, max = 0, buttonLabel = "Select categories" }) {
@@ -135,7 +135,7 @@ export function CategoryPicker({ categories = [], value = [], onChange, max = 0,
                       selected ? "border-primary bg-primary text-white" : "border-outline-variant bg-surface-container-low text-transparent"
                     )}
                   >
-                    ✓
+                    {selected ? <Check className="size-3.5 stroke-[3]" aria-hidden="true" /> : null}
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-on-surface">{name}</p>

@@ -25,6 +25,20 @@ button:not(.icon-btn):has(> svg) > svg,
   margin-left: 0 !important;
 }
 
+/* Row action menus always keep the icon in the first column and labels aligned. */
+[data-row-actions-menu] > button,
+[data-row-actions-menu] > a {
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+
+[data-row-actions-menu] > button > svg,
+[data-row-actions-menu] > a > svg {
+  order: -1 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
 :root {
   --color-primary: #1d4ed8;
   --color-on-primary: #ffffff;

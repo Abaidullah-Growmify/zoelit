@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowDown, ArrowUp, ChevronDown, Loader2, Search, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, ChevronDown, Loader2, Search, X } from "lucide-react";
 import { getAdminProducts, getAdminProductsByIds } from "@/lib/api";
 import { FALLBACK_IMAGE } from "@/lib/product-mapper";
 import { cn } from "@/lib/utils";
@@ -241,7 +241,7 @@ export function ProductPicker({
                       selected ? "border-primary bg-primary text-white" : "border-outline-variant bg-surface-container-low text-transparent"
                     )}
                   >
-                    ✓
+                    {selected ? <Check className="size-3.5 stroke-[3]" aria-hidden="true" /> : null}
                   </span>
                   <div className="relative size-10 shrink-0 overflow-hidden rounded-lg bg-surface-container-low">
                     <Image src={product.imageUrl || product.image || FALLBACK_IMAGE} alt="" fill sizes="40px" className="object-cover" />

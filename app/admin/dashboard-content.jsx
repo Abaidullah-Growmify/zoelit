@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ArrowUpRight, ChevronDown } from "lucide-react";
+import { ArrowUpRight, ChevronDown, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
@@ -18,6 +18,7 @@ import { useAdminAuthStore } from "@/store/admin-auth-store";
 export function AdminDashboardContent({ orders, topProducts, lowStock, salesOverview }) {
   const token = useAdminAuthStore((state) => state.token);
   const [tableOrders, setTableOrders] = useState(orders || []);
+  const [pendingOrderId, setPendingOrderId] = useState("");
   const numberedOrders = tableOrders.map((order, index) => ({ ...order, serial: index + 1 }));
 
   useEffect(() => {
@@ -30,6 +31,7 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
 
   async function handleOrderStatusChange(order, nextStatus) {
     const previousOrders = tableOrders;
+    setPendingOrderId(order.id);
     setTableOrders((current) => current.map((row) => row.id === order.id ? { ...row, status: nextStatus } : row));
 
     try {
@@ -38,6 +40,8 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
     } catch (statusError) {
       setTableOrders(previousOrders);
       toast.error(statusError.message || "Could not update order status");
+    } finally {
+      setPendingOrderId("");
     }
   }
 
@@ -49,7 +53,7 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
     { key: "notes", header: "Notes", accessor: "notes", render: (order) => <OrderNotesDialog notes={order.notes} label={`View notes for order ${order.publicOrderId || order.orderNumber || order.id}`} /> },
     { key: "total", header: "Total", sortable: true, accessor: "total", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => money(order.total) },
     { key: "date", header: "Date", sortable: true, accessor: "date", render: (order) => shortDate(order.date) },
-    { key: "status", header: "Status", accessor: "status", render: (order) => <OrderStatusSelect order={order} onChange={handleOrderStatusChange} /> },
+    { key: "status", header: "Status", accessor: "status", render: (order) => <OrderStatusSelect order={order} pending={pendingOrderId === order.id} onChange={handleOrderStatusChange} /> },
   ];
   const trend = chartTrend(salesOverview);
 
@@ -157,7 +161,7 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
   );
 }
 
-function OrderStatusSelect({ order, onChange }) {
+function OrderStatusSelect({ order, pending, onChange }) {
   const status = order.status || "Pending";
 
   return (
@@ -165,13 +169,18 @@ function OrderStatusSelect({ order, onChange }) {
       <select
         value={status}
         onChange={(event) => onChange(order, event.target.value)}
-        disabled={Boolean(order.fulfillmentGroups?.length)}
+        disabled={pending}
+        aria-busy={pending || undefined}
         aria-label={`Change status for order ${order.orderNumber || order.id}`}
         className={`h-8 w-fit appearance-none rounded-md border-0 py-0 pl-3 pr-8 text-label-sm font-semibold shadow-none outline-none ring-0 transition focus:ring-2 disabled:cursor-not-allowed disabled:opacity-70 ${statusClassName(status)}`}
       >
         {statuses.map((option) => <option key={option}>{option}</option>)}
       </select>
-      <ChevronDown className="pointer-events-none absolute right-3 size-3.5 text-current" />
+      {pending ? (
+        <Loader2 className="pointer-events-none absolute right-3 size-3.5 animate-spin text-primary" />
+      ) : (
+        <ChevronDown className="pointer-events-none absolute right-3 size-3.5 text-current" />
+      )}
     </span>
   );
 }
