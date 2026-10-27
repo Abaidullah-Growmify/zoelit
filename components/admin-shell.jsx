@@ -10,7 +10,9 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { BrandLogo } from "@/components/brand-logo";
 import { AuthGateSkeleton } from "@/components/skeletons";
 import { cn } from "@/lib/utils";
+import { clearAdminPushToken } from "@/lib/firebase";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
+import { AdminNotificationListener } from "@/components/admin-notification-listener";
 
 const items = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -21,6 +23,7 @@ const items = [
   { href: "/admin/commissions", label: "Commissions", icon: Percent },
   { href: "/admin/vouchers", label: "Vouchers", icon: Ticket },
   { href: "/admin/customers", label: "Customers", icon: Users },
+  { href: "/admin/notifications", label: "Notifications", icon: Bell },
   { href: "/admin/email-templates", label: "Email templates", icon: Mail },
   { href: "/admin/home", label: "Home customization", icon: Home },
   { href: "/admin/settings", label: "Settings", icon: Settings },
@@ -93,6 +96,9 @@ export function AdminShell({ children }) {
 
   const handleLogout = async () => {
     await logout();
+    // The server removed the session-bound row; also clear the local FCM token
+    // so the next login registers a fresh subscription for the new session.
+    clearAdminPushToken().catch(() => {});
     toast.info("Admin signed out");
     router.push("/admin/login");
   };
@@ -118,13 +124,14 @@ export function AdminShell({ children }) {
 
   return (
     <div className="admin-shell min-h-screen min-w-0 bg-background">
+      <AdminNotificationListener />
       <div className="relative sticky top-0 z-40 flex h-14 items-center gap-2 border-b border-outline-variant/70 bg-surface/95 px-3 backdrop-blur lg:hidden print:hidden">
         <button className="icon-btn size-10 shrink-0 self-center" onClick={() => setMobileOpen(true)} aria-label="Open admin menu"><Menu className="size-5" /></button>
         <Link href="/admin" className="mr-1 flex min-w-0 flex-1 items-center justify-start border-r border-outline-variant/70 pr-3 text-left"><BrandLogo className="w-[clamp(75px,22vw,90px)] max-w-full object-contain" /></Link>
-        <button type="button" className="icon-btn relative shrink-0" aria-label="Notifications">
-          <Bell className="size-4" />
-          <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-primary" />
-        </button>
+         <Link href="/admin/notifications" className="icon-btn relative shrink-0" aria-label="Notifications">
+           <Bell className="size-4" />
+           <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-primary" />
+         </Link>
         <div className="relative shrink-0" ref={mobileProfileRef}>
           <button type="button" onClick={() => setProfileOpen((open) => !open)} className="grid size-10 place-items-center rounded-md border border-outline-variant bg-surface" aria-expanded={profileOpen} aria-haspopup="menu" aria-label="Open account menu">
             <span className="grid size-7 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary">{initials}</span>
@@ -177,10 +184,10 @@ export function AdminShell({ children }) {
               <button type="button" onClick={toggleFullscreen} className="icon-btn" aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"} title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}>
                 {isFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
               </button>
-              <button type="button" className="icon-btn relative" aria-label="Notifications">
-                <Bell className="size-4" />
-                <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-primary" />
-              </button>
+               <Link href="/admin/notifications" className="icon-btn relative" aria-label="Notifications">
+                 <Bell className="size-4" />
+                 <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-primary" />
+               </Link>
               <div className="relative" ref={profileRef}>
                 <button type="button" onClick={() => setProfileOpen((open) => !open)} className="flex h-10 items-center gap-2 rounded-md border border-outline-variant bg-surface px-2 text-left transition hover:bg-surface-container-low" aria-expanded={profileOpen} aria-haspopup="menu">
                   <span className="grid size-7 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary">{initials}</span>

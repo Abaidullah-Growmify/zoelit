@@ -9,6 +9,8 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button, ErrorText, Input, Label } from "@/components/ui";
+import { registerAdminPushToken } from "@/lib/api";
+import { getAdminPushToken, requestAdminNotificationPermission } from "@/lib/firebase";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
 
 const schema = z.object({
@@ -31,9 +33,25 @@ export default function AdminLoginPage() {
 
   async function onSubmit(values) {
     try {
-      await login(values.email, values.password, values.remember);
+      // Start the browser permission prompt inside the submit gesture. If we
+      // wait for the login request first, Chrome/Firefox ignore the request
+      // because the user gesture has already expired.
+      const permissionPromise = requestAdminNotificationPermission().catch(() => "default");
+
+      const session = await login(values.email, values.password, values.remember);
       toast.success("Admin access granted");
       router.push("/admin");
+
+      // The admin login token is now valid. Save this browser's push token
+      // against that exact session without delaying the redirect.
+      permissionPromise
+        .then((permission) => permission === "granted" ? getAdminPushToken({ requestPermission: false }) : null)
+        .then((pushToken) => {
+          if (!pushToken || !session?.token) return null;
+          return registerAdminPushToken({ token: pushToken, device: "web", browser: navigator.userAgent, platform: navigator.platform }, session.token);
+        })
+        .then(() => window.dispatchEvent(new Event("zoelit-admin-push-token")))
+        .catch(() => {});
     } catch (error) {
       toast.error(error.message || "Admin sign in failed");
     }

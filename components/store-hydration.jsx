@@ -147,6 +147,7 @@ export function StoreHydration() {
       }
 
       dispatch(forceAdminLogout());
+      import("@/lib/firebase").then(({ clearAdminPushToken }) => clearAdminPushToken()).catch(() => {});
 
       if (window.location.pathname.startsWith("/admin")) {
         window.location.assign(`/admin/login?next=${encodeURIComponent(`${window.location.pathname}${window.location.search}`)}`);
@@ -165,6 +166,7 @@ export function StoreHydration() {
 
       if (apiPath.startsWith("/api/admin")) {
         dispatch(forceAdminLogout());
+        import("@/lib/firebase").then(({ clearAdminPushToken }) => clearAdminPushToken()).catch(() => {});
       } else {
         dispatch(forceLogout());
       }

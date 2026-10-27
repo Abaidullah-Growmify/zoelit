@@ -19,7 +19,10 @@ export const adminLogin = createAsyncThunk(
 export const adminLogout = createAsyncThunk("adminAuth/logout", async (_, { getState }) => {
   const { token } = getState().adminAuth;
   try {
-    if (token) await api.adminLogout(token);
+    // Send the request even when local storage lost the token; the httpOnly
+    // admin cookie still identifies the session and lets the server delete the
+    // session-bound browser push token.
+    await api.adminLogout(token || undefined);
   } catch {
     // Ignore network errors; always clear the local session.
   }

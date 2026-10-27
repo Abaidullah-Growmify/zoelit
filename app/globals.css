@@ -39,6 +39,23 @@ button:not(.icon-btn):has(> svg) > svg,
   margin-right: 0 !important;
 }
 
+/* Keep mobile feedback compact and below the storefront navigation. */
+@media (max-width: 640px) {
+  [data-sonner-toaster] {
+    --width: min(calc(100vw - 2rem), 20rem) !important;
+    top: 4.5rem !important;
+    right: 1rem !important;
+    left: auto !important;
+    width: min(calc(100vw - 2rem), 20rem) !important;
+    max-width: calc(100vw - 2rem) !important;
+  }
+
+  [data-sonner-toast] {
+    width: min(calc(100vw - 2rem), 20rem) !important;
+    max-width: min(calc(100vw - 2rem), 20rem) !important;
+  }
+}
+
 :root {
   --color-primary: #1d4ed8;
   --color-on-primary: #ffffff;

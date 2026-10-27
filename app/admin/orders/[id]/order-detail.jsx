@@ -117,8 +117,15 @@ export function AdminOrderDetail({ id }) {
 
   return (
     <>
-      <Card className="print:hidden space-y-6 p-6">
+      <div className="print:hidden space-y-6">
         <AdminPageHeader title={`Order ${order.publicOrderId || order.orderNumber || order.id}`} description={`Placed by ${customer.name || "Unknown"} on ${shortDate(order.date)}. Review fulfilment details and print the invoice.`} action={<Button variant="outline" onClick={() => window.print()}><Printer className="size-4" />Print invoice</Button>} />
+
+        <div className="grid gap-3 sm:grid-cols-4">
+          <OrderMetric label="Status" value={order.status || "Pending"} badge />
+          <OrderMetric label="Items" value={`${(order.lineItems || []).length} product${(order.lineItems || []).length === 1 ? "" : "s"}`} />
+          <OrderMetric label="Payment" value={order.payment || order.paymentMethod || "Pending"} />
+          <OrderMetric label="Order total" value={money(order.total || 0)} />
+        </div>
 
         <div className="mt-8 grid gap-6 xl:grid-cols-[1fr_380px]">
           <div className="min-w-0 space-y-6">
@@ -144,8 +151,8 @@ export function AdminOrderDetail({ id }) {
 
                    return (
                     <div key={item.productId} className="flex flex-wrap gap-4 rounded-md border border-slate-100 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-950/60">
-                    {item.image ? (
-                      <Image src={item.image} alt={item.name} width={96} height={96} unoptimized className="size-24 shrink-0 rounded-md object-cover ring-1 ring-slate-200 dark:ring-slate-800" />
+                     {(item.image || item.imageUrl || item.productImage) ? (
+                       <Image src={item.image || item.imageUrl || item.productImage} alt={item.name} width={96} height={96} unoptimized className="size-24 shrink-0 rounded-md object-cover ring-1 ring-slate-200 dark:ring-slate-800" />
                     ) : (
                       <div className="size-24 shrink-0 rounded-md bg-slate-200 dark:bg-slate-800" />
                     )}
@@ -229,12 +236,14 @@ export function AdminOrderDetail({ id }) {
                   <Field label="Ship date"><Input type="date" value={manualShipDate} onChange={(event) => { setManualShipDate(event.target.value); dirtyRef.current = true; }} /></Field>
                   <Field label="Invoice number"><Input value={manualInvoice} onChange={(event) => { setManualInvoice(event.target.value); dirtyRef.current = true; }} placeholder="INV-000001" /></Field>
                 </> : null}
-                <Button className="w-full" onClick={handleUpdate} disabled={saving}>
-                  {saving ? <Loader2 className="size-4 animate-spin" /> : null} Update shipment
-                </Button>
-                <Button className="w-full" variant="outline" onClick={handleCancel} disabled={cancelling || order.status === "Cancelled"}>
-                  <XCircle className="size-4" /> {cancelling ? "Cancelling..." : order.status === "Cancelled" ? "Order cancelled" : "Cancel order"}
-                </Button>
+                 <div className="grid grid-cols-2 gap-2">
+                   <Button className="min-w-0 px-2 text-xs whitespace-nowrap sm:text-sm" onClick={handleUpdate} disabled={saving}>
+                   {saving ? <Loader2 className="size-4 animate-spin" /> : null} Update shipment
+                   </Button>
+                   <Button className="min-w-0 px-2 text-xs whitespace-nowrap sm:text-sm" variant="outline" onClick={handleCancel} disabled={cancelling || order.status === "Cancelled"}>
+                   <XCircle className="size-4" /> {cancelling ? "Cancelling..." : order.status === "Cancelled" ? "Order cancelled" : "Cancel order"}
+                   </Button>
+                 </div>
               </div>
             </Card>
             <Card>
@@ -270,7 +279,7 @@ export function AdminOrderDetail({ id }) {
             ))}
           </div>
         </Card>
-      </Card>
+      </div>
 
       <InvoicePrint order={order} />
     </>
@@ -284,6 +293,10 @@ function Summary({ label, value, strong }) {
       <span className="tabular-nums">{value}</span>
     </div>
   );
+}
+
+function OrderMetric({ label, value, badge = false }) {
+  return <div className="rounded-xl border border-outline-variant/70 bg-surface px-4 py-3 shadow-sm"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-on-surface-variant">{label}</p>{badge ? <div className="mt-2"><AdminStatusBadge>{value}</AdminStatusBadge></div> : <p className="mt-1 break-words text-sm font-semibold text-on-surface">{value}</p>}</div>;
 }
 
 function Field({ label, children }) {

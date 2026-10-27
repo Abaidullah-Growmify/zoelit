@@ -8,6 +8,7 @@ import {
   CreditCard,
   Eye,
   EyeOff,
+  KeyRound,
   Loader2,
   Mail,
   Percent,
@@ -26,11 +27,6 @@ import { useSearchParams } from "next/navigation";
 import { useRouter } from "nextjs-toploader/app";
 import { AdminTableActions } from "@/components/admin-table";
 
-const INGRAM_ENVS = [
-  { value: "sandbox", label: "Sandbox" },
-  { value: "production", label: "Production" },
-];
-
 const STRIPE_MODES = [
   { value: "test", label: "Test mode" },
   { value: "live", label: "Live mode" },
@@ -46,6 +42,16 @@ const SECRET_KEYS = new Set([
   "stripe.publishableKey",
   "stripe.webhookSecret",
   "email.smtpPassword",
+  "firebase.apiKey",
+  "firebase.authDomain",
+  "firebase.databaseURL",
+  "firebase.projectId",
+  "firebase.storageBucket",
+  "firebase.messagingSenderId",
+  "firebase.appId",
+  "firebase.vapidKey",
+  "firebase.clientEmail",
+  "firebase.privateKey",
 ]);
 
 const SECTIONS = [
@@ -82,13 +88,14 @@ const SECTIONS = [
     description: "Ingram keys, URLs and sync options.",
     icon: RefreshCw,
     fields: [
-      { key: "ingram.env", label: "Environment", type: "select", options: INGRAM_ENVS },
       { key: "ingram.clientId", label: "Client ID", type: "password", placeholder: "Client ID" },
       { key: "ingram.clientSecret", label: "Client secret", type: "password", placeholder: "Client secret" },
       { key: "ingram.customerNumber", label: "Customer number", type: "text", placeholder: "Ingram customer number" },
       { key: "ingram.countryCode", label: "Country code", type: "text", placeholder: "US" },
       { key: "ingram.senderId", label: "Sender ID", type: "text", placeholder: "Sender ID" },
       { key: "ingram.tokenUrl", label: "Token URL", type: "text", placeholder: "https://api.ingrammicro.com/.../token", span: true },
+      { key: "ingram.v6BaseUrl", label: "Production V6 base URL", type: "text", placeholder: "https://api.ingrammicro.com:443/resellers/v6", span: true },
+      { key: "ingram.v7BaseUrl", label: "Production V7 base URL", type: "text", placeholder: "https://api.ingrammicro.com:443/resellers/v7", span: true },
       { key: "ingram.stockWebhookSecret", label: "Stock webhook secret", type: "password", placeholder: "Webhook secret" },
       { key: "ingram.orderWebhookSecret", label: "Order webhook secret", type: "password", placeholder: "Webhook secret" },
       { key: "ingram.autoCategoryDiscovery", label: "Automatic category discovery", type: "toggle" },
@@ -120,17 +127,42 @@ const SECTIONS = [
       { key: "email.fromAddress", label: "From address", type: "email", placeholder: "noreply@zoelit.com" },
       { key: "email.senderName", label: "Sender name", type: "text", placeholder: "ZoeLit" },
       { key: "email.supportEmail", label: "Support reply-to", type: "email", placeholder: "help@zoelit.com" },
+      { key: "email.templatesEnabled", label: "Email templates", type: "toggle" },
+      { key: "email.adminEmails", label: "Send emails to admin", type: "toggle" },
+      { key: "email.customerOrderEmails", label: "Send order emails to customers", type: "toggle" },
+    ],
+  },
+  {
+    id: "firebase",
+    label: "Firebase",
+    description: "Web push and Firebase Admin credentials.",
+    icon: KeyRound,
+    fields: [
+      { key: "firebase.apiKey", label: "Web API key", type: "password", placeholder: "AIza..." },
+      { key: "firebase.authDomain", label: "Web auth domain", type: "password", placeholder: "project.firebaseapp.com" },
+      { key: "firebase.databaseURL", label: "Realtime Database URL", type: "password", placeholder: "https://project-default-rtdb.firebaseio.com" },
+      { key: "firebase.projectId", label: "Project ID", type: "password", placeholder: "Firebase project ID" },
+      { key: "firebase.storageBucket", label: "Storage bucket", type: "password", placeholder: "project.firebasestorage.app" },
+      { key: "firebase.messagingSenderId", label: "Messaging sender ID", type: "password", placeholder: "Messaging sender ID" },
+      { key: "firebase.appId", label: "Web app ID", type: "password", placeholder: "1:...:web:..." },
+      { key: "firebase.vapidKey", label: "Web Push VAPID key", type: "password", placeholder: "Web Push certificate key" },
+      { key: "firebase.clientEmail", label: "Admin client email", type: "password", placeholder: "firebase-adminsdk-...@project.iam.gserviceaccount.com" },
+      { key: "firebase.privateKey", label: "Admin private key", type: "textarea", placeholder: "-----BEGIN PRIVATE KEY-----\n...", span: true },
     ],
   },
   {
     id: "notifications",
     label: "Notifications",
-    description: "Which email notifications get sent.",
+    description: "Choose which admin events trigger push alerts.",
     icon: Bell,
     fields: [
-      { key: "email.templatesEnabled", label: "Email templates", type: "toggle" },
-      { key: "email.adminEmails", label: "Send emails to admin", type: "toggle" },
-      { key: "email.customerOrderEmails", label: "Send order emails to customers", type: "toggle" },
+      { key: "notifications.newOrder", label: "New orders", hint: "Receive an alert when a customer places a new order.", type: "toggle" },
+      { key: "notifications.orderStatus", label: "Order status changes", hint: "Receive processing, shipped, delivered, and other status updates.", type: "toggle" },
+      { key: "notifications.paymentFailed", label: "Payment failures", hint: "Receive an alert when a payment cannot be completed.", type: "toggle" },
+      { key: "notifications.orderCancelled", label: "Cancelled orders", hint: "Receive an alert when an order is cancelled.", type: "toggle" },
+      { key: "notifications.ingramFailed", label: "Ingram sync failures", hint: "Receive an alert when an order cannot be submitted or synced with Ingram.", type: "toggle" },
+      { key: "notifications.refundProcessed", label: "Refunds processed", hint: "Receive an alert when a refund is completed.", type: "toggle" },
+      { key: "notifications.contactMessage", label: "Contact messages", hint: "Receive an alert when a visitor submits the contact form.", type: "toggle" },
     ],
   },
 ];
@@ -148,6 +180,13 @@ const DEFAULTS = {
   "email.adminEmails": true,
   "email.smtpPort": "587",
   "email.smtpSecure": false,
+  "notifications.newOrder": true,
+  "notifications.orderStatus": true,
+  "notifications.paymentFailed": true,
+  "notifications.orderCancelled": true,
+  "notifications.ingramFailed": true,
+  "notifications.refundProcessed": true,
+  "notifications.contactMessage": true,
 };
 
 function mergeSettings(raw) {

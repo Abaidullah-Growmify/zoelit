@@ -384,9 +384,26 @@ export default function AdminHomePage() {
     if (shouldNavigate) selectSection("bestDeals");
   }, [sectionParam, selectSection]);
 
-  const persist = async () => {
+  const persist = async (scope = "all") => {
     if (!token || !homepage) throw new Error("Admin session expired");
-    const data = await updateAdminHomepage(homepage, token);
+    let payload = homepage;
+
+    // A section save must not persist edits made in other sections. The API
+    // stores the complete homepage document, so merge only the requested
+    // section over the last saved snapshot before sending it.
+    if (scope !== "all" && saved) {
+      if (scope.startsWith("custom:")) {
+        const index = Number(scope.split(":")[1]);
+        const customSections = [...(saved.customSections || [])];
+        const currentSection = homepage.customSections?.[index];
+        if (currentSection) customSections[index] = currentSection;
+        payload = { ...saved, customSections };
+      } else {
+        payload = { ...saved, [scope]: homepage[scope] };
+      }
+    }
+
+    const data = await updateAdminHomepage(payload, token, scope);
     const merged = normalizeHomepage(data?.homepage);
     setHomepage(merged);
     setSaved(merged);
@@ -410,7 +427,7 @@ export default function AdminHomePage() {
     }
     setSaving("all");
     try {
-      await persist();
+      await persist("all");
       toast.success("Home page saved");
     } catch (saveError) {
       toast.error(saveError.message || "Could not save home page");
@@ -427,7 +444,7 @@ export default function AdminHomePage() {
     }
     setSaving(activeId);
     try {
-      await persist();
+      await persist(activeId);
       setSavedFlash(activeId);
       setTimeout(() => setSavedFlash(""), 2200);
       toast.success("Section saved");

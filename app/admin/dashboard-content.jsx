@@ -3,14 +3,15 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ArrowUpRight, ChevronDown, Loader2 } from "lucide-react";
+import { ArrowUpRight, ChevronDown, Eye, Loader2, Pencil } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminTable } from "@/components/admin-table";
 import { OrderNotesDialog } from "@/components/order-notes-dialog";
 import { Card } from "@/components/ui";
-import { updateAdminOrderStatus } from "@/lib/api";
+import { AdminOrderEditDialog } from "@/components/admin-order-edit-dialog";
+import { getAdminOrder, updateAdminOrderStatus } from "@/lib/api";
 import { statuses } from "@/lib/data";
 import { money, shortDate } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
@@ -19,6 +20,7 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
   const token = useAdminAuthStore((state) => state.token);
   const [tableOrders, setTableOrders] = useState(orders || []);
   const [pendingOrderId, setPendingOrderId] = useState("");
+  const [editingOrder, setEditingOrder] = useState(null);
   const numberedOrders = tableOrders.map((order, index) => ({ ...order, serial: index + 1 }));
 
   useEffect(() => {
@@ -42,6 +44,15 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
       toast.error(statusError.message || "Could not update order status");
     } finally {
       setPendingOrderId("");
+    }
+  }
+
+  async function openEditOrder(order) {
+    try {
+      const data = await getAdminOrder(order.id, token);
+      setEditingOrder(data.order || order);
+    } catch (editError) {
+      toast.error(editError.message || "Could not load order details");
     }
   }
 
@@ -151,13 +162,24 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
         searchKeys={["orderNumber", "id", (order) => order.customer?.name, "status", "payment", "total"]}
         filters={[{ key: "status", label: "Filter recent orders by status", allLabel: "All statuses", options: statuses, value: (order) => order.status }]}
          rowActions={(order) => [
-           { label: "View", href: `/admin/orders/${order.id}` },
+            { label: "View", href: `/admin/orders/${order.id}`, icon: Eye, ariaLabel: "View order" },
+            { label: "Edit order", icon: Pencil, ariaLabel: "Edit order", onClick: () => openEditOrder(order), loadingLabel: "Opening editor..." },
          ]}
          toolbarInHeader
          hideReset
          disableInitialSort
-      />
-    </>
+       />
+       {editingOrder ? (
+         <AdminOrderEditDialog
+           order={editingOrder}
+           onClose={() => setEditingOrder(null)}
+           onSaved={(updatedOrder) => {
+             if (!updatedOrder) return;
+             setTableOrders((current) => current.map((row) => row.id === updatedOrder.id ? { ...row, ...updatedOrder } : row));
+           }}
+         />
+       ) : null}
+     </>
   );
 }
 
