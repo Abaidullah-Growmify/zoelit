@@ -1,14 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { Check, Eye, Pencil, RefreshCw, Search, ChevronDown, Plus, X } from "lucide-react";
+import { Check, Eye, Pencil, RefreshCw, Search, ChevronDown, Plus, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
 import { AdminTable } from "@/components/admin-table";
 import { Button, Card, FilterTabs, Input, SourceBadge } from "@/components/ui";
 import { AddItemModal } from "@/components/add-item-modal";
 import { AdminProductsSkeleton } from "@/components/skeletons";
-import { InfoActionDialog } from "@/components/action-feedback";
+import { ConfirmActionDialog, InfoActionDialog } from "@/components/action-feedback";
 import {
    getAdminProducts,
    getAdminCategories,
@@ -18,6 +18,7 @@ import {
   getSyncStatus,
   applyIngramSyncChange,
   ignoreIngramSyncChange,
+  deleteAdminProduct,
 } from "@/lib/api";
 import { FALLBACK_IMAGE } from "@/lib/product-mapper";
 import { money } from "@/lib/utils";
@@ -41,6 +42,8 @@ const [syncing, setSyncing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [sourceFilter, setSourceFilter] = useState("all");
   const [categoryError, setCategoryError] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const pollRef = useRef(null);
 
   useEffect(() => {
@@ -176,7 +179,7 @@ const [syncing, setSyncing] = useState(false);
       .catch(() => {});
   }
 
-async function handleToggleProduct(ingramPartNumber) {
+  async function handleToggleProduct(ingramPartNumber) {
     try {
       const data = await toggleProductActive(ingramPartNumber, token);
       toast.success(data.message);
@@ -187,6 +190,21 @@ async function handleToggleProduct(ingramPartNumber) {
       } else {
         toast.error(err.message || "Could not toggle product");
       }
+    }
+  }
+
+  async function confirmDeleteProduct() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const data = await deleteAdminProduct(deleteTarget.id, token);
+      toast.success(data.message || (deleteTarget.source === "ingram" ? "Ingram product deactivated" : "Product deleted"));
+      setDeleteTarget(null);
+      refreshProducts();
+    } catch (err) {
+      toast.error(err.message || "Could not delete product");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -306,8 +324,15 @@ rowActions={(product) => [
                 href: `/admin/products/${encodeURIComponent(product.id)}`,
                 icon: Pencil,
                 disabled: product.source === "ingram",
-                 disabledTitle: "Ingram products cannot be edited (read-only)",
-               },
+                disabledTitle: "Ingram products cannot be edited (read-only)",
+                },
+                {
+                  label: "Delete",
+                  ariaLabel: `${product.source === "ingram" ? "Deactivate" : "Delete"} ${product.name}`,
+                  icon: Trash2,
+                  onClick: () => setDeleteTarget(product),
+                  tone: "danger",
+                },
                ...(product.syncChange ? [
                  { label: "Update from Ingram", ariaLabel: `Apply Ingram update for ${product.name}`, icon: Check, onClick: () => handleSyncChange(product.syncChange, "apply") },
                  { label: "Ignore Ingram change", ariaLabel: `Ignore Ingram change for ${product.name}`, icon: X, onClick: () => handleSyncChange(product.syncChange, "ignore"), tone: "danger" },
@@ -332,6 +357,15 @@ rowActions={(product) => [
         title="Cannot activate product"
         message={categoryError}
         onClose={() => setCategoryError("")}
+      />
+      <ConfirmActionDialog
+        open={Boolean(deleteTarget)}
+        title={deleteTarget?.source === "ingram" ? "Deactivate Ingram product?" : "Delete manual product?"}
+        message={deleteTarget?.source === "ingram" ? `${deleteTarget?.name || "This product"} will be deactivated and kept in the database.` : `${deleteTarget?.name || "This product"} will be permanently removed from the database.`}
+        confirmLabel={deleteTarget?.source === "ingram" ? "Deactivate" : "Delete product"}
+        loading={deleting}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={confirmDeleteProduct}
       />
     </div>
   );

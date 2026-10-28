@@ -1,15 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { RefreshCw, Search, ChevronDown, Plus, ArrowLeft, Eye, Pencil, Save } from "lucide-react";
+import { RefreshCw, Search, ChevronDown, Plus, ArrowLeft, Eye, Pencil, Save, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AdminTable, AdminTableActions } from "@/components/admin-table";
-import { TransparentActionLoader } from "@/components/action-feedback";
+import { ConfirmActionDialog, TransparentActionLoader } from "@/components/action-feedback";
 import { Button, Card, FilterTabs, Input, Textarea, Label, SourceBadge, Badge } from "@/components/ui";
 import { AddItemModal } from "@/components/add-item-modal";
 import { AdminCategoriesSkeleton } from "@/components/skeletons";
-import { getAdminCategories, getCategoryProducts, createManualCategory, toggleCategoryActive, toggleProductActive, updateAdminCategory, getSyncStatus } from "@/lib/api";
+import { getAdminCategories, getCategoryProducts, createManualCategory, toggleCategoryActive, toggleProductActive, updateAdminCategory, deleteAdminCategory, getSyncStatus } from "@/lib/api";
 import { FALLBACK_IMAGE } from "@/lib/product-mapper";
 import { money } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
@@ -33,6 +33,8 @@ export default function AdminCategoriesPage() {
 const [sourceFilter, setSourceFilter] = useState("all");
   const [actionLoading, setActionLoading] = useState("");
   const [editTarget, setEditTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
 
   const checkSyncStatus = useCallback(async () => {
@@ -180,6 +182,21 @@ function handleEditCategory(category) {
     }
   }
 
+  async function confirmDeleteCategory() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const data = await deleteAdminCategory(deleteTarget.name, token);
+      toast.success(data.message || (deleteTarget.source === "ingram" ? "Ingram category deactivated" : "Category deleted"));
+      setDeleteTarget(null);
+      loadCategories();
+    } catch (err) {
+      toast.error(err.message || "Could not delete category");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   const filteredRows = useMemo(() => {
     const query = keyword.trim().toLowerCase();
     let result = rows || [];
@@ -266,6 +283,13 @@ function handleEditCategory(category) {
               onClick: () => handleEditCategory(category),
               disabled: category.source === "ingram",
               disabledTitle: "Ingram categories cannot be edited (read-only)",
+            },
+            {
+              label: "Delete",
+              ariaLabel: `${category.source === "ingram" ? "Deactivate" : "Delete"} ${category.name}`,
+              icon: Trash2,
+              onClick: () => setDeleteTarget(category),
+              tone: "danger",
             },
           ]}
         />
@@ -450,6 +474,15 @@ function handleEditCategory(category) {
         category={editTarget}
         onClose={() => setEditTarget(null)}
         onSubmit={confirmSaveCategory}
+      />
+      <ConfirmActionDialog
+        open={Boolean(deleteTarget)}
+        title={deleteTarget?.source === "ingram" ? "Deactivate Ingram category?" : "Delete manual category?"}
+        message={deleteTarget?.source === "ingram" ? `${deleteTarget?.name || "This category"} will be deactivated and kept in the database.` : `${deleteTarget?.name || "This category"} will be permanently removed from the database.`}
+        confirmLabel={deleteTarget?.source === "ingram" ? "Deactivate" : "Delete category"}
+        loading={deleting}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={confirmDeleteCategory}
       />
     </div>
   );
