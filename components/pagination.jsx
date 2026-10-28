@@ -4,57 +4,103 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function getPageNumbers(current, total) {
-  // Agar total pages 7 ya us se kam hain
-  // to saare pages show kar do
+  // Chhoti pagination ho to saare pages show kar do
   if (total <= 7) {
     return Array.from({ length: total }, (_, i) => i + 1);
   }
 
-  const pages = [];
-
-  // First page hamesha show hogi
-  pages.push(1);
-
-  // Agar current page 4 ya us se aage hai
-  // to first page ke baad dots show honge
-  if (current > 4) {
-    pages.push("...");
+  // Hamesha first aur last page dikhega, beech me current ke aas-paas
+  // ka window slide karta rahega: 1 2 3 ... 24 25 26 ... 60
+  if (current <= 3) {
+    return [1, 2, 3, 4, "...", total];
   }
 
-  let start;
-  let end;
-
-  // Starting pages
-  if (current <= 4) {
-    start = 2;
-    end = 5;
-  }
-  // Ending pages
-  else if (current >= total - 3) {
-    start = total - 4;
-    end = total - 1;
-  }
-  // Middle pages
-  else {
-    start = current - 2;
-    end = current + 2;
+  if (current >= total - 2) {
+    return [1, "...", total - 3, total - 2, total - 1, total];
   }
 
-  // 5 page numbers add karna
-  for (let i = start; i <= end; i++) {
-    pages.push(i);
+  return [1, "...", current - 1, current, current + 1, "...", total];
+}
+
+function getCompactPageNumbers(current, total) {
+  // Mobile par compact window: 1 2 3 ... 40 | 1 ... 12 ... 40 | 1 ... 38 39 40
+  if (total <= 5) {
+    return Array.from({ length: total }, (_, i) => i + 1);
   }
 
-  // Agar last pages ke qareeb nahi hain
-  // to dots show honge
-  if (current < total - 3) {
-    pages.push("...");
+  if (current <= 2) {
+    return [1, 2, 3, "...", total];
   }
 
-  // Last page hamesha show hogi
-  pages.push(total);
+  if (current >= total - 1) {
+    return [1, "...", total - 2, total - 1, total];
+  }
 
-  return pages;
+  return [1, "...", current, "...", total];
+}
+
+function ArrowButton({ direction, page, totalPages, onPageChange, compact = false }) {
+  const isPrevious = direction === "previous";
+  const disabled = isPrevious ? page <= 1 : page >= totalPages;
+
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={() => onPageChange(isPrevious ? page - 1 : page + 1)}
+      aria-label={isPrevious ? "Previous page" : "Next page"}
+      className={cn(
+        "inline-flex shrink-0 items-center justify-center rounded-md border border-outline-variant bg-surface font-medium transition",
+        compact ? "size-8" : "h-9 gap-1.5 px-2.5 text-sm sm:h-10 sm:px-4",
+        disabled
+          ? "cursor-not-allowed text-on-surface-variant opacity-40"
+          : "text-on-surface-variant hover:border-primary/40 hover:bg-surface-container-low hover:text-primary"
+      )}
+    >
+      {isPrevious ? <ChevronLeft className="size-3.5" /> : null}
+      {compact ? null : <span className="hidden sm:inline">{isPrevious ? "Previous" : "Next"}</span>}
+      {isPrevious ? null : <ChevronRight className="size-3.5" />}
+    </button>
+  );
+}
+
+function PageList({ pages, page, onPageChange, compact = false }) {
+  return pages.map((item, index) => {
+    if (item === "...") {
+      return (
+        <span
+          key={`ellipsis-${index}`}
+          className={cn(
+            "inline-flex items-center justify-center text-label-sm text-on-surface-variant",
+            compact ? "h-8 w-4" : "h-9 w-6 sm:h-10 sm:w-8"
+          )}
+        >
+          ...
+        </span>
+      );
+    }
+
+    const isActive = item === page;
+
+    return (
+      <button
+        key={item}
+        type="button"
+        onClick={() => onPageChange(item)}
+        aria-current={isActive ? "page" : undefined}
+        aria-label={`Page ${item}`}
+        className={cn(
+          "inline-flex shrink-0 items-center justify-center rounded-md border border-outline-variant bg-surface font-medium transition",
+          compact ? "size-8 text-xs" : "h-9 min-w-9 px-2 text-sm sm:h-10 sm:min-w-10 sm:px-3.5",
+          isActive
+            ? "border-primary bg-primary text-white"
+            : "text-on-surface-variant hover:border-primary/40 hover:bg-surface-container-low hover:text-primary"
+        )}
+      >
+        {item}
+      </button>
+    );
+  });
 }
 
 export default function Pagination({
@@ -66,77 +112,27 @@ export default function Pagination({
   // Agar sirf 1 page hai to pagination ki zaroorat nahi
   if (totalPages <= 1) return null;
 
-  const pages = getPageNumbers(page, totalPages);
-
   return (
-    <nav
-      aria-label="Pagination"
-      className={cn(
-        "flex flex-wrap items-center justify-center gap-1.5",
-        className
-      )}
-    >
-      <button
-        type="button"
-        disabled={page <= 1}
-        onClick={() => onPageChange(page - 1)}
-        className={cn(
-           "inline-flex h-10 items-center gap-1.5 rounded-md border border-outline-variant bg-surface px-4 text-sm font-medium transition",
-           page <= 1
-             ? "cursor-not-allowed text-on-surface-variant opacity-40"
-             : "text-on-surface-variant hover:border-primary/40 hover:bg-surface-container-low hover:text-primary"
-        )}
+    <div className={cn("flex min-w-0 justify-center", className)}>
+      {/* Mobile: compact first / current / last pagination, ek hi line me fit */}
+      <nav
+        aria-label="Pagination"
+        className="flex items-center justify-center gap-1 sm:hidden"
       >
-        <ChevronLeft className="size-3.5" />
-        <span className="hidden sm:inline">Previous</span>
-      </button>
+        <ArrowButton direction="previous" page={page} totalPages={totalPages} onPageChange={onPageChange} compact />
+        <PageList pages={getCompactPageNumbers(page, totalPages)} page={page} onPageChange={onPageChange} compact />
+        <ArrowButton direction="next" page={page} totalPages={totalPages} onPageChange={onPageChange} compact />
+      </nav>
 
-      {pages.map((item, index) => {
-        if (item === "...") {
-          return (
-            <span
-              key={`ellipsis-${index}`}
-              className="inline-flex h-10 w-8 items-center justify-center text-label-sm text-on-surface-variant"
-            >
-              ...
-            </span>
-          );
-        }
-
-        const isActive = item === page;
-
-        return (
-          <button
-            key={item}
-            type="button"
-            onClick={() => onPageChange(item)}
-            aria-current={isActive ? "page" : undefined}
-            className={cn(
-              "inline-flex h-10 min-w-10 items-center justify-center rounded-md border border-outline-variant bg-surface px-3.5 text-sm font-medium transition",
-              isActive
-                ? "border-primary bg-primary text-white"
-                : "text-on-surface-variant hover:border-primary/40 hover:bg-surface-container-low hover:text-primary"
-            )}
-          >
-            {item}
-          </button>
-        );
-      })}
-
-      <button
-        type="button"
-        disabled={page >= totalPages}
-        onClick={() => onPageChange(page + 1)}
-        className={cn(
-           "inline-flex h-10 items-center gap-1.5 rounded-md border border-outline-variant bg-surface px-4 text-sm font-medium transition",
-           page >= totalPages
-             ? "cursor-not-allowed text-on-surface-variant opacity-40"
-             : "text-on-surface-variant hover:border-primary/40 hover:bg-surface-container-low hover:text-primary"
-        )}
+      {/* Desktop / tablet: sliding window pagination */}
+      <nav
+        aria-label="Pagination"
+        className="hidden flex-wrap items-center justify-center gap-1.5 sm:flex"
       >
-        <span className="hidden sm:inline">Next</span>
-        <ChevronRight className="size-3.5" />
-      </button>
-    </nav>
+        <ArrowButton direction="previous" page={page} totalPages={totalPages} onPageChange={onPageChange} />
+        <PageList pages={getPageNumbers(page, totalPages)} page={page} onPageChange={onPageChange} />
+        <ArrowButton direction="next" page={page} totalPages={totalPages} onPageChange={onPageChange} />
+      </nav>
+    </div>
   );
 }
