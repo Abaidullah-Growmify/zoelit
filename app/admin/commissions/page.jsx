@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AlertTriangle, Check, CheckCircle, ChevronDown, CircleOff, Eye, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { AlertTriangle, Check, CheckCircle, ChevronDown, CircleOff, Eye, Loader2, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Card, Input, Skeleton } from "@/components/ui";
 import { AdminTable } from "@/components/admin-table";
@@ -109,12 +109,19 @@ export default function AdminCommissionsPage() {
   async function edit(rule) {
     setFormReturnView(ruleView);
     setEditingId(rule._id);
-    setForm({ ...empty, ...rule, valueType: rule.valueType || "percentage", value: rule.value ?? rule.rate ?? "" });
-    setProductCategory(rule.type === "category" ? "" : rule.category || "");
+    setForm({
+      ...empty,
+      type: rule.type || "product",
+      productId: rule.productId || "",
+      category: rule.category || "",
+      valueType: rule.valueType || "percentage",
+      value: rule.value ?? rule.rate ?? "",
+      name: rule.name || "",
+      isActive: rule.isActive !== false,
+    });
+    setProductCategory(rule.type === "product" ? rule.category || "" : "");
     setProductSearch(rule.type === "product" ? rule.productId || "" : "");
-    setRuleView("all");
     setFormOpen(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
     if (rule.type === "product" && rule.productId) {
       try {
         const data = await getAdminProduct(rule.productId, token);
@@ -131,7 +138,9 @@ export default function AdminCommissionsPage() {
     try {
       const result = await updateCommissionRule(rule._id, { ...rule, isActive }, token);
       setRules((items) => items.map((item) => item._id === result.rule._id ? result.rule : item));
-      if (isActive) { setRuleView("active"); setFormOpen(false); }
+       setRuleView(isActive ? "active" : "all");
+       setFormOpen(false);
+       setStatusTarget(null);
       toast.success(`Commission ${isActive ? "activated" : "deactivated"}`);
     } catch (error) { toast.error(error.message || "Could not update commission status"); }
     finally { setStatusSavingId(""); }
@@ -140,7 +149,6 @@ export default function AdminCommissionsPage() {
   async function confirmStatusChange() {
     if (!statusTarget) return;
     const rule = statusTarget;
-    setStatusTarget(null);
     await changeRuleStatus(rule, rule.isActive === false);
   }
   function reset() { setEditingId(""); setForm(empty); setProductCategory(""); setProductSearch(""); setCategoryProducts([]); setProductOpen(false); }
@@ -200,9 +208,9 @@ export default function AdminCommissionsPage() {
             {form.type === "category" ? <label className="text-sm font-medium text-on-surface">Category<select required value={form.category} onChange={(e) => change("category", e.target.value)} className="mt-2 h-11 w-full rounded-md border border-outline-variant bg-surface px-3 text-sm"><option value="">Choose category</option>{categories.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}</select></label> : null}
             {form.type === "product" ? <div className="sm:col-span-2"><ProductPicker categories={categories} category={productCategory} onCategoryChange={(value) => { setProductCategory(value); setProductSearch(""); setProductOpen(false); setForm((current) => ({ ...current, productId: "" })); }} value={productSearch} onChange={(value) => { setProductSearch(value); setProductOpen(true); setForm((current) => ({ ...current, productId: "" })); }} products={matchingProducts} loading={productsLoading} open={productOpen} onOpenChange={setProductOpen} onOutside={() => { const product = categoryProducts.find((item) => item.ingramPartNumber === form.productId); if (product) setProductSearch(`${product.name || product.description || "Unnamed product"} · ${product.ingramPartNumber}`); }} onSelect={(product) => { setForm((current) => ({ ...current, productId: product.ingramPartNumber })); setProductSearch(`${product.name || product.description || "Unnamed product"} · ${product.ingramPartNumber}`); setProductOpen(false); }} currentSku={editingId && !productCategory ? form.productId : ""} /></div> : null}
           </div><div className="mt-4 border-t border-outline-variant pt-4"><div className="grid gap-4 sm:grid-cols-2">
-             <label className="text-sm font-medium text-on-surface">{form.valueType === "fixed" ? "Fixed commission per unit" : "Commission percentage"}<div className="mt-2 flex h-11 overflow-hidden rounded-md border border-outline-variant bg-surface transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10"><input required type="number" min="0" max={form.valueType === "percentage" ? "100" : undefined} step={form.valueType === "percentage" ? "1" : "0.01"} inputMode="decimal" value={form.value} onChange={(e) => change("value", e.target.value)} placeholder={form.valueType === "percentage" ? "e.g. 5" : "e.g. 10.00 per unit"} className="min-w-0 flex-1 border-0 bg-transparent px-3.5 text-sm outline-none" /><select value={form.valueType} onChange={(e) => change("valueType", e.target.value)} aria-label="Commission value type" className="w-28 shrink-0 border-0 border-l border-outline-variant bg-surface-container-low px-2 text-center text-sm font-semibold text-on-surface outline-none"><option value="percentage">% Percentage</option><option value="fixed">$ Fixed amount</option></select></div></label>
+             <label className="block text-sm font-medium text-on-surface">{form.valueType === "fixed" ? "Fixed commission per unit" : "Commission percentage"}<div className="mt-2 flex h-11 overflow-hidden rounded-md border border-outline-variant bg-surface transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10"><input required type="number" min="0" max={form.valueType === "percentage" ? "100" : undefined} step={form.valueType === "percentage" ? "1" : "0.01"} inputMode="decimal" value={form.value} onChange={(e) => change("value", e.target.value)} placeholder={form.valueType === "percentage" ? "e.g. 5" : "e.g. 10.00 per unit"} className="min-w-0 flex-1 border-0 bg-transparent px-3.5 text-sm outline-none" /><select value={form.valueType} onChange={(e) => change("valueType", e.target.value)} aria-label="Commission value type" className="w-28 shrink-0 border-0 border-l border-outline-variant bg-surface-container-low px-2 text-center text-sm font-semibold text-on-surface outline-none"><option value="percentage">% Percentage</option><option value="fixed">$ Fixed amount</option></select></div></label>
             <label className="text-sm font-medium text-on-surface">Rule name<input value={form.name} onChange={(e) => change("name", e.target.value)} maxLength={RULE_NAME_MAX_LENGTH} placeholder="Optional name" className="mt-2 h-11 w-full rounded-md border border-outline-variant bg-surface px-3 text-sm" /><span className="mt-1.5 block text-xs text-on-surface-variant">{form.name.length}/{RULE_NAME_MAX_LENGTH} characters</span></label>
-            <label className="text-sm font-medium text-on-surface sm:col-span-2">Rule status<select value={form.isActive ? "active" : "inactive"} onChange={(e) => change("isActive", e.target.value === "active")} className="mt-2 h-11 w-full rounded-md border border-outline-variant bg-surface px-3 text-sm sm:w-1/2"><option value="active">Active rule</option><option value="inactive">Inactive rule</option></select></label>
+             <label className="block text-sm font-medium text-on-surface sm:col-span-2"><span className="block">Rule status</span><select value={form.isActive ? "active" : "inactive"} onChange={(e) => change("isActive", e.target.value === "active")} className="mt-2 block h-11 w-full rounded-md border border-outline-variant bg-surface px-3 text-sm sm:max-w-xs"><option value="active">Active rule</option><option value="inactive">Inactive rule</option></select></label>
           </div></div></div>
           <div className="flex flex-col-reverse gap-2 border-t border-outline-variant pt-4 sm:flex-row sm:justify-end"><Button type="button" variant="outline" onClick={() => { reset(); setRuleView(formReturnView); setFormOpen(false); }}>Cancel</Button><Button disabled={saving} type="submit" className="min-w-36 gap-2"><Plus className="size-4" />{saving ? "Saving..." : editingId ? "Update rule" : "Add rule"}</Button></div>
        </form>
@@ -480,7 +488,7 @@ function StatusCommissionModal({ rule, saving, onCancel, onConfirm }) {
   return <div className="fixed inset-0 z-50 grid place-items-center bg-inverse-surface/50 px-4 backdrop-blur-sm" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) onCancel(); }}>
     <div role="dialog" aria-modal="true" aria-labelledby="status-commission-title" className="w-full max-w-md overflow-hidden rounded-lg border border-outline-variant bg-surface shadow-2xl">
       <div className="flex items-start gap-4 border-b border-outline-variant px-5 py-5"><span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">{activating ? <Check className="size-5" /> : <AlertTriangle className="size-5" />}</span><div className="min-w-0 flex-1"><h2 id="status-commission-title" className="font-heading text-lg font-semibold text-on-surface">Are you sure?</h2><p className="mt-1 text-sm leading-5 text-on-surface-variant">Are you sure you want to {activating ? "activate" : "deactivate"} this commission rule?</p></div><button type="button" onClick={onCancel} disabled={saving} className="grid size-8 place-items-center rounded-md text-on-surface-variant transition hover:bg-surface-container-low hover:text-on-surface" aria-label="Close dialog"><X className="size-4" /></button></div>
-       <div className="flex flex-col-reverse gap-2 border-t border-outline-variant px-5 py-4 sm:flex-row sm:justify-end"><Button variant="outline" onClick={onCancel} disabled={saving}>Cancel</Button><Button onClick={onConfirm} disabled={saving}>{saving ? "Updating..." : "OK"}</Button></div>
+        <div className="flex flex-col-reverse gap-2 border-t border-outline-variant px-5 py-4 sm:flex-row sm:justify-end"><Button variant="outline" onClick={onCancel} disabled={saving}>Cancel</Button><Button onClick={onConfirm} disabled={saving}>{saving ? <><Loader2 className="size-4 animate-spin" />Updating...</> : "OK"}</Button></div>
     </div>
   </div>;
 }

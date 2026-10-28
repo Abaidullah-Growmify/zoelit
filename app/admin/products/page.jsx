@@ -24,7 +24,6 @@ import { money } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
 
 const PAGE_SIZE = 10;
-const MIN_SKELETON_MS = 650;
 
 export default function AdminProductsPage() {
   const token = useAdminAuthStore((state) => state.token);
@@ -59,11 +58,8 @@ const [syncing, setSyncing] = useState(false);
   useEffect(() => {
     let active = true;
     if (!token) return;
-    Promise.all([
-      getAdminProducts(productQuery(), token),
-      new Promise((resolve) => window.setTimeout(resolve, MIN_SKELETON_MS)),
-    ])
-      .then(([data]) => {
+    getAdminProducts(productQuery(), token)
+      .then((data) => {
         if (!active) return;
         setRows(toRows(data.products, page, PAGE_SIZE));
         setTotalPages(data.pagination?.totalPages ?? 1);
