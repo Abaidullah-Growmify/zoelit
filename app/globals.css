@@ -15,6 +15,15 @@ button:not(.icon-btn):has(> svg) > svg,
   flex-shrink: 0;
 }
 
+button:not(.icon-btn)[data-font-select-trigger]:has(> svg) {
+  justify-content: flex-start !important;
+}
+
+button[data-font-select-trigger] > svg {
+  order: initial !important;
+  margin-left: auto !important;
+}
+
 .profile-settings-nav button {
   justify-content: flex-start !important;
   gap: 0.25rem;
@@ -113,8 +122,8 @@ button:not(.icon-btn):has(> svg) > svg,
   --color-background-rgb: 248 250 252;
   --color-on-surface-rgb: 15 23 42;
 
-  --font-display: "Plus Jakarta Sans", sans-serif;
-  --font-body: "Inter", sans-serif;
+  --font-display: var(--font-poppins), sans-serif;
+  --font-body: var(--font-inter), sans-serif;
 
   --radius-default: 0.75rem;
   --radius-lg: 1rem;

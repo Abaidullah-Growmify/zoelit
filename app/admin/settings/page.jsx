@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Bell,
   ArrowLeft,
   CheckCircle2,
+  ChevronDown,
   CreditCard,
   Eye,
   EyeOff,
@@ -16,6 +17,7 @@ import {
   RotateCcw,
   Save,
   Store,
+  SunMoon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Card, Input, Label, Select, Skeleton } from "@/components/ui";
@@ -26,11 +28,14 @@ import { cn } from "@/lib/utils";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "nextjs-toploader/app";
 import { AdminTableActions } from "@/components/admin-table";
+import { FONT_OPTIONS } from "@/lib/fonts";
 
 const STRIPE_MODES = [
   { value: "test", label: "Test mode" },
   { value: "live", label: "Live mode" },
 ];
+
+const SORTED_FONT_OPTIONS = [...FONT_OPTIONS].sort((first, second) => first.label.localeCompare(second.label));
 
 const SECRET_SENTINEL = "__SET__";
 const SECRET_KEYS = new Set([
@@ -65,6 +70,16 @@ const SECTIONS = [
       { key: "store.email", label: "Contact email", type: "email", placeholder: "support@zoelit.com" },
       { key: "store.phone", label: "Support phone", type: "tel", placeholder: "+1 000 000 0000" },
       { key: "store.address", label: "Business address", type: "text", placeholder: "Street, City, Country", span: true },
+    ],
+  },
+  {
+    id: "appearance",
+    label: "Appearance",
+    description: "Choose the fonts used across both panels.",
+    icon: SunMoon,
+    fields: [
+      { key: "appearance.headingFont", label: "Heading font", type: "font-select", options: SORTED_FONT_OPTIONS.map((font) => ({ value: font.value, label: font.label })) },
+      { key: "appearance.bodyFont", label: "Body font", type: "font-select", options: SORTED_FONT_OPTIONS.map((font) => ({ value: font.value, label: font.label })) },
     ],
   },
   {
@@ -169,6 +184,7 @@ const SECTIONS = [
 
 const DEFAULTS = {
   "store.name": "ZoeLit Commerce",
+  "appearance.theme": "light",
   "stripe.enabled": true,
   "commission.enabled": true,
   "ingram.autoSyncEnabled": true,
@@ -296,6 +312,14 @@ export default function AdminSettingsPage() {
     setValues(merged.settings);
     setLoaded(merged.settings);
     setConfigured(merged.configured);
+    if (payload["appearance.headingFont"] || payload["appearance.bodyFont"]) {
+      const appearance = {
+        headingFont: payload["appearance.headingFont"],
+        bodyFont: payload["appearance.bodyFont"],
+      };
+      window.localStorage.setItem("zoelit-appearance", JSON.stringify(appearance));
+      window.dispatchEvent(new CustomEvent("zoelit-appearance-change", { detail: appearance }));
+    }
     return data;
   }
 
@@ -547,6 +571,14 @@ function FieldControl({ field, value, onChange, visible, onToggleVisible, config
     );
   }
 
+  if (field.type === "font-select") {
+    return (
+      <div>
+        <FontSelect options={field.options || []} value={value ?? ""} onChange={onChange} />
+      </div>
+    );
+  }
+
   if (field.type === "number") {
     return (
       <div>
@@ -583,6 +615,38 @@ function FieldControl({ field, value, onChange, visible, onToggleVisible, config
     <div>
       <Input type={field.type || "text"} value={value ?? ""} placeholder={field.placeholder} onChange={(event) => onChange(event.target.value)} />
       {field.hint ? <p className="mt-1.5 text-xs leading-5 text-on-surface-variant">{field.hint}</p> : null}
+    </div>
+  );
+}
+
+function FontSelect({ options, value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const selected = options.find((option) => option.value === value) || options[0];
+
+  useEffect(() => {
+    function close(event) {
+      if (!ref.current?.contains(event.target)) setOpen(false);
+    }
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative z-20 w-full sm:w-56">
+      <button type="button" data-font-select-trigger onClick={() => setOpen((current) => !current)} aria-haspopup="listbox" aria-expanded={open} className="flex h-11 w-full items-center gap-3 rounded-md border border-outline-variant bg-surface px-3.5 text-left text-sm text-on-surface shadow-sm transition hover:border-primary focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10">
+        <span className="truncate">{selected?.label || "Select font"}</span>
+        <ChevronDown className={cn("ml-auto size-4 shrink-0 text-on-surface-variant transition-transform", open && "rotate-180")} />
+      </button>
+      {open ? (
+        <div role="listbox" className="absolute left-0 top-full mt-2 max-h-64 w-full overflow-y-auto rounded-md border border-outline-variant bg-surface p-1 shadow-xl">
+          {options.map((option) => (
+            <button key={option.value} type="button" role="option" aria-selected={option.value === value} onClick={() => { onChange(option.value); setOpen(false); }} className={cn("block w-full rounded px-3 py-2 text-left text-sm text-on-surface transition hover:bg-primary/10", option.value === value && "bg-primary/10 font-semibold text-primary")}>
+              {option.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
