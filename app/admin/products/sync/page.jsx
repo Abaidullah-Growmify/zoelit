@@ -17,7 +17,10 @@ import { useAdminAuthStore } from "@/store/admin-auth-store";
 
 // Fewer remote requests keep the first-screen scan responsive while the UI
 // still paginates the loaded products in groups of ten.
-const REMOTE_PAGE_SIZE = 50;
+// Ingram supports up to 100 records per request. Keep the UI page size at ten,
+// but fetch larger remote pages so the existing page-by-page experience needs
+// fewer rate-limited API calls.
+const REMOTE_PAGE_SIZE = 100;
 const UI_PAGE_SIZE = 10;
 const PENDING_PAGE_SIZE = 20;
 
