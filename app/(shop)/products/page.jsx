@@ -1,7 +1,6 @@
 "use client";
 
-import { useDeferredValue, useEffect, useState } from "react";
-import Link from "next/link";
+import { startTransition, useDeferredValue, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { getProductCategories, getPublicProducts } from "@/lib/api";
@@ -11,6 +10,7 @@ import { ProductFilters } from "@/components/product-filters";
 import Pagination from "@/components/pagination";
 import { EmptyState, Input, Select } from "@/components/ui";
 import { ProductGridSkeleton } from "@/components/skeletons";
+import { DashboardSectionBanner } from "@/components/dashboard-section-banner";
 
 const SORT_QUERY = {
   newest: "newest",
@@ -28,6 +28,12 @@ const PAGE_SIZE = 12;
 
 const GRID_CLASSES = "product-grid grid-home grid-catalog grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:gap-5";
 
+const SORT_OPTIONS = [
+  { value: "newest", label: "Newest" },
+  { value: "price-low", label: "Price: Low to High" },
+  { value: "price-high", label: "Price: High to Low" },
+];
+
 function sortProducts(products, sortKey) {
   const sorted = [...products];
   if (sortKey === "price-low") sorted.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
@@ -38,19 +44,32 @@ function sortProducts(products, sortKey) {
 
 export default function ProductsPage() {
   const params = useSearchParams();
-  const initialCategory = params.get("category");
+  const urlCategory = params.get("category") || "";
+  const urlKeyword = params.get("keyword") || "";
   const [sort, setSort] = useState("newest");
   const [categories, setCategories] = useState(["All"]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [keyword, setKeyword] = useState("");
+  const [keyword, setKeyword] = useState(urlKeyword);
   const [priceRange, setPriceRange] = useState("all");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const deferredKeyword = useDeferredValue(keyword);
   const [debouncedKeyword, setDebouncedKeyword] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState(initialCategory ? [initialCategory] : []);
+  const [selectedCategories, setSelectedCategories] = useState(urlCategory ? [urlCategory] : []);
+
+  // The navbar navigates to this same page with a query string. Keep the
+  // controls in sync when that happens without a full page remount.
+  useEffect(() => {
+    startTransition(() => {
+      setKeyword(urlKeyword);
+      setDebouncedKeyword(urlKeyword);
+      setSelectedCategories(urlCategory ? [urlCategory] : []);
+      setPage(1);
+      setLoading(true);
+    });
+  }, [urlKeyword, urlCategory]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedKeyword(deferredKeyword), 500);
@@ -200,14 +219,28 @@ export default function ProductsPage() {
   return (
     <section className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8 lg:py-14">
       <div className="mb-5 lg:mb-7">
-        <div className="mb-4 flex items-center gap-2 text-xs text-on-surface-variant"><Link href="/" className="hover:text-on-surface">Home</Link><span>/</span><strong className="text-on-surface">All Products</strong></div>
-        <h1 className="font-heading text-[clamp(1.4rem,1.1rem+1.5vw,2rem)] font-bold tracking-[-0.03em] text-on-surface">All Products</h1>
-        <p className="mt-2 text-sm text-on-surface-variant">Explore the complete collection - filter by category or price.</p>
+        <DashboardSectionBanner eyebrow="Store / Products" title="All Products" description="Explore the complete collection and filter by category, price, keyword, or SKU." />
       </div>
 
-      <div className="relative mb-5 w-full max-w-none lg:mb-7 lg:max-w-xl">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
-        <Input value={keyword} onChange={(event) => { setKeyword(event.target.value); setLoading(true); setPage(1); }} placeholder="Search products by name, SKU or keyword..." aria-label="Search products" className="h-11 w-full pl-10 sm:h-12" />
+      <div className="mb-6 rounded-2xl border border-outline-variant/70 bg-surface p-3 shadow-sm sm:p-4 lg:mb-8">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="relative min-w-0 flex-1 lg:max-w-2xl">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
+            <Input value={keyword} onChange={(event) => { setKeyword(event.target.value); setLoading(true); setPage(1); }} placeholder="Search products by name, SKU or keyword..." aria-label="Search products" className="h-11 w-full border-transparent bg-surface-container-low pl-10 focus:border-primary sm:h-12" />
+          </div>
+          <div className="hidden shrink-0 items-center gap-2 lg:flex">
+            <label htmlFor="sort" className="whitespace-nowrap text-sm font-medium text-on-surface-variant">Sort by</label>
+            <Select id="sort" value={sort} onChange={(e) => changeSort(e.target.value)} aria-label="Sort products" className="h-10 w-48">
+              {SORT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </Select>
+          </div>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-outline-variant/50 pt-3 text-xs text-on-surface-variant">
+          <span className="font-semibold text-on-surface">Find the right fit</span>
+          <span>Browse by category</span><span aria-hidden="true" className="text-primary">•</span>
+          <span>Compare prices</span><span aria-hidden="true" className="text-primary">•</span>
+          <span>Search by SKU</span>
+        </div>
       </div>
 
       {/* Mobile toolbar: filter drawer trigger + compact sort. */}
@@ -224,9 +257,7 @@ export default function ProductsPage() {
         </button>
         <div className="min-w-0 flex-1">
           <Select value={sort} onChange={(e) => changeSort(e.target.value)} aria-label="Sort products" className="h-10">
-            <option value="newest">Newest</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="price-high">Price: High to Low</option>
+            {SORT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
           </Select>
         </div>
       </div>
@@ -248,16 +279,14 @@ export default function ProductsPage() {
         </div>
       ) : null}
 
-      <div className="grid items-start gap-7 lg:grid-cols-[240px_minmax(0,1fr)]">
+      <div className="grid items-start gap-7 lg:grid-cols-[248px_minmax(0,1fr)]">
         {/* Desktop filter sidebar — unchanged from the original lg design. */}
-        <aside className="min-w-0 rounded-[14px] border border-outline-variant bg-surface p-5 lg:block hidden">
-          <div className="mb-1 flex items-center justify-between"><h2 className="text-sm font-semibold text-on-surface">Filters</h2><button type="button" onClick={clearAllFilters} className="text-xs font-semibold text-on-surface-variant underline hover:text-on-surface">Clear all</button></div>
+        <aside className="min-w-0 rounded-2xl border border-outline-variant/70 bg-surface p-5 shadow-sm lg:block hidden">
+          <div className="mb-1 flex items-center justify-between"><h2 className="text-sm font-bold text-on-surface">Refine results</h2><button type="button" onClick={clearAllFilters} className="text-xs font-semibold text-on-surface-variant underline hover:text-on-surface">Clear all</button></div>
           <ProductFilters variant="sidebar" {...filterPanelProps} />
         </aside>
 
         <div className="min-w-0">
-          {/* Desktop toolbar — kept exactly as before. */}
-          <div className="mb-5 hidden items-center justify-end gap-4 border-b border-outline-variant pb-4 lg:flex"><div className="flex shrink-0 items-center gap-2"><label htmlFor="sort" className="whitespace-nowrap text-sm text-on-surface-variant">Sort by</label><Select id="sort" value={sort} onChange={(e) => changeSort(e.target.value)} aria-label="Sort products" className="h-10"><option value="newest">Newest</option><option value="price-low">Price: Low to High</option><option value="price-high">Price: High to Low</option></Select></div></div>
           {loading ? <ProductGridSkeleton count={PAGE_SIZE} columns={GRID_CLASSES} /> : displayProducts.length ? <div className={GRID_CLASSES}>{displayProducts.map((product) => <ProductCard key={product.id} product={product} />)}</div> : <EmptyState title="No products found" description="No products match your search. Try a different filter." />}
         {!loading && displayProducts.length ? (
           <div className="mt-6 border-t border-outline-variant/70 pt-5">

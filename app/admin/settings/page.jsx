@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  AlertCircle,
   Bell,
   ArrowLeft,
   CheckCircle2,
@@ -13,15 +14,17 @@ import {
   Loader2,
   Mail,
   Percent,
+  PlugZap,
   RefreshCw,
   RotateCcw,
   Save,
   Store,
   SunMoon,
+  XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Card, Input, Label, Select, Skeleton } from "@/components/ui";
-import { getAdminSettings, updateAdminSettings } from "@/lib/api";
+import { getAdminSettings, testAdminIntegration, updateAdminSettings } from "@/lib/api";
 import { TransparentActionLoader } from "@/components/action-feedback";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
 import { cn } from "@/lib/utils";
@@ -61,8 +64,7 @@ const SECRET_KEYS = new Set([
 
 const SECTIONS = [
   {
-    id: "store",
-    label: "Store info",
+    id: "store",    label: "Store info",
     description: "Brand identity and contact details.",
     icon: Store,
     fields: [
@@ -86,7 +88,8 @@ const SECTIONS = [
     id: "payments",
     label: "Payments",
     description: "Stripe keys, checkout and webhooks.",
-      icon: CreditCard,
+    icon: CreditCard,
+    integration: "stripe",
     fields: [
       { key: "stripe.mode", label: "Stripe mode", type: "select", options: STRIPE_MODES, span: true, widthClass: "w-full sm:max-w-sm" },
       { key: "stripe.secretKey", label: "Secret key", type: "password", placeholder: "sk_test_... or sk_live_..." },
@@ -102,6 +105,7 @@ const SECTIONS = [
     label: "Ingram sync",
     description: "Ingram keys, URLs and sync options.",
     icon: RefreshCw,
+    integration: "ingram",
     fields: [
       { key: "ingram.clientId", label: "Client ID", type: "password", placeholder: "Client ID" },
       { key: "ingram.clientSecret", label: "Client secret", type: "password", placeholder: "Client secret" },
@@ -133,6 +137,7 @@ const SECTIONS = [
     label: "Email",
     description: "SMTP delivery and sender details.",
     icon: Mail,
+    integration: "email",
     fields: [
       { key: "email.smtpHost", label: "SMTP host", type: "text", placeholder: "smtp.gmail.com" },
       { key: "email.smtpPort", label: "SMTP port", type: "text", placeholder: "587" },
@@ -152,6 +157,7 @@ const SECTIONS = [
     label: "Firebase",
     description: "Web push and Firebase Admin credentials.",
     icon: KeyRound,
+    integration: "firebase",
     fields: [
       { key: "firebase.apiKey", label: "Web API key", type: "password", placeholder: "AIza..." },
       { key: "firebase.authDomain", label: "Web auth domain", type: "password", placeholder: "project.firebaseapp.com" },
@@ -233,6 +239,8 @@ export default function AdminSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState("");
   const [savedFlash, setSavedFlash] = useState("");
+  const [testing, setTesting] = useState("");
+  const [testResults, setTestResults] = useState({});
   const [visibleKeys, setVisibleKeys] = useState({});
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -287,6 +295,34 @@ export default function AdminSettingsPage() {
 
   const hasDirty = Object.values(dirtySections).some(Boolean);
 
+  const headerTestable = Boolean(activeSection.integration);
+  const headerTestTarget = activeSection.integration;
+  const headerTestBlocked = Boolean(activeSection.integration && dirtySections[activeSection.id]);
+  const headerTestBusy = Boolean(headerTestTarget && testing === headerTestTarget);
+
+  async function runTest(integration) {
+    if (!token || !integration || testing) return;
+    setTesting(integration);
+    try {
+      const data = await testAdminIntegration(integration, token);
+      const results = Array.isArray(data.results) ? data.results : [];
+      setTestResults((current) => {
+        const next = { ...current };
+        for (const item of results) if (item?.id) next[item.id] = item;
+        return next;
+      });
+
+      const first = results[0];
+      if (first?.status === "error") toast.error(first.summary || "Connection failed");
+      else if (first?.status === "warning") toast.warning(first.summary || "Connection works with warnings");
+      else toast.success(first?.summary || "Connection succeeded");
+    } catch (error) {
+      toast.error(error.message || "Could not run the connection test");
+    } finally {
+      setTesting("");
+    }
+  }
+
   function buildPayload(section) {
     const payload = {};
     for (const field of section.fields) {
@@ -328,6 +364,9 @@ export default function AdminSettingsPage() {
     try {
       await persist(buildPayload(activeSection));
       setSavedFlash(activeSection.id);
+      if (activeSection.integration) {
+        setTestResults((current) => ({ ...current, [activeSection.integration]: null }));
+      }
       setTimeout(() => setSavedFlash(""), 2200);
       toast.success(`${activeSection.label} saved`);
     } catch (error) {
@@ -343,6 +382,7 @@ export default function AdminSettingsPage() {
     setSaving("all");
     try {
       await persist(payload);
+      setTestResults({});
       toast.success("All settings saved");
     } catch (error) {
       toast.error(error.message || "Could not save settings");
@@ -392,13 +432,27 @@ export default function AdminSettingsPage() {
               <AdminTableActions label="Section actions" actions={[{ label: "Revert changes", icon: RotateCcw, disabled: !dirtySections[activeSection.id], onClick: revertSection }]} />
             </div>
             <div className="mx-auto max-w-2xl px-4 py-3">
-              <p className="truncate text-sm text-on-surface-variant">{activeSection.description}</p>
+              <p className="text-sm text-on-surface-variant">{activeSection.description}</p>
               <div className="settings-mobile-editor mt-3 rounded-xl border border-outline-variant/80 bg-surface p-4">
                 <SettingsFields activeSection={activeSection} values={values} setValue={setValue} visibleKeys={visibleKeys} toggleVisible={toggleVisible} configured={configured} />
+                {activeSection.integration && dirtySections[activeSection.id] ? (
+                  <p className="mt-3 text-xs font-semibold text-amber-700">Save changes before testing the latest values.</p>
+                ) : null}
+                {activeSection.integration ? (
+                  <IntegrationResult result={testResults[activeSection.integration]} stale={dirtySections[activeSection.id]} />
+                ) : null}
               </div>
             </div>
             <div className="fixed inset-x-0 bottom-0 z-30 border-t border-outline-variant/70 bg-surface p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-              <div className="mx-auto max-w-2xl"><Button onClick={saveSection} disabled={saving || !dirtySections[activeSection.id]} className="h-11 w-full">{saving === activeSection.id ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}{saving === activeSection.id ? "Saving..." : "Save changes"}</Button></div>
+              <div className="mx-auto flex max-w-2xl gap-2">
+                {activeSection.integration ? (
+                  <Button variant="secondary" onClick={() => runTest(activeSection.integration)} disabled={saving || testing || dirtySections[activeSection.id]} className="h-11 flex-1" title={dirtySections[activeSection.id] ? "Save changes before testing" : "Test saved credentials"}>
+                    {testing === activeSection.integration ? <Loader2 className="size-4 animate-spin" /> : <PlugZap className="size-4" />}
+                    {testing === activeSection.integration ? "Testing..." : "Test"}
+                  </Button>
+                ) : null}
+                <Button onClick={saveSection} disabled={saving || !dirtySections[activeSection.id]} className="h-11 flex-1">{saving === activeSection.id ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}{saving === activeSection.id ? "Saving..." : "Save changes"}</Button>
+              </div>
             </div>
           </div>
         )}
@@ -410,11 +464,28 @@ export default function AdminSettingsPage() {
             <h1 className="font-heading text-xl font-semibold text-on-surface sm:text-2xl">Settings</h1>
             <p className="mt-1 max-w-3xl text-sm leading-6 text-on-surface-variant">Manage store, payment, catalog and email preferences for ZoeLit.</p>
           </div>
-          <div className="shrink-0">
-            <Button onClick={saveAll} disabled={loading || saving || !hasDirty} className="h-10 w-full sm:w-auto">
-              {saving === "all" ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-              {saving === "all" ? "Saving..." : "Save all changes"}
-            </Button>
+          <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              {headerTestable ? (
+                <Button
+                  variant="secondary"
+                  onClick={() => runTest(headerTestTarget)}
+                  disabled={loading || saving || testing || headerTestBlocked}
+                  className="h-10 w-full sm:w-auto"
+                  title={headerTestBlocked ? "Save this section before testing" : "Test the saved credentials"}
+                >
+                  {headerTestBusy ? <Loader2 className="size-4 animate-spin" /> : <PlugZap className="size-4" />}
+                  {headerTestBusy ? "Testing..." : "Test connection"}
+                </Button>
+              ) : null}
+              <Button onClick={saveAll} disabled={loading || saving || !hasDirty} className="h-10 w-full sm:w-auto">
+                {saving === "all" ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+                {saving === "all" ? "Saving..." : "Save all changes"}
+              </Button>
+            </div>
+            {headerTestBlocked ? (
+              <p className="text-xs font-semibold text-amber-700">Save this section before testing.</p>
+            ) : null}
           </div>
         </div>
       </div>
@@ -464,33 +535,108 @@ export default function AdminSettingsPage() {
 
                 <SettingsFields activeSection={activeSection} values={values} setValue={setValue} visibleKeys={visibleKeys} toggleVisible={toggleVisible} configured={configured} />
 
-                <div className="mt-7 flex flex-col-reverse items-stretch justify-between gap-3 border-t border-outline-variant pt-5 sm:flex-row sm:items-center">
-                  {dirtySections[activeSection.id] ? (
-                    <button type="button" onClick={revertSection} className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-on-surface-variant transition hover:text-on-surface">
-                      <RotateCcw className="size-4" />
-                      Revert changes
-                    </button>
-                  ) : (
-                    <p className="text-sm text-on-surface-variant">No unsaved changes in this section.</p>
-                  )}
-                  <div className="flex items-center justify-end gap-3">
-                    {savedFlash === activeSection.id ? (
-                      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600">
-                        <CheckCircle2 className="size-4" />
-                        Saved
-                      </span>
-                    ) : null}
-                    <Button onClick={saveSection} disabled={saving || !dirtySections[activeSection.id]} className="min-w-36">
-                      {saving === activeSection.id ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-                      {saving === activeSection.id ? "Saving..." : "Save section"}
-                    </Button>
-                  </div>
-                </div>
+                {activeSection.integration ? (
+                  <IntegrationResult result={testResults[activeSection.integration]} stale={dirtySections[activeSection.id]} />
+                ) : null}
+
+                    <div className="mt-7 flex flex-col-reverse items-stretch justify-between gap-3 border-t border-outline-variant pt-5 sm:flex-row sm:items-center">
+                      {dirtySections[activeSection.id] ? (
+                        <button type="button" onClick={revertSection} className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-on-surface-variant transition hover:text-on-surface">
+                          <RotateCcw className="size-4" />
+                          Revert changes
+                        </button>
+                      ) : (
+                        <p className="text-sm text-on-surface-variant">
+                          {activeSection.integration ? "Connection tests use the saved credentials." : "No unsaved changes in this section."}
+                        </p>
+                      )}
+                      <div className="flex flex-wrap items-center justify-end gap-3">
+                        {savedFlash === activeSection.id ? (
+                          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600">
+                            <CheckCircle2 className="size-4" />
+                            Saved
+                          </span>
+                        ) : null}
+                        <Button onClick={saveSection} disabled={saving || !dirtySections[activeSection.id]} className="min-w-36">
+                          {saving === activeSection.id ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+                          {saving === activeSection.id ? "Saving..." : "Save section"}
+                        </Button>
+                      </div>
+                    </div>
               </>
           </div>
         </div>
       </Card>
     </>
+  );
+}
+
+const RESULT_TONES = {
+  ok: {
+    wrap: "border-emerald-200 bg-emerald-50/70",
+    icon: "text-emerald-600",
+    badge: "bg-emerald-100 text-emerald-700",
+    text: "text-emerald-900",
+  },
+  warning: {
+    wrap: "border-amber-200 bg-amber-50/70",
+    icon: "text-amber-600",
+    badge: "bg-amber-100 text-amber-800",
+    text: "text-amber-900",
+  },
+  error: {
+    wrap: "border-rose-200 bg-rose-50/70",
+    icon: "text-rose-600",
+    badge: "bg-rose-100 text-rose-700",
+    text: "text-rose-900",
+  },
+};
+
+function IntegrationResult({ result, stale = false }) {
+  if (!result) return null;
+  const status = RESULT_TONES[result.status] ? result.status : "error";
+  const tone = RESULT_TONES[status];
+  const Icon = status === "ok" ? CheckCircle2 : status === "warning" ? AlertCircle : XCircle;
+  const statusLabel = status === "ok" ? "Connected" : status === "warning" ? "Needs attention" : "Failed";
+
+  return (
+    <section className={cn("mt-6 rounded-xl border p-4 sm:p-5", tone.wrap)} aria-live="polite">
+      <div className="flex items-start gap-3">
+        <Icon className={cn("mt-0.5 size-5 shrink-0", tone.icon)} />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className={cn("text-sm font-semibold", tone.text)}>{result.summary}</p>
+            <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide", tone.badge)}>{statusLabel}</span>
+          </div>
+          {result.message ? <p className={cn("mt-1 text-sm leading-6", tone.text)}>{result.message}</p> : null}
+        </div>
+      </div>
+
+      {result.details?.length ? (
+        <dl className="mt-4 grid gap-x-4 gap-y-2.5 border-t border-outline-variant/70 pt-4 text-xs sm:grid-cols-2">
+          {result.details.map((item) => (
+            <div key={item.label} className="min-w-0">
+              <dt className="font-semibold text-on-surface-variant">{item.label}</dt>
+              <dd className="mt-0.5 break-all font-mono text-[11px] leading-5 text-on-surface">{item.value}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+
+      {result.warnings?.length ? (
+        <ul className="mt-3 space-y-1.5">
+          {result.warnings.map((warning) => (
+            <li key={warning} className="flex items-start gap-2 text-xs leading-5 text-amber-800">
+              <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
+              <span>{warning}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      {stale ? <p className="mt-3 text-xs font-semibold text-amber-700">Settings changed after this test. Save and test again.</p> : null}
+      {result.checkedAt ? <p className="mt-3 text-[11px] text-on-surface-variant">Checked {new Date(result.checkedAt).toLocaleString()}</p> : null}
+    </section>
   );
 }
 
@@ -669,6 +815,9 @@ function Toggle({ checked, onChange }) {
 }
 
 function SettingsSkeleton({ sectionParam }) {
+  const skeletonSection = SECTIONS.find((section) => section.id === sectionParam);
+  const showTestSkeleton = Boolean(skeletonSection?.integration);
+
   return (
     <>
       <div className="lg:hidden">
@@ -691,14 +840,17 @@ function SettingsSkeleton({ sectionParam }) {
               </div>
             </div>
             <div className="fixed inset-x-0 bottom-0 z-30 border-t border-outline-variant/70 bg-surface p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-              <div className="mx-auto max-w-2xl"><Skeleton className="h-11 w-full rounded-md" /></div>
+              <div className="mx-auto flex max-w-2xl gap-2">
+                {showTestSkeleton ? <Skeleton className="h-11 flex-1 rounded-md" /> : null}
+                <Skeleton className="h-11 flex-1 rounded-md" />
+              </div>
             </div>
           </div>
         ) : (
            <div className="mx-auto max-w-2xl overflow-hidden rounded-xl border border-outline-variant/80 bg-surface px-4 py-3">
              <div className="pb-3 pt-1"><Skeleton className="h-6 w-32 max-w-full rounded-md" /><Skeleton className="mt-2 h-4 w-40 max-w-full rounded-md" /></div>
              <div className="-mx-4 border-t border-outline-variant/70">
-              {Array.from({ length: 6 }).map((_, index) => <div key={index} className="flex min-h-14 items-center gap-3 border-b border-outline-variant/70 px-3 py-3.5 last:border-b-0"><Skeleton className="size-9 rounded-lg" /><div className="min-w-0 flex-1"><Skeleton className="h-4 w-32 rounded-md" /><Skeleton className="mt-1 h-3 w-44 max-w-full rounded-md" /></div><Skeleton className="size-4 rounded-md" /></div>)}
+              {Array.from({ length: SECTIONS.length }).map((_, index) => <div key={index} className="flex min-h-14 items-center gap-3 border-b border-outline-variant/70 px-3 py-3.5 last:border-b-0"><Skeleton className="size-9 rounded-lg" /><div className="min-w-0 flex-1"><Skeleton className="h-4 w-32 rounded-md" /><Skeleton className="mt-1 h-3 w-44 max-w-full rounded-md" /></div><Skeleton className="size-4 rounded-md" /></div>)}
             </div>
           </div>
         )}
@@ -710,15 +862,18 @@ function SettingsSkeleton({ sectionParam }) {
             <Skeleton className="h-7 w-40 rounded-md" />
             <Skeleton className="mt-2 h-4 w-[30rem] max-w-full rounded-md" />
           </div>
-          <div className="shrink-0">
-            <Skeleton className="h-10 w-40 rounded-md" />
+          <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              {showTestSkeleton ? <Skeleton className="h-10 w-36 rounded-md" /> : null}
+              <Skeleton className="h-10 w-40 rounded-md" />
+            </div>
           </div>
         </div>
       </div>
       <div className="flex flex-col lg:flex-row lg:items-stretch">
         <aside className="w-full shrink-0 gap-1 px-5 py-6 sm:px-7 lg:w-64 lg:border-r lg:border-outline-variant">
           <div className="flex flex-col gap-1.5">
-            {Array.from({ length: 6 }).map((_, index) => (
+            {Array.from({ length: SECTIONS.length }).map((_, index) => (
               <Skeleton key={index} className="h-10 w-full rounded-md" />
             ))}
           </div>

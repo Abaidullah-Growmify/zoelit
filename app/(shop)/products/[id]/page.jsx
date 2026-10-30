@@ -52,7 +52,7 @@ function YouMayAlsoLike({ currentId, products }) {
         }
         className="mb-8"
       />
-      <div className="product-grid grid-home grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{related.map((product) => <ProductCard key={product.id} product={product} />)}</div>
+      <div className="product-grid grid-home grid gap-5 sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:grid-cols-3">{related.map((product) => <ProductCard key={product.id} product={product} />)}</div>
     </section>
   );
 }
@@ -97,7 +97,7 @@ export default async function ProductDetailPage({ params }) {
             )}
           </div>
 
-          <h1 className="mt-4 max-w-2xl text-balance font-heading text-headline-md font-extrabold leading-tight tracking-[-0.03em] text-on-surface sm:text-headline-lg">
+          <h1 className="mt-4 max-w-2xl text-balance font-heading text-3xl font-extrabold leading-tight tracking-[-0.03em] text-on-surface sm:text-headline-lg">
             {product.name}
           </h1>
 

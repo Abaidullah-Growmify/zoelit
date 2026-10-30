@@ -42,8 +42,8 @@ const VOUCHER_MESSAGES = {
   USAGE_LIMIT_REACHED: "This voucher has reached its usage limit.",
   CUSTOMER_LIMIT_REACHED: "You have already used this voucher the maximum number of times.",
   MIN_ORDER_NOT_MET: "This cart does not meet the minimum order for this voucher.",
-  PRODUCT_NOT_ELIGIBLE: "This voucher does not apply to any item in your cart.",
-  CATEGORY_NOT_ELIGIBLE: "This voucher does not apply to any item in your cart.",
+  PRODUCT_NOT_ELIGIBLE: "This voucher is not valid for any product in your cart.",
+  CATEGORY_NOT_ELIGIBLE: "This voucher is not valid for any category in your cart.",
 };
 
 const VOUCHER_ERROR_CODES = new Set(Object.keys(VOUCHER_MESSAGES));
@@ -469,9 +469,7 @@ export default function CheckoutPage() {
       form.setValue("city", address.city || "");
       form.setValue("state", address.region || "");
       form.setValue("postal", address.postal || "");
-      if (address.phone || user?.phone) {
-        form.setValue("phone", address.phone || user.phone || "");
-      }
+      form.setValue("phone", address.phone || user?.phone || "");
     },
     [form, user?.phone]
   );
@@ -870,6 +868,7 @@ export default function CheckoutPage() {
                     <span className="block text-label-sm font-semibold text-on-surface">{address.label}</span>
                     <span className="mt-1 block text-label-sm leading-5 text-on-surface-variant">
                       {address.name}
+                      {address.phone ? <><br />{address.phone}</> : null}
                       <br />
                       {address.line1}
                     </span>

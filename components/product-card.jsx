@@ -27,6 +27,7 @@ export function ProductCard({
   onAddToCart,
   onToggleWishlist,
   productId = product?.id,
+  sku = product?.sku || product?.ingramPartNumber || "",
 }) {
   const imageRef = useRef(null);
   const addItem = useCartStore((state) => state.addItem);
@@ -185,15 +186,18 @@ export function ProductCard({
       <div className="zl-card-body flex min-w-0 flex-1 flex-col p-4 pt-4">
         <div className="min-w-0">{titleNode}</div>
 
+        {sku ? <div className="mt-2 truncate font-heading text-xs font-semibold tabular-nums text-on-surface-variant">SKU: {sku}</div> : null}
+
         {description ? <p className="zl-card-desc mt-2 line-clamp-2 break-words text-sm leading-5 text-on-surface-variant">{description}</p> : null}
 
-        <span className={cn("zl-card-price mt-3 block whitespace-nowrap font-heading text-body-lg font-extrabold tabular-nums tracking-[-0.02em]", isPriceOnRequest ? "text-on-surface-variant" : "text-on-surface")}>{isPriceOnRequest ? "On request" : money(Number(price) || 0)}</span>
-
-        <div className="zl-card-stock mt-2 flex items-center gap-2">
-          <span className={cn("inline-flex size-2 shrink-0 rounded-full", sellable ? "bg-emerald-500" : "bg-rose-500")} />
-          <span className="text-xs font-medium text-on-surface-variant">
-            {sellable ? `${remainingStock} in stock` : availability}
-          </span>
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <span className={cn("block whitespace-nowrap font-heading text-body-lg font-extrabold tabular-nums tracking-[-0.02em]", isPriceOnRequest ? "text-on-surface-variant" : "text-[#2563EB]")}>{isPriceOnRequest ? "On request" : money(Number(price) || 0)}</span>
+          <div className="zl-card-stock flex min-w-0 items-center justify-end gap-1.5">
+            <span className={cn("inline-flex size-2 shrink-0 rounded-full", sellable ? "bg-emerald-500" : "bg-rose-500")} />
+            <span className="truncate text-xs font-medium text-on-surface-variant">
+              {sellable ? `${remainingStock} in stock` : availability}
+            </span>
+          </div>
         </div>
 
         <div className="zl-card-actions mt-auto pt-5">

@@ -35,6 +35,7 @@ const [sourceFilter, setSourceFilter] = useState("all");
   const [editTarget, setEditTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [filterLoading, setFilterLoading] = useState(false);
 
 
   const checkSyncStatus = useCallback(async () => {
@@ -412,6 +413,7 @@ function handleEditCategory(category) {
   return (
     <div className="space-y-6">
       <TransparentActionLoader open={Boolean(actionLoading)} label={actionLoading} />
+      <TransparentActionLoader open={filterLoading} label="Switching filter..." />
       {rows === null && !error ? (
         <AdminCategoriesSkeleton />
       ) : error ? (
@@ -446,7 +448,7 @@ function handleEditCategory(category) {
              secondaryToolbar={(
                <FilterTabs
                  value={sourceFilter}
-                 onChange={(value) => { setSourceFilter(value); setPage(1); }}
+                 onChange={(value) => { setFilterLoading(true); setSourceFilter(value); setPage(1); setTimeout(() => setFilterLoading(false), 800); }}
                  tabs={[
                    { value: "all", label: "All" },
                    { value: "manual", label: "Manual" },

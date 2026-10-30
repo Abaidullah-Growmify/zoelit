@@ -1,0 +1,4 @@
+const fs = require('fs');
+let s = fs.readFileSync('app/(shop)/contact/page.jsx','utf8');
+s = s.replace('      <PageHeader\n        eyebrow="Get to know us"\n        title="Have a project in mind? Let\'s talk."\n        description="Contact Zoel IT LTD for enquiries, support, office details, or product questions. Send us a message and we will help you quickly."\n        align="center"\n      />', `      <div className="rounded-2xl bg-gradient-to-b from-surface-container-low/80 to-surface p-6 sm:p-8 lg:p-10"><div className="max-w-2xl"><p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Contact / Support</p><h1 className="mt-2 font-heading text-3xl font-bold tracking-tight text-on-surface sm:text-4xl">We&apos;re here to help</h1><p className="mt-3 text-sm leading-6 text-on-surface-variant">Reach our UK and Pakistan offices for enquiries, support, or product questions.</p></div></div>`);
+fs.writeFileSync('app/(shop)/contact/page.jsx', s);

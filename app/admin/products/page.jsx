@@ -8,7 +8,7 @@ import { AdminTable } from "@/components/admin-table";
 import { Button, Card, FilterTabs, Input, SourceBadge } from "@/components/ui";
 import { AddItemModal } from "@/components/add-item-modal";
 import { AdminProductsSkeleton } from "@/components/skeletons";
-import { ConfirmActionDialog, InfoActionDialog } from "@/components/action-feedback";
+import { ConfirmActionDialog, InfoActionDialog, TransparentActionLoader } from "@/components/action-feedback";
 import {
    getAdminProducts,
    getAdminCategories,
@@ -44,6 +44,7 @@ const [syncing, setSyncing] = useState(false);
   const [categoryError, setCategoryError] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [filterLoading, setFilterLoading] = useState(false);
   const pollRef = useRef(null);
 
   useEffect(() => {
@@ -270,6 +271,7 @@ const [syncing, setSyncing] = useState(false);
 
   return (
     <div className="space-y-6">
+      <TransparentActionLoader open={filterLoading} label="Switching filter..." />
       {rows === null && !error ? (
         <AdminProductsSkeleton />
       ) : error ? (
@@ -307,7 +309,7 @@ const [syncing, setSyncing] = useState(false);
                 <div className="w-full overflow-x-auto whitespace-nowrap">
                   <FilterTabs
                     value={sourceFilter}
-                    onChange={(value) => { setSourceFilter(value); setPage(1); }}
+                    onChange={(value) => { setFilterLoading(true); setSourceFilter(value); setPage(1); setTimeout(() => setFilterLoading(false), 800); }}
                     tabs={[
                       { value: "all", label: "All" },
                       { value: "manual", label: "Manual" },
@@ -426,7 +428,7 @@ function ProductCell({ product }) {
       <Image src={product.image} alt={product.name} width={48} height={48} className="size-10 shrink-0 rounded-lg object-cover ring-1 ring-outline-variant" />
        <div className="min-w-0">
          <p title={product.name} className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-base font-bold text-on-surface">{product.name}</p>
-        <p className="mt-0.5 truncate text-meta font-normal text-on-surface-variant">{product.sku}</p>
+        <p className="mt-0.5 truncate text-xs font-bold text-on-surface-variant">SKU: {product.sku}</p>
       </div>
     </div>
   );

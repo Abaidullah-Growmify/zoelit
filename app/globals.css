@@ -432,6 +432,18 @@ button, a[href], summary, select {
   margin-inline: auto;
 }
 
+/* Contact has two information-dense columns and benefits from the full width
+   of larger displays without changing the shared site container everywhere. */
+.contact-page {
+  width: min(1440px, calc(100% - 2rem));
+}
+
+@media (max-width: 639px) {
+  .contact-page {
+    width: calc(100% - 1.25rem);
+  }
+}
+
 .soft-shadow,
 .shadow-primary-elevated {
   box-shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px -12px rgb(15 23 42 / 0.12);
@@ -891,7 +903,7 @@ button, a[href], summary, select {
   .zl-hero-left, .zl-hero-right { display: none; }
   .zl-hero { display: block; padding: 18px 18px 28px; }
   .zl-mhero { display: block; }
-  .zl-mhero-stage { position: relative; min-height: 220px; overflow: hidden; border-radius: 20px; background: linear-gradient(135deg, #dbeafe, #eff6ff); }
+  .zl-mhero-stage { position: relative; min-height: 220px; overflow: hidden; border-radius: 0.75rem; background: linear-gradient(135deg, #dbeafe, #eff6ff); }
   .zl-mhero-slide { position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 22px; opacity: 0; transition: opacity 220ms ease; }
   .zl-mhero-slide.is-active { opacity: 1; }
   .zl-mhero-copy { min-width: 0; }
@@ -1805,7 +1817,7 @@ html, body { overflow-x: clip; }
   .site-header > div:first-child > div:last-child > a { width: 36px; height: 36px; }
 
   .zl-hero { min-height: 0; padding: 16px 16px 34px; background: #fff; }
-  .zl-mhero-stage { height: 218px; min-height: 218px; border-radius: 18px; background: linear-gradient(135deg, #2877ed 0%, #3885ef 58%, #75aaff 100%); box-shadow: 0 12px 28px rgb(29 78 216 / .18); }
+  .zl-mhero-stage { height: 218px; min-height: 218px; border-radius: 0.75rem; background: linear-gradient(135deg, #2877ed 0%, #3885ef 58%, #75aaff 100%); box-shadow: 0 12px 28px rgb(29 78 216 / .18); }
   .zl-mhero-slide { height: 218px; min-height: 218px; align-items: stretch; overflow: hidden; padding: 22px 16px 16px; }
   .zl-mhero-copy { display: flex; width: 58%; flex-direction: column; align-items: flex-start; justify-content: space-between; padding-bottom: 2px; }
   .zl-mhero-badge { border-radius: 999px; background: #fff; padding: 7px 11px; color: #1765dc; font-size: 10px; }
@@ -4543,6 +4555,28 @@ html, body { overflow-x: clip; }
 .zl-mhero-badge { border-radius: 0.375rem; }
 .zl-mhero-cta { border-radius: 0.5rem; }
 
+/* Mobile banner: keep the product inside a right-side image box so it cannot
+   sit on the blue card without a frame. Radius matches Shop / View buttons. */
+.zl-mhero-img {
+  display: flex;
+  align-self: stretch;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0.45rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
+}
+
+.zl-mhero-img img,
+.zl-mhero-img canvas {
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+}
+
 /* Let the centred container control the category strip instead of the section
    being capped and left-aligned. */
 .home-categories-section {
@@ -4676,7 +4710,7 @@ html, body { overflow-x: clip; }
   gap: 0.75rem;
   min-width: 0;
   padding: 0.75rem;
-  border-radius: 1.5rem;
+  border-radius: 0.75rem;
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   box-shadow: 0 20px 40px rgb(29 78 216 / 0.3);
   color: #fff;
@@ -4785,8 +4819,9 @@ html, body { overflow-x: clip; }
   min-height: 13rem;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   padding: 1rem;
-  border-radius: 1rem;
+  border-radius: 0.75rem;
   background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
 }
 
@@ -4834,7 +4869,7 @@ html, body { overflow-x: clip; }
     align-items: stretch;
     gap: 0.85rem;
     padding: 0.85rem;
-    border-radius: 1.25rem;
+    border-radius: 0.75rem;
   }
 
   .hero-card-body { gap: 0.6rem; padding: 1rem; }
@@ -4962,7 +4997,7 @@ html, body { overflow-x: clip; }
     align-items: stretch;
     gap: clamp(0.5rem, calc(3.125vw - 1rem), 1rem);
     padding: clamp(0.5rem, calc(3.125vw - 1rem), 1rem);
-    border-radius: 1.25rem;
+    border-radius: 0.75rem;
   }
 
   .hero-card-body { gap: clamp(0.45rem, calc(1.875vw - 0.45rem), 0.75rem); padding: clamp(0.75rem, calc(3.125vw - 0.75rem), 1.25rem); }
@@ -5021,6 +5056,58 @@ html, body { overflow-x: clip; }
   padding-inline: 1rem !important;
   border-radius: 0.5rem;
   font-size: 0.875rem;
+}
+
+/* Header search is an input box with the icon inside — never a second
+   standalone search button. Radius matches Sign In / Shop the Store. */
+.header-search-box {
+  flex: 0 1 auto;
+  width: 7.25rem;
+  min-width: 0;
+  max-width: 18rem;
+}
+
+.header-search-box input {
+  border-radius: 0.5rem !important;
+}
+
+@media (max-width: 399px) {
+  .header-search-box {
+    width: 5.75rem;
+  }
+
+  .header-search-box input {
+    font-size: 0.7rem;
+    padding-right: 0.4rem;
+  }
+}
+
+@media (min-width: 480px) {
+  .header-search-box {
+    width: 11.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .header-search-box {
+    width: 14rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .header-search-box {
+    width: 16.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .header-search-box {
+    width: 18rem;
+  }
+}
+
+.site-header .site-brand-logo {
+  min-width: 6.5rem;
 }
 
 @media (min-width: 1280px) {

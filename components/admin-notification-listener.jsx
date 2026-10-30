@@ -23,6 +23,14 @@ export function AdminNotificationListener() {
     function wasAnnounced(eventId, tag) {
       if (!eventId || announcedEvents.has(eventId)) return true;
       if (tag && announcedTags.has(tag)) return true;
+      try {
+        // localStorage shares the dedupe marker between open admin tabs. A
+        // session-only marker would let every tab announce the same event.
+        if (localStorage.getItem(`zoelit-admin-notification-${eventId}`) === "1") return true;
+        localStorage.setItem(`zoelit-admin-notification-${eventId}`, "1");
+      } catch {
+        // In-memory deduplication still protects this tab when storage is unavailable.
+      }
       announcedEvents.add(eventId);
       if (tag) announcedTags.add(tag);
       return false;
@@ -31,24 +39,14 @@ export function AdminNotificationListener() {
     function announce(payload, eventId) {
       const title = payload.notification?.title || payload.data?.title || "New notification";
       const body = payload.notification?.body || payload.data?.body || "You have a new admin notification.";
-      const url = payload.data?.url || "/admin/notifications";
+      // A notification toast always opens the notification history. The
+      // notification detail page can still show a related order separately.
+      const url = "/admin/notifications";
       const tag = payload.data?.tag || (payload.data?.entityId ? `zoelit-entity-${payload.data.entityId}` : `zoelit-${eventId || Date.now()}`);
       if (wasAnnounced(eventId, tag)) return;
-      if (Notification.permission === "granted") {
-        const browserNotification = new Notification(title, {
-          body,
-          icon: "/zoelit_favicon_clean_padded.png",
-          badge: "/zoelit_favicon_clean_padded.png",
-          requireInteraction: false,
-          tag,
-        });
-        window.setTimeout(() => browserNotification.close(), 7000);
-        browserNotification.onclick = () => {
-          window.focus();
-          router.push(url);
-          browserNotification.close();
-        };
-      }
+      // System notifications are rendered only by the Firebase service
+      // worker. Creating another `new Notification()` here duplicates every
+      // push while the admin page is open.
       toast(title, {
         description: body,
         action: { label: "View", onClick: () => router.push(url) },
@@ -67,7 +65,10 @@ export function AdminNotificationListener() {
           if (initial) knownEvents.add(eventId);
           else if (!knownEvents.has(eventId)) {
             knownEvents.add(eventId);
-            announce({ notification: { title: notification.title, body: notification.body }, data: { url: notification.url || "/admin/notifications" } }, eventId);
+            announce({
+              notification: { title: notification.title, body: notification.body },
+              data: { eventId, entityId: notification.entityId || "", url: "/admin/notifications" },
+            }, eventId);
           }
         }
       } catch {
@@ -93,7 +94,7 @@ export function AdminNotificationListener() {
     const pushSyncTimer = window.setInterval(syncPushToken, 10 * 60 * 1000);
 
     listenForAdminMessages((payload) => {
-      const eventId = payload.data?.eventId || `${payload.data?.type || "notification"}-${payload.data?.entityId || Date.now()}`;
+      const eventId = payload.data?.eventId || payload.data?.notificationId || `${payload.data?.type || "notification"}-${payload.data?.entityId || "unknown"}-${payload.notification?.title || payload.data?.title || "event"}`;
       knownEvents.add(eventId);
       announce(payload, eventId);
     }).then((cleanup) => {

@@ -39,7 +39,7 @@ export function ProductBuy({ product }) {
       <div className="flex items-end justify-between gap-4">
         <div>
           <p className="text-label-sm font-semibold uppercase tracking-[0.18em] text-on-surface-variant">Total</p>
-          <span className="mt-1 block font-heading text-headline-lg font-extrabold tabular-nums tracking-[-0.03em] text-on-surface">
+          <span className="mt-1 block font-heading text-3xl font-extrabold tabular-nums tracking-[-0.03em] text-on-surface">
             {product.price > 0 ? money((Number(product.price) || 0) * quantity) : "On request"}
           </span>
           {product.price > 0 && quantity > 1 ? <p className="mt-1 text-label-sm font-semibold text-on-surface-variant">{money(product.price)} each</p> : null}

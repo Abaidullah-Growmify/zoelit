@@ -1,0 +1,4 @@
+const fs = require('fs');
+let s = fs.readFileSync('app/(shop)/faq/page.jsx','utf8');
+s = s.replace('<section className="container-page py-12">\n      <PageHeader eyebrow="FAQ" title="Frequently asked questions" description="Clear answers about orders, checkout, account tools, and support." align="center" />\n      <FAQAccordion faqs={faqs} />', '<section className="container-page py-6"><div className="rounded-xl border border-outline-variant/60 bg-surface-container-low/40 p-4 sm:p-6 shadow-sm"><div className="max-w-2xl"><p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Support / FAQ</p><h1 className="mt-2 font-heading text-3xl font-bold tracking-tight text-on-surface sm:text-4xl">Frequently asked questions</h1><p className="mt-3 text-sm leading-6 text-on-surface-variant">Clear answers about orders, checkout, account tools, and support.</p></div></div><FAQAccordion faqs={faqs} />');
+fs.writeFileSync('app/(shop)/faq/page.jsx', s);

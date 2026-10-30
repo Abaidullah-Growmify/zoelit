@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRouter } from "nextjs-toploader/app";
 import { useEffect, useRef, useState } from "react";
-import { Bell, ChevronDown, Home, LayoutDashboard, Mail, Maximize2, Minimize2, Package, PanelLeftClose, PanelLeftOpen, Settings, ShoppingBag, Tags, Users, Menu, X, Percent, ShoppingCart, Ticket } from "lucide-react";
+import { Bell, ChevronDown, Home, LayoutDashboard, Mail, Maximize2, Minimize2, Package, PanelLeftClose, PanelLeftOpen, Settings, ShoppingBag, Tags, Users, Menu, X, Percent, ShoppingCart, Ticket, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { BrandLogo } from "@/components/brand-logo";
@@ -24,6 +24,7 @@ const items = [
   { href: "/admin/vouchers", label: "Vouchers", icon: Ticket },
   { href: "/admin/customers", label: "Customers", icon: Users },
   { href: "/admin/notifications", label: "Notifications", icon: Bell },
+  { href: "/admin/contact-messages", label: "Contact messages", icon: MessageSquare },
   { href: "/admin/email-templates", label: "Email templates", icon: Mail },
   { href: "/admin/home", label: "Home customization", icon: Home },
   { href: "/admin/settings", label: "Settings", icon: Settings },
