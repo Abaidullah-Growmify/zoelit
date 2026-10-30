@@ -73,8 +73,8 @@ async function HomeCatalog({ categories, productCount, homepage, picks }) {
   const sectionProducts = async (id, type, fallbackOffset = 0) => {
     const config = home[id] || {};
     if (config.enabled === false) return [];
-    if (resolved[id]?.length) return resolved[id].slice(0, SECTION_LIMITS[id] || 4);
     if (config.mode === "auto") return (await getAutoSectionProducts(type, SECTION_LIMITS[id] || 4)).slice(0, SECTION_LIMITS[id] || 4);
+    if (resolved[id]?.length) return resolved[id].slice(0, SECTION_LIMITS[id] || 4);
     return fallback.slice(fallbackOffset, fallbackOffset + (SECTION_LIMITS[id] || 4));
   };
   const [bestDeals, newArrivals, trending] = await Promise.all([
@@ -82,7 +82,10 @@ async function HomeCatalog({ categories, productCount, homepage, picks }) {
     sectionProducts("newArrivals", "newArrivals", 4),
     sectionProducts("trending", "trending", 8),
   ]);
-  const heroProducts = (resolved.hero?.length ? resolved.hero : fallback).slice(0, SECTION_LIMITS.hero);
+  const heroProducts = (home.hero?.mode === "auto"
+    ? await getAutoSectionProducts("hero", SECTION_LIMITS.hero)
+    : resolved.hero?.length ? resolved.hero : fallback
+  ).slice(0, SECTION_LIMITS.hero);
   const selectedCategories = home.categories?.mode === "auto" || !home.categories?.categoryNames?.length
     ? categories.slice(0, 6)
     : categories.filter((category) => home.categories.categoryNames.includes(category.name)).slice(0, 6);
@@ -92,19 +95,25 @@ async function HomeCatalog({ categories, productCount, homepage, picks }) {
     { id: "trending", config: home.trending, products: trending },
   ];
 
+  const customSections = await Promise.all((home.customSections || []).map(async (config, index) => {
+    if (config?.enabled === false) return { config, products: [] };
+    const key = `custom:${index}`;
+    const products = config?.mode === "auto"
+      ? await getAutoSectionProducts("custom", SECTION_LIMITS.custom)
+      : resolved[key]?.length ? resolved[key] : fallback.slice(index * 4, index * 4 + 4);
+    return { config, products: products.slice(0, SECTION_LIMITS.custom) };
+  }));
+
   return <>
     {home.hero?.enabled !== false && heroProducts.length ? <HomeHero products={heroProducts} productCount={productCount} categories={selectedCategories} content={home.hero} explicit /> : null}
     {home.categories?.enabled !== false && selectedCategories.length ? <section className="home-categories-section py-10 md:py-16"><Container><SectionHeader eyebrow="Explore" title="Shop by category" action={<Link href="/products" className="inline-flex items-center gap-1 text-sm font-semibold text-primary">View all <ChevronRight className="size-4" /></Link>} /><div className="mt-6"><HomeCategories categories={selectedCategories} /></div></Container></section> : null}
-    {sections.map((section) => section.config?.enabled !== false && section.products.length ? <ProductSection key={section.id} config={section.config} products={section.products} /> : null)}
-    {(home.customSections || []).map((config, index) => {
-      const products = resolved[`custom:${index}`]?.length ? resolved[`custom:${index}`] : fallback.slice(index * 4, index * 4 + 4);
-      return config?.enabled !== false && products.length ? <ProductSection key={`custom:${index}`} config={config} products={products.slice(0, SECTION_LIMITS.custom)} /> : null;
-    })}
+    {sections.map((section) => section.config?.enabled !== false && section.products.length ? <ProductSection key={section.id} config={{ ...(section.config || {}), id: section.id }} products={section.products} /> : null)}
+    {customSections.map(({ config, products }, index) => config?.enabled !== false && products.length ? <ProductSection key={`custom:${index}`} config={config} products={products} /> : null)}
   </>;
 }
 
 function ProductSection({ config = {}, products }) {
-  return <section className="container-page py-10 md:py-16"><SectionHeader eyebrow={config.eyebrow} title={config.title || "Featured products"} action={<Link href="/products" className="inline-flex items-center gap-1 text-sm font-semibold text-primary">View all <ChevronRight className="size-4" /></Link>} /><div className="product-grid grid-home mt-8">{products.map((product) => <ProductCard key={product.id} product={product} />)}</div></section>;
+  return <section className="container-page py-10 md:py-16"><SectionHeader eyebrow={config.id === "bestDeals" ? "Featured" : config.eyebrow} title={config.title || "Featured products"} action={<Link href="/products" className="inline-flex items-center gap-1 text-sm font-semibold text-primary">View all <ChevronRight className="size-4" /></Link>} /><div className="product-grid grid-home mt-8">{products.map((product) => <ProductCard key={product.id} product={product} />)}</div></section>;
 }
 
 export default async function HomePage() {

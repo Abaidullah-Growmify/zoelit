@@ -26,7 +26,7 @@ const DEFAULTS = {
     productIds: [],
   },
   categories: { enabled: true, mode: "manual", categoryNames: [] },
-  bestDeals: { enabled: true, eyebrow: "", title: "Featured Products", mode: "manual", productIds: [] },
+  bestDeals: { enabled: true, eyebrow: "Featured", title: "Featured Products", mode: "manual", productIds: [] },
   newArrivals: { enabled: true, eyebrow: "New Arrivals", title: "Fresh picks just landed", mode: "manual", productIds: [] },
   trending: { enabled: true, eyebrow: "Trending", title: "Popular right now", mode: "manual", productIds: [] },
   customSections: [],
