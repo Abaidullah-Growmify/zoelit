@@ -2,6 +2,14 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { CartDrawer } from "@/components/cart-drawer";
 
+export const metadata = {
+  title: {
+    default: "ZoeLit | Technology and Business Equipment",
+    template: "%s | ZoeLit",
+  },
+  description: "Shop dependable technology, connectivity products, and business equipment from ZoeLit.",
+};
+
 export default function ShopLayout({ children }) {
   return (
     <div className="flex min-h-screen flex-col">

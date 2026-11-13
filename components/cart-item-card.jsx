@@ -6,6 +6,7 @@ import { useProductStore } from "@/store/product-store";
 import { money } from "@/lib/utils";
 import { Card } from "@/components/ui";
 import { FALLBACK_IMAGE } from "@/lib/product-mapper";
+import { safeImageSrc } from "@/components/clean-product-image";
 
 export function CartItemCard({ item, updateQuantity, removeItem }) {
   const storeProduct = useProductStore((state) => state.getById(item.productId));
@@ -23,18 +24,18 @@ export function CartItemCard({ item, updateQuantity, removeItem }) {
   const quantity = Math.floor(Number(item.quantity)) || 0;
 
   return (
-    <Card className="relative overflow-hidden rounded-lg bg-surface-container-low p-3 shadow-primary-elevated transition duration-300 hover:border-primary sm:p-4">
-      <div className="flex gap-3 sm:gap-5">
-        <Image src={displayProduct.image} alt={displayProduct.name} width={240} height={240} className="size-20 shrink-0 rounded-lg object-cover sm:size-30" />
+    <Card className="cart-item-card relative overflow-hidden rounded-lg bg-surface-container-low p-3 shadow-primary-elevated transition duration-300 hover:border-primary sm:p-4">
+      <div className="cart-item-main flex gap-3 sm:gap-5">
+        <Image src={safeImageSrc(displayProduct.image)} alt={displayProduct.name} width={240} height={240} className="cart-item-image size-20 shrink-0 rounded-lg object-cover sm:size-30" />
 
-        <div className="flex min-w-0 flex-1 flex-col justify-between gap-4">
+        <div className="cart-item-details flex min-w-0 flex-1 flex-col justify-between gap-4">
           <div className="min-w-0 pr-8 sm:pr-10">
             <h2 className="line-clamp-2 max-w-xl break-words font-heading text-sm font-semibold leading-tight tracking-tight text-on-surface sm:text-body-lg">{displayProduct.name}</h2>
             <p className="mt-1 line-clamp-1 max-w-xl text-body-md leading-5 text-on-surface-variant">{displayProduct.description}</p>
             <p className="mt-2 text-label-md font-semibold tabular-nums text-on-surface-variant">Each {money(price)}</p>
           </div>
 
-          <div className="flex items-center justify-between gap-3">
+          <div className="cart-item-controls flex min-w-0 items-center justify-between gap-3">
             <div className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-surface-container px-2 py-1 sm:gap-3 sm:px-3 sm:py-1.5">
               <button className="grid size-6 place-items-center rounded-lg text-on-surface-variant transition hover:bg-surface-container-low hover:text-primary sm:size-7" onClick={() => updateQuantity(item.productId, quantity - 1)} aria-label={`Decrease ${displayProduct.name} quantity`}>
                 <Minus className="size-4" />
@@ -44,7 +45,7 @@ export function CartItemCard({ item, updateQuantity, removeItem }) {
                 <Plus className="size-4" />
               </button>
             </div>
-            <p className="shrink-0 text-right text-sm font-semibold tabular-nums text-on-surface sm:text-body-lg">{money(price * (quantity || 1))}</p>
+            <p className="cart-item-total min-w-0 shrink text-right text-sm font-semibold tabular-nums text-on-surface sm:text-body-lg">{money(price * (quantity || 1))}</p>
           </div>
         </div>
 

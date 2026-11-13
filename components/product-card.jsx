@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRef, useSyncExternalStore } from "react";
 import { ArrowRight, Heart, ShoppingBasket } from "lucide-react";
@@ -10,6 +9,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { useWishlistStore } from "@/store/wishlist-store";
 import { Button, Card } from "@/components/ui";
 import { resolveAvailability } from "@/lib/product-availability";
+import { CleanProductImage } from "@/components/clean-product-image";
 
 const IMAGE_AREA_CLASS = "h-[180px] p-4";
 
@@ -133,6 +133,7 @@ export function ProductCard({
   const titleNode = hasDetailLink ? (
     <Link
       href={detailHref}
+      prefetch={false}
       title={title}
       className="zl-card-title min-h-10 min-w-0 line-clamp-2 text-overflow-unset [overflow-wrap:anywhere] font-heading text-base font-bold leading-tight tracking-[-0.02em] text-on-surface transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:text-primary group-hover:text-primary"
     >
@@ -144,19 +145,16 @@ export function ProductCard({
 
   const imageNode = (
     <div className="flex h-full w-full items-center justify-center">
-      <Image
+      <CleanProductImage
         src={image}
         alt={title}
-        width={300}
-        height={220}
-        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
         className="h-full w-full object-contain p-2 transition-transform duration-300 ease-out motion-reduce:transform-none group-hover:scale-[1.02]"
       />
     </div>
   );
 
   return (
-    <Card className="zl-card group relative flex h-full cursor-pointer flex-col border-[rgba(0,0,0,0.06)] p-0 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.12)] transition-all duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-1 hover:border-primary/20 hover:shadow-[0_16px_32px_-12px_rgba(16,24,40,0.22)]">
+    <Card className="product-card-container zl-card group relative flex h-full cursor-pointer flex-col border-[rgba(0,0,0,0.06)] p-0 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.12)] transition-all duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-1 hover:border-primary/20 hover:shadow-[0_16px_32px_-12px_rgba(16,24,40,0.22)]">
       {isClientReady && token ? (
         <button
           type="button"
@@ -180,41 +178,46 @@ export function ProductCard({
         </span>
       ) : null}
       <div ref={imageRef} className={cn("zl-card-img relative overflow-hidden rounded-t-xl border-b-2 border-[rgba(0,0,0,0.08)] bg-transparent dark:border-slate-700", IMAGE_AREA_CLASS)}>
-        {hasDetailLink ? <Link href={detailHref} className="block h-full w-full focus-visible:outline-none">{imageNode}</Link> : <div className="block h-full w-full">{imageNode}</div>}
+        {hasDetailLink ? <Link href={detailHref} prefetch={false} className="block h-full w-full focus-visible:outline-none">{imageNode}</Link> : <div className="block h-full w-full">{imageNode}</div>}
       </div>
 
       <div className="zl-card-body flex min-w-0 flex-1 flex-col p-4 pt-4">
         <div className="min-w-0">{titleNode}</div>
 
-        {sku ? <div className="mt-2 truncate font-heading text-xs font-semibold tabular-nums text-on-surface-variant">SKU: {sku}</div> : null}
+        {productId ? (
+          <div className="zl-card-sku mt-2 min-w-0 truncate font-heading text-xs font-semibold tabular-nums text-on-surface-variant">
+            {`SKU: ${sku || productId}`}
+          </div>
+        ) : null}
 
         {description ? <p className="zl-card-desc mt-2 line-clamp-2 break-words text-sm leading-5 text-on-surface-variant">{description}</p> : null}
 
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <span className={cn("block whitespace-nowrap font-heading text-body-lg font-extrabold tabular-nums tracking-[-0.02em]", isPriceOnRequest ? "text-on-surface-variant" : "text-[#2563EB]")}>{isPriceOnRequest ? "On request" : money(Number(price) || 0)}</span>
+        <div className="zl-card-meta mt-3">
+          <div className="zl-card-price-row flex items-center justify-between gap-2">
+          <span className={cn("zl-card-price block whitespace-nowrap font-heading text-body-lg font-extrabold tabular-nums tracking-[-0.02em]", isPriceOnRequest ? "text-on-surface-variant" : "text-[#2563EB]")}>{isPriceOnRequest ? "On request" : money(Number(price) || 0)}</span>
           <div className="zl-card-stock flex min-w-0 items-center justify-end gap-1.5">
             <span className={cn("inline-flex size-2 shrink-0 rounded-full", sellable ? "bg-emerald-500" : "bg-rose-500")} />
             <span className="truncate text-xs font-medium text-on-surface-variant">
               {sellable ? `${remainingStock} in stock` : availability}
             </span>
           </div>
-        </div>
-
-        <div className="zl-card-actions mt-auto pt-5">
-          <Button
-            className="h-10 w-full rounded-md bg-[#2563EB] text-white hover:bg-[#1d4ed8]"
-            onClick={handleAddToCart}
-            aria-label={`Add ${title} to cart`}
-            disabled={!sellable || remainingStock <= 0}
-          >
-            <ShoppingBasket className="size-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5 motion-reduce:transition-none" />
-            {sellable ? "Add to cart" : "Out of stock"}
-          </Button>
+          </div>
+          <div className="zl-card-actions mt-5 shrink-0">
+            <Button
+              className="h-10 w-full rounded-md bg-[#2563EB] text-white hover:bg-[#1d4ed8]"
+              onClick={handleAddToCart}
+              aria-label={sellable ? "Add to cart" : "Out of stock"}
+              disabled={!sellable || remainingStock <= 0}
+            >
+              <ShoppingBasket className="size-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5 motion-reduce:transition-none" />
+              <span className="cart-action-label">{sellable ? "Add to cart" : "Out of stock"}</span>
+            </Button>
+          </div>
         </div>
       </div>
 
       {hasDetailLink ? (
-        <Link href={detailHref} className="zl-card-arrow" aria-label={`View ${title}`}>
+        <Link href={detailHref} prefetch={false} className="zl-card-arrow" aria-label={`View ${title}`}>
           <ArrowRight className="size-4" />
         </Link>
       ) : null}

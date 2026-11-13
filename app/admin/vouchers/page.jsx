@@ -208,8 +208,8 @@ export default function AdminVouchersPage() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [statusSavingId, setStatusSavingId] = useState("");
-  // Two tabs, one search box: `view` flips between the enabled table and the
-  // disabled card grid, `voucherSearch` filters whichever tab is open.
+  // Two tabs, one search box: active vouchers stay in the table, while all
+  // vouchers use the card layout for a quick visual overview.
   const [view, setView] = useState("active");
   const [voucherSearch, setVoucherSearch] = useState("");
   const [statusTarget, setStatusTarget] = useState(null);
@@ -526,7 +526,7 @@ async function save(event) {
         <div className="max-w-[11rem]">
           <p className="truncate font-semibold text-on-surface">{voucher.name || "-"}</p>
           {voucher.description ? (
-            <p className="mt-0.5 truncate text-xs text-on-surface-variant" title={voucher.description}>
+            <p className="mt-0.5 truncate text-xs text-on-surface" title={voucher.description}>
               {voucher.description}
             </p>
           ) : null}
@@ -552,7 +552,7 @@ async function save(event) {
       render: (voucher) => {
         const label = appliesToLabel(voucher, productNames, categories);
         return (
-          <span className="block max-w-[12rem] truncate text-xs font-semibold text-on-surface-variant" title={label}>
+          <span className="block max-w-[12rem] truncate text-xs font-semibold text-on-surface" title={label}>
             {label}
           </span>
         );
@@ -568,13 +568,6 @@ async function save(event) {
           {usageLabel(voucher)}
         </span>
       ),
-    },
-    {
-      key: "period",
-      header: "Period",
-      accessor: (voucher) => voucher.expiresAt || "",
-      sortable: true,
-      render: (voucher) => <span className="whitespace-nowrap text-xs text-on-surface-variant">{periodLabel(voucher)}</span>,
     },
     {
       key: "status",
@@ -611,7 +604,6 @@ async function save(event) {
   const activeRows = matchedVouchers
     .filter((voucher) => voucher.isActive !== false)
     .map((voucher, index) => ({ ...voucher, serial: index + 1 }));
-  const inactiveVouchers = matchedVouchers.filter((voucher) => voucher.isActive === false);
   // The banner prefers the "fix the fields" nudge while the form is known to
   // be invalid, and falls back to whatever the server said otherwise.
   const banner = showErrors && hasErrors ? "Please fix the highlighted fields before saving." : formError;
@@ -625,43 +617,47 @@ async function save(event) {
   return (
     <div className="space-y-6">
       <Card className="overflow-visible p-0">
-        <div className="border-b border-outline-variant bg-surface-container-low/40 px-5 py-6 sm:px-7">
-          <h1 className="font-heading text-2xl font-semibold text-on-surface">Vouchers</h1>
-          <p className="mt-1 max-w-3xl text-sm leading-6 text-on-surface-variant">
-            Create and manage discount codes shown at checkout. Usage is only recorded once an order is paid.
-          </p>
-          <div className="mt-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-b border-outline-variant/80">
-            <div className="flex gap-1">
+        <div className="border-b border-outline-variant bg-surface-container-low/40 px-4 py-5 sm:px-5 sm:py-6 lg:px-7">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <h1 className="font-heading text-xl font-semibold text-on-surface sm:text-2xl">Vouchers</h1>
+              <p className="mt-1 max-w-3xl text-sm leading-6 text-on-surface-variant">
+                Create and manage discount codes shown at checkout. Usage is only recorded once an order is paid.
+              </p>
+            </div>
+          </div>
+          <div className="mt-5 flex min-w-0 flex-col gap-3 border-b border-outline-variant/80 min-[560px]:flex-row min-[560px]:items-end min-[560px]:justify-between">
+            <div className="flex min-w-0 shrink gap-1 overflow-hidden whitespace-nowrap">
               <button
                 type="button"
                 onClick={() => setView("active")}
-                className={`border-b-2 px-4 py-2.5 text-sm font-semibold ${view === "active" ? "border-primary text-primary" : "border-transparent text-on-surface-variant transition hover:text-on-surface"}`}
+                className={`border-b-2 px-3 py-2.5 text-sm font-semibold transition sm:px-4 ${view === "active" ? "border-primary text-primary" : "border-transparent text-on-surface-variant hover:text-on-surface"}`}
               >
                 Active vouchers
               </button>
               <button
                 type="button"
                 onClick={() => setView("inactive")}
-                className={`border-b-2 px-4 py-2.5 text-sm font-semibold ${view === "inactive" ? "border-primary text-primary" : "border-transparent text-on-surface-variant transition hover:text-on-surface"}`}
+                className={`border-b-2 px-3 py-2.5 text-sm font-semibold transition sm:px-4 ${view === "inactive" ? "border-primary text-primary" : "border-transparent text-on-surface-variant hover:text-on-surface"}`}
               >
-                Inactive vouchers
+                All vouchers
               </button>
             </div>
-            <div className="ml-auto flex items-center gap-3">
-              <div className="relative min-w-0 sm:w-64">
-                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
-                <Input
-                  value={voucherSearch}
-                  onChange={(event) => setVoucherSearch(event.target.value)}
-                  placeholder="Search vouchers"
-                  aria-label="Search vouchers"
-                  className="h-9 pl-10 shadow-sm"
-                />
-              </div>
-              <Button type="button" onClick={openAddForm} className="h-9 shrink-0 gap-2">
-                <Plus className="size-4" />
-                Add voucher
-              </Button>
+            <div className="flex w-full min-w-0 shrink-0 justify-end gap-2 pb-1 min-[560px]:w-auto">
+            <div className="relative min-w-0 w-full min-[560px]:w-44 lg:w-72">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
+              <Input
+                value={voucherSearch}
+                onChange={(event) => setVoucherSearch(event.target.value)}
+                placeholder="Search vouchers"
+                aria-label="Search vouchers"
+                className="h-10 w-full pl-10"
+              />
+            </div>
+            <Button type="button" onClick={openAddForm} className="h-10 min-w-0 shrink-0 gap-1.5 px-2 text-xs sm:gap-2 sm:px-3 sm:text-sm">
+              <Plus className="size-4 shrink-0" />
+              <span className="truncate">Add voucher</span>
+            </Button>
             </div>
           </div>
         </div>
@@ -688,12 +684,12 @@ async function save(event) {
             ]}
           />
         ) : (
-          <InactiveVoucherGrid
-            vouchers={inactiveVouchers}
-            totalCount={vouchers.length}
+          <AllVoucherGrid
+             vouchers={matchedVouchers}
+             totalCount={vouchers.length}
             search={voucherSearch}
-            onStatusChange={requestStatusChange}
-            onEdit={edit}
+             onStatusChange={requestStatusChange}
+             onEdit={edit}
             onDelete={(voucher) => setDeleteTarget(voucher)}
             statusSavingId={statusSavingId}
             productNames={productNames}
@@ -1054,14 +1050,14 @@ async function save(event) {
                   </p>
                 ) : null}
 
-                <div className="flex flex-col-reverse gap-2 border-t border-outline-variant pt-4 sm:flex-row sm:justify-end">
+                <div className="flex flex-row items-stretch justify-end gap-2 border-t border-outline-variant pt-4">
                   <Button type="button" variant="outline" onClick={closeForm} disabled={saving}>
                     Cancel
                   </Button>
                   <Button
                     type="submit"
                     disabled={saving || (showErrors && hasErrors)}
-                    className="min-w-40 gap-2"
+                    className="gap-2"
                   >
                     <Plus className="size-4" />
                     {saving ? "Saving..." : editingId ? "Update voucher" : "Add voucher"}
@@ -1110,7 +1106,7 @@ async function save(event) {
                 <X className="size-4" />
               </button>
             </div>
-            <div className="flex flex-col-reverse gap-2 border-t border-outline-variant px-5 py-4 sm:flex-row sm:justify-end">
+            <div className="flex flex-row items-stretch justify-end gap-2 border-t border-outline-variant px-5 py-4">
               <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={deleting}>
                 Cancel
               </Button>
@@ -1190,7 +1186,7 @@ function StatusVoucherModal({ voucher, saving, onCancel, onConfirm }) {
             <X className="size-4" />
           </button>
         </div>
-        <div className="flex flex-col-reverse gap-2 border-t border-outline-variant px-5 py-4 sm:flex-row sm:justify-end">
+        <div className="flex flex-row items-stretch justify-end gap-2 border-t border-outline-variant px-5 py-4">
           <Button variant="outline" onClick={onCancel} disabled={saving}>
             Cancel
           </Button>
@@ -1307,42 +1303,58 @@ function VoucherViewRow({ label, value }) {
   );
 }
 
-function InactiveVoucherGrid({ vouchers, totalCount, search, onStatusChange, onEdit, onDelete, statusSavingId, productNames = {}, categories = [] }) {
+function AllVoucherGrid({ vouchers, totalCount, search, onStatusChange, onEdit, onDelete, statusSavingId, productNames = {}, categories = [] }) {
   if (!vouchers.length) {
     return (
       <p className="p-7 text-sm text-on-surface-variant">
         {totalCount === 0
-          ? "No inactive vouchers."
+          ? "No vouchers."
           : search.trim()
             ? "No vouchers match your search."
-            : "Every voucher is active."}
+            : "No vouchers available."}
       </p>
     );
   }
 
-  const columns = [
-    { key: "code", header: "Code", accessor: "code", sortable: true, render: (voucher) => <span className="rounded-lg bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary">{voucher.code}</span> },
-    { key: "name", header: "Name", accessor: "name", sortable: true, render: (voucher) => <div className="max-w-[12rem]"><p className="truncate font-semibold text-on-surface">{voucher.name || "-"}</p><p className="truncate text-xs text-on-surface-variant">{voucher.description || ""}</p></div> },
-    { key: "discount", header: "Discount", accessor: discountLabel, sortable: true, render: (voucher) => <span className="font-semibold tabular-nums text-on-surface">{discountLabel(voucher)}</span> },
-    { key: "appliesTo", header: "Applies to", accessor: (voucher) => appliesToLabel(voucher, productNames, categories), sortable: true, render: (voucher) => <span className="block max-w-[12rem] truncate text-xs font-semibold text-on-surface-variant">{appliesToLabel(voucher, productNames, categories)}</span> },
-    { key: "usage", header: "Usage", accessor: (voucher) => Number(voucher.usageCount) || 0, sortable: true, render: (voucher) => <span className="font-semibold tabular-nums text-on-surface">{usageLabel(voucher)}</span> },
-    { key: "period", header: "Period", accessor: (voucher) => voucher.expiresAt || "", sortable: true, render: (voucher) => <span className="text-xs text-on-surface-variant">{periodLabel(voucher)}</span> },
-    { key: "status", header: "Status", accessor: "status", render: (voucher) => <AdminStatusBadge>{voucher.status}</AdminStatusBadge> },
-  ];
-
-  return <AdminTable
-    title="Inactive vouchers"
-    description="Disabled vouchers that checkout will not accept."
-    columns={columns}
-    data={vouchers.map((voucher, index) => ({ ...voucher, serial: index + 1 }))}
-    hideSearch
-    disableInitialSort
-    rowActions={(voucher) => [
-      { label: "Edit", icon: Pencil, onClick: () => onEdit(voucher) },
-      { label: "Delete", icon: Trash2, onClick: () => onDelete(voucher), disabled: statusSavingId === (voucher._id || voucher.id) },
-      { label: "Activate", icon: CheckCircle, onClick: () => onStatusChange(voucher) },
-    ]}
-  />;
+  return (
+    <div className="border-t border-outline-variant/70 p-5 sm:p-7">
+      <div className="mb-5">
+        <h2 className="font-heading text-lg font-semibold text-on-surface">All vouchers</h2>
+        <p className="mt-1 text-sm text-on-surface-variant">Active and inactive vouchers in card view.</p>
+      </div>
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        {vouchers.map((voucher, index) => {
+          const id = voucher._id || voucher.id;
+          const active = voucher.isActive !== false;
+          const saving = statusSavingId === id;
+          return (
+            <div key={id || `${voucher.code}-${index}`} className="flex min-w-0 flex-col rounded-xl border border-outline-variant bg-surface p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+              <div className="flex items-start justify-between gap-3">
+                <span className="rounded-lg bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary">{voucher.code}</span>
+                <AdminStatusBadge>{voucher.status}</AdminStatusBadge>
+              </div>
+              <h3 className="mt-3 truncate text-base font-semibold text-on-surface" title={voucher.name || "-"}>{voucher.name || "-"}</h3>
+              {voucher.description ? <p className="mt-1 truncate text-sm text-on-surface-variant">{voucher.description}</p> : <p className="mt-1 text-sm text-on-surface-variant">Discount voucher</p>}
+              <div className="mt-3 border-t border-outline-variant/70 pt-3">
+                <p className="text-xs font-medium uppercase tracking-[0.12em] text-on-surface-variant">Discount</p>
+                <p className="mt-0.5 text-lg font-bold tabular-nums text-on-surface">{discountLabel(voucher)}</p>
+              </div>
+              <div className="mt-3 grid gap-2 text-sm">
+                <div className="flex min-w-0 justify-between gap-3"><span className="text-on-surface-variant">Applies to</span><strong className="max-w-[12rem] truncate text-right font-semibold text-on-surface" title={appliesToLabel(voucher, productNames, categories)}>{appliesToLabel(voucher, productNames, categories)}</strong></div>
+                <div className="flex justify-between gap-3"><span className="text-on-surface-variant">Usage</span><strong className="tabular-nums text-on-surface">{usageLabel(voucher)}</strong></div>
+                <div className="flex justify-between gap-3"><span className="text-on-surface-variant">Expires</span><strong className="max-w-[12rem] truncate text-right font-semibold text-on-surface" title={periodLabel(voucher)}>{periodLabel(voucher)}</strong></div>
+              </div>
+              <div className="mt-4 flex items-center justify-end gap-2 border-t border-outline-variant/70 pt-3">
+                <button type="button" onClick={() => onEdit(voucher)} className="icon-btn size-9 text-on-surface-variant hover:text-primary" aria-label={`Edit ${voucher.code}`} title="Edit"><Pencil className="size-4" /></button>
+                <button type="button" onClick={() => onDelete(voucher)} className="icon-btn size-9 text-on-surface-variant hover:text-rose-600" aria-label={`Delete ${voucher.code}`} title="Delete" disabled={saving}><Trash2 className="size-4" /></button>
+                <button type="button" onClick={() => onStatusChange(voucher)} className={`ml-1 inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold transition ${active ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "border-outline-variant bg-surface-container-low text-on-surface-variant hover:bg-surface-container"}`} disabled={saving} title={active ? "Disable voucher" : "Activate voucher"}>{active ? <><span>Active</span><CheckCircle className="size-4" /></> : <><span>Inactive</span><X className="size-4" /></>}</button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 function VoucherSkeleton() {

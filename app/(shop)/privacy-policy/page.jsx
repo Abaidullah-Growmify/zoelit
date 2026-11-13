@@ -9,12 +9,17 @@ const sections = [
   { title: "Security", text: "The interface is designed for secure checkout patterns, clear validation, and protected account routes. Production deployments should use HTTPS and secure auth providers." },
 ];
 
-export const metadata = { title: "Privacy Policy | ZoeLit Commerce" };
+export const metadata = {
+  title: "Privacy Policy | Zoel IT Commerce",
+  description: "Learn how ZoeLit handles customer information, account data, orders, checkout, and privacy choices.",
+  alternates: { canonical: "/privacy-policy" },
+  openGraph: { title: "Privacy Policy | ZoeLit", description: "Learn how ZoeLit handles customer information, account data, orders, checkout, and privacy choices.", url: "/privacy-policy" },
+};
 
 export default function PrivacyPolicyPage() {
   return (
     <section className="container-page py-12">
-      <PageHeader eyebrow="Privacy" title="Privacy Policy" description="Last updated August 5, 2026. This page explains how ZoeLit Commerce handles customer information in this e-commerce experience." align="center" />
+      <PageHeader eyebrow="Privacy" title="Privacy Policy" description="Last updated August 5, 2026. This page explains how Zoel IT Commerce handles customer information in this e-commerce experience." align="center" />
       <div className="mx-auto mt-10 grid max-w-4xl gap-5">
         {sections.map((section) => (
           <Card key={section.title} className="shadow-none">

@@ -14,7 +14,7 @@ import {
 } from "@/lib/api";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
 
-const EMAIL_LOGO_URL = "https://res.cloudinary.com/erspxhnu/image/upload/v1788352762/Zoelit_logo_light_mode.jpg";
+const EMAIL_LOGO_URL = "https://res.cloudinary.com/erspxhnu/image/upload/v1793360103/zoelit_logo_full_light.png";
 
 const previewValues = {
   name: "Avery Morgan",
@@ -26,7 +26,7 @@ const previewValues = {
   resetUrl: "#",
   verificationUrl: "#",
   expiresIn: "15 minutes",
-  companyName: "ZoeLit Commerce",
+  companyName: "Zoel IT Commerce",
   adminEmail: "ms.ayshrajpoot@gmail.com",
   companyEmail: "support@zoelit.com",
   companyPhone: "+1 (800) 555-0144",
@@ -38,7 +38,7 @@ function replaceVariables(text) {
 }
 
 function buildPreviewHtml(template) {
-  return `<style>body{margin:0;background:#f4f7fb}p{margin:0 0 18px;font-size:14px;line-height:1.7;color:#334155}strong{color:#172033}a{display:inline-block;background:#003fb1;color:#fff!important;text-decoration:none;padding:13px 24px;margin:8px 0;border-radius:5px;font-weight:700}</style><div style="font-family:Arial,sans-serif;background:#f4f7fb;padding:32px 16px;color:#172033;min-height:100%"><div style="max-width:640px;margin:auto;background:#fff;border:1px solid #dbe3ef;box-shadow:0 4px 16px rgba(15,23,42,.08)"><div style="background:#fff;padding:20px 32px;border-bottom:1px solid #e2e8f0"><img src="${EMAIL_LOGO_URL}" alt="ZoeLit" style="display:block;width:190px;height:auto;max-height:44px;object-fit:contain" /></div><div style="padding:32px"><div style="font-size:13px;color:#64748b;border-bottom:1px solid #eef2f7;padding-bottom:16px;margin-bottom:22px">Subject: ${replaceVariables(template.subject)}</div>${replaceVariables(template.htmlBody)}</div><div style="border-top:1px solid #e2e8f0;background:#f8fafc;padding:20px 32px;color:#64748b;font-size:12px;line-height:1.7;text-align:left"><strong style="color:#172033;font-size:14px">ZoeLit Commerce</strong><br>Need help? Contact our support team at ${previewValues.adminEmail}.</div></div></div>`;
+  return `<style>body{margin:0;background:#f4f7fb}p{margin:0 0 18px;font-size:14px;line-height:1.7;color:#334155}strong{color:#172033}a{display:inline-block;background:#003fb1;color:#fff!important;text-decoration:none;padding:13px 24px;margin:8px 0;border-radius:5px;font-weight:700}</style><div style="font-family:Arial,sans-serif;background:#f4f7fb;padding:32px 16px;color:#172033;min-height:100%"><div style="max-width:640px;margin:auto;background:#fff;border:1px solid #dbe3ef;box-shadow:0 4px 16px rgba(15,23,42,.08)"><div style="background:#fff;padding:20px 32px;border-bottom:1px solid #e2e8f0"><img src="${EMAIL_LOGO_URL}" alt="ZoeLit" style="display:block;width:190px;height:auto;max-height:44px;object-fit:contain" /></div><div style="padding:32px"><div style="font-size:13px;color:#64748b;border-bottom:1px solid #eef2f7;padding-bottom:16px;margin-bottom:22px">Subject: ${replaceVariables(template.subject)}</div>${replaceVariables(template.htmlBody)}</div><div style="border-top:1px solid #e2e8f0;background:#f8fafc;padding:20px 32px;color:#64748b;font-size:12px;line-height:1.7;text-align:left"><strong style="color:#172033;font-size:14px">Zoel IT Commerce</strong><br>Need help? Contact our support team at ${previewValues.adminEmail}.</div></div></div>`;
 }
 
 function formatHtmlForEditor(html) {
@@ -253,10 +253,10 @@ export default function EmailTemplatesPage() {
                       <td className="px-5 py-4 font-semibold tabular-nums text-on-surface">{serialSort === "asc" ? index + 1 : orderedTemplates.length - index}</td>
                       <td className="px-5 py-4 font-semibold text-on-surface">
                         {template.name}
-                        <div className="mt-1 text-xs font-normal text-on-surface-variant">{template.description || template.subject}</div>
+                        <div className="mt-1 text-xs font-normal text-on-surface">{template.description || template.subject}</div>
                       </td>
-                      <td className="px-5 py-4 font-mono text-xs text-on-surface-variant">{template.templateKey}</td>
-                      <td className="max-w-xs px-5 py-4 text-on-surface-variant">{template.subject}</td>
+                      <td className="px-5 py-4 font-mono text-xs text-on-surface">{template.templateKey}</td>
+                      <td className="max-w-xs px-5 py-4 text-on-surface">{template.subject}</td>
                       <td className="px-5 py-4">
                         <select value="active" disabled={actionLoading === "Updating template status..."} onChange={(event) => requestStatusChange(template, event)} className="h-9 rounded-md border border-emerald-200 bg-emerald-50 px-3 text-sm font-semibold text-emerald-700">
                           <option value="active">Active</option>

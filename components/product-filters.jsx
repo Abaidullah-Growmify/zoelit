@@ -4,9 +4,10 @@ import { useState } from "react";
 
 const PRICE_OPTIONS = [
   ["all", "Any price"],
-  ["under-2000", "Under Rs 2,000"],
-  ["2000-10000", "Rs 2,000 - 10,000"],
-  ["over-10000", "Rs 10,000 +"],
+  ["under-100", "Under $100"],
+  ["100-500", "$100-500"],
+  ["over-500", "$500+"],
+  ["on-request", "On request"],
 ];
 
 const HEADING_CLASS = "mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-on-surface-variant";
@@ -40,10 +41,10 @@ export function ProductFilters({
 
   return (
     <div className={isSheet ? "divide-y divide-outline-variant/60" : undefined}>
-      <div className={categorySectionClass}>
+      <fieldset className={categorySectionClass}>
         {isSheet ? (
           <div className="mb-1 flex items-center justify-between gap-3">
-            <h3 className={HEADING_CLASS}>Category</h3>
+            <legend className={HEADING_CLASS}>Category</legend>
             {selectedCategories.length > 0 ? (
               <button type="button" onClick={onClearCategories} className="shrink-0 text-xs font-semibold text-primary underline-offset-2 hover:underline">
                 Clear
@@ -51,7 +52,7 @@ export function ProductFilters({
             ) : null}
           </div>
         ) : (
-          <h3 className={HEADING_CLASS}>Category</h3>
+          <legend className={HEADING_CLASS}>Category</legend>
         )}
         {visibleCategories.map((item) => (
           <label key={item} className={rowClass}>
@@ -68,10 +69,10 @@ export function ProductFilters({
             {showAllCategories ? "Show less" : `Show more (${categoryOptions.length - SHEET_VISIBLE_CATEGORIES})`}
           </button>
         ) : null}
-      </div>
+      </fieldset>
 
-      <div className={sectionClass}>
-        <h3 className={HEADING_CLASS}>Price</h3>
+      <fieldset className={sectionClass}>
+        <legend className={HEADING_CLASS}>Price</legend>
         {PRICE_OPTIONS.map(([value, label]) => (
           <label key={value} className={rowClass}>
             <input
@@ -85,7 +86,7 @@ export function ProductFilters({
             <span className="min-w-0">{label}</span>
           </label>
         ))}
-      </div>
+      </fieldset>
 
     </div>
   );

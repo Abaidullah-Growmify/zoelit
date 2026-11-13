@@ -25,13 +25,13 @@ export function NewsletterSignup() {
   return (
     <form onSubmit={handleSubmit} className="rounded-lg border border-outline-variant/70 bg-surface-container-low p-3 shadow-sm dark:bg-surface-container" aria-label="Subscribe for latest trends and offers">
       <div className="flex flex-wrap gap-3">
-        <Input type="email" name="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Enter your email" aria-label="Email address" className="h-12 min-w-0 flex-1 basis-full bg-surface-container-lowest sm:basis-auto" />
+        <Input id="newsletter-email" type="email" name="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Enter your email" aria-label="Email address" aria-invalid={status.type === "error" ? "true" : "false"} aria-describedby={status.type === "error" ? "newsletter-status" : undefined} className="h-12 min-w-0 flex-1 basis-full bg-surface-container-lowest sm:basis-auto" />
         <Button type="submit" disabled={status.type === "loading"} className="h-12 w-full justify-center px-6 text-white sm:w-auto">
           {status.type === "loading" ? "Subscribing..." : "Subscribe"}
           {status.type !== "loading" ? <ArrowRight className="size-4" /> : null}
         </Button>
       </div>
-      <p className={`mt-3 text-label-sm font-medium leading-5 ${status.type === "error" ? "text-error" : status.type === "success" ? "text-emerald-600" : "text-on-surface-variant"}`} role={status.type === "idle" ? undefined : "status"}>
+      <p id="newsletter-status" className={`mt-3 text-label-sm font-medium leading-5 ${status.type === "error" ? "text-error" : status.type === "success" ? "text-emerald-600" : "text-on-surface-variant"}`} role={status.type === "error" ? "alert" : status.type === "success" ? "status" : undefined}>
         {status.message || "No spam. Just ZoeLit picks, offers, and product updates."}
       </p>
     </form>

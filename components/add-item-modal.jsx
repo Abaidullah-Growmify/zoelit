@@ -49,12 +49,13 @@ function SectionTitle({ children }) {
   );
 }
 
-export function AddItemModal({ open, onClose, type, categories = [], onSubmit, submitting }) {
+export function AddItemModal({ open, onClose, type, categories = [], onSubmit, submitting, initialData = null, editing = false }) {
   const token = useAdminAuthStore((state) => state.token);
   const [imagePreview, setImagePreview] = useState("");
   const [imageUrlInput, setImageUrlInput] = useState("");
   const [pendingImage, setPendingImage] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const fileInputRef = useRef(null);
 const [form, setForm] = useState({
@@ -65,16 +66,17 @@ const [form, setForm] = useState({
   });
   const categoryIconOptions = getCategoryIconOptions(form.name);
 
-useEffect(() => {
+  useEffect(() => {
     if (open) {
       const timeout = window.setTimeout(() => {
         setImagePreview("");
         setImageUrlInput("");
         setPendingImage(null);
         setUploadingImage(false);
+        setCreating(false);
         setFieldErrors({});
         setForm({
-          name: "", sku: "", description: "", category: "", icon: "Package", price: "", stock: "",
+          name: initialData?.name || "", sku: initialData?.sku || "", description: initialData?.description || "", category: initialData?.category || "", icon: initialData?.icon || "Package", price: initialData?.price || "", stock: initialData?.stock ?? "",
           status: "active",
           vendor: "", vendorPartNumber: "", upc: "", subCategory: "", productType: "",
           availability: "", warranty: "", details: "",
@@ -83,7 +85,7 @@ useEffect(() => {
       return () => window.clearTimeout(timeout);
     }
     return undefined;
-  }, [open]);
+  }, [open, initialData]);
 
   // Pick image -> compress for a local preview only. Cloudinary upload happens
   // when the admin creates the product, so a discarded form never uploads and
@@ -145,14 +147,21 @@ async function handleCreate() {
         requestAnimationFrame(() => document.getElementById("mf-name")?.focus());
         return;
       }
-      await onSubmit({
-        name: form.name.trim(),
-        description: form.description.trim(),
-        icon: form.icon,
-        isActive,
-        stock: Number(form.stock) || 0,
-      });
-      resetForm();
+      if (creating) return;
+      // Give instant feedback on click and block double submits while saving.
+      setCreating(true);
+      try {
+        await onSubmit({
+          name: form.name.trim(),
+          description: form.description.trim(),
+          icon: form.icon,
+          isActive,
+          stock: Number(form.stock) || 0,
+        });
+        resetForm();
+      } finally {
+        setCreating(false);
+      }
       return;
     }
 
@@ -182,23 +191,30 @@ async function handleCreate() {
       return;
     }
 
+    // Product creation also needs a synchronous client-side lock. Without it,
+    // rapid clicks can start several uploads/POST requests before the parent
+    // has time to update its `submitting` state, producing repeated toasts.
+    if (creating || submitting) return;
+    setCreating(true);
+
     // Everything checks out, so only now is a staged file sent to Cloudinary
     // and only then does the product land in the database.
-    let imageUrl = imageUrlInput.trim();
-    if (pendingImage) {
-      setUploadingImage(true);
-      try {
-        const result = await uploadProductImage(pendingImage, token);
-        imageUrl = result.url;
-      } catch (uploadError) {
-        toast.error(uploadError.message || "Could not upload the image; product was not created");
-        return;
-      } finally {
-        setUploadingImage(false);
+    try {
+      let imageUrl = imageUrlInput.trim();
+      if (pendingImage) {
+        setUploadingImage(true);
+        try {
+          const result = await uploadProductImage(pendingImage, token);
+          imageUrl = result.url;
+        } catch (uploadError) {
+          toast.error(uploadError.message || "Could not upload the image; product was not created");
+          return;
+        } finally {
+          setUploadingImage(false);
+        }
       }
-    }
 
-    await onSubmit({
+      await onSubmit({
         ingramPartNumber: form.sku.trim(),
         name: form.name.trim(),
         description: form.description.trim(),
@@ -217,6 +233,9 @@ async function handleCreate() {
         details: form.details.trim(),
       });
       resetForm();
+    } finally {
+      setCreating(false);
+    }
   }
 
   function resetForm() {
@@ -225,6 +244,7 @@ async function handleCreate() {
     setImageUrlInput("");
     setPendingImage(null);
     setUploadingImage(false);
+    setCreating(false);
     setFieldErrors({});
     setForm({
       name: "", sku: "", description: "", category: "", icon: "Package", price: "", stock: "",
@@ -243,7 +263,7 @@ async function handleCreate() {
 
         <div className="flex items-center justify-between border-b border-outline-variant px-5 py-4">
           <h2 className="font-heading text-lg font-semibold text-on-surface">
-            {type === "category" ? "Add New Category" : "Add New Product"}
+            {type === "category" ? (editing ? "Edit Category" : "Add New Category") : "Add New Product"}
           </h2>
           <button onClick={onClose} className="icon-btn size-8">
             <X className="size-5" />
@@ -555,9 +575,9 @@ className="h-10"
         </div>
 
         <div className="flex items-center justify-end gap-3 border-t border-outline-variant px-6 py-4">
-          <Button variant="ghost" onClick={onClose} disabled={uploadingImage} className="h-11 px-5">Cancel</Button>
-          <Button onClick={handleCreate} disabled={submitting || uploadingImage} className="h-11 px-6">
-            {uploadingImage ? <Loader2 className="size-4 animate-spin" /> : submitting ? "Creating..." : type === "category" ? "Create Category" : "Create Product"}
+          <Button type="button" variant="ghost" onClick={onClose} disabled={uploadingImage || creating} className="h-11 px-5">Cancel</Button>
+          <Button type="button" onClick={handleCreate} disabled={creating || submitting || uploadingImage} className="h-11 px-6">
+            {uploadingImage ? <Loader2 className="size-4 animate-spin" /> : creating || submitting ? <><Loader2 className="size-4 animate-spin" /> {editing ? "Updating..." : "Creating..."}</> : type === "category" ? (editing ? "Update Category" : "Create Category") : "Create Product"}
           </Button>
         </div>
       </div>

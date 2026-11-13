@@ -13,7 +13,7 @@ const DEFAULT_CONTENT = {
   lead: "Explore a considered collection of electronics, accessories, and everyday essentials selected for quality, value, and ease.",
 };
 
-export function HomeHero({ products, productCount = 0, categories = [], content, explicit = false }) {
+export function HomeHero({ products, productCount = 0, userCount = 0, categories = [], content, explicit = false }) {
   const heroContent = { ...DEFAULT_CONTENT, ...content };
   const [activeIndex, setActiveIndex] = useState(0);
   const [slide, setSlide] = useState(0);
@@ -87,7 +87,7 @@ export function HomeHero({ products, productCount = 0, categories = [], content,
             <Link className="hero-btn" href="/products">Shop the Store <ArrowRight className="h-4 w-4" /></Link>
           </div>
           <div className="hero-stats">
-            <AnimatedStat target={50000} suffix="k+" label="Happy customers" divisor={1000} />
+            <AnimatedStat target={Number(userCount) || 0} label="Users" />
             <AnimatedStat target={Math.max(Number(productCount) || 0, 30000)} suffix="k+" label="Products" divisor={1000} />
             <AnimatedStat target={categoryCount} suffix="+" label="Categories" />
           </div>
@@ -106,7 +106,7 @@ export function HomeHero({ products, productCount = 0, categories = [], content,
                   aria-hidden={index !== mobileActive}
                 >
                   <div className="zl-mhero-copy">
-                    <span className="zl-mhero-badge">{product.heroBadge || (Number(product.price) > 150 ? "Free delivery" : "Popular pick")}</span>
+                    <span className="zl-mhero-badge">{product.badge || product.category || "Featured"}</span>
                     <h2 className="zl-mhero-title">{product.name}</h2>
                     <p className="zl-mhero-sub">{product.category || "Featured"}</p>
                     <div className="zl-mhero-bottom">
@@ -116,7 +116,7 @@ export function HomeHero({ products, productCount = 0, categories = [], content,
                   </div>
                   <div className="zl-mhero-img">
                     {product.image ? (
-                      <CleanProductImage src={product.image} alt={product.name} />
+                      <CleanProductImage src={product.image} alt={product.name} priority={index === mobileActive} fetchPriority={index === mobileActive ? "high" : "auto"} process={false} width={1200} />
                     ) : (
                       <span className="zl-mhero-fallback">★</span>
                     )}
@@ -145,7 +145,7 @@ export function HomeHero({ products, productCount = 0, categories = [], content,
               </button>
             </div>
             <div className="zl-mstats">
-               <AnimatedStat icon={Users} target={50000} suffix="k+" label="Happy customers" divisor={1000} variant="mobile" />
+               <AnimatedStat icon={Users} target={Number(userCount) || 0} label="Users" variant="mobile" />
                 <AnimatedStat icon={Package} target={Math.max(Number(productCount) || 0, 30000)} suffix="k+" label="Products" divisor={1000} variant="mobile" />
                  <AnimatedStat icon={Layers3} target={categoryCount} suffix="+" label="Categories" variant="mobile" />
             </div>
@@ -153,7 +153,7 @@ export function HomeHero({ products, productCount = 0, categories = [], content,
         </div>
 
         <div className="hero-card-col">
-          {desktopProducts[0] ? <HeroProduct product={desktopProducts[0]} shippingLabel={Number(desktopProducts[0].price) > 150 ? "Free delivery" : "Low shipping rate"} badge={firstBadge(desktopProducts[0])} /> : null}
+          {desktopProducts[0] ? <HeroProduct product={desktopProducts[0]} shippingLabel={shippingLabel(desktopProducts[0])} badge={firstBadge(desktopProducts[0])} /> : null}
         </div>
       </Container>
     </section>
@@ -161,7 +161,11 @@ export function HomeHero({ products, productCount = 0, categories = [], content,
 }
 
 function firstBadge(product) {
-  return product.heroBadge || (Number(product.price) > 150 ? "Free delivery" : "Low shipping rate");
+  return product.badge || product.category || "Featured";
+}
+
+function shippingLabel(product) {
+  return Number(product?.price) > 150 ? "Free delivery" : "Shipping calculated at checkout";
 }
 
 function AnimatedStat({ target, suffix, label, divisor = 1, decimal = false, icon: Icon, variant }) {
@@ -214,7 +218,7 @@ function HeroProduct({ product, shippingLabel, badge }) {
         </div>
         <div className="hero-shipping">
           <Truck className="h-4 w-4" />
-          <span>{shippingLabel || (Number(product.price) > 150 ? "Free delivery" : "Low shipping rate")}</span>
+          <span>{shippingLabel || "Shipping calculated at checkout"}</span>
         </div>
         <div className="hero-shipping hero-stock">
           <Package className="h-4 w-4" />
@@ -222,7 +226,7 @@ function HeroProduct({ product, shippingLabel, badge }) {
         </div>
       </div>
       <div className="hero-media">
-        {product.image ? <CleanProductImage src={product.image} alt={product.name} /> : <span className="hero-media-fallback">★</span>}
+         {product.image ? <CleanProductImage src={product.image} alt={product.name} priority process={false} width={1200} /> : <span className="hero-media-fallback">★</span>}
       </div>
     </article>
   );

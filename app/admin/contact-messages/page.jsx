@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, MoveHorizontal, Trash2, XCircle } from "lucide-react";
+import { Eye, Trash2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui";
 import { AdminTableActions } from "@/components/admin-table";
@@ -51,7 +51,7 @@ export default function AdminContactMessagesPage() {
   return (
     <section className="container-page py-0">
       <Card className="overflow-hidden p-0">
-        <div className="bg-surface-container-low/40">
+        <div className="border-b border-outline-variant/70 bg-surface-container-low/40 px-5 py-5 sm:px-7 sm:py-6">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Admin / Support</p>
           <h1 className="mt-1 font-heading text-2xl font-bold tracking-tight text-on-surface sm:text-3xl">Contact messages</h1>
           <p className="mt-1 text-[13px] leading-5 text-on-surface-variant sm:text-sm sm:leading-6">Review enquiries submitted through the website contact form.</p>
@@ -69,7 +69,6 @@ export default function AdminContactMessagesPage() {
 
 function ContactTable({ messages, onDelete, onView }) {
   return <>
-    <p className="flex items-center gap-1.5 border-b border-outline-variant/60 px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-on-surface-variant/80 lg:hidden"><MoveHorizontal className="size-3.5" />Swipe table to see all columns</p>
     <div className="w-full min-w-0 overflow-x-auto overscroll-x-contain [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-on-surface-variant/40"><table className="w-full min-w-[1080px] border-collapse text-left"><colgroup><col className="w-14" /><col className="w-[17%]" /><col className="w-[15%]" /><col className="w-[20%]" /><col className="w-[15%]" /><col className="w-[25%]" /><col className="w-16" /></colgroup><thead><tr className="border-b border-outline-variant/60 bg-surface-container-low/45 text-[10px] font-bold uppercase tracking-[0.12em] text-on-surface-variant sm:text-[11px]"><th className="px-4 py-3 text-left sm:px-6">#</th><th className="px-3 py-3 text-left">Name</th><th className="px-3 py-3 text-left">Ticket number</th><th className="px-3 py-3 text-left">Email</th><th className="px-3 py-3 text-left">Phone</th><th className="px-3 py-3 text-left">Message</th><th className="px-4 py-3 text-center">Action</th></tr></thead><tbody className="divide-y divide-outline-variant/60">{messages.map((message, index) => <ContactRow key={message._id || message.id} message={message} index={index + 1} onDelete={onDelete} onView={onView} />)}</tbody></table></div>
   </>;
 }

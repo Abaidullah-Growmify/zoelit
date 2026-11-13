@@ -4,6 +4,7 @@ import { Check, Loader2, PackageSearch, RefreshCw, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button, Card, Input } from "@/components/ui";
+import { TransparentActionLoader } from "@/components/action-feedback";
 import Pagination from "@/components/pagination";
 import { getIngramCategories, startProductSync } from "@/lib/api";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
@@ -140,6 +141,7 @@ export default function AdminCategorySyncPage() {
 
   return (
     <div className="space-y-5">
+      <TransparentActionLoader open={syncing} label="Syncing categories from Ingram… Please wait." />
       <Card className="overflow-hidden p-0">
           <div className="border-b border-outline-variant px-5 py-5 sm:px-6">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">

@@ -20,19 +20,19 @@ export function AdminStatCard({ label, value, icon: Icon, helper, tone = "blue",
   const TrendIcon = trendPositive ? ArrowUp : ArrowDown;
 
   return (
-    <Card className="p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-sm font-medium text-on-surface-variant">{label}</p>
+    <Card className="overflow-hidden p-3 sm:p-4">
+      <div className="flex items-start justify-between gap-2 sm:gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="break-words text-xs font-medium leading-4 text-on-surface-variant sm:text-sm sm:leading-5">{label}</p>
           <p className="mt-1.5 truncate font-heading text-base font-semibold tabular-nums tracking-tight text-on-surface sm:text-xl">{value}</p>
         </div>
-        <span className={cn("grid size-9 shrink-0 place-items-center rounded-lg", iconClass)}>
-          <Icon className="size-4" />
+        <span className={cn("grid size-8 shrink-0 place-items-center rounded-lg sm:size-9", iconClass)}>
+          <Icon className="size-3.5 sm:size-4" />
         </span>
       </div>
       {(helper || trend) ? (
-        <div className="mt-3 flex items-center justify-between gap-3 text-sm">
-          {helper ? <p className="text-on-surface-variant">{helper}</p> : <span />}
+        <div className="mt-2 flex items-start justify-between gap-2 text-xs sm:mt-3 sm:items-center sm:gap-3 sm:text-sm">
+          {helper ? <p className="min-w-0 break-words leading-4 text-on-surface-variant sm:leading-5">{helper}</p> : <span />}
           {trend ? (
             <span className={cn("inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-0.5 font-medium tabular-nums", trendPositive ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-rose-500/10 text-rose-700 dark:text-rose-300")}>
               <TrendIcon className="size-3" aria-hidden="true" /> {trend.value}

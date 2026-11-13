@@ -39,7 +39,7 @@ function Summary({ label, value, strong = false }) {
 
 function Section({ title, subtitle, children }) {
   return (
-    <Card>
+    <Card className="w-full max-w-full min-w-0 overflow-hidden">
       <h2 className="font-heading text-h2 font-semibold text-on-surface">{title}</h2>
       {subtitle ? <p className="mt-1 text-body font-regular text-on-surface-variant">{subtitle}</p> : null}
       <div className="mt-5">{children}</div>
@@ -86,7 +86,7 @@ export function AdminCaptureDetail({ id }) {
   const orderRef = record.orderNumber || record.order?.orderNumber || record.order?.publicOrderId || record.id;
 
   return (
-    <Card className="space-y-6 p-6">
+    <Card className="w-full max-w-full min-w-0 space-y-6 overflow-hidden p-4 sm:p-6">
       <AdminPageHeader
         title={record.customerName || record.email || "Checkout visit"}
         description={
@@ -103,10 +103,10 @@ export function AdminCaptureDetail({ id }) {
         <Badge tone="slate">{record.itemsCount} item(s)</Badge>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
-        <div className="space-y-6">
+      <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,380px)]">
+        <div className="min-w-0 space-y-6">
           <Section title="Contact details" subtitle="What the customer typed into the checkout form.">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <Field label="Name" value={record.customerName} />
               <Field label="Email" value={record.email} />
               <Field label="Phone" value={record.phone} />
@@ -119,12 +119,12 @@ export function AdminCaptureDetail({ id }) {
           <Section title="Cart snapshot" subtitle="Priced by the server from the catalog, with commission applied.">
             <div className="space-y-3">
               {record.products.map((item) => (
-                <div key={item.productId} className="flex items-start justify-between gap-3 rounded-md border border-outline-variant/70 bg-surface-container-low/40 p-3">
+                <div key={item.productId} className="flex min-w-0 flex-col gap-2 rounded-md border border-outline-variant/70 bg-surface-container-low/40 p-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-on-surface">{item.name}</p>
                     <p className="text-xs text-on-surface-variant">{item.productId} · {money(item.price)} each</p>
                   </div>
-                  <p className="shrink-0 whitespace-nowrap text-sm tabular-nums text-on-surface">×{item.quantity} · {money(item.lineTotal)}</p>
+                  <p className="shrink-0 text-sm tabular-nums text-on-surface sm:whitespace-nowrap">×{item.quantity} · {money(item.lineTotal)}</p>
                 </div>
               ))}
             </div>
@@ -148,7 +148,7 @@ export function AdminCaptureDetail({ id }) {
           </Section>
         </div>
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <Section title="Timeline" subtitle="How far the customer got, step by step.">
             <ol className="space-y-4">
               {(record.steps || []).map((entry, index) => (
@@ -161,7 +161,7 @@ export function AdminCaptureDetail({ id }) {
                 </li>
               ))}
             </ol>
-            <div className="mt-5 grid gap-3 border-t border-outline-variant/70 pt-4 sm:grid-cols-2">
+            <div className="mt-5 grid grid-cols-2 gap-3 border-t border-outline-variant/70 pt-4 sm:gap-4">
               <Field label="First seen" value={shortDate(record.firstSeen)} />
               <Field label="Last seen" value={shortDate(record.lastSeen)} />
               <Field label="Cart session" value={record.checkoutSessionKey} />
@@ -171,7 +171,7 @@ export function AdminCaptureDetail({ id }) {
 
           {record.order ? (
             <Section title="Linked order" subtitle="The order this visit became.">
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <Field label="Order number" value={record.order.orderNumber || record.order.publicOrderId} />
                 <Field label="Status" value={record.order.status} />
                 <Field label="Payment" value={record.order.payment} />

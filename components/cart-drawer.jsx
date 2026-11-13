@@ -1,22 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
 import { ShoppingBag, X } from "lucide-react";
 import { money } from "@/lib/utils";
 import { useCartStore } from "@/store/cart-store";
-import { useProductStore } from "@/store/product-store";
 import { CartItemCard } from "@/components/cart-item-card";
 import { Button, EmptyState } from "@/components/ui";
 
 export function CartDrawer() {
   const { items, drawerOpen, closeCart, updateQuantity, removeItem, subtotal } = useCartStore();
-  const fetchProducts = useProductStore((state) => state.fetchProducts);
-
-  useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
   return (
-    <div className={`fixed inset-0 z-50 ${drawerOpen ? "pointer-events-auto" : "pointer-events-none"}`} aria-hidden={!drawerOpen}>
+    <div className={`fixed inset-0 z-50 ${drawerOpen ? "pointer-events-auto" : "pointer-events-none"}`} aria-hidden={!drawerOpen} inert={!drawerOpen}>
       <div onClick={closeCart} className={`absolute inset-0 bg-inverse-surface/40 transition ${drawerOpen ? "opacity-100" : "opacity-0"}`} />
       <aside className={`cart-drawer-panel absolute right-0 top-0 h-full w-[min(360px,calc(100%-2rem))] max-w-md overflow-hidden bg-surface-container-lowest p-6 shadow-2xl transition duration-300 sm:w-full ${drawerOpen ? "is-open" : ""}`}>
         <div className="flex items-center justify-between"><h2 className="font-heading text-headline-md font-semibold text-on-surface">Shopping Cart</h2><button onClick={closeCart} aria-label="Close cart"><X /></button></div>

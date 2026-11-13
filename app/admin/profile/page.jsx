@@ -8,10 +8,11 @@ import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { Button, Card, Input, Label } from "@/components/ui";
 import { DashboardSectionBanner } from "@/components/dashboard-section-banner";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
+import * as api from "@/lib/api";
 
 export default function AdminProfilePage() {
   const admin = useAdminAuthStore((state) => state.admin);
-  const fallback = { name: "ZoeLit Admin", email: "admin@zoelit.com", role: "admin", phone: "" };
+  const fallback = { name: "ZoeLit Admin", email: "", role: "admin", phone: "" };
   const adminInfo = { ...fallback, ...(admin || {}) };
 
   return (
@@ -58,13 +59,21 @@ function AdminIdentityCard({ admin }) {
 
 function AdminPersonalInfoCard({ admin }) {
   const [saved, setSaved] = useState(false);
+  const token = useAdminAuthStore((state) => state.token);
+  const setAdmin = useAdminAuthStore((state) => state.setAdmin);
   const form = useForm({ defaultValues: { name: admin.name, email: admin.email, phone: admin.phone || "" } });
 
-  function onSubmit(values) {
-    setSaved(true);
-    toast.success("Admin profile saved");
-    form.reset(values);
-    window.setTimeout(() => setSaved(false), 1800);
+  async function onSubmit(values) {
+    try {
+      const response = await api.updateAdminProfile(values, token);
+      setAdmin(response.admin);
+      form.reset(response.admin);
+      setSaved(true);
+      toast.success("Admin profile saved");
+      window.setTimeout(() => setSaved(false), 1800);
+    } catch (error) {
+      toast.error(error.message || "Unable to save admin profile");
+    }
   }
 
   return (
@@ -72,7 +81,7 @@ function AdminPersonalInfoCard({ admin }) {
       <div className="flex items-center gap-3"><UserRound className="size-5 text-primary" /><h2 className="font-heading text-xl font-semibold tracking-[-0.02em] text-on-surface">Personal info</h2></div>
       <form onSubmit={form.handleSubmit(onSubmit)} className="mt-5 grid gap-4 md:grid-cols-2">
         <Field label="Name" name="name" form={form} autoComplete="name" />
-        <Field label="Email" name="email" type="email" form={form} autoComplete="email" />
+         <Field label="Email (cannot be changed)" name="email" type="email" form={form} autoComplete="email" readOnly />
         <Field label="Phone" name="phone" form={form} autoComplete="tel" />
         <div className="flex flex-col items-stretch gap-3 border-t border-outline-variant/40 pt-5 sm:flex-row sm:items-center md:col-span-2">
           <Button disabled={!form.formState.isDirty} className="w-full sm:w-fit">Save changes</Button>
@@ -87,13 +96,28 @@ function AdminSecurityCard() {
   const [saved, setSaved] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
-  const form = useForm({ defaultValues: { currentPassword: "", newPassword: "" } });
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const token = useAdminAuthStore((state) => state.token);
+  const form = useForm({ defaultValues: { currentPassword: "", newPassword: "", confirmPassword: "" } });
 
-  function onSubmit() {
-    setSaved(true);
-    toast.success("Admin password updated");
-    form.reset({ currentPassword: "", newPassword: "" });
-    window.setTimeout(() => setSaved(false), 1800);
+  async function onSubmit(values) {
+    if (values.newPassword !== values.confirmPassword) {
+      form.setError("confirmPassword", { type: "validate", message: "Passwords do not match" });
+      return;
+    }
+    if (values.newPassword.length < 8 || !/[A-Z]/.test(values.newPassword) || !/[0-9]/.test(values.newPassword)) {
+      form.setError("newPassword", { type: "validate", message: "Use 8 characters with one uppercase letter and one number" });
+      return;
+    }
+    try {
+      await api.updateAdminPassword({ currentPassword: values.currentPassword, newPassword: values.newPassword }, token);
+      setSaved(true);
+      toast.success("Admin password updated");
+      form.reset({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      window.setTimeout(() => setSaved(false), 1800);
+    } catch (error) {
+      toast.error(error.message || "Unable to update admin password");
+    }
   }
 
   return (
@@ -101,8 +125,9 @@ function AdminSecurityCard() {
       <div className="flex items-center gap-3"><KeyRound className="size-5 text-primary" /><h2 className="font-heading text-xl font-semibold tracking-[-0.02em] text-on-surface">Security</h2></div>
       <p className="mt-2 text-body-md font-normal leading-6 text-on-surface-variant">Change the password used to sign in to the admin panel.</p>
       <form onSubmit={form.handleSubmit(onSubmit)} className="mt-5 grid gap-4 md:grid-cols-2">
-        <PasswordField label="Current password" name="currentPassword" form={form} autoComplete="current-password" placeholder="Current password" show={showCurrentPassword} onToggle={() => setShowCurrentPassword((value) => !value)} />
-        <PasswordField label="New password" name="newPassword" form={form} autoComplete="new-password" placeholder="New password" show={showNewPassword} onToggle={() => setShowNewPassword((value) => !value)} />
+        <PasswordField label="Current password" name="currentPassword" form={form} autoComplete="current-password" placeholder="Current password" show={showCurrentPassword} onToggle={() => setShowCurrentPassword((value) => !value)} required />
+        <PasswordField label="New password" name="newPassword" form={form} autoComplete="new-password" placeholder="New password" show={showNewPassword} onToggle={() => setShowNewPassword((value) => !value)} required />
+        <PasswordField label="Confirm new password" name="confirmPassword" form={form} autoComplete="new-password" placeholder="Confirm new password" show={showConfirmPassword} onToggle={() => setShowConfirmPassword((value) => !value)} required />
         <div className="flex flex-col items-stretch gap-3 border-t border-outline-variant/40 pt-5 sm:flex-row sm:items-center md:col-span-2">
           <Button variant="outline" disabled={!form.formState.isDirty} className="w-full sm:w-fit">Update password</Button>
           <SavedState show={saved} label="Saved" />
@@ -121,12 +146,12 @@ function AvatarEditor({ initials, label }) {
   );
 }
 
-function Field({ label, name, type = "text", form, autoComplete }) {
-  return <div className="space-y-2"><Label>{label}</Label><Input type={type} autoComplete={autoComplete} {...form.register(name)} /></div>;
+function Field({ label, name, type = "text", form, autoComplete, readOnly = false }) {
+  return <div className="space-y-2"><Label htmlFor={`admin-${name}`}>{label}</Label><Input id={`admin-${name}`} type={type} autoComplete={autoComplete} readOnly={readOnly} aria-readonly={readOnly ? "true" : undefined} className={readOnly ? "bg-surface-container-low text-on-surface-variant" : undefined} {...form.register(name)} /></div>;
 }
 
-function PasswordField({ label, name, form, autoComplete, placeholder, show, onToggle }) {
-  return <div className="space-y-2"><Label>{label}</Label><div className="relative"><Input type={show ? "text" : "password"} autoComplete={autoComplete} placeholder={placeholder} className="pr-10" {...form.register(name)} /><button type="button" tabIndex={-1} onClick={onToggle} className="absolute inset-y-0 right-0 flex items-center pr-3 text-on-surface-variant transition hover:text-primary" aria-label={show ? "Hide password" : "Show password"}>{show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button></div></div>;
+function PasswordField({ label, name, form, autoComplete, placeholder, show, onToggle, required }) {
+  return <div className="space-y-2"><Label>{label}</Label><div className="relative"><Input type={show ? "text" : "password"} autoComplete={autoComplete} placeholder={placeholder} required={required} minLength={8} className="pr-10" {...form.register(name)} /><button type="button" tabIndex={-1} onClick={onToggle} className="absolute inset-y-0 right-0 flex items-center pr-3 text-on-surface-variant transition hover:text-primary" aria-label={show ? "Hide password" : "Show password"}>{show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button></div>{form.formState.errors[name]?.message ? <p className="text-sm text-error">{form.formState.errors[name].message}</p> : null}</div>;
 }
 
 function SavedState({ show, label }) {

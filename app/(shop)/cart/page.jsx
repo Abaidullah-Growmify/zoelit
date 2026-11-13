@@ -25,6 +25,7 @@ export default function CartPage() {
   if (!items.length) {
     return (
       <section className="container-page py-12">
+        <h1 className="sr-only">Shopping Cart</h1>
         <EmptyState
           title="Your cart is empty"
           description="Browse the collection and add your favorites."

@@ -14,7 +14,6 @@ import { useAdminAuthStore } from "@/store/admin-auth-store";
 import { cn } from "@/lib/utils";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "nextjs-toploader/app";
-import { AdminTableActions } from "@/components/admin-table";
 
 const DEFAULTS = {
   hero: {
@@ -655,10 +654,16 @@ export default function AdminHomePage() {
                 <ArrowLeft className="size-5" />
               </button>
               <h1 className="min-w-0 flex-1 truncate text-base font-semibold text-on-surface">{activeItem.label}</h1>
-              <AdminTableActions
-                label="Section actions"
-                actions={[{ label: "Restore defaults", icon: RotateCcw, onClick: () => setResetOpen(true) }]}
-              />
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setResetOpen(true)}
+                disabled={loading || saving}
+                className="h-10 shrink-0 gap-1.5 px-2 text-xs font-semibold sm:px-3 sm:text-sm"
+              >
+                <RotateCcw className="size-4" />
+                <span>Restore defaults</span>
+              </Button>
             </div>
             <div className="mx-auto max-w-2xl px-4 py-3">
               <p className="truncate text-sm text-on-surface-variant">{mobileDescription}</p>
@@ -924,8 +929,8 @@ function EditorBody({ activeId, homepage, categories, limits, token, patchSectio
           </div>
         ) : (
           <div className="sm:col-span-2">
-            <Field label="Category tiles" hint={<RequirementHint count={homepage.categories.categoryNames.length} max={6} min={limits.minCategories} empty="Empty — the top categories are shown automatically while this section is on." />}>
-              <CategoryPicker categories={categories} value={homepage.categories.categoryNames} onChange={(value) => patchSection("categories", { categoryNames: value })} max={6} />
+             <Field label="Category tiles" hint={<RequirementHint count={homepage.categories.categoryNames.length} max={0} min={limits.minCategories} empty="Empty — the top six categories are shown automatically while this section is on." />}>
+               <CategoryPicker categories={categories} value={homepage.categories.categoryNames} onChange={(value) => patchSection("categories", { categoryNames: value })} />
             </Field>
           </div>
         )}

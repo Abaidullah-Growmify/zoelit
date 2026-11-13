@@ -82,17 +82,18 @@ const columns = [
           searchPlaceholder="Search order, status, payment, tracking"
           searchKeys={["orderNumber", "status", "payment", "tracking", "total"]}
           filters={[{ key: "status", label: "Filter orders by status", allLabel: "All statuses", options: Array.from(new Set(orders.map((order) => order.status).filter(Boolean))), value: (order) => order.status }]}
-          rowActions={(order) => [{ label: "Details", href: `/dashboard/orders/${order.id}` }]}
+          rowActions={(order) => [{ label: "View", href: `/dashboard/orders/${order.id}` }]}
           pageSize={10}
           page={safePage}
           onPageChange={setPage}
            onPaginationChange={handlePaginationChange}
            disableInitialSort
            inlineToolbar
-            searchWrapperClassName="min-w-0 basis-full md:w-auto md:basis-0 md:flex-1 lg:min-w-[24rem]"
-            filterWrapperClassName="w-auto min-w-0 flex-1 sm:w-40 sm:flex-none"
-            resetButtonClassName="w-auto min-w-0 flex-1 border-primary bg-primary text-white hover:bg-primary/90 sm:flex-none"
-         />
+            searchWrapperClassName="min-w-0 basis-full md:w-[min(32rem,100%)] md:basis-auto md:flex-none lg:w-[32rem]"
+            filterWrapperClassName="w-auto min-w-0 flex-1 sm:w-44 sm:flex-none"
+            controlsWrapperClassName="w-full flex-nowrap sm:w-auto md:ml-auto md:justify-end"
+            resetButtonClassName="w-auto min-w-[5.5rem] flex-none border-primary bg-primary px-3 text-white hover:bg-primary/90"
+          />
       </div>
     </div>
   );

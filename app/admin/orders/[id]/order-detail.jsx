@@ -8,12 +8,14 @@ import { AdminPageHeader } from "@/components/admin-page-header";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { Button, Card, Input, Label } from "@/components/ui";
 import { AdminOrderDetailSkeleton } from "@/components/skeletons";
+import { safeImageSrc } from "@/components/clean-product-image";
 import { cancelAdminOrder, getAdminOrder, updateAdminManualFulfillment, updateAdminOrderStatus } from "@/lib/api";
 import { money, shortDate } from "@/lib/utils";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
 import { usePolling } from "@/lib/use-polling";
 import { InvoicePrint } from "@/components/invoice-print";
 import { BulletNotes } from "@/components/bullet-notes";
+import { TransparentActionLoader } from "@/components/action-feedback";
 
 export function AdminOrderDetail({ id }) {
   const token = useAdminAuthStore((state) => state.token);
@@ -117,10 +119,17 @@ export function AdminOrderDetail({ id }) {
 
   return (
     <>
-      <div className="print:hidden space-y-6">
-        <AdminPageHeader title={`Order ${order.publicOrderId || order.orderNumber || order.id}`} description={`Placed by ${customer.name || "Unknown"} on ${shortDate(order.date)}. Review fulfilment details and print the invoice.`} action={<Button variant="outline" onClick={() => window.print()}><Printer className="size-4" />Print invoice</Button>} />
+      <div className="container-page print:hidden space-y-6 py-4 sm:py-6">
+        <div className="min-w-0">
+          <p className="mb-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-primary">Admin</p>
+          <div className="flex min-w-0 items-center justify-between gap-3 sm:gap-4">
+            <h1 className="min-w-0 break-words font-heading text-xl font-semibold tracking-tight text-on-surface sm:text-2xl">Order {order.publicOrderId || order.orderNumber || order.id}</h1>
+            <Button variant="outline" onClick={() => window.print()} className="h-9 shrink-0 px-2.5 text-xs sm:h-10 sm:px-3 sm:text-sm"><Printer className="size-4" /> <span className="hidden min-[430px]:inline">Print invoice</span><span className="min-[430px]:hidden">Print</span></Button>
+          </div>
+          <p className="mt-2 line-clamp-2 w-full max-w-[80%] text-sm leading-6 text-on-surface-variant">Placed by {customer.name || "Unknown"} on {shortDate(order.date)}. Review fulfilment<span className="block">details and print the invoice.</span></p>
+        </div>
 
-        <div className="grid gap-3 sm:grid-cols-4">
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:mt-6 sm:grid-cols-4">
           <OrderMetric label="Status" value={order.status || "Pending"} badge />
           <OrderMetric label="Items" value={`${(order.lineItems || []).length} product${(order.lineItems || []).length === 1 ? "" : "s"}`} />
           <OrderMetric label="Payment" value={order.payment || order.paymentMethod || "Pending"} />
@@ -149,19 +158,38 @@ export function AdminOrderDetail({ id }) {
                        ? `${commissionTypeLabel(item.commissionRuleType)} · ${Number(item.commissionValue ?? item.commissionRate ?? 0)}% · ${money(commissionAmount)}`
                        : "No commission applied";
 
+                   const quantityLabel = `${quantity} unit${quantity === 1 ? "" : "s"}`;
+                   const skuLabel = item.sku || item.productId || "—";
+
                    return (
-                    <div key={item.productId} className="flex flex-wrap gap-4 rounded-md border border-slate-100 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-950/60">
-                     {(item.image || item.imageUrl || item.productImage) ? (
-                       <Image src={item.image || item.imageUrl || item.productImage} alt={item.name} width={96} height={96} unoptimized className="size-24 shrink-0 rounded-md object-cover ring-1 ring-slate-200 dark:ring-slate-800" />
-                    ) : (
-                      <div className="size-24 shrink-0 rounded-md bg-slate-200 dark:bg-slate-800" />
-                    )}
-                    <div className="flex-1">
-                      <h3 className="font-heading text-h3 font-semibold text-slate-950 dark:text-white">{item.name}</h3>
-                      <p className="mt-1 text-body font-regular tabular-nums text-slate-500 dark:text-slate-400">Qty {Math.floor(Number(item.quantity)) || 0}</p>
+                    <div key={item.productId} className="rounded-lg border border-slate-100 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-950/60">
+                      <div className="flex items-start gap-3">
+                        <h3 className="min-w-0 flex-1 break-words font-heading text-sm font-semibold leading-5 text-slate-950 dark:text-white sm:text-h3 sm:leading-6">{item.name}</h3>
+                        {(item.image || item.imageUrl || item.productImage) ? (
+                          <Image src={safeImageSrc(item.image || item.imageUrl || item.productImage)} alt={item.name} width={96} height={96} unoptimized className="size-14 shrink-0 rounded-md object-cover ring-1 ring-slate-200 dark:ring-slate-800 sm:size-16" />
+                        ) : (
+                          <div className="size-14 shrink-0 rounded-md bg-slate-200 dark:bg-slate-800 sm:size-16" />
+                        )}
+                      </div>
+                      <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 border-t border-slate-200/70 pt-2.5 text-[11px] dark:border-slate-800 sm:grid-cols-3 sm:text-xs">
+                        <div className="min-w-0">
+                          <dt className="font-semibold uppercase tracking-[0.08em] text-slate-400 dark:text-slate-500">SKU / Unit no.</dt>
+                          <dd className="mt-0.5 truncate font-medium tabular-nums text-slate-700 dark:text-slate-200" title={skuLabel}>{skuLabel}</dd>
+                        </div>
+                        <div>
+                          <dt className="font-semibold uppercase tracking-[0.08em] text-slate-400 dark:text-slate-500">Quantity</dt>
+                          <dd className="mt-0.5 font-medium tabular-nums text-slate-700 dark:text-slate-200">{quantityLabel}</dd>
+                        </div>
+                        <div>
+                          <dt className="font-semibold uppercase tracking-[0.08em] text-slate-400 dark:text-slate-500">Base price</dt>
+                          <dd className="mt-0.5 font-medium tabular-nums text-slate-700 dark:text-slate-200">{money(baseLineTotal)}</dd>
+                        </div>
+                      </dl>
+                      <div className="mt-2.5 flex items-end justify-between gap-3 border-t border-slate-200/70 pt-2.5 dark:border-slate-800">
+                        <p className="min-w-0 text-[11px] font-semibold leading-4 text-primary sm:text-xs">{commissionLabel}</p>
+                        <strong className="shrink-0 font-semibold tabular-nums text-slate-950 dark:text-white">{money(finalLineTotal)}</strong>
+                      </div>
                     </div>
-                      <div className="min-w-0 w-full text-right sm:w-auto sm:min-w-44 sm:shrink-0"><strong className="block font-semibold tabular-nums">{money(finalLineTotal)}</strong><span className="block text-xs text-on-surface-variant">Base: {money(baseLineTotal)}</span><span className="block text-xs font-semibold text-primary">{commissionLabel}</span></div>
-                   </div>
                    );
                  })}
               </div>
@@ -221,21 +249,20 @@ export function AdminOrderDetail({ id }) {
               <h2 className="font-heading text-h2 font-semibold">Shipment controls</h2>
               <p className="mt-1 text-body font-regular text-slate-500 dark:text-slate-400">Update shipment details. Order status is changed from the orders table.</p>
               <div className="mt-5 space-y-4">
-                {(order.fulfillmentGroups || []).some((group) => group.source === "manual") ? <Field label="Manual status">
-                  <select value={manualStatus} onChange={(event) => { setManualStatus(event.target.value); dirtyRef.current = true; }} className="h-10 w-full rounded-md border border-outline-variant bg-surface px-3 text-sm">
-                    {['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'].map((status) => <option key={status}>{status}</option>)}
-                  </select>
-                </Field> : null}
+                 <Field label="Manual status">
+                   <select value={manualStatus} onChange={(event) => { setManualStatus(event.target.value); dirtyRef.current = true; }} className="h-10 w-full rounded-md border border-outline-variant bg-surface px-3 text-sm">
+                     {['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'].map((status) => <option key={status}>{status}</option>)}
+                   </select>
+                 </Field>
                 <Field label="Tracking number">
                   <Input value={tracking} onChange={(event) => { setTracking(event.target.value); dirtyRef.current = true; }} placeholder="ZX-000000" />
                 </Field>
                 <Field label="Carrier name">
                   <Input value={carrier} onChange={(event) => { setCarrier(event.target.value); dirtyRef.current = true; }} placeholder="DHL Express" />
                 </Field>
-                {(order.fulfillmentGroups || []).some((group) => group.source === "manual") ? <>
-                  <Field label="Ship date"><Input type="date" value={manualShipDate} onChange={(event) => { setManualShipDate(event.target.value); dirtyRef.current = true; }} /></Field>
-                  <Field label="Invoice number"><Input value={manualInvoice} onChange={(event) => { setManualInvoice(event.target.value); dirtyRef.current = true; }} placeholder="INV-000001" /></Field>
-                </> : null}
+                   <Field label="Ship date"><Input type="date" value={manualShipDate} onChange={(event) => { setManualShipDate(event.target.value); dirtyRef.current = true; }} /></Field>
+                   <Field label="Invoice number"><Input value={manualInvoice} onChange={(event) => { setManualInvoice(event.target.value); dirtyRef.current = true; }} placeholder="INV-000001" /></Field>
+                 
                  <div className="grid grid-cols-2 gap-2">
                    <Button className="min-w-0 px-2 text-xs whitespace-nowrap sm:text-sm" onClick={handleUpdate} disabled={saving}>
                    {saving ? <Loader2 className="size-4 animate-spin" /> : null} Update shipment
@@ -273,7 +300,7 @@ export function AdminOrderDetail({ id }) {
                 <div className="min-w-0">
                   <p className="break-words text-body font-semibold text-slate-950 [overflow-wrap:anywhere] dark:text-white">{event.status}</p>
                   <p className="mt-0.5 break-words text-meta font-regular text-slate-500 [overflow-wrap:anywhere] dark:text-slate-400">{event.eventType || "event"} · {shortDate(event.date)}</p>
-                  {event.note ? <p className="mt-1 break-words text-meta font-regular text-slate-500 [overflow-wrap:anywhere] dark:text-slate-400">{event.note}</p> : null}
+                  {event.note ? <p className="mt-1 break-words text-meta font-regular text-slate-500 [overflow-wrap:anywhere] dark:text-slate-400">{cleanTimelineNote(event.note)}</p> : null}
                 </div>
               </div>
             ))}
@@ -282,6 +309,7 @@ export function AdminOrderDetail({ id }) {
       </div>
 
       <InvoicePrint order={order} />
+      <TransparentActionLoader open={saving || cancelling} label={cancelling ? "Cancelling order..." : "Updating shipment..."} />
     </>
   );
 }
@@ -323,4 +351,10 @@ function commissionTypeLabel(type) {
   if (type === "product") return "Product commission";
   if (type === "global") return "General commission";
   return "Commission";
+}
+
+function cleanTimelineNote(note) {
+  const text = String(note || "");
+  if (!/stripe payment confirmed/i.test(text)) return text;
+  return text.replace(/\s*\([^)]*\)\s*$/, "").trim();
 }

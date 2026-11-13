@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "backup.js",
+    "fix*.js",
+    "restore_design.js",
+    "app/admin/categories/page_backup.jsx",
   ]),
 ]);
 

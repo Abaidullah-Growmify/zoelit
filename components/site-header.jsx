@@ -31,6 +31,7 @@ export function SiteHeader() {
   const pathname = usePathname();
   const cartButtonRef = useRef(null);
   const mobileNavRef = useRef(null);
+  const mobileMenuTriggerRef = useRef(null);
   const profileRef = useRef(null);
   const searchRef = useRef(null);
   const cartHydrated = useCartStore((state) => state.hasHydrated);
@@ -69,6 +70,45 @@ export function SiteHeader() {
   }, [mobileNavOpen]);
 
   useEffect(() => {
+    if (!mobileNavOpen) return undefined;
+
+    const panel = mobileNavRef.current;
+    const trigger = mobileMenuTriggerRef.current;
+    if (!panel) return undefined;
+
+    const getFocusable = () => [...panel.querySelectorAll("a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex=\"-1\"])")];
+    const focusable = getFocusable();
+    focusable[0]?.focus();
+
+    function handleMenuKeyDown(event) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setMobileNavOpen(false);
+        return;
+      }
+
+      if (event.key !== "Tab") return;
+      const items = getFocusable();
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener("keydown", handleMenuKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleMenuKeyDown);
+      trigger?.focus();
+    };
+  }, [mobileNavOpen]);
+
+  useEffect(() => {
     if (!profileOpen) return undefined;
     const closeProfile = (event) => {
       if (profileRef.current && !profileRef.current.contains(event.target)) setProfileOpen(false);
@@ -96,23 +136,24 @@ export function SiteHeader() {
     <div className={`relative z-50 ${showAccountStrip ? "h-24 sm:h-[108px]" : "h-14 sm:h-16"}`}>
       <div className="fixed inset-x-0 top-0 z-[200]">
       <header className="relative z-[300] w-full border-b border-outline-variant/70 bg-surface backdrop-blur-md">
-        <Container className="store-shell flex h-14 items-center gap-2 sm:h-16 md:grid md:h-16 md:grid-cols-[auto_1fr_auto] md:gap-4 lg:grid lg:h-16 lg:grid-cols-[auto_1fr_auto] lg:gap-8">
-          <div className="flex shrink-0 items-center gap-2">
+        <Container className="store-shell flex h-14 items-center gap-2 sm:grid sm:h-16 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:gap-4 lg:gap-8">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <button
+              ref={mobileMenuTriggerRef}
               type="button"
               aria-label={mobileNavOpen ? "Close menu" : "Open menu"}
               onClick={() => setMobileNavOpen((open) => !open)}
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-on-surface-variant transition hover:bg-slate-100 active:scale-95 md:hidden"
+              className="-ml-2 grid h-8 w-8 shrink-0 place-items-center rounded-lg text-on-surface-variant transition hover:bg-slate-100 active:scale-95 sm:hidden"
             >
               {mobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
 
             <Link href="/" className="flex min-w-0 shrink-0 items-center">
-              <BrandLogo className="h-7 w-auto max-w-[160px] shrink-0 object-contain sm:h-8 md:max-lg:h-7 lg:h-7" priority />
+              <BrandLogo className="site-brand-logo h-6 w-auto max-w-[130px] shrink-0 object-contain sm:h-8 sm:max-w-[160px] md:max-lg:h-7 lg:h-7" priority />
             </Link>
           </div>
 
-          <nav className="hidden items-center gap-6 md:flex md:justify-center md:gap-5 lg:gap-8">
+          <nav className="hidden items-center sm:flex sm:justify-self-center sm:gap-4 lg:gap-6 xl:gap-8">
             {nav.map((item) => {
               const active = item.href === "/" ? pathname === item.href : pathname.startsWith(item.href);
               return (
@@ -129,66 +170,62 @@ export function SiteHeader() {
             })}
           </nav>
 
-           <div className="ml-auto flex min-w-0 shrink items-center justify-end gap-1 sm:gap-2 md:ml-0 md:justify-self-end md:gap-1 lg:ml-0 lg:justify-self-end lg:gap-2">
-             <div
-               ref={searchRef}
-               className={`relative z-30 flex h-9 shrink-0 items-center overflow-hidden rounded-lg border transition-[width,background-color,box-shadow] duration-300 ease-out ${
-                 searchOpen
-                   ? "w-36 border-outline-variant bg-surface px-2 shadow-md sm:w-44 md:w-52 lg:w-64 xl:w-[26rem]"
-                   : "w-9 border-transparent bg-transparent"
-               }`}
-             >
-               {searchOpen ? (
-                 <form
-                   role="search"
-                   onSubmit={(event) => {
-                     event.preventDefault();
-                     submitSearch(router, searchQuery);
-                     setSearchOpen(false);
-                   }}
-                   className="flex min-w-0 flex-1 items-center"
-                 >
-                   <input
-                     autoFocus
-                     type="search"
-                     value={searchQuery}
-                     onChange={(event) => setSearchQuery(event.target.value)}
-                     placeholder="Search SKU, keyword..."
-                     aria-label="Search products by SKU or keyword"
-                     className="min-w-0 flex-1 bg-transparent px-1 text-xs text-on-surface outline-none placeholder:text-on-surface-variant sm:text-sm"
-                   />
-                   <button type="submit" aria-label="Submit search" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-on-surface-variant transition hover:bg-slate-100">
-                     <Search className="h-4 w-4" />
-                   </button>
-                 </form>
-               ) : (
-                 <button
-                   type="button"
-                   aria-label="Search products"
-                   onClick={() => setSearchOpen(true)}
-                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-on-surface-variant transition hover:bg-slate-100"
-                 >
-                   <Search className="h-5 w-5" />
-                 </button>
-               )}
-             </div>
+            <div className="ml-auto flex shrink-0 items-center justify-end gap-1 sm:ml-0 sm:gap-1 sm:justify-self-end md:gap-2 lg:gap-3">
+              <div ref={searchRef} className={`relative z-30 shrink-0 ${searchOpen ? "w-[clamp(9rem,32vw,12rem)] sm:w-32 md:w-40 lg:w-52 xl:w-80" : "w-9"}`}>
+                <button
+                  type="button"
+                  aria-label="Search products"
+                  aria-expanded={searchOpen}
+                  onClick={() => setSearchOpen((open) => !open)}
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-on-surface-variant transition hover:bg-slate-100 md:h-10 md:w-10 ${searchOpen ? "hidden" : ""}`}
+                >
+                  <Search className="h-5 w-5 md:h-6 md:w-6" />
+                </button>
 
-            <Link
-              href="/dashboard/wishlist"
-              aria-label="Wishlist"
-              className="hidden h-9 w-9 shrink-0 place-items-center rounded-lg text-on-surface-variant transition hover:bg-slate-100 sm:grid"
-            >
-              <Heart className="h-5 w-5" />
-            </Link>
+                {searchOpen ? (
+                  <form
+                    role="search"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      submitSearch(router, searchQuery);
+                      setSearchOpen(false);
+                    }}
+                    className="static flex h-9 w-full translate-x-0 items-center overflow-hidden rounded-md border border-outline-variant/80 bg-surface-container-lowest px-1 shadow-sm ring-1 ring-transparent transition focus-within:border-primary focus-within:ring-primary/20 sm:h-10"
+                  >
+                    <input
+                      autoFocus
+                      type="search"
+                      value={searchQuery}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                      placeholder="Search SKU, keyword..."
+                      aria-label="Search products by SKU or keyword"
+                      className="min-w-0 flex-1 bg-transparent px-3 text-sm text-on-surface outline-none placeholder:text-on-surface-variant"
+                    />
+                    <button type="submit" aria-label="Submit search" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-on-surface-variant transition hover:bg-surface-container-low hover:text-primary">
+                      <Search className="h-4 w-4" />
+                    </button>
+                  </form>
+                ) : null}
+              </div>
+
+              {user ? (
+                <Link
+                  href="/dashboard/wishlist"
+                  aria-label="Wishlist"
+                  className="hidden h-9 w-9 shrink-0 place-items-center rounded-lg text-on-surface-variant transition hover:bg-slate-100 sm:grid md:h-10 md:w-10"
+                >
+                  <Heart className="h-5 w-5 md:h-6 md:w-6" />
+                </Link>
+              ) : null}
 
             <button
               ref={cartButtonRef}
               type="button"
-              aria-label="Open cart"
+               aria-label={count > 0 ? `Open cart, ${count} ${count === 1 ? "item" : "items"}` : "Open cart"}
               onClick={openCart}
-              className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-on-surface-variant transition hover:bg-slate-100 active:scale-95"
-            >
-              <ShoppingCart className="h-5 w-5" />
+               className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-on-surface-variant transition hover:bg-slate-100 active:scale-95 md:h-10 md:w-10"
+             >
+               <ShoppingCart className="h-5 w-5 md:h-6 md:w-6" />
               {count > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-4 text-white">
                   {count}
@@ -197,7 +234,7 @@ export function SiteHeader() {
             </button>
 
             {user ? (
-              <div className="relative z-[120] ml-1 sm:ml-2 lg:ml-3" ref={profileRef}>
+              <div className="relative z-[120] ml-0 sm:ml-1 lg:ml-3" ref={profileRef}>
                 <button
                   type="button"
                   onClick={() => setProfileOpen((open) => !open)}
@@ -225,14 +262,14 @@ export function SiteHeader() {
                 )}
               </div>
             ) : !hasHydratedAuth ? (
-              <div aria-hidden="true" className="ml-1 size-9 shrink-0 animate-pulse rounded-lg bg-surface-container-high sm:ml-2" />
+              <div aria-hidden="true" className="ml-0 size-9 shrink-0 animate-pulse rounded-lg bg-surface-container-high sm:ml-1 lg:ml-3" />
             ) : (
               <Link
                 href="/login"
-                className="ml-1 inline-flex h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-lg bg-primary px-2.5 text-xs font-medium text-white transition hover:bg-primary-container sm:ml-2 sm:px-3 sm:text-sm md:h-9 md:px-4 lg:ml-3"
+                className="ml-0 inline-flex h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-lg bg-primary px-2 text-xs font-medium text-white transition hover:bg-primary-container sm:ml-1 sm:px-2.5 sm:text-sm md:h-9 md:px-3 lg:ml-3 lg:px-3 xl:px-4"
               >
                 <LogIn className="h-4 w-4" />
-                Sign In
+                <span className="max-[359px]:hidden">Sign In</span>
               </Link>
             )}
           </div>
@@ -241,9 +278,9 @@ export function SiteHeader() {
 
       {showAccountStrip && (
         <div className="w-full border-b border-outline-variant/70 bg-gradient-to-r from-[#14213d] to-[#17479f]">
-          <Container className="store-shell flex h-10 items-center overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:h-11 lg:h-11">
+          <Container className="store-shell flex min-h-10 items-center justify-center py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:min-h-11 md:py-0">
             {user ? (
-              <div className="mx-auto flex w-max min-w-max items-center justify-center gap-4 lg:gap-6">
+              <div className="mx-auto flex w-full flex-nowrap items-center justify-start gap-x-2 overflow-x-auto whitespace-nowrap [-ms-overflow-style:none] [scrollbar-width:none] min-[360px]:gap-x-3 sm:gap-x-6 sm:justify-center lg:gap-8 [&::-webkit-scrollbar]:hidden">
                 <p className="hidden shrink-0 border-r border-white/20 pr-4 text-xs font-normal text-blue-200 md:block md:pr-5 md:text-[13px] lg:pr-6 lg:text-[13px] lg:font-medium">
                   Hello, <span className="font-semibold text-white">{user.name || "there"}</span>
                 </p>
@@ -274,7 +311,7 @@ export function SiteHeader() {
           >
             <div className="flex items-center justify-between border-b border-outline-variant px-4 py-3">
               <Link href="/" onClick={() => setMobileNavOpen(false)} className="flex items-center">
-                <BrandLogo className="h-8 w-auto" priority />
+                <BrandLogo className="h-6 w-auto max-w-[120px]" priority />
               </Link>
               <button
                 type="button"
@@ -286,27 +323,7 @@ export function SiteHeader() {
               </button>
             </div>
 
-            <form
-              className="relative mt-3 px-1"
-              role="search"
-              onSubmit={(event) => {
-                event.preventDefault();
-                submitSearch(router, searchQuery);
-                setMobileNavOpen(false);
-              }}
-            >
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-variant" aria-hidden="true" />
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Search SKU, keyword..."
-                aria-label="Search products by SKU or keyword"
-                className="h-10 w-full rounded-lg border border-outline-variant bg-surface-container-low pl-10 pr-3 text-sm text-on-surface outline-none placeholder:text-on-surface-variant focus:border-primary"
-              />
-            </form>
-
-            <div className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
+            <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-3">
               {nav.map((item) => {
                 const active = item.href === "/" ? pathname === item.href : pathname.startsWith(item.href);
                 return (
@@ -314,7 +331,7 @@ export function SiteHeader() {
                     key={item.href}
                     href={item.href}
                     onClick={() => setMobileNavOpen(false)}
-                    className={`rounded-md px-3 py-2 text-sm font-medium transition hover:bg-surface-container-low ${
+                    className={`rounded-lg px-4 py-3 text-base font-semibold transition hover:bg-surface-container-low ${
                       active ? "text-primary" : "text-on-surface-variant hover:text-on-surface"
                     }`}
                   >
@@ -327,7 +344,7 @@ export function SiteHeader() {
                 <button
                   type="button"
                   onClick={() => { handleLogout(); setMobileNavOpen(false); }}
-                  className="rounded-md px-3 py-2 text-left text-sm font-medium text-error transition hover:bg-error-container"
+                   className="rounded-lg px-4 py-3 text-left text-base font-semibold text-error transition hover:bg-error-container"
                 >
                   Sign out
                 </button>
@@ -335,7 +352,7 @@ export function SiteHeader() {
                 <Link
                   href="/login"
                   onClick={() => setMobileNavOpen(false)}
-                  className="rounded-md px-3 py-2 text-sm font-medium text-primary transition hover:bg-surface-container-low"
+                  className="rounded-lg px-4 py-3 text-base font-semibold text-primary transition hover:bg-surface-container-low"
                 >
                   Sign In
                 </Link>
@@ -353,11 +370,11 @@ function AccountLink({ href, icon: Icon, label, pathname }) {
   return (
     <Link
       href={href}
-      className={`relative inline-flex items-center gap-1.5 py-2 text-xs font-medium transition-colors md:text-[13px] lg:text-[13px] ${
+      className={`relative inline-flex items-center gap-1 whitespace-nowrap px-1 py-1 text-[11px] font-medium transition-colors min-[360px]:px-1.5 min-[360px]:text-xs min-[440px]:gap-1.5 sm:gap-1.5 sm:px-2 sm:py-2 sm:text-[13px] md:text-sm ${
         active ? "text-white after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-primary" : "text-blue-200 hover:text-white"
       }`}
     >
-      <Icon className="h-4 w-4" />
+      <Icon className="hidden size-3.5 shrink-0 min-[440px]:block sm:size-4" />
       <span>{label}</span>
     </Link>
   );

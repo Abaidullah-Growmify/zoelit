@@ -51,7 +51,8 @@ export function AdminShell({ children }) {
   }, [ready]);
 
   useEffect(() => {
-    if (pathname !== "/admin/login" && (ready || hydrationTimedOut) && !admin) router.replace(`/admin/login?next=${encodeURIComponent(pathname)}`);
+    const publicAdminPaths = ["/admin/login", "/admin/forgot-password", "/admin/reset-password"];
+    if (!publicAdminPaths.includes(pathname) && (ready || hydrationTimedOut) && !admin) router.replace(`/admin/login?next=${encodeURIComponent(pathname)}`);
   }, [ready, hydrationTimedOut, admin, router, pathname]);
 
   useEffect(() => {
@@ -93,7 +94,7 @@ export function AdminShell({ children }) {
     };
   }, [mobileOpen]);
 
-  if (pathname === "/admin/login") return children;
+  if (["/admin/login", "/admin/forgot-password", "/admin/reset-password"].includes(pathname)) return children;
 
   const handleLogout = async () => {
     await logout();
@@ -238,7 +239,12 @@ function Sidebar({ collapsed, onNavigate, hideLogo = false }) {
             <Link
               key={item.href}
               href={item.href}
-              onClick={onNavigate}
+              onClick={() => {
+                if (item.href === "/admin/categories") {
+                  window.dispatchEvent(new Event("admin:categories-reset"));
+                }
+                onNavigate?.();
+              }}
               data-active={active}
               className={cn("nav-item", collapsed && "justify-center px-0")}
               title={collapsed ? item.label : undefined}

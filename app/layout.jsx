@@ -10,9 +10,48 @@ const plusJakartaSans = Plus_Jakarta_Sans({ variable: "--font-display", subsets:
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"], weight: ["400", "500", "600"] });
 const poppins = Poppins({ variable: "--font-poppins", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
 
+const themeInitScript = `(() => { try { const theme = localStorage.getItem("theme"); if (theme === "dark") document.documentElement.classList.add("dark"); else if (theme === "light") document.documentElement.classList.remove("dark"); } catch {} })()`;
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://zoelit-frontend.vercel.app").replace(/\/$/, "");
+
+const organizationStructuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      name: "ZoeLit",
+      url: SITE_URL,
+      logo: `${SITE_URL}/zoelit-logo-light-trimmed.png`,
+    },
+    {
+      "@type": "WebSite",
+      name: "ZoeLit",
+      url: SITE_URL,
+      potentialAction: {
+        "@type": "SearchAction",
+        target: `${SITE_URL}/products?keyword={search_term_string}`,
+        "query-input": "required name=search_term_string",
+      },
+    },
+  ],
+};
+
 export const metadata = {
-  title: "ZoeLit Commerce | Premium Online Store",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://zoelit-frontend.vercel.app"),
+  title: "Zoel IT Commerce | Premium Online Store",
   description: "A premium e-commerce storefront with account dashboard, cart, checkout, and order management.",
+  openGraph: {
+    type: "website",
+    siteName: "ZoeLit",
+    title: "ZoeLit | Technology and Business Equipment",
+    description: "Shop dependable technology, connectivity products, and business equipment from ZoeLit.",
+    images: [{ url: "/zoelit-logo-light-trimmed.png", alt: "ZoeLit" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ZoeLit | Technology and Business Equipment",
+    description: "Shop dependable technology, connectivity products, and business equipment from ZoeLit.",
+    images: ["/zoelit-logo-light-trimmed.png"],
+  },
   icons: {
     icon: "/zoelit_favicon_clean_padded.png",
     shortcut: "/zoelit_favicon_clean_padded.png",
@@ -24,6 +63,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${plusJakartaSans.variable} ${inter.variable} ${poppins.variable}`} suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <link rel="icon" type="image/png" href="/zoelit_favicon_clean_padded.png?v=4" />
         <link rel="shortcut icon" type="image/png" href="/zoelit_favicon_clean_padded.png?v=4" />
         <link
@@ -39,6 +79,7 @@ export default function RootLayout({ children }) {
         className="min-h-screen bg-background font-sans text-body-md text-on-surface antialiased"
         suppressHydrationWarning
       >
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationStructuredData) }} />
         <NextTopLoader color="#2563eb" initialPosition={0.08} crawlSpeed={200} height={3} crawl showSpinner={false} easing="ease" speed={200} shadow="0 0 10px #2563eb,0 0 5px #2563eb" zIndex={1600} showForHashAnchor={false} />
         <ReduxProvider>
           <StoreHydration />

@@ -10,7 +10,9 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useAuthStore } from "@/store/auth-store";
-import { Button, ErrorText, Input, Label } from "@/components/ui";
+import { ErrorText, Input, Label } from "@/components/ui";
+import { RateLimitAlert, RateLimitButton } from "@/components/rate-limit-alert";
+import { parseRetryAfter } from "@/lib/rate-limit-helper";
 
 const schema = z.object({
   email: z.string().email("Enter a valid email address"),
@@ -29,7 +31,7 @@ export function LoginForm() {
   const verifiedNotice = params.get("verified") === "success";
   const form = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { email: "", password: "", remember: true },
+    defaultValues: { email: "", password: "", remember: false },
   });
 
   useEffect(() => {
@@ -44,10 +46,13 @@ export function LoginForm() {
     return () => cancelAnimationFrame(id);
   }, [form]);
 
+  const [rateLimitRemaining, setRateLimitRemaining] = useState(null);
+
   async function onSubmit(values) {
     try {
       await login(values.email, values.password, values.remember);
       toast.success("Welcome back");
+      setRateLimitRemaining(null);
       router.push(params.get("next") || "/dashboard");
     } catch (error) {
       if (error.code === "EMAIL_UNVERIFIED") {
@@ -55,9 +60,26 @@ export function LoginForm() {
         router.push(`/verify-email?email=${encodeURIComponent(values.email)}`);
         return;
       }
-      toast.error(error.message || "Sign in failed");
+      
+      // Check if it's a rate-limit error
+      if (error.status === 429) {
+        const retryAfter = parseRetryAfter(error);
+        setRateLimitRemaining(retryAfter);
+        // No toast — show message below the button instead
+      } else {
+        toast.error(error.message || "Sign in failed");
+      }
     }
   }
+
+  // Countdown effect to clear rate limit state when timer expires
+  useEffect(() => {
+    if (!rateLimitRemaining || rateLimitRemaining <= 0) return;
+    const timer = setTimeout(() => {
+      setRateLimitRemaining(null);
+    }, rateLimitRemaining * 1000);
+    return () => clearTimeout(timer);
+  }, [rateLimitRemaining]);
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background p-4">
@@ -65,40 +87,53 @@ export function LoginForm() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgb(0_63_177_/_0.16),transparent_34%),radial-gradient(circle_at_20%_80%,rgb(26_86_219_/_0.12),transparent_28%)]" />
       <section className="relative z-10 w-full max-w-md rounded-2xl border border-outline-variant bg-surface/90 p-6 shadow-xl backdrop-blur-xl">
         <div className="flex flex-col items-center pb-2 text-center">
-          <Link href="/" className="mb-3 flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <Link href="/" aria-label="Back to ZoeLit homepage" className="mb-3 flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
             <UserRound className="size-6" />
           </Link>
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-on-surface">Welcome back</h1>
           <p className="mt-2 text-sm text-on-surface-variant">Sign in to your shopping account.</p>
         </div>
         {verifiedNotice ? <div className="mt-4 flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-800"><MailCheck className="mt-0.5 size-4 shrink-0" /><span>Email verified — your account is now active. Sign in to continue.</span></div> : null}
+        
+        {rateLimitRemaining && (
+          <RateLimitAlert
+            retryAfter={rateLimitRemaining}
+            message="Too many attempts"
+            className="mt-4"
+          />
+        )}
+        
         <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-4" noValidate>
           <div className="space-y-2">
-            <Label>Email</Label>
-            <Input type="email" autoComplete="email" placeholder="you@example.com" readOnly={autofillBlocked} {...form.register("email")} />
-            <ErrorText>{form.formState.errors.email?.message}</ErrorText>
+             <Label htmlFor="login-email">Email</Label>
+             <Input id="login-email" type="email" autoComplete="email" placeholder="you@example.com" readOnly={autofillBlocked} {...form.register("email")} aria-invalid={form.formState.errors.email ? "true" : "false"} aria-describedby={form.formState.errors.email ? "login-email-error" : undefined} />
+             <ErrorText id="login-email-error">{form.formState.errors.email?.message}</ErrorText>
           </div>
           <div className="space-y-2">
-            <div className="flex items-center justify-between gap-4">
-              <Label>Password</Label>
-               <Link href="/forgot-password" className="text-body-md font-semibold text-primary hover:text-primary-container">Forgot password?</Link>
+             <div className="flex items-center justify-between gap-2 sm:gap-4">
+                <Label htmlFor="login-password">Password</Label>
+                <Link href="/forgot-password" className="shrink-0 whitespace-nowrap text-xs font-semibold text-primary hover:text-primary-container sm:text-sm">Forgot password?</Link>
             </div>
             <div className="relative">
-              <Input type={showPassword ? "text" : "password"} autoComplete="current-password" placeholder="Enter password" className="pr-10" readOnly={autofillBlocked} {...form.register("password")} />
+               <Input id="login-password" type={showPassword ? "text" : "password"} autoComplete="current-password" placeholder="Enter password" className="pr-10" readOnly={autofillBlocked} {...form.register("password")} aria-invalid={form.formState.errors.password ? "true" : "false"} aria-describedby={form.formState.errors.password ? "login-password-error" : undefined} />
               <button type="button" tabIndex={-1} onClick={() => setShowPassword((value) => !value)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-on-surface-variant transition hover:text-on-surface" aria-label={showPassword ? "Hide password" : "Show password"}>
                 {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
             </div>
-            <ErrorText>{form.formState.errors.password?.message}</ErrorText>
+             <ErrorText id="login-password-error">{form.formState.errors.password?.message}</ErrorText>
           </div>
-          <label className="flex items-center gap-2 text-body-md text-on-surface-variant">
+           <label className="flex items-center gap-2 text-sm text-on-surface-variant">
             <input type="checkbox" className="size-4 rounded border-outline-variant" {...form.register("remember")} /> Keep me signed in
           </label>
-          <Button className="w-full" disabled={form.formState.isSubmitting}>
+          <RateLimitButton
+            type="submit"
+            retryAfter={rateLimitRemaining}
+            className="w-full"
+          >
             {form.formState.isSubmitting ? <><Loader2 className="size-4 animate-spin" />Signing in...</> : "Sign in"}
-          </Button>
+          </RateLimitButton>
         </form>
-        <p className="mt-6 text-center text-body-md text-on-surface-variant">Need a ZoeLit account? <Link href="/register" className="font-semibold text-primary hover:text-primary-container">Create account</Link></p>
+        <p className="mt-6 text-center text-sm text-on-surface-variant">Need a ZoeLit account? <Link href="/register" className="font-semibold text-primary hover:text-primary-container">Create account</Link></p>
       </section>
     </div>
   );

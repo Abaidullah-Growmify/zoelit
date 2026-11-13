@@ -16,7 +16,7 @@ import { useAdminAuthStore } from "@/store/admin-auth-store";
 import { minimumLoadingDelay } from "@/lib/utils";
 import Pagination from "@/components/pagination";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 const customerSchema = z.object({
   name: z.string().min(2, "Full name is required"),
@@ -133,8 +133,8 @@ export default function AdminCustomersPage() {
   const columns = [
     { key: "serial", header: "#", sortable: true, accessor: "serial", cellClassName: "font-semibold tabular-nums text-on-surface" },
     { key: "name", header: "Name", sortable: true, accessor: "name", cellClassName: "font-semibold text-on-surface" },
-    { key: "email", header: "Email", sortable: true, accessor: "email", cellClassName: "text-on-surface-variant" },
-    { key: "phone", header: "Phone", accessor: "phone", cellClassName: "text-on-surface-variant", render: (customer) => customer.phone || "—" },
+    { key: "email", header: "Email", sortable: true, accessor: "email", cellClassName: "text-on-surface" },
+    { key: "phone", header: "Phone", accessor: "phone", cellClassName: "text-on-surface", render: (customer) => customer.phone || "—" },
     { key: "orders", header: "Orders", sortable: true, accessor: "orders", cellClassName: "tabular-nums" },
     { key: "totalSpent", header: "Spent", sortable: true, accessor: "totalSpent", cellClassName: "font-semibold tabular-nums text-on-surface", render: (customer) => money(customer.totalSpent) },
     { key: "joined", header: "Joined", sortable: true, accessor: "joined", render: (customer) => shortDate(customer.joined) },
@@ -144,7 +144,7 @@ export default function AdminCustomersPage() {
   return (
     <div className="space-y-6">
       {rows === null && !error ? (
-        <AdminCustomersSkeleton />
+         <AdminCustomersSkeleton rows={PAGE_SIZE} />
       ) : error ? (
         <Card className="p-8 text-center text-body font-regular text-rose-600">{error}</Card>
       ) : (
@@ -325,7 +325,7 @@ function EditCustomerModal({ customer, token, onClose, onUpdated }) {
             <PasswordField label="New password" name="password" form={form} autoComplete="new-password" placeholder="Leave blank to keep current" show={showPassword} onToggle={() => setShowPassword((value) => !value)} />
             <PasswordField label="Confirm new password" name="confirmPassword" form={form} autoComplete="new-password" placeholder="Confirm new password" show={showConfirmPassword} onToggle={() => setShowConfirmPassword((value) => !value)} />
           </div>
-          <div className="flex gap-2 pt-2 sm:justify-end"><Button type="button" variant="outline" onClick={onClose} className="h-11 min-w-0 flex-1 sm:flex-none">Cancel</Button><Button disabled={form.formState.isSubmitting} className="h-11 min-w-0 flex-1 sm:flex-none">{form.formState.isSubmitting ? <><Loader2 className="size-4 animate-spin" /> Saving...</> : "Save changes"}</Button></div>
+          <div className="flex justify-end gap-2 pt-2"><Button type="button" variant="outline" onClick={onClose} className="h-11">Cancel</Button><Button disabled={form.formState.isSubmitting} className="h-11">{form.formState.isSubmitting ? <><Loader2 className="size-4 animate-spin" /> Saving...</> : "Save changes"}</Button></div>
         </form>
       </div>
     </div>
@@ -427,9 +427,9 @@ function NewCustomerModal({ open, token, onClose, onCreated }) {
             <PasswordField label="Confirm password" name="confirmPassword" form={form} autoComplete="new-password" placeholder="Confirm password" show={showConfirmPassword} onToggle={() => setShowConfirmPassword((value) => !value)} />
           </div>
 
-          <div className="flex gap-2 pt-2 sm:justify-end">
-            <Button type="button" variant="outline" onClick={closeModal} className="h-11 min-w-0 flex-1 sm:flex-none">Cancel</Button>
-            <Button disabled={form.formState.isSubmitting || !token} className="h-11 min-w-0 flex-1 sm:flex-none">
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" onClick={closeModal} className="h-11">Cancel</Button>
+            <Button disabled={form.formState.isSubmitting || !token} className="h-11">
               {form.formState.isSubmitting ? <><Loader2 className="size-4 animate-spin" /> Saving...</> : "Save customer"}
             </Button>
           </div>

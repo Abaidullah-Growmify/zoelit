@@ -13,7 +13,12 @@ const faqs = [
   { question: "What payment methods are supported?", answer: "The current implementation includes checkout-ready UI. Production payment providers such as Stripe or PayPal can be connected to the same flow." },
 ];
 
-export const metadata = { title: "FAQ | ZoeLit Commerce" };
+export const metadata = {
+  title: "FAQ | Zoel IT Commerce",
+  description: "Find answers about ZoeLit products, orders, checkout, delivery, returns, and customer accounts.",
+  alternates: { canonical: "/faq" },
+  openGraph: { title: "FAQ | ZoeLit", description: "Find answers about ZoeLit products, orders, checkout, delivery, returns, and customer accounts.", url: "/faq" },
+};
 
 export default function FAQPage() {
   return (
@@ -28,9 +33,8 @@ export default function FAQPage() {
         <SupportCard icon={UserRound} title="Account support" text="Manage your profile, addresses, wishlist, and sign-in access." />
       </div>
 
-      <div className="mt-8 flex min-w-0 flex-col items-start justify-between gap-3 border-b border-outline-variant/70 pb-4 sm:mt-10 sm:flex-row sm:items-end sm:gap-4">
+      <div className="mt-8 flex min-w-0 flex-col items-start gap-3 border-b border-outline-variant/70 pb-4 sm:mt-10 sm:flex-row sm:items-end sm:gap-4">
         <div><p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Knowledge base</p><h2 className="mt-1 font-heading text-2xl font-bold tracking-tight text-on-surface sm:text-3xl">Frequently asked questions</h2></div>
-        <Link href="/contact" className="hidden items-center gap-1.5 text-sm font-semibold text-primary transition hover:gap-2.5 sm:flex">Contact us <ArrowRight className="size-4" /></Link>
       </div>
       <FAQAccordion faqs={faqs} />
       <Card className="group mt-6 flex w-full min-w-0 flex-col gap-4 border-primary/20 bg-gradient-to-r from-primary to-primary-container p-4 text-white shadow-sm sm:mt-8 sm:flex-row sm:items-center sm:justify-between sm:p-7">

@@ -11,11 +11,11 @@ export function buttonClasses({ variant = "primary", size = "md" } = {}) {
   return cn(
     "button-control inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-semibold tracking-tight transition duration-150 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15 disabled:pointer-events-none disabled:opacity-60",
     size === "sm" ? "h-8 min-h-8 px-3 text-sm" : "h-9 min-h-9 px-3 text-sm sm:px-3.5",
-    variant === "primary" && "bg-primary text-white shadow-sm hover:bg-primary-container",
-     variant === "secondary" && "bg-primary text-white shadow-sm hover:bg-primary-container",
-     variant === "outline" && "border border-primary bg-primary text-white shadow-sm hover:bg-primary-container",
-     variant === "ghost" && "text-primary hover:bg-primary/10 hover:text-primary",
-     variant === "danger" && "bg-error-container text-on-error-container hover:bg-error hover:text-on-error"
+      variant === "primary" && "button-variant-primary bg-primary text-white shadow-sm hover:bg-primary-container",
+      variant === "secondary" && "button-variant-secondary bg-primary text-white shadow-sm hover:bg-primary-container",
+      variant === "outline" && "button-variant-outline border border-primary bg-primary text-white shadow-sm hover:bg-primary-container",
+      variant === "ghost" && "button-variant-ghost text-primary hover:bg-primary/10 hover:text-primary",
+      variant === "danger" && "button-variant-danger bg-error-container text-on-error-container hover:bg-error hover:text-on-error"
   );
 }
 
@@ -40,10 +40,10 @@ export function PageHeader({ eyebrow, title, description, action, align = "left"
 export function SectionHeader({ eyebrow, title, action, align = "left", className }) {
   const centered = align === "center";
   return (
-    <div className={cn(centered ? "mx-auto max-w-2xl text-center" : "flex flex-wrap items-end justify-between gap-x-3 gap-y-2", className)}>
+    <div className={cn(centered ? "mx-auto max-w-2xl text-center" : "zl-sec-head flex flex-wrap items-end justify-between gap-x-3 gap-y-2", className)}>
       <div className="min-w-0 w-full sm:w-auto">
-        {eyebrow ? <p className="mb-1 text-sm font-semibold uppercase tracking-[0.16em] text-primary">{eyebrow}</p> : null}
-        <h2 aria-label={eyebrow ? `${eyebrow}: ${title}` : undefined} className="text-balance break-words font-heading text-lg font-semibold tracking-tight text-on-surface sm:text-xl">{title}</h2>
+        {eyebrow ? <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary sm:mb-1 sm:text-xs">{eyebrow}</p> : null}
+        <h2 aria-label={eyebrow ? `${eyebrow}: ${title}` : undefined} className="text-balance break-words font-heading text-base font-semibold tracking-tight text-on-surface sm:text-lg">{title}</h2>
       </div>
       {action ? <div className="panel-actions w-full sm:w-auto sm:justify-end">{action}</div> : null}
     </div>
@@ -84,9 +84,9 @@ export function Label({ className, ...props }) {
   return <label className={cn("text-sm font-medium text-on-surface", className)} {...props} />;
 }
 
-export function ErrorText({ children }) {
+export function ErrorText({ children, ...props }) {
   if (!children) return null;
-  return <p className="mt-1 text-xs text-error">{children}</p>;
+  return <p className="mt-1 text-xs text-error" {...props}>{children}</p>;
 }
 
 export function FilterTabs({ tabs, value, onChange }) {
@@ -98,7 +98,7 @@ export function FilterTabs({ tabs, value, onChange }) {
           type="button"
           data-active={value === tab.value}
           onClick={() => onChange(tab.value)}
-          className="filter-tab min-h-10 flex-1 whitespace-nowrap sm:flex-none"
+           className="filter-tab min-h-9 flex-1 whitespace-nowrap sm:min-h-10 sm:flex-none"
         >
           {tab.label}
         </button>

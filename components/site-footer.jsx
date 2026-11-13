@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowRight, Mail, MapPin, Phone, Link2 } from "lucide-react";
+import { Mail, MapPin, Phone, Link2 } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
 import { useStoreConfig } from "@/components/store-config-provider";
 import { Button, Input } from "@/components/ui";
@@ -30,10 +30,10 @@ const CARE_LINKS = [
 ];
 
 const SOCIALS = [
-  { href: "#", label: "Facebook", Icon: FacebookIcon },
-  { href: "#", label: "X", Icon: XIcon },
-  { href: "#", label: "Instagram", Icon: InstagramIcon },
-  { href: "#", label: "YouTube", Icon: YoutubeIcon },
+  { href: null, label: "Facebook", Icon: FacebookIcon },
+  { href: null, label: "X", Icon: XIcon },
+  { href: null, label: "Instagram", Icon: InstagramIcon },
+  { href: null, label: "YouTube", Icon: YoutubeIcon },
 ];
 
 function FacebookIcon({ className }) {
@@ -70,18 +70,20 @@ function YoutubeIcon({ className }) {
 
 export function SiteFooter() {
   const { name, email, phone, address } = useStoreConfig();
-  const storeName = name || "ZoeLit";
+  const configuredName = String(name || "").trim();
+  const storeName = configuredName && !/^enc:\s*v\d+/i.test(configuredName) ? configuredName : "ZoeLit";
   const storeEmail = email || FALLBACK_EMAIL;
   const storePhone = phone || FALLBACK_PHONE;
   const storeAddress = address || FALLBACK_ADDRESS;
-  const copyright = `(c) 2026 ${storeName}. All rights reserved.`;
+  const copyright = `© 2026 ${storeName}. All rights reserved.`;
   return (
-    <footer className="site-footer w-full border-t pb-2 md:pb-3">
-      {/* Mobile layout (unchanged). */}
+    <footer className="site-footer w-full overflow-hidden border-t pb-2 md:pb-3">
+      {/* One responsive footer layout is used at every screen size so mobile
+          and desktop never show different footer content. */}
       <div className="md:hidden">
-        <div className="container-page pt-12">
-          <div className="grid grid-cols-2 gap-x-6 gap-y-10">
-            <div className="flex min-w-0 flex-col gap-5 col-span-2">
+        <div className="container-page pt-8">
+          <div className="grid grid-cols-2 gap-x-5 gap-y-7">
+            <div className="col-span-2 flex min-w-0 flex-col gap-4">
               <div className="flex flex-col items-start gap-3">
                 <Link href="/" className="flex items-start">
                   <BrandLogo variant="dark" crop className="w-36 max-w-full sm:w-40" />
@@ -90,21 +92,21 @@ export function SiteFooter() {
                   Curated network and connectivity solutions for professionals and businesses.
                 </p>
               </div>
-              <div className="flex flex-wrap gap-3">
-                <a className="footer-social flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition duration-200 ease-out" href="#" aria-label="Social link">
-                  <Link2 className="size-[18px]" />
+              <div className="mt-1 flex flex-wrap gap-2.5">
+                <span className="footer-social flex h-9 w-9 shrink-0 items-center justify-center rounded-full border opacity-70" role="img" aria-label="Social links coming soon">
+                  <Link2 className="size-4" />
+                </span>
+                <a className="footer-social flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition duration-200 ease-out" href={`tel:${storePhone.replace(/[^\d+]/g, "")}`} aria-label="Call us">
+                  <Phone className="size-4" />
                 </a>
-                <a className="footer-social flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition duration-200 ease-out" href="#" aria-label="Call us">
-                  <Phone className="size-[18px]" />
-                </a>
-                <a className="footer-social flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition duration-200 ease-out" href="#" aria-label="Email us">
-                  <Mail className="size-[18px]" />
+                <a className="footer-social flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition duration-200 ease-out" href={`mailto:${storeEmail}`} aria-label="Email us">
+                  <Mail className="size-4" />
                 </a>
               </div>
             </div>
 
             <div className="min-w-0">
-              <h4 className="mb-2 text-body-lg font-semibold tracking-[0.05em]">Shop</h4>
+               <h2 className="mb-2 text-lg font-bold tracking-[0.05em]">Shop</h2>
               <ul className="flex flex-col">
                 <li><Link className={linkClass} href="/products">All Products</Link></li>
                 <li><Link className={linkClass} href="/products">Categories</Link></li>
@@ -114,35 +116,35 @@ export function SiteFooter() {
             </div>
 
             <div className="min-w-0">
-              <h4 className="mb-2 text-body-lg font-semibold tracking-[0.05em]">Company</h4>
+               <h2 className="mb-2 text-lg font-bold tracking-[0.05em]">Company</h2>
               <ul className="flex flex-col">
-                <li><a className={linkClass} href="#">About Us</a></li>
-                <li><a className={linkClass} href="#">Careers</a></li>
-                <li><a className={linkClass} href="#">News &amp; Updates</a></li>
-                <li><a className={linkClass} href="#">Contact Us</a></li>
+                <li><Link className={linkClass} href="/about-us">About Us</Link></li>
+                <li><Link className={linkClass} href="/careers">Careers</Link></li>
+                <li><Link className={linkClass} href="/news-updates">News &amp; Updates</Link></li>
+                <li><Link className={linkClass} href="/contact">Contact Us</Link></li>
               </ul>
             </div>
 
-            <div className="min-w-0 footer-mobile-contact">
-              <h4 className="mb-2 text-body-lg font-semibold tracking-[0.05em]">Contact</h4>
-              <ul className="flex flex-col">
-                <li className="footer-contact flex items-start gap-2">
-                  <Phone className="mt-3 size-5 shrink-0 text-primary" />
-                  <a className="flex min-h-11 items-center text-body-md leading-6 transition-colors hover:text-primary" href={`tel:${storePhone.replace(/[^\d+]/g, "")}`}>{storePhone}</a>
+            <div className="col-span-1 min-w-0 footer-mobile-contact" style={{ gridColumn: "span 1 / span 1" }}>
+               <h2 className="mb-2 text-lg font-bold tracking-[0.05em]">Contact</h2>
+              <ul className="flex flex-col gap-0.5">
+                <li className="footer-contact flex min-h-9 items-center gap-2.5">
+                  <Phone className="size-4 shrink-0 text-primary" />
+                  <a className="min-w-0 break-words text-body-md leading-5 transition-colors hover:text-primary" href={`tel:${storePhone.replace(/[^\d+]/g, "")}`}>{storePhone}</a>
                 </li>
-                <li className="footer-contact flex items-start gap-2">
-                  <Mail className="mt-3 size-5 shrink-0 text-primary" />
-                  <a className="flex min-h-11 items-center text-body-md leading-6 transition-colors hover:text-primary" href={`mailto:${storeEmail}`}>{storeEmail}</a>
+                <li className="footer-contact flex min-h-9 items-center gap-2.5">
+                  <Mail className="size-4 shrink-0 text-primary" />
+                  <a className="min-w-0 break-words text-body-md leading-5 transition-colors hover:text-primary" href={`mailto:${storeEmail}`}>{storeEmail}</a>
                 </li>
-                <li className="footer-contact flex items-start gap-2">
-                  <MapPin className="mt-3 size-5 shrink-0 text-primary" />
-                  <span className="whitespace-pre-line pt-3 text-body-md leading-6">{storeAddress}</span>
+                <li className="footer-contact flex items-start gap-2.5 py-1">
+                  <MapPin className="mt-0.5 size-4 shrink-0 text-primary" />
+                  <span className="min-w-0 whitespace-pre-line break-words text-body-md leading-5">{storeAddress}</span>
                 </li>
               </ul>
             </div>
 
-            <div className="min-w-0 footer-mobile-newsletter">
-              <h4 className="mb-2 text-body-lg font-semibold tracking-[0.05em]">Newsletter</h4>
+            <div className="col-span-1 min-w-0 footer-mobile-newsletter" style={{ gridColumn: "span 1 / span 1" }}>
+               <h2 className="mb-2 text-lg font-bold tracking-[0.05em]">Newsletter</h2>
               <p className="mb-3 text-body-md leading-6">Get the latest updates and offers.</p>
               <FooterNewsletter />
             </div>
@@ -156,10 +158,10 @@ export function SiteFooter() {
         </div>
       </div>
 
-      {/* Tablet + desktop layout (reference design). */}
+      {/* Responsive reference layout. */}
       <div className="hidden md:block">
         <div className="container-page pt-12 md:pt-14">
-          <div className="grid items-start gap-x-10 gap-y-10 md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.4fr)]">
+           <div className="grid items-start gap-x-6 gap-y-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.4fr)] lg:gap-x-10">
             <div className="min-w-0">
               <Link href="/" className="flex items-start">
                 <BrandLogo variant="dark" crop className="w-36 md:w-40 lg:w-44" />
@@ -168,16 +170,16 @@ export function SiteFooter() {
                 Better technology, thoughtfully chosen.
               </p>
               <div className="mt-4 flex items-center gap-1">
-                {SOCIALS.map(({ href, label, Icon }) => (
-                  <a key={label} href={href} aria-label={label} className="footer-social grid h-10 w-10 place-items-center rounded-full transition duration-200 ease-out">
+                {SOCIALS.map(({ label, Icon }) => (
+                  <span key={label} role="img" aria-label={`${label} link coming soon`} className="footer-social grid h-10 w-10 place-items-center rounded-full opacity-70">
                     <Icon className="size-[18px]" />
-                  </a>
+                  </span>
                 ))}
               </div>
             </div>
 
             <div className="min-w-0">
-              <h4 className="mb-2 text-body-lg font-semibold tracking-[0.05em] md:mb-3">Quick Links</h4>
+               <h2 className="mb-2 text-lg font-bold tracking-[0.05em] md:mb-3">Quick Links</h2>
               <ul className="flex flex-col">
                 {QUICK_LINKS.map((item) => (
                   <li key={item.href + item.label}><Link className={linkClass} href={item.href}>{item.label}</Link></li>
@@ -186,7 +188,7 @@ export function SiteFooter() {
             </div>
 
             <div className="min-w-0">
-              <h4 className="mb-2 text-body-lg font-semibold tracking-[0.05em] md:mb-3">Customer Care</h4>
+               <h2 className="mb-2 text-lg font-bold tracking-[0.05em] md:mb-3">Customer Care</h2>
               <ul className="flex flex-col">
                 {CARE_LINKS.map((item) => (
                   <li key={item.label}><Link className={linkClass} href={item.href}>{item.label}</Link></li>
@@ -195,7 +197,7 @@ export function SiteFooter() {
             </div>
 
             <div className="min-w-0">
-              <h4 className="mb-2 text-body-lg font-semibold tracking-[0.05em] md:mb-3">Newsletter</h4>
+               <h2 className="mb-2 text-lg font-bold tracking-[0.05em] md:mb-3">Newsletter</h2>
               <p className="mb-3 text-body-md leading-6">Get the latest updates and offers.</p>
               <FooterNewsletter />
             </div>
@@ -219,7 +221,6 @@ export function SiteFooter() {
 function FooterNewsletter() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState({ type: "idle", message: "" });
-
   async function handleSubmit(event) {
     event.preventDefault();
     setStatus({ type: "loading", message: "" });
@@ -234,23 +235,25 @@ function FooterNewsletter() {
 
   return (
     <form onSubmit={handleSubmit} aria-label="Subscribe to newsletter">
-      <div className="flex gap-2">
+      <div className="flex min-w-0 flex-col gap-2 min-[420px]:flex-row">
         <Input
+          id="footer-newsletter-email"
           type="email"
           name="email"
           required
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          placeholder="Email address"
+          placeholder="Email"
           aria-label="Email address"
-          className="h-11 min-w-0 flex-1 rounded-lg border-0 bg-white text-on-surface shadow-sm focus:ring-2 focus:ring-primary/40"
+          aria-invalid={status.type === "error" ? "true" : "false"}
+          aria-describedby={status.type === "error" ? "footer-newsletter-status" : undefined}
+          className="h-10 min-w-0 w-full flex-1 basis-1/2 rounded-lg border-0 bg-white text-center text-sm font-normal text-on-surface shadow-sm focus:ring-2 focus:ring-primary/40"
         />
-        <Button type="submit" disabled={status.type === "loading"} className="h-11 shrink-0 rounded-md bg-[#2f6fed] px-4 text-white hover:bg-[#1d54c8]">
+        <Button type="submit" disabled={status.type === "loading"} className="!justify-center h-10 w-full min-w-0 flex-1 basis-1/2 gap-1.5 rounded-md bg-[#2f6fed] px-2 text-center text-sm font-medium text-white hover:bg-[#1d54c8]">
           {status.type === "loading" ? "Joining..." : "Subscribe"}
-          {status.type !== "loading" ? <ArrowRight className="size-4" /> : null}
         </Button>
       </div>
-      <p className={`mt-2 text-label-sm font-medium leading-5 ${status.type === "error" ? "text-error" : status.type === "success" ? "text-emerald-300" : ""}`} role={status.type === "idle" ? undefined : "status"}>
+       <p id="footer-newsletter-status" className={`mt-2 text-label-sm font-medium leading-5 ${status.type === "error" ? "text-error" : status.type === "success" ? "text-emerald-300" : ""}`} role={status.type === "error" ? "alert" : status.type === "success" ? "status" : undefined}>
         {status.message}
       </p>
     </form>

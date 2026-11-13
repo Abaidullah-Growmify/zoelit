@@ -4,18 +4,11 @@ import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, Check, ChevronDown, Loader2, Search, X } from "lucide-react";
 import { getAdminProducts, getAdminProductsByIds } from "@/lib/api";
-import { FALLBACK_IMAGE } from "@/lib/product-mapper";
-import { cn } from "@/lib/utils";
+import { safeImageSrc } from "@/components/clean-product-image";
+import { cn, money } from "@/lib/utils";
 
 const DEFAULT_BADGES = [
-  "Free delivery",
-  "Low shipping rate",
-  "Best seller",
-  "New arrival",
-  "Limited offer",
-  "Popular pick",
-  "Exclusive",
-  "Top rated",
+  "Featured",
 ];
 
 export function HeroProductPicker({
@@ -75,7 +68,7 @@ export function HeroProductPicker({
     if (!token || !open) return undefined;
     const searchingTimer = window.setTimeout(() => setSearching(true), 0);
     const timer = window.setTimeout(() => {
-      getAdminProducts({ keyword: keyword.trim(), page: 1, limit: 20, activeOnly: true }, token)
+      getAdminProducts({ keyword: keyword.trim(), page: 1, limit: 20, activeOnly: true, enrich: true, mix: true }, token)
         .then((data) => {
           const fetched = data?.products || [];
           setResults(fetched);
@@ -103,7 +96,7 @@ export function HeroProductPicker({
     if (!token || !open || loadingMore || !hasMore) return;
     setLoadingMore(true);
     const nextPage = page + 1;
-    getAdminProducts({ keyword: keyword.trim(), page: nextPage, limit: 20, activeOnly: true }, token)
+    getAdminProducts({ keyword: keyword.trim(), page: nextPage, limit: 20, activeOnly: true, enrich: true, mix: true }, token)
       .then((data) => {
         const fetched = data?.products || [];
         setResults((current) => {
@@ -198,11 +191,11 @@ export function HeroProductPicker({
             return (
               <li key={item.productId} className="home-hero-product-item flex items-center gap-2 rounded-md border border-outline-variant bg-surface px-2 py-2">
                 <div className="relative size-9 shrink-0 overflow-hidden rounded-lg bg-surface-container-low">
-                  <Image src={product?.imageUrl || product?.image || FALLBACK_IMAGE} alt="" fill sizes="36px" className="object-cover" />
+                  <Image src={safeImageSrc(product?.imageUrl || product?.image)} alt="" fill sizes="36px" className="object-cover" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-on-surface">{product?.name || item.productId}</p>
-                  <p className="truncate text-xs text-on-surface-variant">{item.productId}</p>
+                  <p className="truncate text-xs text-on-surface-variant">{item.productId} · {product ? money(product.price) : "—"} · Stock: {product ? Number(product.stock ?? product.quantity) || 0 : "—"}</p>
                 </div>
                 <div className="flex items-center gap-1">
                   <select
@@ -275,11 +268,11 @@ export function HeroProductPicker({
                     {selected ? <Check className="size-3.5 stroke-[3]" aria-hidden="true" /> : null}
                   </span>
                   <div className="relative size-10 shrink-0 overflow-hidden rounded-lg bg-surface-container-low">
-                    <Image src={product.imageUrl || product.image || FALLBACK_IMAGE} alt="" fill sizes="40px" className="object-cover" />
+                    <Image src={safeImageSrc(product.imageUrl || product.image)} alt="" fill sizes="40px" className="object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-on-surface">{product.name || product.description || id}</p>
-                    <p className="truncate text-xs text-on-surface-variant">{id} {product.category ? `· ${product.category}` : ""}</p>
+                    <p className="truncate text-xs text-on-surface-variant">{id} {product.category ? `· ${product.category}` : ""} · {money(product.price)} · Stock: {Number(product.stock ?? product.quantity) || 0}</p>
                   </div>
                   {selected ? <span className="shrink-0 text-xs font-semibold text-primary">Picked</span> : null}
                 </button>

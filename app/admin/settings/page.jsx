@@ -10,6 +10,7 @@ import {
   CreditCard,
   Eye,
   EyeOff,
+  Image as ImageIcon,
   KeyRound,
   Loader2,
   Mail,
@@ -30,7 +31,6 @@ import { useAdminAuthStore } from "@/store/admin-auth-store";
 import { cn } from "@/lib/utils";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "nextjs-toploader/app";
-import { AdminTableActions } from "@/components/admin-table";
 import { FONT_OPTIONS } from "@/lib/fonts";
 
 const STRIPE_MODES = [
@@ -41,6 +41,20 @@ const STRIPE_MODES = [
 const SORTED_FONT_OPTIONS = [...FONT_OPTIONS].sort((first, second) => first.label.localeCompare(second.label));
 
 const SECRET_SENTINEL = "__SET__";
+const REQUIRED_FIELDS_BY_SECTION = {
+  store: ["store.name", "store.email", "store.phone", "store.address"],
+  appearance: ["appearance.headingFont", "appearance.bodyFont"],
+  payments: ["stripe.mode", "stripe.secretKey", "stripe.publishableKey", "stripe.webhookSecret", "stripe.webhookUrl", "stripe.enabled"],
+  catalog: ["ingram.clientId", "ingram.clientSecret", "ingram.customerNumber", "ingram.countryCode", "ingram.senderId", "ingram.tokenUrl", "ingram.v6BaseUrl", "ingram.v7BaseUrl", "ingram.stockWebhookSecret", "ingram.orderWebhookSecret", "ingram.autoCategoryDiscovery", "ingram.autoCatalogSyncEnabled", "ingram.syncImagesEnabled", "ingram.autoSyncEnabled"],
+  commissions: ["commission.enabled"],
+  email: ["email.smtpHost", "email.smtpPort", "email.smtpSecure", "email.smtpUser", "email.smtpPassword", "email.fromAddress", "email.senderName", "email.supportEmail", "email.templatesEnabled", "email.adminEmails", "email.customerOrderEmails"],
+  firebase: ["firebase.apiKey", "firebase.authDomain", "firebase.databaseURL", "firebase.projectId", "firebase.storageBucket", "firebase.messagingSenderId", "firebase.appId", "firebase.vapidKey", "firebase.clientEmail", "firebase.privateKey"],
+  cloudinary: ["cloudinary.cloudName", "cloudinary.apiKey", "cloudinary.apiSecret", "cloudinary.productsFolder"],
+  notifications: ["notifications.newOrder", "notifications.orderStatus", "notifications.paymentFailed", "notifications.orderCancelled", "notifications.ingramFailed", "notifications.refundProcessed", "notifications.contactMessage"],
+};
+
+const REQUIRED_FIELD_KEYS = new Set(Object.values(REQUIRED_FIELDS_BY_SECTION).flat());
+
 const SECRET_KEYS = new Set([
   "ingram.clientId",
   "ingram.clientSecret",
@@ -60,6 +74,8 @@ const SECRET_KEYS = new Set([
   "firebase.vapidKey",
   "firebase.clientEmail",
   "firebase.privateKey",
+  "cloudinary.apiKey",
+  "cloudinary.apiSecret",
 ]);
 
 const SECTIONS = [
@@ -68,7 +84,7 @@ const SECTIONS = [
     description: "Brand identity and contact details.",
     icon: Store,
     fields: [
-      { key: "store.name", label: "Store name", type: "text", placeholder: "ZoeLit Commerce" },
+      { key: "store.name", label: "Store name", type: "text", placeholder: "Zoel IT Commerce" },
       { key: "store.email", label: "Contact email", type: "email", placeholder: "support@zoelit.com" },
       { key: "store.phone", label: "Support phone", type: "tel", placeholder: "+1 000 000 0000" },
       { key: "store.address", label: "Business address", type: "text", placeholder: "Street, City, Country", span: true },
@@ -172,6 +188,19 @@ const SECTIONS = [
     ],
   },
   {
+    id: "cloudinary",
+    label: "Cloudinary",
+    description: "Product image storage and delivery credentials.",
+    icon: ImageIcon,
+    integration: "cloudinary",
+    fields: [
+      { key: "cloudinary.cloudName", label: "Cloud name", type: "text", placeholder: "your-cloud-name" },
+      { key: "cloudinary.apiKey", label: "API key", type: "password", placeholder: "Cloudinary API key" },
+      { key: "cloudinary.apiSecret", label: "API secret", type: "password", placeholder: "Cloudinary API secret" },
+      { key: "cloudinary.productsFolder", label: "Products folder", type: "text", placeholder: "zoelit/products" },
+    ],
+  },
+  {
     id: "notifications",
     label: "Notifications",
     description: "Choose which admin events trigger push alerts.",
@@ -188,42 +217,18 @@ const SECTIONS = [
   },
 ];
 
-const DEFAULTS = {
-  "store.name": "ZoeLit Commerce",
-  "appearance.theme": "light",
-  "stripe.enabled": true,
-  "commission.enabled": true,
-  "ingram.autoSyncEnabled": true,
-  "ingram.autoCategoryDiscovery": false,
-  "ingram.syncImagesEnabled": true,
-  "email.senderName": "ZoeLit",
-  "email.customerOrderEmails": true,
-  "email.templatesEnabled": true,
-  "email.adminEmails": true,
-  "email.smtpPort": "587",
-  "email.smtpSecure": false,
-  "notifications.newOrder": true,
-  "notifications.orderStatus": true,
-  "notifications.paymentFailed": true,
-  "notifications.orderCancelled": true,
-  "notifications.ingramFailed": true,
-  "notifications.refundProcessed": true,
-  "notifications.contactMessage": true,
-};
-
 function mergeSettings(raw) {
-  const source = { ...DEFAULTS, ...raw };
   const settings = {};
   const configured = new Set();
-  for (const key of Object.keys(source)) {
-    const value = source[key];
-    if (SECRET_KEYS.has(key)) {
-      if (value === SECRET_SENTINEL) {
-        settings[key] = "";
-        configured.add(key);
-      } else {
-        settings[key] = value == null ? "" : value;
-      }
+  for (const key of Object.keys(raw)) {
+    const value = raw[key];
+    if (value === SECRET_SENTINEL) {
+      // Saved values are intentionally never returned to the browser. Keep the
+      // input empty while retaining the configured marker for save semantics.
+      settings[key] = "";
+      configured.add(key);
+    } else if (SECRET_KEYS.has(key)) {
+      settings[key] = value == null ? "" : value;
     } else {
       settings[key] = value == null ? "" : value;
     }
@@ -262,9 +267,24 @@ export default function AdminSettingsPage() {
     try {
       const data = await getAdminSettings(token);
       const merged = mergeSettings(data.settings || {});
+      // Clear all field values so admin must enter fresh data — no pre-filled values
+      for (const key of Object.keys(merged.settings)) {
+        merged.settings[key] = "";
+      }
+      // Also clear toggle values to false
+      for (const section of SECTIONS) {
+        for (const field of section.fields) {
+          if (field.type === "toggle") {
+            merged.settings[field.key] = false;
+          }
+        }
+      }
+      // Do NOT fall back to .env values — admin must enter fresh data
       setValues(merged.settings);
-      setLoaded(merged.settings);
-      setConfigured(merged.configured);
+      // The freshly loaded/cleared values are the clean baseline. Revert should
+      // only become active after the admin changes a field in this section.
+      setLoaded({ ...merged.settings });
+      setConfigured(new Set());
     } catch (error) {
       toast.error(error.message || "Could not load settings");
     } finally {
@@ -359,7 +379,25 @@ export default function AdminSettingsPage() {
     return data;
   }
 
+  function validateSection(section) {
+    const required = REQUIRED_FIELDS_BY_SECTION[section.id] || [];
+    const missing = [];
+    for (const key of required) {
+      const value = values[key];
+      const raw = value == null ? "" : String(value).trim();
+      if (!raw) {
+        missing.push(key);
+      }
+    }
+    return missing;
+  }
+
   async function saveSection() {
+    const missing = validateSection(activeSection);
+    if (missing.length) {
+      toast.error(`Required fields missing: ${missing.join(", ")}`);
+      return;
+    }
     setSaving(activeSection.id);
     try {
       await persist(buildPayload(activeSection));
@@ -377,6 +415,15 @@ export default function AdminSettingsPage() {
   }
 
   async function saveAll() {
+    const allMissing = [];
+    for (const section of SECTIONS) {
+      const missing = validateSection(section);
+      for (const key of missing) allMissing.push(key);
+    }
+    if (allMissing.length) {
+      toast.error(`Required fields missing: ${allMissing.join(", ")}`);
+      return;
+    }
     const payload = {};
     for (const section of SECTIONS) Object.assign(payload, buildPayload(section));
     setSaving("all");
@@ -429,7 +476,16 @@ export default function AdminSettingsPage() {
             <div className="sticky top-14 z-30 flex h-12 items-center gap-2 border-b border-outline-variant/70 bg-surface px-4">
               <button type="button" onClick={goToList} className="grid size-11 shrink-0 place-items-center rounded-md text-on-surface-variant" aria-label="Back to settings sections"><ArrowLeft className="size-5" /></button>
               <h1 className="min-w-0 flex-1 truncate text-base font-semibold text-on-surface">{activeSection.label}</h1>
-              <AdminTableActions label="Section actions" actions={[{ label: "Revert changes", icon: RotateCcw, disabled: !dirtySections[activeSection.id], onClick: revertSection }]} />
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={revertSection}
+                disabled={!dirtySections[activeSection.id]}
+                className="h-10 shrink-0 gap-1.5 px-2 text-xs font-semibold sm:px-3 sm:text-sm"
+              >
+                <RotateCcw className="size-4" />
+                <span>Revert changes</span>
+              </Button>
             </div>
             <div className="mx-auto max-w-2xl px-4 py-3">
               <p className="text-sm text-on-surface-variant">{activeSection.description}</p>
@@ -660,7 +716,13 @@ function SettingsFields({ activeSection, values, setValue, visibleKeys, toggleVi
 }
 
 function FieldLabel({ field }) {
-  return <Label>{field.label}</Label>;
+  const isRequired = REQUIRED_FIELD_KEYS.has(field.key);
+  return (
+    <Label>
+      {field.label}
+      {isRequired ? <span className="ml-1 text-rose-500">*</span> : null}
+    </Label>
+  );
 }
 
 function ToggleRow({ field, value, onChange }) {
@@ -704,7 +766,7 @@ function FieldControl({ field, value, onChange, visible, onToggleVisible, config
     return (
       <div>
         <div className="w-full sm:w-56">
-          <Select value={value ?? ""} onChange={(event) => onChange(event.target.value)}>
+          <Select name={`setting-${field.key.replace(".", "-")}`} autoComplete="off" value={value ?? ""} onChange={(event) => onChange(event.target.value)}>
             {(field.options || []).map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -728,7 +790,7 @@ function FieldControl({ field, value, onChange, visible, onToggleVisible, config
   if (field.type === "number") {
     return (
       <div>
-        <Input type="number" min={field.min} max={field.max} value={value ?? ""} placeholder={field.placeholder} onChange={(event) => onChange(event.target.value)} className="sm:w-56" />
+        <Input name={`setting-${field.key.replace(".", "-")}`} autoComplete="new-password" type="number" min={field.min} max={field.max} value={value ?? ""} placeholder={field.placeholder} onChange={(event) => onChange(event.target.value)} className="sm:w-56" />
         {field.hint ? <p className="mt-1.5 text-xs leading-5 text-on-surface-variant">{field.hint}</p> : null}
       </div>
     );
@@ -738,7 +800,7 @@ function FieldControl({ field, value, onChange, visible, onToggleVisible, config
     return (
       <div>
         <div className="relative">
-          <Input type={visible ? "text" : "password"} value={value ?? ""} placeholder={configured ? "Configured — leave blank to keep" : field.placeholder} onChange={(event) => onChange(event.target.value)} className="pr-10" />
+          <Input name={`setting-${field.key.replace(".", "-")}`} autoComplete="new-password" data-lpignore="true" data-1p-ignore="true" type={visible ? "text" : "password"} value={value ?? ""} placeholder={configured ? "Configured — leave blank to keep" : field.placeholder} onChange={(event) => onChange(event.target.value)} className="pr-10" />
           <button type="button" tabIndex={-1} onClick={onToggleVisible} className="absolute inset-y-0 right-0 flex items-center pr-3 text-on-surface-variant transition hover:text-primary" aria-label={visible ? `Hide ${field.label}` : `Show ${field.label}`}>
             {visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>
@@ -751,7 +813,7 @@ function FieldControl({ field, value, onChange, visible, onToggleVisible, config
   if (field.type === "textarea") {
     return (
       <div>
-        <textarea value={value ?? ""} placeholder={field.placeholder} onChange={(event) => onChange(event.target.value)} className="min-h-28 w-full rounded-md border border-outline-variant bg-surface px-3.5 py-3 text-sm text-on-surface transition placeholder:text-on-surface-variant/80 focus:border-primary focus:ring-4 focus:ring-primary/10 dark:bg-surface-container-low" />
+        <textarea name={`setting-${field.key.replace(".", "-")}`} autoComplete="new-password" data-lpignore="true" data-1p-ignore="true" value={value ?? ""} placeholder={field.placeholder} onChange={(event) => onChange(event.target.value)} className="min-h-28 w-full rounded-md border border-outline-variant bg-surface px-3.5 py-3 text-sm text-on-surface transition placeholder:text-on-surface-variant/80 focus:border-primary focus:ring-4 focus:ring-primary/10 dark:bg-surface-container-low" />
         {field.hint ? <p className="mt-1.5 text-xs leading-5 text-on-surface-variant">{field.hint}</p> : null}
       </div>
     );
@@ -759,7 +821,7 @@ function FieldControl({ field, value, onChange, visible, onToggleVisible, config
 
   return (
     <div>
-      <Input type={field.type || "text"} value={value ?? ""} placeholder={field.placeholder} onChange={(event) => onChange(event.target.value)} />
+      <Input name={`setting-${field.key.replace(".", "-")}`} autoComplete="new-password" data-lpignore="true" data-1p-ignore="true" type={field.type || "text"} value={value ?? ""} placeholder={field.placeholder} onChange={(event) => onChange(event.target.value)} />
       {field.hint ? <p className="mt-1.5 text-xs leading-5 text-on-surface-variant">{field.hint}</p> : null}
     </div>
   );

@@ -41,6 +41,7 @@ export function AdminTable({
   searchWrapperClassName,
   filterClassName,
   filterWrapperClassName,
+  controlsWrapperClassName,
   toolbarInHeader = false,
   secondaryToolbar,
   hideReset = false,
@@ -50,7 +51,7 @@ export function AdminTable({
       <Card className={cn("overflow-hidden p-0 shadow-sm", className)}>
         <div className={cn("w-full overflow-x-auto rounded-lg border border-outline-variant/70 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-on-surface-variant/40", wrapperClassName)}>
             <table className={cn("w-full min-w-[720px] text-left text-label-md", tableClassName)}>
-            <thead className="sticky top-0 z-10 border-b border-outline-variant/70 bg-surface/95 text-xs font-medium text-on-surface-variant backdrop-blur">
+            <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-100 text-xs font-semibold text-slate-700 shadow-[0_1px_0_rgba(15,23,42,0.08)] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
               <tr>{columns.map((column) => <th key={column} className="whitespace-nowrap px-4 py-3 font-medium">{column}</th>)}</tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/40">{children}</tbody>
@@ -61,10 +62,10 @@ export function AdminTable({
     );
   }
 
-  return <AdminDataTable columns={columns} data={data} filters={filters} searchPlaceholder={searchPlaceholder} searchKeys={searchKeys} rowActions={rowActions} title={title} description={description} toolbar={toolbar} action={action} pageSize={pageSize} zebra={zebra} hideSearch={hideSearch} hidePagination={hidePagination} disableInitialSort={disableInitialSort} page={controlledPage} onPageChange={onPageChange} onPaginationChange={onPaginationChange} totalPages={controlledTotalPages} totalItems={controlledTotalItems} className={className} wrapperClassName={wrapperClassName} tableClassName={tableClassName} inlineToolbar={inlineToolbar} resetButtonClassName={resetButtonClassName} searchWrapperClassName={searchWrapperClassName} filterClassName={filterClassName} filterWrapperClassName={filterWrapperClassName} toolbarInHeader={toolbarInHeader} secondaryToolbar={secondaryToolbar} hideReset={hideReset} />;
+  return <AdminDataTable columns={columns} data={data} filters={filters} searchPlaceholder={searchPlaceholder} searchKeys={searchKeys} rowActions={rowActions} title={title} description={description} toolbar={toolbar} action={action} pageSize={pageSize} zebra={zebra} hideSearch={hideSearch} hidePagination={hidePagination} disableInitialSort={disableInitialSort} page={controlledPage} onPageChange={onPageChange} onPaginationChange={onPaginationChange} totalPages={controlledTotalPages} totalItems={controlledTotalItems} className={className} wrapperClassName={wrapperClassName} tableClassName={tableClassName} inlineToolbar={inlineToolbar} resetButtonClassName={resetButtonClassName} searchWrapperClassName={searchWrapperClassName} filterClassName={filterClassName} filterWrapperClassName={filterWrapperClassName} controlsWrapperClassName={controlsWrapperClassName} toolbarInHeader={toolbarInHeader} secondaryToolbar={secondaryToolbar} hideReset={hideReset} />;
 }
 
-function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys, rowActions, title, description, toolbar, action, pageSize, zebra, hideSearch, hidePagination, disableInitialSort, page: controlledPage, onPageChange, onPaginationChange, totalPages: controlledTotalPages, totalItems: controlledTotalItems, className, wrapperClassName, tableClassName, inlineToolbar, resetButtonClassName, searchWrapperClassName, filterClassName, filterWrapperClassName, toolbarInHeader, secondaryToolbar, hideReset }) {
+function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys, rowActions, title, description, toolbar, action, pageSize, zebra, hideSearch, hidePagination, disableInitialSort, page: controlledPage, onPageChange, onPaginationChange, totalPages: controlledTotalPages, totalItems: controlledTotalItems, className, wrapperClassName, tableClassName, inlineToolbar, resetButtonClassName, searchWrapperClassName, filterClassName, filterWrapperClassName, controlsWrapperClassName, toolbarInHeader, secondaryToolbar, hideReset }) {
   const [query, setQuery] = useState("");
   const [filterValues, setFilterValues] = useState(() => Object.fromEntries(filters.map((filter) => [filter.key, filter.allLabel || "All"])));
   const [sort, setSort] = useState(() => {
@@ -143,23 +144,30 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
   }
 
   const tableControls = (
-    <div className="flex min-w-0 flex-wrap items-center justify-start gap-2 md:justify-end md:gap-3">
+    <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-2 md:gap-3 lg:flex-nowrap">
       {toolbar}
       {!hideSearch ? (
-        <div className={cn("relative min-w-0 w-full grow basis-full sm:basis-48 sm:max-w-md md:min-w-[14rem] lg:max-w-xl", searchWrapperClassName)}>
+        <div className={cn("relative min-w-0 w-full grow basis-full min-[480px]:basis-48 min-[480px]:max-w-md md:basis-0 md:min-w-[14rem] lg:max-w-xl", searchWrapperClassName)}>
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
-          <Input value={query} onChange={(event) => updateQuery(event.target.value)} placeholder={searchPlaceholder} aria-label={searchPlaceholder} className="h-10 pl-10 shadow-sm" />
+          <Input value={query} onChange={(event) => updateQuery(event.target.value)} placeholder={searchPlaceholder} aria-label={searchPlaceholder} className="peer h-10 pl-10 shadow-sm placeholder:text-transparent" />
+          <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-10 right-3 hidden min-w-0 items-center text-sm text-on-surface-variant/80 peer-placeholder-shown:flex">
+            <span className="block w-full truncate">{searchPlaceholder}</span>
+          </span>
         </div>
       ) : null}
-      {filters.map((filter) => (
-        <div key={filter.key} className={cn("w-full sm:w-auto", filterWrapperClassName)}>
-          <Select value={filterValues[filter.key]} onChange={(event) => updateFilter(filter.key, event.target.value)} aria-label={filter.label} className={cn("h-10 w-full shadow-sm", filterClassName)}>
-            <option>{filter.allLabel || "All"}</option>
-            {filter.options.map((option) => <option key={option}>{option}</option>)}
-          </Select>
+      {filters.length > 0 ? (
+        <div className={cn("flex w-full min-w-0 flex-wrap items-center gap-2 min-[480px]:w-auto", controlsWrapperClassName)}>
+          {filters.map((filter) => (
+            <div key={filter.key} className={cn("w-full min-[480px]:w-auto", filterWrapperClassName)}>
+              <Select value={filterValues[filter.key]} onChange={(event) => updateFilter(filter.key, event.target.value)} aria-label={filter.label} className={cn("h-10 w-full shadow-sm", filterClassName)}>
+                <option>{filter.allLabel || "All"}</option>
+                {filter.options.map((option) => <option key={option}>{option}</option>)}
+              </Select>
+            </div>
+          ))}
+          {!hideReset ? <Button variant="secondary" size="sm" onClick={resetControls} className={cn("h-10 w-full shrink-0 shadow-sm sm:w-auto", resetButtonClassName)}>Reset</Button> : null}
         </div>
-      ))}
-      {filters.length > 0 && !hideReset ? <Button variant="secondary" size="sm" onClick={resetControls} className={cn("h-10 w-full shrink-0 shadow-sm sm:w-auto", resetButtonClassName)}>Reset</Button> : null}
+      ) : null}
     </div>
   );
 
@@ -167,9 +175,9 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
     <Card className={cn("overflow-hidden p-0 shadow-sm", className)}>
       {title || description ? (
         <div className="border-b border-outline-variant/70 px-4 py-4 sm:px-5 lg:px-6">
-            <div className={cn("flex gap-4", inlineToolbar ? "flex-col xl:flex-row xl:items-center xl:justify-between" : "")}> 
+            <div className={cn("flex gap-4", inlineToolbar ? "flex-row items-start justify-between" : "")}> 
             {title || description ? (
-            <div className="mb-0">
+            <div className="mb-0 min-w-0 flex-1">
               <div>
                  {title ? <h2 className="font-heading text-base font-bold tracking-tight text-on-surface sm:text-lg">{title}</h2> : null}
                 {description ? <p className="mt-1 text-sm text-on-surface-variant">{description}</p> : null}
@@ -182,16 +190,16 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
       ) : null}
       {hasToolbar && !toolbarInHeader ? (
         <div className="border-b border-outline-variant/70 p-3 sm:p-4">
-           <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             {tableControls}
-            {action && !inlineToolbar ? <div className="flex shrink-0 flex-wrap items-center gap-3 lg:justify-end">{action}</div> : null}
+             {action && !inlineToolbar ? <div className="flex shrink-0 flex-wrap items-center gap-3 lg:justify-end">{action}</div> : null}
           </div>
         </div>
       ) : null}
       {secondaryToolbar ? <div className="flex justify-start border-b border-outline-variant/70 px-4 py-3">{secondaryToolbar}</div> : null}
       <div className={cn("w-full overflow-x-auto rounded-lg border border-outline-variant/70 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-on-surface-variant/40 [&::-webkit-scrollbar-track]:bg-surface-container-low/20", wrapperClassName)}>
         <table className={cn("w-full min-w-[960px] text-left text-label-md", tableClassName)}>
-          <thead className="sticky top-0 z-10 border-b border-outline-variant/70 bg-surface-container-low/95 text-xs font-medium text-on-surface-variant backdrop-blur-sm">
+          <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-100 text-xs font-semibold text-slate-700 shadow-[0_1px_0_rgba(15,23,42,0.08)] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
             <tr>
               {columns.map((column) => (
                 <th key={column.key} className={cn("whitespace-nowrap px-3 py-3 text-xs font-medium sm:px-4", column.className)}>
@@ -203,14 +211,14 @@ function AdminDataTable({ columns, data, filters, searchPlaceholder, searchKeys,
                   ) : column.header}
                 </th>
               ))}
-                {hasActions ? <th className="sticky right-0 z-20 whitespace-nowrap bg-surface-container-low px-3 py-3 text-left text-xs font-medium shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)] sm:px-4">Actions</th> : null}
+                {hasActions ? <th className="whitespace-nowrap bg-surface-container-low px-3 py-3 text-left text-xs font-medium sm:px-4">Actions</th> : null}
             </tr>
           </thead>
           <tbody className="divide-y divide-outline-variant/40 dark:divide-outline-variant/40">
             {pageItems.map((row, rowIndex) => (
               <AdminTableRow key={row.id || row.productId || row.key || rowIndex} zebra={zebra} index={rowIndex}>
                 {columns.map((column) => <AdminTableCell key={column.key} className={column.cellClassName}>{column.render ? column.render(row) : getColumnValue(column, row)}</AdminTableCell>)}
-                {hasActions ? <AdminTableCell className={cn("sticky right-0 z-10 text-left shadow-[-8px_0_12px_-12px_rgba(15,23,42,0.45)]", zebra && rowIndex % 2 === 1 ? "!bg-surface-container-low" : "!bg-surface")}><AdminTableActions actions={rowActions(row)} label={`Actions for ${row.name || row.productName || row.id || "row"}`} /></AdminTableCell> : null}
+                {hasActions ? <AdminTableCell className={cn("text-left", zebra && rowIndex % 2 === 1 ? "!bg-surface-container-low" : "!bg-surface")}><AdminTableActions actions={rowActions(row)} label={`Actions for ${row.name || row.productName || row.id || "row"}`} /></AdminTableCell> : null}
               </AdminTableRow>
             ))}
             {!pageItems.length ? (
@@ -239,7 +247,7 @@ export function AdminTableRow({ children, zebra = true, index = 0 }) {
 }
 
 export function AdminTableCell({ children, className }) {
-  return <td className={cn("whitespace-nowrap px-3 py-3.5 align-middle text-sm text-on-surface-variant sm:px-4", className)}>{children}</td>;
+  return <td className={cn("whitespace-nowrap px-2.5 py-3 align-middle text-xs text-on-surface sm:px-4 sm:py-3.5 sm:text-sm", className)}>{children}</td>;
 }
 
 export function AdminTableActions({ actions, label = "Row actions" }) {
@@ -327,7 +335,7 @@ export function AdminTableActions({ actions, label = "Row actions" }) {
       </div>
       {open && anchor && typeof document !== "undefined"
         ? createPortal(
-             <div data-row-actions-menu style={{ position: "fixed", top: anchor.top, left: anchor.left, zIndex: 100 }} className="w-40 max-w-[calc(100vw-1rem)] overflow-hidden rounded-lg border border-outline-variant bg-surface py-1 text-left shadow-xl">
+             <div data-row-actions-menu style={{ position: "fixed", top: anchor.top, left: anchor.left, zIndex: 100 }} className="w-auto min-w-[7rem] max-w-[12rem] overflow-hidden rounded-lg border border-outline-variant bg-surface py-1 text-left shadow-xl">
               {actions.map((action) => {
                 const Icon = action.icon || Eye;
                 const isDisabled = Boolean(action.disabled);

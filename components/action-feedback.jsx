@@ -71,7 +71,7 @@ export function ConfirmActionDialog({
             <p className="mt-2 text-sm leading-6 text-on-surface-variant">{message}</p>
           </div>
         </div>
-        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <div className="mt-6 flex flex-row items-stretch justify-end gap-2">
           <Button type="button" variant="secondary" onClick={onCancel} disabled={loading}>{cancelLabel}</Button>
           <Button type="button" variant="danger" onClick={onConfirm} disabled={loading}>
             {loading ? <><Loader2 className="size-4 animate-spin" /> Working...</> : <><Trash2 className="size-4" /> {confirmLabel}</>}

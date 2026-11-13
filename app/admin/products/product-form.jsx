@@ -7,7 +7,7 @@ import { Loader2, Save, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Card, Input, Label, Select, Textarea } from "@/components/ui";
 import { getProductCategories, updateAdminProduct, createManualProduct, uploadProductImage } from "@/lib/api";
-import { FALLBACK_IMAGE } from "@/lib/product-mapper";
+import { safeImageSrc } from "@/components/clean-product-image";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
 
 export function ProductForm({ product, mode, readOnly = false }) {
@@ -121,6 +121,14 @@ export function ProductForm({ product, mode, readOnly = false }) {
     }
     if (!pendingImage && !String(values.imageUrl || "").trim()) missing.image = true;
 
+    const normalizedName = String(values.name || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    const normalizedDescription = String(values.description || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    if (normalizedName && normalizedDescription && normalizedName === normalizedDescription) {
+      setFieldErrors((current) => ({ ...current, description: true }));
+      toast.error("Add useful product details instead of repeating the product name.");
+      return;
+    }
+
     if (Object.keys(missing).length > 0) {
       setFieldErrors(missing);
       requestAnimationFrame(() => {
@@ -198,7 +206,7 @@ export function ProductForm({ product, mode, readOnly = false }) {
     }
   }
 
-  const preview = pendingPreview || values.imageUrl || FALLBACK_IMAGE;
+  const preview = safeImageSrc(pendingPreview || values.imageUrl);
 
   return (
     <div className="mt-8 grid gap-6 xl:grid-cols-[1fr_360px]">
@@ -212,7 +220,7 @@ export function ProductForm({ product, mode, readOnly = false }) {
             <Field label={<>Category <span className="text-rose-500">*</span></>}><Select id="pf-category" value={values.category} onChange={(event) => setValue("category", event.target.value)} disabled={readOnly} className={errField("category")}><option value="">Select category</option>{categories.map((category) => <option key={category} value={category}>{category}</option>)}</Select></Field>
             <Field label="Status"><Select value={values.status} onChange={(event) => setValue("status", event.target.value)} disabled={readOnly}><option>Active</option><option>Paused</option></Select></Field>
           </div>
-          <Field className="mt-4" label="Description"><Textarea value={values.description} onChange={(event) => setValue("description", event.target.value)} placeholder="Short product description" disabled={readOnly} /></Field>
+          <Field className="mt-4" label="Description"><Textarea value={values.description} onChange={(event) => setValue("description", event.target.value)} placeholder="Short product description" disabled={readOnly} className={errField("description")} /></Field>
         </Card>
         <Card>
           <h2 className="font-heading text-h2 font-semibold">Pricing and inventory</h2>

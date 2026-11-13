@@ -9,19 +9,90 @@ import { ProductImageZoom } from "./product-image-zoom";
 import { ProductCard } from "@/components/product-card";
 import { Card, SectionHeader } from "@/components/ui";
 
-export const dynamic = "force-dynamic";
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://zoelit-frontend.vercel.app").replace(/\/$/, "");
+
+// Product pages are cached and revalidated in the background. Stock and price
+// changes are picked up within the revalidation window.
+export const revalidate = 60;
 
 export async function generateMetadata({ params }) {
   const { id } = await params;
   const [product, config] = await Promise.all([getServerProduct(id), getStoreConfig()]);
-  return { title: product ? `${product.name} | ${config.name}` : "Product" };
+  const description = String(product?.description || `View product details, availability, and pricing for ${product?.name || "this ZoeLit product"}.`)
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 160);
+  return product
+    ? {
+        title: `${product.name} | ${config.name}`,
+        description,
+        alternates: { canonical: `/products/${encodeURIComponent(id)}` },
+        openGraph: {
+          type: "website",
+          title: product.name,
+          description,
+          url: `/products/${encodeURIComponent(id)}`,
+          images: product.image ? [{ url: product.image, alt: product.name }] : undefined,
+        },
+        twitter: {
+          card: "summary_large_image",
+          title: product.name,
+          description,
+          images: product.image ? [product.image] : undefined,
+        },
+      }
+    : { title: "Product not found", description: "The requested ZoeLit product could not be found." };
+}
+
+function ProductStructuredData({ product }) {
+  const data = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Product",
+        name: product.name,
+        description: product.description,
+        image: product.image ? [product.image] : undefined,
+        sku: product.sku || product.id,
+        category: product.category,
+        offers: {
+          "@type": "Offer",
+          url: `${SITE_URL}/products/${encodeURIComponent(product.id)}`,
+          priceCurrency: "USD",
+          price: Number(product.price) > 0 ? Number(product.price).toFixed(2) : undefined,
+          availability: product.isSellable && Number(product.stock) > 0
+            ? "https://schema.org/InStock"
+            : "https://schema.org/OutOfStock",
+          itemCondition: "https://schema.org/NewCondition",
+        },
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+          { "@type": "ListItem", position: 2, name: "Products", item: `${SITE_URL}/products` },
+          { "@type": "ListItem", position: 3, name: product.name, item: `${SITE_URL}/products/${encodeURIComponent(product.id)}` },
+        ],
+      },
+    ],
+  };
+
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />;
 }
 
 function TrustTiles({ product }) {
+  const warranty = String(product.details?.Warranty || "").trim();
+  const warrantyLabel = !warranty
+    ? "Account and order tracking"
+    : /included/i.test(warranty)
+      ? "Warranty included"
+      : /warranty/i.test(warranty)
+        ? warranty
+        : `${warranty} warranty`;
   const tiles = [
     { icon: Truck, label: "Shipping shown before checkout" },
     { icon: ShieldCheck, label: "Secure, validated checkout" },
-    { icon: RotateCcw, label: product.details?.Warranty ? `Includes ${product.details.Warranty} warranty` : "Account and order tracking" },
+    { icon: RotateCcw, label: warrantyLabel },
   ];
 
   return (
@@ -66,6 +137,7 @@ export default async function ProductDetailPage({ params }) {
 
   return (
     <section className="container-page py-10 md:py-14">
+      <ProductStructuredData product={product} />
       <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-label-md font-semibold text-on-surface-variant">
         <Link href="/" className="transition hover:text-primary">Home</Link>
         <span aria-hidden="true">/</span>
@@ -103,7 +175,6 @@ export default async function ProductDetailPage({ params }) {
 
           <div className="mt-5 flex items-end gap-4">
             <span className="font-heading text-headline-lg font-extrabold tabular-nums tracking-[-0.03em] text-on-surface">{money(product.price)}</span>
-            <span className="pb-1 text-label-md font-semibold text-on-surface-variant">Tax and shipping at checkout</span>
           </div>
 
           <p className="mt-6 max-w-xl text-body-md leading-7 text-on-surface-variant">{product.description}</p>

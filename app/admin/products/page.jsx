@@ -26,6 +26,30 @@ import { useAdminAuthStore } from "@/store/admin-auth-store";
 
 const PAGE_SIZE = 10;
 
+// next/image rejects unknown remote hosts during render. Product image URLs
+// can come from manual admin input, so an unsupported host must degrade to the
+// catalog fallback instead of taking down the entire admin products page.
+const ADMIN_IMAGE_HOSTS = new Set([
+  "res.cloudinary.com",
+  "images.unsplash.com",
+  "images.icecat.biz",
+  "pics.icecat.io",
+  "dummyimage.com",
+]);
+
+function safeAdminImageSource(value) {
+  if (!value) return FALLBACK_IMAGE;
+  if (value.startsWith("/") || value.startsWith("data:") || value.startsWith("blob:")) return value;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "https:") return FALLBACK_IMAGE;
+    if (ADMIN_IMAGE_HOSTS.has(url.hostname) || url.hostname.endsWith(".icecat.biz")) return value;
+  } catch {
+    return FALLBACK_IMAGE;
+  }
+  return FALLBACK_IMAGE;
+}
+
 export default function AdminProductsPage() {
   const token = useAdminAuthStore((state) => state.token);
   const [rows, setRows] = useState(null);
@@ -271,9 +295,9 @@ const [syncing, setSyncing] = useState(false);
 
   return (
     <div className="space-y-6">
-      <TransparentActionLoader open={filterLoading} label="Switching filter..." />
+      <TransparentActionLoader open={filterLoading || syncing} label={syncing ? "Syncing products from Ingram… Please wait." : "Switching filter..."} />
       {rows === null && !error ? (
-        <AdminProductsSkeleton />
+         <AdminProductsSkeleton rows={PAGE_SIZE} />
       ) : error ? (
         <Card className="p-8 text-center text-body font-regular text-rose-600">{error}</Card>
       ) : (
@@ -288,16 +312,18 @@ const [syncing, setSyncing] = useState(false);
             onPageChange={setPage}
             totalPages={totalPages}
             totalItems={totalItems}
-            toolbar={(
-              <>
-                 <div className="relative min-w-0 w-full flex-1 sm:max-w-md lg:max-w-sm">
-                   <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
-                   <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search products, SKU or category" aria-label="Search products" className="h-10 pl-10 shadow-sm" />
+             toolbar={(
+               <>
+                 <div className="flex w-full min-w-0 items-center gap-2 md:contents">
+                   <div className="relative min-w-0 flex-1 sm:max-w-md lg:max-w-sm">
+                     <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
+                     <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search products, SKU or category" aria-label="Search products" className="h-10 pl-10 shadow-sm" />
+                   </div>
+                   <Button onClick={handleOpenAddModal} className="h-10 w-auto shrink-0 gap-1 px-3 text-xs leading-none sm:gap-1.5 sm:text-sm md:w-auto"><Plus className="size-3.5 shrink-0 sm:size-4" /> <span className="sm:hidden">Add</span><span className="hidden sm:inline">Add product</span></Button>
                  </div>
-                 <div className="grid w-full grid-cols-3 gap-2 md:contents">
-                   <Button onClick={handleOpenAddModal} className="h-10 w-full min-w-0 gap-1 px-1 text-xs sm:px-3 sm:text-sm md:w-auto"><Plus className="size-3.5 shrink-0 sm:size-4" /> <span className="truncate">Add product</span></Button>
-                   <Button asChild href="/admin/products/sync" className="h-10 w-full min-w-0 gap-1 whitespace-nowrap px-1 text-xs sm:px-3 sm:text-sm md:w-auto"><RefreshCw className="size-3.5 shrink-0 sm:size-4" /><span className="truncate sm:hidden">Sync</span><span className="hidden truncate sm:inline">Sync from Ingram</span></Button>
-                   <Button onClick={handlePriceSync} disabled={syncing} className="h-10 w-full min-w-0 gap-1 whitespace-nowrap px-1 text-xs sm:px-3 sm:text-sm md:w-auto"><RefreshCw className={`size-3.5 shrink-0 sm:size-4 ${syncing ? "animate-spin" : ""}`} /><span className="truncate">Sync prices</span></Button>
+                 <div className="grid w-full grid-cols-2 gap-2 md:contents">
+                   <Button asChild href="/admin/products/sync" className="h-10 w-full min-w-0 gap-1 whitespace-nowrap px-2 text-xs leading-none sm:gap-1.5 sm:px-3 sm:text-sm md:w-auto"><RefreshCw className="size-3.5 shrink-0 sm:size-4" /><span className="sm:hidden">Sync</span><span className="hidden sm:inline">Sync from Ingram</span></Button>
+                   <Button onClick={handlePriceSync} disabled={syncing} className="h-10 w-full min-w-0 gap-1 whitespace-nowrap px-2 text-xs leading-none sm:gap-1.5 sm:px-3 sm:text-sm md:w-auto"><RefreshCw className={`size-3.5 shrink-0 sm:size-4 ${syncing ? "animate-spin" : ""}`} /><span className="sm:hidden">Prices</span><span className="hidden sm:inline">Sync prices</span></Button>
                  </div>
                </>
             )}
@@ -306,7 +332,7 @@ const [syncing, setSyncing] = useState(false);
              inlineToolbar
              toolbarInHeader
              secondaryToolbar={(
-                <div className="w-full overflow-x-auto whitespace-nowrap">
+                 <div className="w-full overflow-x-auto whitespace-nowrap">
                   <FilterTabs
                     value={sourceFilter}
                     onChange={(value) => { setFilterLoading(true); setSourceFilter(value); setPage(1); setTimeout(() => setFilterLoading(false), 800); }}
@@ -403,7 +429,7 @@ function toRow(product, serial) {
     price,
     stock,
     syncChange,
-    image: product.imageUrl || FALLBACK_IMAGE,
+    image: safeAdminImageSource(product.imageUrl),
 isActive: product.isActive,
     source: product.source || "manual",
     status: !product.isActive

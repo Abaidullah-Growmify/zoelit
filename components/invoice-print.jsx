@@ -424,7 +424,7 @@ export function InvoicePrint({ order }) {
               </div>
 
               <div className="footer-copy">
-                We appreciate your trust in ZoeLit Commerce.
+                We appreciate your trust in Zoel IT Commerce.
               </div>
 
             </div>

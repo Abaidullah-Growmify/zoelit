@@ -132,8 +132,8 @@ export default function AdminOrdersPage() {
   const columns = [
     { key: "serial", header: "#", sortable: true, accessor: "serial", cellClassName: "w-16 font-semibold tabular-nums text-on-surface" },
     { key: "orderNumber", header: "Order ID", sortable: true, accessor: "publicOrderId", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => order.publicOrderId || order.orderNumber || order.ingramOrderNumber || order.id },
-    { key: "customer", header: "Customer", sortable: true, accessor: (order) => order.customer?.name || "—", cellClassName: "max-w-[200px] truncate font-semibold" },
-    { key: "payment", header: "Payment", accessor: "payment", render: (order) => <AdminStatusBadge className="text-label-md font-normal text-on-surface-variant">{order.payment}</AdminStatusBadge> },
+    { key: "customerName", header: "Name", sortable: true, accessor: (order) => (order.customer?.isVisitor ? (order.billing?.firstName || order.billing?.lastName ? `${order.billing.firstName || ""} ${order.billing.lastName || ""}`.trim() : (order.billing?.email || "Guest")) : (order.customer?.name || "—")), cellClassName: "min-w-[160px] max-w-[220px] truncate text-on-surface", render: (order) => <span className="truncate" title={order.customer?.isVisitor ? (order.billing?.firstName || order.billing?.lastName ? `${order.billing.firstName || ""} ${order.billing.lastName || ""}`.trim() : (order.billing?.email || "Guest")) : (order.customer?.name || "—")}>{order.customer?.isVisitor ? (order.billing?.firstName || order.billing?.lastName ? `${order.billing.firstName || ""} ${order.billing.lastName || ""}`.trim() : (order.billing?.email || "Guest")) : (order.customer?.name || "—")}</span> },
+    { key: "payment", header: "Payment", accessor: "payment", render: (order) => <AdminStatusBadge className="text-label-md font-normal text-on-surface">{order.payment}</AdminStatusBadge> },
     { key: "total", header: "Total", sortable: true, accessor: "total", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => money(order.total) },
     { key: "commissionTotal", header: "Commission", sortable: true, accessor: "commissionTotal", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => money(order.commissionTotal || 0) },
     { key: "date", header: "Date", sortable: true, accessor: "date", render: (order) => shortDate(order.date) },
@@ -143,7 +143,7 @@ export default function AdminOrdersPage() {
   return (
     <div className="space-y-6">
       {orders === null && !error ? (
-        <AdminOrdersSkeleton />
+         <AdminOrdersSkeleton rows={PAGE_SIZE} />
       ) : error ? (
         <Card className="p-8 text-center text-body font-regular text-rose-600">{error}</Card>
       ) : (

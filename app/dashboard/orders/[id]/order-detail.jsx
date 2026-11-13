@@ -11,6 +11,7 @@ import { DashboardPageHeader } from "@/components/dashboard-page-header";
 import { Badge, Button, Card } from "@/components/ui";
 import { OrderDetailSkeleton } from "@/components/skeletons";
 import { usePolling } from "@/lib/use-polling";
+import { safeImageSrc } from "@/components/clean-product-image";
 import { InvoicePrint } from "@/components/invoice-print";
 import { BulletNotes } from "@/components/bullet-notes";
 
@@ -52,8 +53,20 @@ export function OrderDetail({ id }) {
     );
   }
 
-  const activeIndex = statuses.indexOf(order.status);
-  const timelineStatuses = statuses.filter((status) => status !== "Cancelled");
+  const fulfillmentGroups = Array.isArray(order.fulfillmentGroups) ? order.fulfillmentGroups : [];
+  const fulfillmentSources = new Set(fulfillmentGroups.map((group) => String(group.source || "").toLowerCase()).filter(Boolean));
+  if (!fulfillmentSources.size) {
+    (order.items || []).forEach((item) => {
+      const source = String(item.source || item.productSource || item.fulfillmentSource || "").toLowerCase();
+      if (source) fulfillmentSources.add(source);
+    });
+  }
+  const isMixedFulfillment = fulfillmentSources.has("ingram") && fulfillmentSources.has("manual");
+  const displayStatus = order.status === "Partially Fulfilled" && !isMixedFulfillment
+    ? (fulfillmentGroups.find((group) => group.source === "ingram")?.status || "Processing")
+    : order.status;
+  const timelineStatuses = statuses.filter((status) => status !== "Cancelled" && (isMixedFulfillment || status !== "Partially Fulfilled"));
+  const activeIndex = timelineStatuses.indexOf(displayStatus);
   const invoiceBilling = address
     ? { firstName: address.name, address: address.line1, city: address.city, state: address.region, postal: address.postal }
     : {};
@@ -62,28 +75,27 @@ export function OrderDetail({ id }) {
     <>
       <div className="print:hidden space-y-6 pb-2">
         <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 via-surface to-surface p-0 shadow-sm">
-          <div className="flex flex-col gap-5 p-5 sm:p-7 lg:flex-row lg:items-center lg:justify-between">
-            <div>
+          <div className="p-5 sm:p-7">
+            <div className="min-w-0">
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Account / Order details</p>
-              <h1 className="mt-2 font-heading text-2xl font-bold tracking-tight text-on-surface sm:text-3xl">Order {order.publicOrderId || order.orderNumber}</h1>
+              <div className="mt-2 flex items-center justify-between gap-4">
+                <h1 className="min-w-0 font-heading text-2xl font-bold tracking-tight text-on-surface sm:text-3xl">Order {order.publicOrderId || order.orderNumber}</h1>
+                <Button variant="outline" onClick={() => window.print()} className="shrink-0"><Printer className="size-4" />Print invoice</Button>
+              </div>
               <p className="mt-2 text-sm text-on-surface-variant">Placed {shortDate(order.date)} · Review your order and delivery progress.</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Badge tone="slate">{order.status}</Badge>
-              <Button variant="outline" onClick={() => window.print()}><Printer className="size-4" />Print invoice</Button>
             </div>
           </div>
         </Card>
 
         <Card className="p-5 sm:p-6">
-          <div className="flex items-center justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Progress</p><h2 className="mt-1 font-heading text-lg font-bold text-on-surface">Order timeline</h2></div><span className="text-sm font-semibold text-on-surface-variant">{order.status}</span></div>
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-9">
+          <div className="flex items-center justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Progress</p><h2 className="mt-1 font-heading text-lg font-bold text-on-surface">Order timeline</h2></div><span className="text-sm font-semibold text-on-surface-variant">{displayStatus}</span></div>
+          <div className={`mt-5 grid grid-cols-2 gap-2.5 min-[520px]:grid-cols-3 sm:gap-3 ${isMixedFulfillment ? "lg:grid-cols-9" : "lg:grid-cols-8"}`}>
             {timelineStatuses.map((status, index) => {
-              const done = order.status === "Cancelled" ? false : index <= activeIndex;
+              const done = displayStatus === "Cancelled" ? false : index <= activeIndex;
               const Icon = done ? CheckCircle2 : Circle;
               return (
-                <div key={status} className="flex min-w-0 flex-col items-center gap-1.5 text-center">
-                  <span className={done ? "text-primary" : "text-slate-300 dark:text-slate-600"}><Icon className="size-5" /></span>
+                <div key={status} className="flex min-w-0 flex-col items-center gap-1.5 rounded-xl border border-outline-variant/60 bg-surface-container-low/30 px-2 py-2.5 text-center">
+                  <span className={done ? "text-primary" : "text-slate-300 dark:text-slate-600"}><Icon className="size-[22px]" /></span>
                   <span className={done ? "text-[11px] font-bold leading-4 text-on-surface" : "text-[11px] font-medium leading-4 text-on-surface-variant"}>{status}</span>
                 </div>
               );
@@ -100,14 +112,14 @@ export function OrderDetail({ id }) {
                 <h2 className="mt-1 font-heading text-xl font-bold text-on-surface">Order summary</h2>
                 <p className="mt-1 text-sm text-on-surface-variant">Placed {shortDate(order.date)}</p>
               </div>
-              <Badge>{order.status}</Badge>
+              <Badge>{displayStatus}</Badge>
             </div>
 
             <div className="mt-5 space-y-3">
               {(order.items || []).map((item) => (
                 <div key={item.productId} className="flex items-center gap-3 rounded-xl border border-outline-variant/70 bg-surface-container-low/30 p-3">
                   {item.image ? (
-                      <Image src={item.image} alt={item.name} width={72} height={72} unoptimized className="size-[72px] rounded-lg object-cover" />
+                      <Image src={safeImageSrc(item.image)} alt={item.name} width={72} height={72} unoptimized className="size-[72px] rounded-lg object-cover" />
                   ) : (
                     <div className="size-[72px] shrink-0 rounded-lg bg-slate-100 dark:bg-slate-800" />
                   )}

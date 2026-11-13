@@ -1,7 +1,18 @@
 import Image from "next/image";
 
-const LIGHT_LOGO = { src: "/zoelit-logo-light-trimmed.png", width: 1318, height: 259 };
-const DARK_LOGO = { src: "/zoelit-logo-dark-trimmed.png", width: 1293, height: 233 };
+// Theme-specific full wordmarks. The light-mode asset is used on the normal
+// light storefront/admin surfaces; the dark-mode asset is used when the UI
+// switches to a dark theme.
+const LIGHT_LOGO = {
+  src: "https://res.cloudinary.com/erspxhnu/image/upload/v1793360103/zoelit_logo_full_light.png",
+  width: 1318,
+  height: 259,
+};
+const DARK_LOGO = {
+  src: "https://res.cloudinary.com/erspxhnu/image/upload/v1793360102/zoelit_logo_full_dark.png",
+  width: 1293,
+  height: 233,
+};
 
 export function BrandLogo({ alt = "ZoeLit", className = "", priority = false, variant = "auto" }) {
   // h-auto only as a fallback: a caller-provided height (h-7, h-9, ...) must win,

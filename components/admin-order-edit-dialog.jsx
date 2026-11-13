@@ -283,7 +283,7 @@ export function AdminOrderEditDialog({ order, onClose, onSaved }) {
             ) : null}
           </section>
 
-          <div className="flex flex-col gap-3 border-t border-outline-variant/70 pt-5 sm:flex-row sm:justify-end">
+          <div className="flex flex-row items-stretch justify-end gap-3 border-t border-outline-variant/70 pt-5">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>

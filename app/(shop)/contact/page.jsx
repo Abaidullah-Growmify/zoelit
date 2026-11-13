@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { DashboardSectionBanner } from "@/components/dashboard-section-banner";
 import { Button, Card, ErrorText, Input, Label, Textarea } from "@/components/ui";
+import { submitContactMessage } from "@/lib/api";
 
 const schema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -15,6 +16,7 @@ const schema = z.object({
   phone: z.string().min(11, "Phone is required"),
   company: z.string().min(2, "Company is required"),
   message: z.string().min(20, "Message must be at least 20 characters"),
+  consent: z.boolean().refine((accepted) => accepted, "You must accept the Terms of Service and Privacy Policy"),
 });
 
 const contactItems = [
@@ -24,12 +26,16 @@ const contactItems = [
 ];
 
 export default function ContactPage() {
-  const form = useForm({ resolver: zodResolver(schema), defaultValues: { name: "", email: "", phone: "", company: "", message: "" } });
+  const form = useForm({ resolver: zodResolver(schema), defaultValues: { name: "", email: "", phone: "", company: "", message: "", consent: false } });
 
-  async function onSubmit() {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    form.reset();
-    toast.success("Message sent. Our support team will reply soon.");
+  async function onSubmit(values) {
+    try {
+      await submitContactMessage(values);
+      form.reset();
+      toast.success("Message sent. Our support team will reply soon.");
+    } catch (error) {
+      toast.error(error.message || "Could not send your message. Please try again.");
+    }
   }
 
   return (
@@ -71,9 +77,16 @@ export default function ContactPage() {
           <Field label="Mobile no" name="phone" type="tel" placeholder="Mobile no" form={form} />
           <Field label="Company" name="company" placeholder="Company" form={form} />
           <div className="md:col-span-2">
-            <Label>Message</Label>
-            <Textarea {...form.register("message")} rows={4} placeholder="Your message" />
-            <ErrorText>{form.formState.errors.message?.message}</ErrorText>
+            <Label htmlFor="contact-message">Message</Label>
+             <Textarea id="contact-message" required aria-required="true" aria-invalid={form.formState.errors.message ? "true" : "false"} aria-describedby={form.formState.errors.message ? "contact-message-error" : undefined} {...form.register("message")} rows={4} placeholder="Your message" />
+            <ErrorText id="contact-message-error">{form.formState.errors.message?.message}</ErrorText>
+          </div>
+          <div className="md:col-span-2">
+            <label className="flex items-start gap-2.5 text-sm leading-5 text-on-surface-variant">
+               <input type="checkbox" required aria-required="true" className="mt-1 size-4 shrink-0 accent-primary" aria-invalid={form.formState.errors.consent ? "true" : "false"} {...form.register("consent")} />
+              <span>I accept the Terms of Service and Privacy Policy.</span>
+            </label>
+            <ErrorText id="contact-consent-error">{form.formState.errors.consent?.message}</ErrorText>
           </div>
           <Button disabled={form.formState.isSubmitting} className="w-full md:col-span-2 sm:w-fit">{form.formState.isSubmitting ? "Sending..." : "Send Message"}</Button>
           </form>
@@ -92,11 +105,13 @@ export default function ContactPage() {
 }
 
 function Field({ label, name, form, type = "text", placeholder, className }) {
+  const fieldId = `contact-${name}`;
+  const errorId = `${fieldId}-error`;
   return (
     <div className={className}>
-      <Label>{label}</Label>
-      <Input type={type} placeholder={placeholder} {...form.register(name)} />
-      <ErrorText>{form.formState.errors[name]?.message}</ErrorText>
+      <Label htmlFor={fieldId}>{label}</Label>
+       <Input id={fieldId} type={type} required aria-required="true" placeholder={placeholder} aria-invalid={form.formState.errors[name] ? "true" : "false"} aria-describedby={form.formState.errors[name] ? errorId : undefined} {...form.register(name)} />
+      <ErrorText id={errorId}>{form.formState.errors[name]?.message}</ErrorText>
     </div>
   );
 }

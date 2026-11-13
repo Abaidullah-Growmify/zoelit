@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { safeImageSrc } from "@/components/clean-product-image";
 
 const DESKTOP_LENS_SIZE = 80;
 const DESKTOP_PREVIEW_SIZE = 240;
@@ -11,6 +12,7 @@ function clamp(value, min, max) {
 }
 
 export function ProductImageZoom({ product, src = product?.image, alt = product?.name }) {
+  const safeSrc = safeImageSrc(src);
   const containerRef = useRef(null);
   const imageRef = useRef(null);
   const frameRef = useRef(null);
@@ -160,7 +162,7 @@ export function ProductImageZoom({ product, src = product?.image, alt = product?
       >
         <Image
           ref={imageRef}
-          src={src}
+           src={safeSrc}
           alt={alt}
           width={1200}
           height={1200}
@@ -188,7 +190,7 @@ export function ProductImageZoom({ product, src = product?.image, alt = product?
                 ...(previewOnLeft ? { left: 12 } : { right: 12 }),
                 width: sizes.preview,
                 height: sizes.preview,
-                backgroundImage: `url(${src})`,
+                 backgroundImage: `url(${safeSrc})`,
                 backgroundRepeat: "no-repeat",
                 backgroundSize: `${imageArea.width * zoom}px ${imageArea.height * zoom}px`,
                 backgroundPosition: `${-lens.x * zoom}px ${-lens.y * zoom}px`,

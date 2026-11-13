@@ -14,12 +14,34 @@ const initialState = {
 
 export const authLogin = createAsyncThunk(
   "auth/login",
-  async ({ email, password, remember }) => api.authLogin({ email, password, remember })
+  async ({ email, password, remember }, { rejectWithValue }) => {
+    try {
+      return await api.authLogin({ email, password, remember });
+    } catch (error) {
+      return rejectWithValue({
+        message: error.message,
+        status: error.status || 0,
+        retryAfter: error.retryAfter || null,
+        code: error.code || "",
+      });
+    }
+  }
 );
 
 export const authRegister = createAsyncThunk(
   "auth/register",
-  async (values) => api.authRegister(values)
+  async (values, { rejectWithValue }) => {
+    try {
+      return await api.authRegister(values);
+    } catch (error) {
+      return rejectWithValue({
+        message: error.message,
+        status: error.status || 0,
+        retryAfter: error.retryAfter || null,
+        code: error.code || "",
+      });
+    }
+  }
 );
 
 export const authLogout = createAsyncThunk("auth/logout", async (_, { getState }) => {

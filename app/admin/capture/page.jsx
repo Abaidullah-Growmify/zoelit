@@ -56,7 +56,6 @@ function CartCell({ record }) {
   return (
     <div className="min-w-0">
       <p className="block max-w-[180px] truncate text-sm text-on-surface">{first.name}{more}</p>
-      <p className="text-xs text-on-surface-variant">{record.itemsCount} item(s)</p>
     </div>
   );
 }
@@ -160,7 +159,7 @@ export default function AdminCapturePage() {
   const columns = [
     { key: "serial", header: "#", sortable: true, accessor: "serial", cellClassName: "w-12 min-w-12 font-semibold tabular-nums text-on-surface" },
     { key: "name", header: "Name", sortable: true, accessor: (r) => r.customerName || "—", cellClassName: "min-w-[160px] max-w-[220px]", render: (r) => <span className="block truncate font-medium text-on-surface">{r.customerName || "—"}</span> },
-    { key: "email", header: "Email", sortable: true, accessor: (r) => r.email || "—", cellClassName: "min-w-[220px] max-w-[260px]", render: (r) => <span className="block truncate text-sm text-on-surface-variant">{r.email || "—"}</span> },
+    { key: "email", header: "Email", sortable: true, accessor: (r) => r.email || "—", cellClassName: "min-w-[220px] max-w-[260px]", render: (r) => <span className="block truncate text-sm text-on-surface">{r.email || "—"}</span> },
     { key: "visitor", header: "Type", accessor: (r) => r.visitorType || "guest", cellClassName: "min-w-[100px] whitespace-nowrap", render: (r) => <VisitorBadge type={r.visitorType} /> },
     { key: "cart", header: "Cart", accessor: "itemsCount", cellClassName: "min-w-[180px] max-w-[220px]", render: (record) => <CartCell record={record} /> },
     { key: "total", header: "Total", sortable: true, accessor: "estimatedTotal", cellClassName: "min-w-[100px] font-semibold tabular-nums text-on-surface", render: (record) => money(record.estimatedTotal) },

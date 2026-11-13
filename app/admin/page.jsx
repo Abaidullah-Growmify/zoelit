@@ -45,7 +45,7 @@ export default function AdminDashboardPage() {
   const stats = summary.stats || {};
   const salesOverview = (summary.revenueOverview || []).map((item) => ({
     date: item.month,
-    revenue: item.amount || 0,
+    revenue: Number(item.amount) || 0,
   }));
 
   return (

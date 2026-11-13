@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { adminLogin as loginThunk, adminLogout as logoutThunk, setAdmin } from "@/store/slices/admin-auth-slice";
+import { adminLogin as loginThunk, adminLogout as logoutThunk, forceLogout, setAdmin } from "@/store/slices/admin-auth-slice";
 
 export function useAdminAuthStore(selector) {
   const adminAuth = useAppSelector((state) => state.adminAuth);
@@ -11,8 +11,9 @@ export function useAdminAuthStore(selector) {
   const store = useMemo(
     () => ({
       ...adminAuth,
-      login: (email, password, remember) => dispatch(loginThunk({ email, password, remember })).unwrap(),
+       login: (email, password, remember, otp) => dispatch(loginThunk({ email, password, remember, otp })).unwrap(),
       setAdmin: (admin) => dispatch(setAdmin(admin)),
+      forceLogout: () => dispatch(forceLogout()),
       logout: () => dispatch(logoutThunk()).unwrap(),
     }),
     [adminAuth, dispatch]

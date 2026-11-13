@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Card, Skeleton } from "@/components/ui";
 import { getAdminNotification, getAdminOrder, getAdminProducts, getAdminProductsByIds, markAdminNotificationRead } from "@/lib/api";
 import { money } from "@/lib/utils";
+import { safeImageSrc } from "@/components/clean-product-image";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
 
 export default function AdminNotificationDetailPage() {
@@ -91,7 +92,7 @@ function OrderPreview({ order }) {
 
 function ProductImage({ item }) {
   const image = item.image || item.imageUrl || item.productImage || "";
-  return image ? <Image src={image} alt="" width={64} height={64} unoptimized className="size-full object-cover" /> : <div className="grid size-full place-items-center text-xs text-on-surface-variant">No image</div>;
+  return image ? <Image src={safeImageSrc(image)} alt="" width={64} height={64} unoptimized className="size-full object-cover" /> : <div className="grid size-full place-items-center text-xs text-on-surface-variant">No image</div>;
 }
 
 function InfoCard({ icon: Icon, title, children }) {

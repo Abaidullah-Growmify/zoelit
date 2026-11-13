@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useRouter } from "nextjs-toploader/app";
 import { useEffect, useState } from "react";
-import { AlertTriangle, ArrowLeft, Check, ChevronRight, Eye, EyeOff, LockKeyhole, MapPin, Pencil, Plus, Trash2, UserRound } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check, ChevronRight, Eye, EyeOff, LockKeyhole, MapPin, Pencil, Plus, Star, Trash2, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import * as api from "@/lib/api";
 import { useAuthStore } from "@/store/auth-store";
@@ -27,6 +27,7 @@ const DESCRIPTIONS = {
 export default function ProfilePage() {
   const token = useAuthStore((state) => state.token);
   const clearSession = useAuthStore((state) => state.clearSession);
+  const setUser = useAuthStore((state) => state.setUser);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -65,7 +66,8 @@ export default function ProfilePage() {
     event.preventDefault();
     setSaving(true);
     try {
-      await api.updateProfile({ name: profile.name, phone: profile.phone }, token);
+      const result = await api.updateProfile({ name: profile.name, phone: profile.phone }, token);
+      if (result?.user) setUser(result.user);
       setInitialProfile(profile);
       toast.success("Profile changes saved");
     } catch (error) {
@@ -126,6 +128,10 @@ export default function ProfilePage() {
       setPasswordError({ title: "Passwords do not match", message: "Your new password and confirmation do not match. Please re-enter them." });
       return;
     }
+    if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+      setPasswordError({ title: "Choose a stronger password", message: "Your new password must be at least 8 characters long and include one uppercase letter and one number." });
+      return;
+    }
     setSaving(true);
     try {
       await api.updatePassword({ currentPassword, newPassword }, token);
@@ -160,7 +166,7 @@ export default function ProfilePage() {
   const currentTab = TABS.find((tab) => tab.id === activeTab);
   const bannerTitle = isMobileMenu ? "Account Settings" : currentTab.label;
   const bannerDescription = isMobileMenu ? "Manage your profile, addresses and security." : DESCRIPTIONS[activeTab];
-const nameBadgeClass = "inline-flex items-center gap-2 rounded-full border border-outline-variant bg-surface px-3 py-1.5 text-sm font-medium text-on-surface";
+
   const sectionContent = activeTab === "profile" ? (
     <form id="profile-form" onSubmit={saveProfile} className="mt-7 grid min-w-0 gap-5 md:grid-cols-2">
       <Field label="Full name"><Input className="h-11 text-base scroll-mb-28" value={profile.name} onChange={(event) => setProfile({ ...profile, name: event.target.value })} required /></Field>
@@ -198,10 +204,55 @@ function EditAddressModal({ form, setForm, onSubmit, saving, onClose }) {
 
 function AddressPanel({ addresses, form, setForm, editingId, setEditingId, onSubmit, onEdit, onDefault, onDelete, saving }) {
   const update = (key, value) => setForm((current) => ({ ...current, [key]: value }));
-  return <div className="mt-7 min-w-0 space-y-7"><form id="address-form" onSubmit={onSubmit} className="grid min-w-0 gap-5 border-0 bg-transparent p-0 md:grid-cols-2 md:rounded-xl md:border md:border-outline-variant md:bg-surface-container-lowest md:p-5"><div className="flex min-w-0 items-center justify-between md:col-span-2"><h3 className="font-heading text-base font-semibold text-on-surface">{editingId ? "Edit address" : "Add address"}</h3>{editingId ? <button type="button" onClick={() => { setEditingId(null); setForm(EMPTY_ADDRESS); }} className="min-h-11 text-xs font-semibold text-on-surface-variant underline">Cancel edit</button> : null}</div><Field label="Label"><Input className="h-11 text-base scroll-mb-28" value={form.label} onChange={(event) => update("label", event.target.value)} required /></Field><Field label="Full name"><Input className="h-11 text-base scroll-mb-28" value={form.name} onChange={(event) => update("name", event.target.value)} required /></Field><Field label="Phone number"><Input className="h-11 text-base scroll-mb-28" type="tel" value={form.phone} onChange={(event) => update("phone", event.target.value)} placeholder="Phone number" required /></Field><Field label="Country"><Input className="h-11 text-base scroll-mb-28" value={form.country} onChange={(event) => update("country", event.target.value)} placeholder="Country" required /></Field><Field label="Address" className="md:col-span-2"><Input className="h-11 text-base scroll-mb-28" value={form.line1} onChange={(event) => update("line1", event.target.value)} required /></Field><Field label="City"><Input className="h-11 text-base scroll-mb-28" value={form.city} onChange={(event) => update("city", event.target.value)} required /></Field><Field label="State / Region"><Input className="h-11 text-base scroll-mb-28" value={form.region} onChange={(event) => update("region", event.target.value)} /></Field><Field label="Postal code"><Input className="h-11 text-base scroll-mb-28" value={form.postal} onChange={(event) => update("postal", event.target.value)} required /></Field><div className="md:col-span-2"><Button disabled={saving} className="inline-flex w-full md:w-fit"><Plus className="size-4" />{saving ? "Saving..." : editingId ? "Save Changes" : "Add Address"}</Button></div></form><div><div className="mb-3 flex items-center justify-between"><h3 className="font-heading text-base font-semibold text-on-surface">Saved addresses</h3><span className="text-xs text-on-surface-variant">{addresses.length} saved</span></div>{addresses.length ? <div className="grid min-w-0 gap-4 md:grid-cols-2">{addresses.map((item) => <AddressCard key={item._id} address={item} onEdit={onEdit} onDefault={onDefault} onDelete={onDelete} />)}</div> : <div className="rounded-xl border border-dashed border-outline-variant p-5 text-sm text-on-surface-variant">No saved addresses yet.</div>}</div></div>;
+  return <div className="mt-7 min-w-0 space-y-7"><form id="address-form" onSubmit={onSubmit} className="grid min-w-0 gap-5 border-0 bg-transparent p-0 md:grid-cols-2 md:rounded-xl md:border md:border-outline-variant md:bg-surface-container-lowest md:p-5"><div className="flex min-w-0 items-center justify-between md:col-span-2"><h3 className="font-heading text-base font-semibold text-on-surface">{editingId ? "Edit address" : "Add address"}</h3>{editingId ? <button type="button" onClick={() => { setEditingId(null); setForm(EMPTY_ADDRESS); }} className="min-h-11 text-xs font-semibold text-on-surface-variant underline">Cancel edit</button> : null}</div><Field label="Label"><Input className="h-11 text-base scroll-mb-28" value={form.label} onChange={(event) => update("label", event.target.value)} required /></Field><Field label="Full name"><Input className="h-11 text-base scroll-mb-28" value={form.name} onChange={(event) => update("name", event.target.value)} required /></Field><Field label="Phone number"><Input className="h-11 text-base scroll-mb-28" type="tel" value={form.phone} onChange={(event) => update("phone", event.target.value)} placeholder="Phone number" required /></Field><Field label="Country"><Input className="h-11 text-base scroll-mb-28" value={form.country} onChange={(event) => update("country", event.target.value)} placeholder="Country" required /></Field><Field label="Address" className="md:col-span-2"><Input className="h-11 text-base scroll-mb-28" value={form.line1} onChange={(event) => update("line1", event.target.value)} required /></Field><Field label="City"><Input className="h-11 text-base scroll-mb-28" value={form.city} onChange={(event) => update("city", event.target.value)} required /></Field><Field label="State / Region"><Input className="h-11 text-base scroll-mb-28" value={form.region} onChange={(event) => update("region", event.target.value)} /></Field><Field label="Postal code"><Input className="h-11 text-base scroll-mb-28" value={form.postal} onChange={(event) => update("postal", event.target.value)} required /></Field><div className="md:col-span-2"><Button disabled={saving} className="inline-flex w-full md:w-fit"><Plus className="size-4" />{saving ? "Saving..." : editingId ? "Save Changes" : "Add Address"}</Button></div></form><div><div className="mb-3 flex items-center justify-between"><h3 className="font-heading text-base font-semibold text-on-surface">Saved addresses</h3><span className="text-xs text-on-surface-variant">{addresses.length} saved</span></div>{addresses.length ? <div className="grid min-w-0 gap-3 sm:grid-cols-2 sm:gap-4">{addresses.map((item) => <AddressCard key={item._id} address={item} onEdit={onEdit} onDefault={onDefault} onDelete={onDelete} />)}</div> : <div className="rounded-xl border border-dashed border-outline-variant p-5 text-sm text-on-surface-variant">No saved addresses yet.</div>}</div></div>;
 }
 
-function AddressCard({ address, onEdit, onDefault, onDelete }) { return <div className="min-w-0 rounded-xl border border-outline-variant bg-surface p-4 shadow-sm md:p-5"><div className="flex min-w-0 items-start justify-between gap-3"><div className="min-w-0"><div className="flex min-w-0 items-center gap-2"><MapPin className="size-4 shrink-0 text-on-surface-variant" /><h4 className="truncate font-semibold text-on-surface">{address.label || "Address"}</h4></div><p className="mt-3 text-sm font-medium text-on-surface">{address.name}</p>{address.phone ? <p className="mt-1 text-sm text-on-surface-variant">{address.phone}</p> : null}<p className="mt-1 break-words text-sm leading-6 text-on-surface-variant">{address.line1}<br />{address.city}{address.region ? `, ${address.region}` : ""} {address.postal}</p></div>{address.default ? <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700"><Check className="size-3" />Default</span> : null}</div><div className="mt-5 flex flex-wrap gap-2 border-t border-outline-variant pt-4"><button type="button" onClick={() => onEdit(address)} className="min-h-11 inline-flex items-center gap-1.5 rounded-lg border border-outline-variant px-3 py-2 text-xs font-semibold text-on-surface-variant hover:border-on-surface hover:text-on-surface"><Pencil className="size-3.5" />Edit</button>{!address.default ? <button type="button" onClick={() => onDefault(address._id)} className="min-h-11 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white hover:bg-primary-container">Make default</button> : <span className="px-2 py-2 text-xs text-emerald-700">Default delivery address</span>}<button type="button" onClick={() => onDelete(address._id)} className="min-h-11 inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50"><Trash2 className="size-3.5" />Delete</button></div></div>; }
+function AddressCard({ address, onEdit, onDefault, onDelete }) {
+  return (
+    <div className="min-w-0 rounded-xl border border-blue-100 bg-white p-4 shadow-sm sm:rounded-2xl sm:p-5">
+      <div className="flex min-w-0 items-start justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <MapPin className="size-4 shrink-0 text-[#2563EB] sm:size-5" />
+          <h4 className="min-w-0 truncate text-sm font-semibold tracking-tight text-[#0f172a] sm:text-base">{address.label || "Address"}</h4>
+        </div>
+        {address.default ? (
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 sm:px-2.5 sm:py-1 sm:text-xs">
+            <Check className="size-3 sm:size-3.5" />Default
+          </span>
+        ) : null}
+      </div>
+      <div className="mt-3">
+        <p className="break-words text-sm font-semibold tracking-tight text-[#0f172a] sm:text-base">{address.name}</p>
+        <p className="mt-1 break-words text-xs leading-relaxed text-[#475569] sm:text-sm">
+          {address.line1}<br />{address.city}{address.region ? `, ${address.region}` : ""} {address.postal}
+        </p>
+      </div>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+        {address.default ? (
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 sm:text-xs">
+            <Star className="size-3.5 fill-emerald-500 text-emerald-500" />Default address
+          </span>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onDefault(address._id)}
+            className="inline-flex items-center gap-1 rounded-lg border border-outline-variant px-2.5 py-1.5 text-[11px] font-medium text-on-surface transition hover:bg-surface-container-low sm:text-xs"
+          >
+            <Star className="size-3.5 text-on-surface-variant" />Set as default
+          </button>
+        )}
+        <div className="flex items-center justify-end gap-2">
+          <button type="button" onClick={() => onEdit(address)} className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2563EB] text-white shadow-sm transition hover:bg-[#1d4ed8]" aria-label="Edit">
+            <Pencil className="size-4" />
+          </button>
+          <button type="button" onClick={() => onDelete(address._id)} className="flex h-9 w-9 items-center justify-center rounded-lg bg-rose-50 text-red-500 transition hover:bg-rose-100" aria-label="Delete">
+            <Trash2 className="size-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function PasswordForm({ onSubmit, saving, onDirty }) {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -211,10 +262,11 @@ function PasswordForm({ onSubmit, saving, onDirty }) {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const update = (setter) => (value) => { setter(value); onDirty(true); };
-  return <form id="security-form" onSubmit={(event) => { event.preventDefault(); onSubmit({ currentPassword, newPassword, confirmPassword }); }} className="mt-7 grid min-w-0 gap-5 md:grid-cols-2"><Field label="Current password" className="md:col-span-2"><PasswordInput name="currentPassword" autoComplete="current-password" value={currentPassword} onChange={update(setCurrentPassword)} show={showCurrent} onToggle={() => setShowCurrent((value) => !value)} placeholder="Enter your current password" /></Field><Field label="New password"><PasswordInput name="newPassword" autoComplete="new-password" value={newPassword} onChange={update(setNewPassword)} show={showNew} onToggle={() => setShowNew((value) => !value)} placeholder="Create a new password" /><p className="text-xs leading-5 text-on-surface-variant">8+ characters with at least one uppercase letter and one number.</p></Field><Field label="Confirm password"><PasswordInput name="confirmPassword" autoComplete="new-password" value={confirmPassword} onChange={update(setConfirmPassword)} show={showConfirm} onToggle={() => setShowConfirm((value) => !value)} placeholder="Confirm your new password" /></Field><div className="md:col-span-2"><Button disabled={saving} className="inline-flex w-full md:w-fit">{saving ? "Saving..." : "Update Password"}</Button></div></form>;
+  const passwordValid = newPassword.length >= 8 && /[A-Z]/.test(newPassword) && /[0-9]/.test(newPassword);
+  return <form id="security-form" onSubmit={(event) => { event.preventDefault(); onSubmit({ currentPassword, newPassword, confirmPassword }); }} className="mt-7 grid min-w-0 gap-5 md:grid-cols-2"><Field label="Current password" className="md:col-span-2"><PasswordInput name="currentPassword" autoComplete="current-password" value={currentPassword} onChange={update(setCurrentPassword)} show={showCurrent} onToggle={() => setShowCurrent((value) => !value)} placeholder="Enter current password" /></Field><Field label="New password"><PasswordInput name="newPassword" autoComplete="new-password" value={newPassword} onChange={update(setNewPassword)} show={showNew} onToggle={() => setShowNew((value) => !value)} placeholder="Create new password" />{newPassword && !passwordValid ? <p className="text-xs leading-5 text-on-surface-variant">8+ characters with at least one uppercase letter and one number.</p> : null}</Field><Field label="Confirm password"><PasswordInput name="confirmPassword" autoComplete="new-password" value={confirmPassword} onChange={update(setConfirmPassword)} show={showConfirm} onToggle={() => setShowConfirm((value) => !value)} placeholder="Confirm new password" /></Field><div className="md:col-span-2"><Button disabled={saving} className="inline-flex w-full md:w-fit">{saving ? "Saving..." : "Update Password"}</Button></div></form>;
 }
 
-function PasswordInput({ name, autoComplete, value, onChange, show, onToggle, placeholder }) { return <div className="relative"><Input name={name} type={show ? "text" : "password"} autoComplete={autoComplete} required minLength={8} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="h-11 pr-12 text-base scroll-mb-28" /><button type="button" tabIndex={-1} onClick={onToggle} className="absolute inset-y-0 right-0 flex h-11 w-11 items-center justify-center text-on-surface-variant transition hover:text-on-surface" aria-label={show ? "Hide password" : "Show password"}>{show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button></div>; }
+function PasswordInput({ name, autoComplete, value, onChange, show, onToggle, placeholder }) { return <div className="relative min-w-0"><Input name={name} type={show ? "text" : "password"} autoComplete={autoComplete} required minLength={8} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="h-11 min-w-0 pr-11 text-sm sm:text-base scroll-mb-28" /><button type="button" tabIndex={-1} onClick={onToggle} className="absolute inset-y-0 right-0 flex h-11 w-10 items-center justify-center text-on-surface-variant transition hover:text-on-surface" aria-label={show ? "Hide password" : "Show password"}>{show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button></div>; }
 
 function PasswordErrorModal({ error, onClose }) { return <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/45 px-4 backdrop-blur-sm" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><div role="dialog" aria-modal="true" className="w-full max-w-md rounded-2xl border border-outline-variant bg-surface shadow-2xl"><div className="flex items-start gap-4 p-6"><span className="grid size-10 shrink-0 place-items-center rounded-full bg-amber-100 text-amber-700"><AlertTriangle className="size-5" /></span><div className="min-w-0 flex-1"><h2 className="font-heading text-lg font-semibold text-on-surface">{error.title}</h2><p className="mt-2 text-sm leading-6 text-on-surface-variant">{error.message}</p></div></div><div className="flex justify-end border-t border-outline-variant px-6 py-4"><Button type="button" onClick={onClose}>OK</Button></div></div></div>; }
 function Field({ label, className = "", children }) { return <label className={`min-w-0 space-y-1.5 ${className}`}><Label className="mb-1.5 block">{label}</Label>{children}</label>; }

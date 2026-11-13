@@ -10,7 +10,7 @@ export function ProductTabs({ product }) {
   return (
     <Card className="overflow-hidden p-0">
       <div className="border-b border-outline-variant/80 px-5 py-4 text-label-md font-semibold text-on-surface">
-        Details &amp; care
+         Specifications
       </div>
 
       <div className="p-5 sm:p-6">

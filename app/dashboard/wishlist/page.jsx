@@ -1,25 +1,38 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 import { useWishlistStore } from "@/store/wishlist-store";
-import { useProductStore } from "@/store/product-store";
 import { ProductCard } from "@/components/product-card";
 import { EmptyState } from "@/components/ui";
 import { DashboardSectionBanner } from "@/components/dashboard-section-banner";
+import { getPublicProductsByIds } from "@/lib/api";
+import { mapProduct } from "@/lib/product-mapper";
 
 export default function WishlistPage() {
   const items = useWishlistStore((state) => state.items);
-  const getById = useProductStore((state) => state.getById);
-  const fetchProducts = useProductStore((state) => state.fetchProducts);
+  const [liveProducts, setLiveProducts] = useState({});
 
   useEffect(() => {
-    fetchProducts().catch(() => {});
-  }, [fetchProducts]);
+    const ids = items.map((item) => item.productId).filter(Boolean);
+    if (!ids.length) {
+      return undefined;
+    }
+    let active = true;
+    getPublicProductsByIds(ids)
+      .then((data) => {
+        if (!active) return;
+        setLiveProducts(Object.fromEntries((data.products || []).map(mapProduct).filter(Boolean).map((product) => [product.id, product])));
+      })
+      .catch(() => {
+        if (active) setLiveProducts({});
+      });
+    return () => { active = false; };
+  }, [items]);
 
   const products = items.map((item) => {
     const snapshot = { ...item, id: item.productId };
-    const live = getById(item.productId);
+    const live = liveProducts[item.productId];
 
     if (!live) return snapshot;
 

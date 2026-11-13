@@ -13,7 +13,18 @@ const initialState = {
 
 export const adminLogin = createAsyncThunk(
   "adminAuth/login",
-  async ({ email, password, remember }) => api.adminLogin({ email, password, remember })
+  async ({ email, password, remember, otp }, { rejectWithValue }) => {
+    try {
+        return await api.adminLogin({ email, password, remember, otp });
+    } catch (error) {
+      return rejectWithValue({
+        message: error.message,
+        status: error.status || 0,
+        retryAfter: error.retryAfter || null,
+        code: error.code || "",
+      });
+    }
+  }
 );
 
 export const adminLogout = createAsyncThunk("adminAuth/logout", async (_, { getState }) => {

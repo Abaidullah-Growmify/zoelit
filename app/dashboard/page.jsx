@@ -10,7 +10,20 @@ import { useAuthStore } from "@/store/auth-store";
 import { useWishlistStore } from "@/store/wishlist-store";
 import { Button, Card } from "@/components/ui";
 import { DashboardSkeleton } from "@/components/skeletons";
+import { AdminStatusBadge } from "@/components/admin-status-badge";
+import { AdminTable } from "@/components/admin-table";
 import { OrderNotesDialog } from "@/components/order-notes-dialog";
+
+const recentOrdersColumns = [
+  { key: "rowNumber", header: "#", sortable: true, accessor: "rowNumber", cellClassName: "font-bold tabular-nums text-slate-950 dark:text-white" },
+  { key: "orderNumber", header: "Order ID", sortable: true, accessor: "orderNumber", cellClassName: "font-bold tabular-nums text-slate-950 dark:text-white", render: (order) => order.publicOrderId || order.orderNumber },
+  { key: "date", header: "Date", sortable: true, accessor: "date", render: (order) => shortDate(order.date) },
+  { key: "status", header: "Status", accessor: "status", render: (order) => <AdminStatusBadge>{order.status}</AdminStatusBadge> },
+  { key: "payment", header: "Payment", accessor: "payment", render: (order) => <AdminStatusBadge>{order.payment}</AdminStatusBadge> },
+  { key: "notes", header: "Notes", accessor: "notes", render: (order) => <OrderNotesDialog notes={order.notes} label={`View notes for order ${order.publicOrderId || order.orderNumber}`} /> },
+  { key: "tracking", header: "Tracking", accessor: "tracking", render: (order) => order.tracking || "Not available" },
+  { key: "total", header: "Total Amount", sortable: true, accessor: "total", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => money(order.total) },
+];
 
 export default function DashboardPage() {
   const token = useAuthStore((state) => state.token);
@@ -27,6 +40,11 @@ export default function DashboardPage() {
 
   if (!data) return <DashboardSkeleton />;
   const { stats, spendingOverview, recentOrders } = data;
+  const dashboardOrders = recentOrders.map((order, index) => ({
+    ...order,
+    id: order._id,
+    rowNumber: index + 1,
+  }));
   const cards = [
     { label: "Total Orders", value: stats.totalOrders, helper: "Lifetime order count", icon: Package },
     { label: "Wishlist Items", value: wishlistCount, helper: "Saved for later", icon: Heart },
@@ -34,20 +52,42 @@ export default function DashboardPage() {
     { label: "Orders in Transit", value: stats.pendingOrders, helper: "Pending or processing", icon: Truck },
   ];
 
-  return <div className="container-page">
-    <div className="mb-8"><h1 className="font-heading text-3xl font-bold tracking-[-0.03em] text-on-surface">Welcome back, {user?.name || "Customer"}</h1><p className="mt-2 text-sm text-on-surface-variant">Here is a quick overview of your account activity.</p></div>
-     <div className="mb-8 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">{cards.map(({ label, value, helper, icon: Icon }) => <Card key={label} className="min-w-0 border-outline-variant/70 p-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md sm:p-5"><div className="mb-4 flex items-start justify-between sm:mb-5"><div className="grid size-9 place-items-center rounded-xl bg-primary/10 text-primary sm:size-10"><Icon className="size-4 sm:size-5" /></div></div><p className="truncate font-heading text-xl font-bold tracking-tight text-on-surface sm:text-2xl">{value}</p><p className="mt-1 truncate text-xs font-medium text-on-surface-variant sm:text-sm">{label}</p><p className="mt-2 line-clamp-2 text-[11px] leading-4 text-on-surface-variant sm:text-xs">{helper}</p></Card>)}</div>
-    <SpendingChart data={spendingOverview} /><div className="flex justify-end py-7"><Button asChild href="/products"><ShoppingBag className="size-4" />Continue Shopping</Button></div><Card className="overflow-hidden p-0 shadow-sm"><div className="flex items-center justify-between border-b border-outline-variant/70 px-5 py-5 sm:px-6"><div><h2 className="font-heading text-lg font-semibold text-on-surface">Recent Orders</h2><p className="mt-1 text-sm text-on-surface-variant">Your latest purchases at a glance.</p></div><Link href="/dashboard/orders" className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">View all<ArrowRight className="size-4" /></Link></div><div className="overflow-x-auto"><table className="w-full min-w-[980px] text-left text-sm"><thead className="bg-surface-container-low text-xs uppercase tracking-[0.08em] text-on-surface-variant"><tr><th className="px-5 py-3 font-semibold">#</th><th className="px-5 py-3 font-semibold">Order ID</th><th className="px-5 py-3 font-semibold">Date</th><th className="px-5 py-3 font-semibold">Payment</th><th className="px-5 py-3 font-semibold">Tracking</th><th className="px-5 py-3 font-semibold">Status</th><th className="px-5 py-3 font-semibold">Total</th><th className="px-5 py-3 font-semibold">Notes</th></tr></thead><tbody>{recentOrders.slice(0, 5).map((order, index) => <tr key={order.id} className="border-t border-outline-variant/60 text-on-surface-variant"><td className="px-5 py-4 text-on-surface-variant">{index + 1}</td><td className="px-5 py-4 font-semibold text-on-surface">{order.customerOrderNumber || order.orderNumber || order.id}</td><td className="px-5 py-4">{shortDate(order.date)}</td><td className="px-5 py-4">{order.paymentMethod || order.payment || "-"}</td><td className="px-5 py-4">{order.tracking || "Not available"}</td><td className="px-5 py-4"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(order.status)}`}>{order.status}</span></td><td className="px-5 py-4 font-semibold text-on-surface">{money(order.total)}</td><td className="px-5 py-4"><OrderNotesDialog notes={order.notes} label={`View notes for order ${order.customerOrderNumber || order.id}`} /></td></tr>)}</tbody></table></div></Card>
-  </div>;
+  return (
+    <div className="container-page">
+      <div className="mb-8"><h1 className="font-heading text-3xl font-bold tracking-[-0.03em] text-on-surface">Welcome back, {user?.name || "Customer"}</h1><p className="mt-2 text-sm text-on-surface-variant">Here is a quick overview of your account activity.</p></div>
+      <div className="mb-8 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+        {cards.map(({ label, value, helper, icon: Icon }) => (
+          <Card key={label} className="min-w-0 border-outline-variant/70 p-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md sm:p-5">
+            <div className="mb-4 flex items-start justify-between sm:mb-5"><div className="grid size-9 place-items-center rounded-xl bg-primary/10 text-primary sm:size-10"><Icon className="size-4 sm:size-5" /></div></div>
+            <p className="truncate font-heading text-xl font-bold tracking-tight text-on-surface sm:text-2xl">{value}</p>
+            <p className="mt-1 truncate text-xs font-medium text-on-surface-variant sm:text-sm">{label}</p>
+            <p className="mt-2 line-clamp-2 text-[11px] leading-4 text-on-surface-variant sm:text-xs">{helper}</p>
+          </Card>
+        ))}
+      </div>
+      <SpendingChart data={spendingOverview} />
+      <div className="flex justify-end py-7">
+        <Button asChild href="/products"><ShoppingBag className="size-4" />Continue Shopping</Button>
+      </div>
+      <AdminTable
+        title="Recent Orders"
+        description="Your latest purchases at a glance."
+         action={<Link href="/dashboard/orders" className="inline-flex shrink-0 items-center gap-1.5 self-start whitespace-nowrap text-sm font-semibold text-primary hover:underline sm:self-auto">View all<ArrowRight className="size-4 shrink-0" /></Link>}
+        columns={recentOrdersColumns}
+        data={dashboardOrders}
+        pageSize={5}
+        hideSearch
+        hidePagination
+        hideReset
+        inlineToolbar
+        disableInitialSort
+        rowActions={(order) => [{ label: "View", href: `/dashboard/orders/${order.id}` }]}
+        zebra
+      />
+    </div>
+  );
 }
-
-function statusTone(status) {
-  if (status === "Delivered") return "bg-emerald-50 text-emerald-700";
-  if (status === "Shipped") return "bg-blue-50 text-blue-700";
-  return "bg-amber-50 text-amber-700";
-}
-
 
 function SpendingChart({ data = [] }) {
-  return <Card className="overflow-hidden p-5 sm:p-6"><h2 className="font-heading text-lg font-semibold tracking-tight text-on-surface">Spending over last 6 months</h2><p className="mt-1 text-sm text-on-surface-variant">Monthly order totals from your account data.</p><div className="mt-6 h-64 rounded-2xl bg-surface-container-low/70 p-3 ring-1 ring-outline-variant/70"><ResponsiveContainer width="100%" height="100%"><AreaChart data={data} margin={{ left: 0, right: 10, top: 12, bottom: 0 }}><defs><linearGradient id="customerSpending" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.35} /><stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0.03} /></linearGradient></defs><CartesianGrid strokeDasharray="3 3" stroke="rgb(100 116 139 / 0.25)" vertical={false} /><XAxis dataKey="month" axisLine={false} tickLine={false} tickMargin={10} fontSize={12} /><YAxis tickFormatter={(value) => money(value)} axisLine={false} tickLine={false} tickMargin={8} width={58} fontSize={12} /><Tooltip formatter={(value) => [money(value), "Spent"]} /><Area type="monotone" dataKey="amount" stroke="var(--color-primary)" strokeWidth={3} fill="url(#customerSpending)" /></AreaChart></ResponsiveContainer></div></Card>;
+  return <Card className="overflow-hidden p-4 sm:p-6"><h2 className="font-heading text-lg font-semibold tracking-tight text-on-surface">Spending over last 6 months</h2><p className="mt-1 text-sm text-on-surface-variant">Monthly order totals from your account data.</p><div className="mt-5 h-56 min-w-0 rounded-2xl bg-surface-container-low/70 p-2 ring-1 ring-outline-variant/70 sm:h-64 sm:p-3"><ResponsiveContainer width="100%" height="100%" minWidth={0}><AreaChart data={data} margin={{ left: 0, right: 6, top: 12, bottom: 0 }}><defs><linearGradient id="customerSpending" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.35} /><stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0.03} /></linearGradient></defs><CartesianGrid strokeDasharray="3 3" stroke="rgb(100 116 139 / 0.25)" vertical={false} /><XAxis dataKey="month" axisLine={false} tickLine={false} tickMargin={8} fontSize={11} interval="preserveStartEnd" /><YAxis tickFormatter={(value) => { const n = Number(value) || 0; return n >= 1000 ? `$${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k` : `$${Math.round(n)}`; }} axisLine={false} tickLine={false} tickMargin={6} width={44} fontSize={11} /><Tooltip formatter={(value) => [money(value), "Spent"]} /><Area type="monotone" dataKey="amount" stroke="var(--color-primary)" strokeWidth={3} fill="url(#customerSpending)" /></AreaChart></ResponsiveContainer></div></Card>;
 }

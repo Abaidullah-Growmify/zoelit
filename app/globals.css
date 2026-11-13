@@ -432,6 +432,35 @@ button, a[href], summary, select {
   margin-inline: auto;
 }
 
+/* Keep sibling actions on one line whenever the available panel width allows
+   it. Groups still wrap naturally on tablet/mobile instead of forcing every
+   action into a full-width row. */
+.panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.panel-actions > .button-control,
+.panel-actions > button,
+.panel-actions > a {
+  flex: 0 1 auto;
+  max-width: 100%;
+}
+
+@media (max-width: 639px) {
+  .panel-actions {
+    width: 100%;
+  }
+
+  .panel-actions > .button-control,
+  .panel-actions > button,
+  .panel-actions > a {
+    flex: 1 1 auto;
+  }
+}
+
 /* Contact has two information-dense columns and benefits from the full width
    of larger displays without changing the shared site container everywhere. */
 .contact-page {
@@ -551,6 +580,112 @@ button, a[href], summary, select {
   width: 0;
   display: none;
 }
+
+/* Admin typography follows the available screen width. Tailwind emits the
+   theme text utilities with fixed values, so the same classes are re-declared
+   here (unlayered rules win over the utilities layer) to keep the admin panel
+   readable on tablets and phones without touching the storefront. */
+@media (max-width: 1279px) {
+  .admin-shell .text-xs { font-size: 0.75rem; }
+  .admin-shell .text-sm { font-size: 0.8125rem; }
+  .admin-shell .text-base,
+  .admin-shell .text-lg { font-size: 0.9375rem; }
+  .admin-shell .text-xl { font-size: 1.0625rem; }
+  .admin-shell .text-2xl { font-size: 1.1875rem; }
+  .admin-shell .text-3xl { font-size: 1.375rem; }
+  .admin-shell .text-4xl { font-size: 1.625rem; }
+  .admin-shell .text-5xl { font-size: 1.75rem; }
+  .admin-shell .text-h1 { font-size: 1.1875rem; }
+  .admin-shell .text-h2 { font-size: 1rem; }
+  .admin-shell .text-h3 { font-size: 0.9375rem; }
+  .admin-shell .text-body,
+  .admin-shell .text-body-md,
+  .admin-shell .text-body-lg { font-size: 0.9375rem; }
+  .admin-shell .text-headline-md { font-size: 1.1875rem; }
+  .admin-shell .text-headline-lg { font-size: 1.375rem; }
+  .admin-shell .text-label-sm { font-size: 0.75rem; }
+  .admin-shell .text-label-md { font-size: 0.8125rem; }
+  .admin-shell .text-meta { font-size: 0.75rem; }
+}
+
+@media (max-width: 639px) {
+  .admin-shell .text-xs { font-size: 0.6875rem; }
+  .admin-shell .text-sm { font-size: 0.75rem; }
+  .admin-shell .text-base,
+  .admin-shell .text-lg { font-size: 0.875rem; }
+  .admin-shell .text-xl { font-size: 1rem; }
+  .admin-shell .text-2xl { font-size: 1.0625rem; }
+  .admin-shell .text-3xl { font-size: 1.25rem; }
+  .admin-shell .text-4xl { font-size: 1.5rem; }
+  .admin-shell .text-5xl { font-size: 1.625rem; }
+  .admin-shell .text-h1 { font-size: 1.0625rem; }
+  .admin-shell .text-h2 { font-size: 0.9375rem; }
+  .admin-shell .text-h3 { font-size: 0.875rem; }
+  .admin-shell .text-body,
+  .admin-shell .text-body-md,
+  .admin-shell .text-body-lg { font-size: 0.8125rem; }
+  .admin-shell .text-headline-md { font-size: 1.0625rem; }
+  .admin-shell .text-headline-lg { font-size: 1.25rem; }
+  .admin-shell .text-label-sm { font-size: 0.6875rem; }
+  .admin-shell .text-label-md { font-size: 0.75rem; }
+  .admin-shell .text-meta { font-size: 0.6875rem; }
+}
+
+/* Fluid typography: scale continuously with the viewport instead of jumping
+   only at desktop breakpoints. This covers both the admin and customer panels
+   because the shared Tailwind text utilities read these theme variables. */
+:root {
+  --text-xs: clamp(0.6875rem, 0.66rem + 0.12vw, 0.8125rem);
+  --text-sm: clamp(0.75rem, 0.7rem + 0.18vw, 0.9375rem);
+  --text-base: clamp(0.875rem, 0.8rem + 0.22vw, 1.0625rem);
+  --text-lg: clamp(0.875rem, 0.8rem + 0.22vw, 1.0625rem);
+  --text-xl: clamp(1rem, 0.9rem + 0.24vw, 1.1875rem);
+  --text-2xl: clamp(1.0625rem, 0.96rem + 0.3vw, 1.375rem);
+  --text-3xl: clamp(1.25rem, 1.08rem + 0.4vw, 1.625rem);
+  --text-4xl: clamp(1.5rem, 1.25rem + 0.55vw, 2rem);
+  --text-5xl: clamp(1.625rem, 1.4rem + 0.65vw, 2.25rem);
+  --text-6xl: clamp(2rem, 1.65rem + 0.8vw, 2.75rem);
+  --text-7xl: clamp(2.25rem, 1.9rem + 1vw, 3.25rem);
+  --text-display-xl: clamp(2rem, 1.65rem + 1vw, 2.5rem);
+  --text-headline-lg: clamp(1.375rem, 1.15rem + 0.65vw, 1.75rem);
+  --text-headline-md: clamp(1.125rem, 0.98rem + 0.4vw, 1.375rem);
+  --text-body-lg: clamp(0.9375rem, 0.85rem + 0.22vw, 1.0625rem);
+  --text-body-md: clamp(0.9375rem, 0.85rem + 0.22vw, 1.0625rem);
+  --text-body: clamp(0.875rem, 0.8rem + 0.22vw, 1.0625rem);
+  --text-label-md: clamp(0.75rem, 0.7rem + 0.18vw, 0.9375rem);
+  --text-label-sm: clamp(0.6875rem, 0.65rem + 0.16vw, 0.875rem);
+  --text-meta: clamp(0.6875rem, 0.65rem + 0.16vw, 0.875rem);
+  --text-h1: clamp(1.0625rem, 0.94rem + 0.32vw, 1.375rem);
+  --text-h2: clamp(0.9375rem, 0.86rem + 0.28vw, 1.25rem);
+  --text-h3: clamp(0.875rem, 0.8rem + 0.24vw, 1.125rem);
+}
+
+/* Apply the fluid values directly as well. Tailwind v4 can emit some theme
+   utilities as fixed declarations, which would otherwise keep these classes
+   at one size despite the responsive theme tokens above. */
+body { font-size: clamp(0.8125rem, 0.68rem + 0.34vw, 1.0625rem); }
+.text-xs { font-size: clamp(0.625rem, 0.53rem + 0.24vw, 0.8125rem) !important; }
+.text-sm { font-size: clamp(0.6875rem, 0.57rem + 0.3vw, 0.9375rem) !important; }
+.text-base { font-size: clamp(0.8125rem, 0.66rem + 0.38vw, 1.0625rem) !important; }
+.text-lg { font-size: clamp(0.8125rem, 0.66rem + 0.38vw, 1.0625rem) !important; }
+.text-xl { font-size: clamp(0.9375rem, 0.76rem + 0.43vw, 1.1875rem) !important; }
+.text-2xl { font-size: clamp(1rem, 0.8rem + 0.5vw, 1.375rem) !important; }
+.text-3xl { font-size: clamp(1.125rem, 0.9rem + 0.58vw, 1.625rem) !important; }
+.text-4xl { font-size: clamp(1.375rem, 1.05rem + 0.78vw, 2rem) !important; }
+.text-5xl { font-size: clamp(1.5rem, 1.15rem + 0.86vw, 2.25rem) !important; }
+.text-6xl { font-size: clamp(1.75rem, 1.35rem + 1vw, 2.75rem) !important; }
+.text-7xl { font-size: clamp(2rem, 1.5rem + 1.25vw, 3.25rem) !important; }
+.text-body,
+.text-body-md,
+.text-body-lg { font-size: clamp(0.8125rem, 0.66rem + 0.38vw, 1.0625rem) !important; }
+.text-label-md { font-size: clamp(0.6875rem, 0.56rem + 0.32vw, 0.9375rem) !important; }
+.text-label-sm,
+.text-meta { font-size: clamp(0.625rem, 0.52rem + 0.26vw, 0.875rem) !important; }
+.text-h1 { font-size: clamp(1rem, 0.78rem + 0.55vw, 1.375rem) !important; }
+.text-h2 { font-size: clamp(0.875rem, 0.7rem + 0.44vw, 1.25rem) !important; }
+.text-h3 { font-size: clamp(0.8125rem, 0.65rem + 0.4vw, 1.125rem) !important; }
+.text-headline-md { font-size: clamp(1rem, 0.8rem + 0.5vw, 1.375rem) !important; }
+.text-headline-lg { font-size: clamp(1.25rem, 0.98rem + 0.68vw, 1.75rem) !important; }
 
 .panel-gradient {
   background:
@@ -892,9 +1027,12 @@ button, a[href], summary, select {
   .product-grid.grid-home .zl-card-body { min-width: 0; padding: 4px 48px 4px 0; }
   .product-grid.grid-home .zl-card-title { min-height: 0; font-size: 14px; }
   .product-grid.grid-home .zl-card-desc { display: none; }
-  .product-grid.grid-home .zl-card-actions { position: absolute; right: 12px; bottom: 26px; display: block; margin: 0; padding: 0; }
-  .product-grid.grid-home .zl-card-arrow { display: none; }
-  .product-grid.grid-home .zl-card-actions button { width: auto; height: 30px; min-width: 0; padding: 0 9px; border-radius: 8px; font-size: 11px; }
+  /* Mobile: price/stock on one row, button below with static positioning */
+  .product-grid.grid-home .zl-card-price-row { flex-wrap: wrap; }
+  .product-grid.grid-home .zl-card-price-row .zl-card-price { order: 1; width: 100%; }
+  .product-grid.grid-home .zl-card-price-row .zl-card-stock { order: 2; justify-content: flex-start; width: 100%; }
+  .product-grid.grid-home .zl-card-actions { position: static !important; display: block; width: 100%; margin-top: 12px; padding: 0; }
+  .product-grid.grid-home .zl-card-actions button { width: 100%; height: 36px; min-width: 0; padding: 0 12px; border-radius: 8px; font-size: 12px; }
   .product-grid.grid-home .zl-card-price { margin-top: 7px; font-size: 15px; }
   .product-grid.grid-home .zl-card-wish { display: none; }
   .product-grid.grid-home .zl-card-arrow { position: absolute; right: 12px; top: 50%; display: grid; width: 38px; height: 38px; place-items: center; border-radius: 999px; background: #1d4ed8; color: #fff; transform: translateY(-50%); }
@@ -917,8 +1055,9 @@ button, a[href], summary, select {
   .zl-mhero-nav { display: flex; align-items: center; justify-content: center; gap: 12px; padding-top: 12px; }
   .zl-mhero-arrow { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 999px; background: #dbeafe; color: #1d4ed8; }
   .zl-mhero-dots, .zl-mstats { display: flex; align-items: center; justify-content: center; gap: 7px; }
-  .zl-mhero-dot { width: 7px; height: 7px; border-radius: 999px; background: #93c5fd; }
-  .zl-mhero-dot.is-active { width: 20px; background: #1d4ed8; }
+  .zl-mhero-dot { display: grid; width: 24px; height: 24px; padding: 0; place-items: center; border: 0; border-radius: 999px; background: transparent; }
+  .zl-mhero-dot::before { content: ""; display: block; width: 7px; height: 7px; border-radius: 999px; background: #93c5fd; }
+  .zl-mhero-dot.is-active::before { width: 20px; background: #1d4ed8; }
   .zl-mstats { margin-top: 18px; justify-content: space-between; border: 1px solid #dbe3ee; border-radius: 14px; padding: 14px 10px; }
   .zl-mstats .zl-stat { text-align: center; }
   .zl-mstats .zl-stat b { color: #1d4ed8; font-size: 16px; }
@@ -1491,6 +1630,69 @@ button, a[href], summary, select {
   background: linear-gradient(135deg, #14213d 0%, #17479f 100%);
   color: #dbeafe;
 }
+.site-footer button[type="submit"] {
+  justify-content: center !important;
+  text-align: center !important;
+}
+.site-footer form input[type="email"] {
+  text-align: center !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+}
+.site-footer form input[type="email"]::placeholder {
+  font-size: 14px !important;
+  font-weight: 400 !important;
+}
+.site-footer form button[type="submit"] {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+}
+.site-footer form input[type="email"],
+.site-footer form button[type="submit"] {
+  min-height: 40px !important;
+  height: 40px !important;
+}
+
+@media print {
+  body > * {
+    visibility: visible !important;
+  }
+
+  .invoice-print-root {
+    display: block !important;
+    visibility: visible !important;
+    position: fixed !important;
+    inset: 0 auto auto 0 !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    background: #ffffff !important;
+    z-index: 999999 !important;
+  }
+
+  .invoice-print-root * {
+    visibility: visible !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .site-footer > .md\:hidden { display: none !important; }
+  .site-footer > .hidden { display: block !important; }
+  .site-footer > .hidden .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .site-footer > .md\:hidden { display: block !important; }
+  .site-footer > .hidden { display: none !important; }
+  .site-footer > .md\:hidden .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .site-footer > .md\:hidden .footer-mobile-contact,
+  .site-footer > .md\:hidden .footer-mobile-newsletter {
+    grid-column: span 1 !important;
+  }
+}
 .site-footer h4 { color: #ffffff; }
 .site-footer .footer-link { color: #b9d0f0; }
 .site-footer .footer-link:hover { color: #ffffff; text-decoration: underline; }
@@ -1772,6 +1974,83 @@ html, body { overflow-x: clip; }
 .zl-hero-right, .zl-hv3 { min-width: 0; max-width: 100%; }
 .cart-drawer-panel { transform: translateX(100%); }
 .cart-drawer-panel.is-open { transform: translateX(0); }
+
+@media (max-width: 479px) {
+  .cart-item-card {
+    padding: 10px;
+  }
+
+  .cart-item-main {
+    gap: 8px;
+  }
+
+  .cart-item-image {
+    width: 64px;
+    height: 64px;
+  }
+
+  .cart-item-details {
+    gap: 8px;
+  }
+
+  .cart-item-controls {
+    gap: 6px;
+  }
+
+  .cart-item-controls > .inline-flex {
+    gap: 1px;
+    padding-inline: 2px;
+  }
+
+  .cart-item-controls > .inline-flex > button {
+    width: 22px;
+    height: 22px;
+  }
+
+  .cart-item-controls > .inline-flex > span {
+    min-width: 16px;
+  }
+
+  .cart-item-total {
+    font-size: 12px;
+  }
+
+  /* The narrow cart drawer needs a compact single-line item layout. */
+  .cart-drawer-panel {
+    padding: 16px;
+  }
+
+  .cart-drawer-panel .cart-item-card {
+    padding: 10px;
+  }
+
+  .cart-drawer-panel .cart-item-details {
+    gap: 10px;
+  }
+
+  .cart-drawer-panel .cart-item-details > div:first-child {
+    padding-right: 0;
+  }
+
+  .cart-drawer-panel .cart-item-details h2 {
+    padding-right: 32px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cart-drawer-panel .cart-item-details p {
+    white-space: nowrap;
+    overflow: visible;
+  }
+
+  .cart-drawer-panel .cart-item-card > .cart-item-main > button {
+    top: 10px;
+    right: 8px;
+    width: 30px;
+    height: 30px;
+  }
+}
 @media (min-width: 1200px) {
   .zl-hero {
     grid-template-columns: minmax(0, 1fr) minmax(440px, 560px);
@@ -1811,8 +2090,8 @@ html, body { overflow-x: clip; }
   .site-header > div:first-child { max-width: none; gap: 6px; padding-inline: 12px; }
   .site-header > div:first-child > div:first-child { gap: 6px; min-width: 0; }
   .site-header > div:first-child > div:first-child > a { min-width: 0; }
-  .site-header > div:first-child > div:first-child > a img, .site-brand-logo { width: 128px; max-width: 28vw; }
-  .site-header > div:first-child > div:last-child { gap: 2px; }
+   .site-header > div:first-child > div:first-child > a img, .site-brand-logo { width: clamp(96px, 30vw, 120px); max-width: 120px; }
+   .site-header > div:first-child > div:last-child { gap: 4px; }
   .site-header > div:first-child > div:last-child > button,
   .site-header > div:first-child > div:last-child > a { width: 36px; height: 36px; }
 
@@ -1831,9 +2110,10 @@ html, body { overflow-x: clip; }
   .zl-hv-nav { display: none !important; }
   .zl-mhero-nav { justify-content: space-between; padding: 12px 0 0; }
   .zl-mhero-arrow { width: 34px; height: 34px; border: 1px solid #d8e6fb; background: #fff; box-shadow: 0 3px 8px rgb(20 67 130 / .08); }
-  .zl-mhero-dots { gap: 8px; }
-  .zl-mhero-dot { width: 9px; height: 9px; background: #d2e0f7; }
-  .zl-mhero-dot.is-active { width: 9px; background: #1d73ed; }
+   .zl-mhero-dots { gap: 4px; }
+  .zl-mhero-dot { width: 24px; height: 24px; }
+  .zl-mhero-dot::before { width: 9px; height: 9px; background: #d2e0f7; }
+  .zl-mhero-dot.is-active::before { width: 9px; background: #1d73ed; }
   .zl-mstats { margin: 16px 0 0; border: 0; border-radius: 16px; background: #f1f7ff; padding: 16px 8px 24px; box-shadow: none; }
   .zl-mstats .zl-stat { min-width: 0; flex: 1; border-right: 1px solid #d3e2f6; }
   .zl-mstats .zl-stat:last-child { border-right: 0; }
@@ -1846,8 +2126,8 @@ html, body { overflow-x: clip; }
   .container-page.home-newsletter { padding-top: 32px; }
   .container-page:has(> .zl-sec-head) { padding-inline: 16px; }
   .zl-sec-head { margin-bottom: 14px !important; align-items: center; }
-  .zl-sec-head > div:first-child > p { display: none; }
-  .zl-sec-head h2 { font-size: 21px; line-height: 1.2; }
+  .zl-sec-head > div:first-child > p { font-size: 10px; letter-spacing: .14em; margin-bottom: 2px; }
+  .zl-sec-head h2 { font-size: 16px; line-height: 1.3; white-space: normal; overflow: visible; text-overflow: clip; }
   .zl-sec-head .panel-actions a { min-height: 32px; padding-inline: 0; font-size: 12px; }
   .product-grid.grid-home { display: flex; flex-direction: column; gap: 10px; }
   .product-grid.grid-home .zl-card { min-height: 118px; height: 118px; flex-direction: row; align-items: stretch; gap: 10px; border-radius: 14px; padding: 8px; box-shadow: 0 3px 14px rgb(20 55 90 / .08); }
@@ -1926,6 +2206,161 @@ html, body { overflow-x: clip; }
   .site-footer > .hidden .grid { gap: 18px; }
   .site-footer .footer-link { min-height: 22px; font-size: 10px; line-height: 1.3; }
   .site-footer p, .site-footer h4 { font-size: 10px; line-height: 1.35; }
+}
+
+/* Final storefront theme and mobile-card corrections. These rules intentionally
+   come after the legacy homepage compositions above so dark mode and narrow
+   screens cannot be overwritten by older hard-coded light styles. */
+.dark .zl-hero {
+  background: radial-gradient(circle at 90% 34%, rgb(96 165 250 / .16), transparent 28rem), linear-gradient(135deg, #020617 0%, #0f172a 48%, #10295d 100%);
+}
+.dark .zl-hero-right .zl-hv3 {
+  background: linear-gradient(118deg, #172554 0%, #1e40af 62%, #1d4ed8 100%);
+  border-color: rgb(96 165 250 / .3);
+  box-shadow: 0 24px 46px rgb(2 6 23 / .6);
+}
+.dark .zl-hero-right .zl-hv3::before {
+  background: linear-gradient(145deg, #172554, #1e3a8a);
+}
+.dark .product-grid.grid-home .zl-card {
+  border-color: rgb(71 85 105 / .7);
+  background: #111827;
+  box-shadow: 0 3px 16px rgb(2 6 23 / .45);
+}
+.dark .product-grid.grid-home .zl-card-img {
+  border-color: rgb(71 85 105 / .7);
+  background: #1e293b;
+}
+.dark .product-grid.grid-home .zl-card-badge {
+  border-color: rgb(147 197 253 / .3);
+  background: rgb(30 64 175 / .45);
+  color: #bfdbfe;
+}
+.dark .product-grid.grid-home .zl-card-price-row .text-\[\#2563EB\],
+.dark .product-grid.grid-home .zl-card-price {
+  color: #93c5fd;
+}
+
+@media (max-width: 767px) {
+  .product-grid.grid-home .zl-card {
+    height: auto !important;
+    min-height: 142px;
+    align-items: stretch;
+  }
+  .product-grid.grid-home .zl-card-body {
+    padding: 7px 2px 7px 0;
+  }
+  .product-grid.grid-home .zl-card-price-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 8px;
+    row-gap: 4px;
+  }
+  .product-grid.grid-home .zl-card-stock {
+    grid-column: 1;
+    grid-row: 2;
+    width: auto;
+    justify-content: flex-start;
+  }
+  .product-grid.grid-home .zl-card-price-row .zl-card-actions {
+    position: static;
+    grid-column: 2;
+    grid-row: 1 / 3;
+    align-self: center;
+    margin-top: 0;
+    padding: 0;
+  }
+  .product-grid.grid-home .zl-card-price-row .zl-card-actions button {
+    max-width: 100%;
+  }
+  .dark .zl-hero {
+    background: #020617;
+  }
+  .dark .zl-mstats {
+    background: #111827;
+    border: 1px solid rgb(71 85 105 / .7);
+  }
+  .dark .zl-mstats .zl-stat {
+    border-color: rgb(71 85 105 / .7);
+  }
+  .dark .zl-mstats .zl-stat span {
+    color: #cbd5e1;
+  }
+}
+
+.dark .home-categories-section .category-grid > a {
+  border-color: rgb(71 85 105 / .75);
+  background: #111827;
+  box-shadow: 0 4px 18px rgb(2 6 23 / .32);
+}
+.dark .home-categories-section .category-grid > a:hover {
+  border-color: #60a5fa;
+  background: #1e293b;
+}
+.dark .home-categories-section .category-grid > a svg {
+  border-color: rgb(96 165 250 / .35);
+  background: #172554;
+  color: #93c5fd;
+}
+.dark .home-categories-section .category-grid > a strong {
+  color: #f8fafc;
+}
+.dark .home-categories-section .category-grid .zl-skel-cat {
+  border-color: rgb(71 85 105 / .75);
+  background: #111827;
+}
+.dark .zl-mhero-img {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+@media (min-width: 768px) {
+  .product-grid.grid-home .zl-card-price-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 8px;
+    row-gap: 0;
+    margin-top: auto !important;
+  }
+  .product-grid.grid-home .zl-card-price-row .zl-card-stock {
+    grid-column: 2;
+    grid-row: 1;
+    width: auto;
+    justify-content: flex-end;
+  }
+  .zl-card-price-row .zl-card-actions {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+    padding-top: 20px;
+  }
+  .zl-card-price-row .zl-card-actions button { width: 100%; }
+  .zl-card-sku {
+    flex-wrap: wrap;
+  }
+  .zl-card-sku .zl-card-actions {
+    flex: 0 0 100%;
+    width: 100%;
+  }
+  .zl-card-sku .zl-card-actions button { width: 100%; }
+}
+
+/* Preserve product colors in dark mode. Only the surrounding image surface
+   changes; never blend or darken the product pixels themselves. */
+.dark .product-grid.grid-home .zl-card-img img,
+.dark .product-grid.grid-home .zl-card-img canvas,
+.dark .hero-media img,
+.dark .hero-media canvas,
+.dark .zl-mhero-img img,
+.dark .zl-mhero-img canvas {
+  mix-blend-mode: normal;
+}
+.dark .product-grid.grid-home .zl-card-badge {
+  border: 1px solid rgb(96 165 250 / .45) !important;
+  background: #1e293b !important;
+  color: #bfdbfe !important;
 }
 
 /* Desktop hero reference: one blue product card beside the editorial copy. */
@@ -2646,7 +3081,7 @@ html, body { overflow-x: clip; }
 }
 
 .home-categories-section .zl-sec-head h2 {
-  font-size: 24px;
+  font-size: clamp(18px, 2.4vw, 22px);
   font-weight: 800;
 }
 
@@ -2707,7 +3142,7 @@ html, body { overflow-x: clip; }
 
 @media (min-width: 768px) {
   .zl-sec-head h2 {
-    font-size: 24px;
+    font-size: clamp(17px, 2.3vw, 22px);
     font-weight: 800;
   }
 
@@ -2787,20 +3222,20 @@ html, body { overflow-x: clip; }
 }
 
 .site-footer ul {
-  gap: 8px;
+  gap: 6px;
 }
 
 .site-footer .footer-link {
-  min-height: 36px;
-  font-size: 15px !important;
-  line-height: 1.5 !important;
+  min-height: 32px;
+  font-size: 13px !important;
+  line-height: 1.45 !important;
 }
 
 .site-footer .footer-contact a,
 .site-footer .footer-contact span,
 .site-footer p {
-  font-size: 15px;
-  line-height: 1.55;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .site-footer > .hidden .grid > div {
@@ -3225,15 +3660,19 @@ html, body { overflow-x: clip; }
     width: 100%;
     max-width: none;
     aspect-ratio: auto;
-    gap: 8px;
-    padding: 10px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    padding: 8px;
+    text-align: center;
   }
 
   .home-categories-section .category-grid .zl-skel-cat {
     height: 88px;
     min-height: 88px;
-    gap: 8px;
-    padding: 10px;
+    flex-direction: column;
+    gap: 5px;
+    padding: 8px;
   }
 
   .home-categories-section .category-grid .zl-skel-cat > .skeleton:first-child {
@@ -3249,12 +3688,14 @@ html, body { overflow-x: clip; }
   }
 
   .home-categories-section .category-grid > a strong {
-    font-size: 12px;
-    line-height: 1.25;
+    flex: none;
+    max-width: 100%;
+    font-size: 11px;
+    line-height: 1.15;
   }
 
   .home-categories-section .zl-sec-head h2 {
-    font-size: 21px;
+    font-size: 17px;
   }
 
   .container-page:has(> .zl-ship-banner) {
@@ -5058,6 +5499,215 @@ html, body { overflow-x: clip; }
   font-size: 0.875rem;
 }
 
+/* Keep the footer edges aligned with the same shared container as homepage
+   sections and product cards. */
+.site-footer .container-page {
+  max-width: var(--space-container-max);
+  padding-inline: 0;
+}
+
+/* Use dark active/hover surfaces in dark mode instead of the default light
+   click shade on header controls. */
+.dark .site-header button[aria-label="Open menu"]:hover,
+.dark .site-header button[aria-label="Search products"]:hover,
+.dark .site-header button[aria-label="Open cart"]:hover,
+.dark .site-header a[aria-label="Wishlist"]:hover,
+.dark .site-header button[aria-label="Open menu"]:active,
+.dark .site-header button[aria-label="Search products"]:active,
+.dark .site-header button[aria-label="Open cart"]:active,
+.dark .site-header a[aria-label="Wishlist"]:active {
+  background: #1e293b !important;
+}
+.dark .site-header a[href="/login"] {
+  background: #2563eb !important;
+}
+.dark .site-header a[href="/login"]:hover,
+.dark .site-header a[href="/login"]:active {
+  background: #1d4ed8 !important;
+}
+.dark header a[href="/login"] {
+  background: #2563eb !important;
+}
+.dark header a[href="/login"]:hover,
+.dark header a[href="/login"]:active {
+  background: #1d4ed8 !important;
+}
+.dark header button[aria-label="Open menu"]:hover,
+.dark header button[aria-label="Search products"]:hover,
+.dark header button[aria-label="Open cart"]:hover,
+.dark header a[aria-label="Wishlist"]:hover,
+.dark header button[aria-label="Open menu"]:active,
+.dark header button[aria-label="Search products"]:active,
+.dark header button[aria-label="Open cart"]:active,
+.dark header a[aria-label="Wishlist"]:active {
+  background: #1e293b !important;
+}
+.dark header button[aria-label="Open profile menu"] {
+  background: #2563eb !important;
+  color: #fff !important;
+}
+.dark header button[aria-label="Open profile menu"]:hover,
+.dark header button[aria-label="Open profile menu"]:active {
+  background: #1d4ed8 !important;
+}
+
+.dark .hero-view,
+.dark .zl-mhero-cta {
+  background: #2563eb !important;
+  color: #fff !important;
+}
+.dark .hero-view:hover,
+.dark .zl-mhero-cta:hover {
+  background: #1d4ed8 !important;
+}
+.dark .hero-badge,
+.dark .zl-mhero-badge {
+  border-color: rgb(147 197 253 / .45) !important;
+  background: #1e293b !important;
+  color: #bfdbfe !important;
+}
+
+/* Normalize shared buttons across every panel in dark mode. Variant hooks
+   keep ghost and danger controls semantically different while preventing
+   page-specific light/blue utility classes from producing inconsistent colors. */
+.dark .button-control.button-variant-primary,
+.dark .button-control.button-variant-secondary,
+.dark .button-control.button-variant-outline {
+  border-color: transparent;
+  background: #2563eb !important;
+  color: #fff !important;
+}
+.dark .button-control.button-variant-primary:hover,
+.dark .button-control.button-variant-secondary:hover,
+.dark .button-control.button-variant-outline:hover,
+.dark .button-control.button-variant-primary:active,
+.dark .button-control.button-variant-secondary:active,
+.dark .button-control.button-variant-outline:active {
+  background: #1d4ed8 !important;
+}
+.dark .button-control.button-variant-ghost:hover,
+.dark .button-control.button-variant-ghost:active {
+  background: rgb(30 41 59 / .9) !important;
+  color: #93c5fd !important;
+}
+.dark .button-control.button-variant-danger {
+  background: #7f1d1d !important;
+  color: #fecaca !important;
+}
+.dark .button-control.button-variant-danger:hover,
+.dark .button-control.button-variant-danger:active {
+  background: #991b1b !important;
+  color: #fee2e2 !important;
+}
+.dark a.bg-white:not(.hero-view):not(.zl-mhero-cta),
+.dark button.bg-white {
+  background: #2563eb !important;
+  color: #fff !important;
+}
+.dark a.bg-white:not(.hero-view):not(.zl-mhero-cta):hover,
+.dark button.bg-white:hover,
+.dark a.bg-white:not(.hero-view):not(.zl-mhero-cta):active,
+.dark button.bg-white:active {
+  background: #1d4ed8 !important;
+}
+.dark button.bg-slate-100 {
+  background: #334155 !important;
+  color: #e2e8f0 !important;
+  border-color: #475569 !important;
+}
+.dark button.bg-slate-100:hover,
+.dark button.bg-slate-100:active {
+  background: #475569 !important;
+}
+.dark button.bg-emerald-50 {
+  background: #064e3b !important;
+  color: #a7f3d0 !important;
+  border-color: #047857 !important;
+}
+.dark button.bg-emerald-50:hover,
+.dark button.bg-emerald-50:active {
+  background: #065f46 !important;
+}
+.dark button.bg-amber-50 {
+  background: #78350f !important;
+  color: #fde68a !important;
+  border-color: #b45309 !important;
+}
+.dark button.bg-amber-50:hover,
+.dark button.bg-amber-50:active {
+  background: #92400e !important;
+}
+.dark .hero-card {
+  border-color: rgb(96 165 250 / .35);
+}
+
+/* Use the same compact badge treatment for hero and product-card labels. */
+.hero-badge,
+.zl-mhero-badge {
+  border: 1px solid #cfe2fb !important;
+  border-radius: 6px !important;
+  background: #dce9ff !important;
+  padding: 4px 7px !important;
+  color: #245fca !important;
+  font-size: 9px !important;
+  font-weight: 800 !important;
+  letter-spacing: .03em;
+}
+.dark .hero-badge,
+.dark .zl-mhero-badge {
+  border-color: rgb(96 165 250 / .45) !important;
+  background: #1e293b !important;
+  color: #bfdbfe !important;
+}
+
+/* Hero badges use a light white treatment in light mode; only their shape and
+   typography are shared with product-card badges. */
+.hero-badge,
+.zl-mhero-badge {
+  border-color: rgb(255 255 255 / .7) !important;
+  background: #fff !important;
+  color: #1765dc !important;
+}
+.dark .hero-badge,
+.dark .zl-mhero-badge {
+  border-color: rgb(96 165 250 / .45) !important;
+  background: #1e293b !important;
+  color: #bfdbfe !important;
+}
+
+/* Remove the later legacy footer inset so its left and right edges follow the
+   exact same vertical lines as the homepage product grid. */
+@media (min-width: 768px) {
+  .site-footer > .hidden > .container-page {
+    padding-inline: 0 !important;
+  }
+}
+
+/* The live homepage hero uses the hero-* component classes (not the legacy
+   zl-* composition above). Keep its complete surface dark with the rest of
+   the storefront theme at every breakpoint. */
+.dark .hero-section {
+  background: radial-gradient(circle at 90% 34%, rgb(96 165 250 / .14), transparent 28rem), linear-gradient(135deg, #020617 0%, #0f172a 48%, #10295d 100%);
+}
+.dark .hero-title { color: #f8fafc; }
+.dark .hero-title span { color: #93c5fd; }
+.dark .hero-lead { color: #cbd5e1; }
+.dark .hero-stat + .hero-stat { border-color: rgb(71 85 105 / .75); }
+.dark .hero-stat-label { color: #94a3b8; }
+.dark .hero-card {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+  box-shadow: 0 24px 46px rgb(2 6 23 / .6);
+}
+.dark .hero-category { color: #cbd5e1; }
+.dark .hero-shipping { border-color: rgb(148 163 184 / .35); color: #cbd5e1; }
+.dark .hero-media { background: rgb(15 23 42 / .55); }
+
+@media (max-width: 767px) {
+  .dark .hero-section { background: #020617; }
+  .dark .hero-inner { background: transparent; }
+  .dark .zl-mhero-stage { box-shadow: 0 14px 30px rgb(2 6 23 / .65); }
+}
+
 /* Header search is an input box with the icon inside — never a second
    standalone search button. Radius matches Sign In / Shop the Store. */
 .header-search-box {
@@ -5120,4 +5770,379 @@ html, body { overflow-x: clip; }
 
 @media (min-width: 1024px) {
   .site-header > div:first-child nav { gap: 2rem; }
+}
+
+/* Final product-card meta layout: keep price/stock and the action control in
+   separate, predictable rows on desktop. Legacy absolute-action rules above
+   must not participate in this layout. */
+@media (min-width: 768px) {
+  .product-grid.grid-home .zl-card-meta {
+    display: block;
+    margin-top: auto !important;
+  }
+  .product-grid.grid-home .zl-card-price-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 27px;
+    width: 100%;
+  }
+  .product-grid.grid-home .zl-card-actions {
+    position: static !important;
+    display: block;
+    width: calc(100% + 12px);
+    margin-left: -6px;
+    margin-top: 20px;
+    padding: 0;
+  }
+  .product-grid.grid-home .zl-card-actions button {
+    display: flex;
+    width: 100% !important;
+    height: 42px;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 767px) {
+  .product-grid.grid-home .zl-card-meta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 8px;
+    row-gap: 4px;
+    margin-top: 8px;
+  }
+  .product-grid.grid-home .zl-card-price-row {
+    display: contents;
+  }
+  .product-grid.grid-home .zl-card-price {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .product-grid.grid-home .zl-card-stock {
+    grid-column: 1;
+    grid-row: 2;
+    justify-content: flex-start;
+  }
+  .product-grid.grid-home .zl-card-actions {
+    position: static !important;
+    grid-column: 2;
+    grid-row: 1 / 3;
+    width: auto;
+    margin: 0;
+    padding: 0;
+  }
+  .product-grid.grid-home .zl-card-actions button {
+    width: auto !important;
+    min-width: 80px;
+    height: 36px;
+  }
+}
+
+/* Compact icon-only cart actions on responsive cards. The label is hidden
+   below lg in ProductCard, so the control should not keep a wide text-button
+   footprint and collide with price/stock content. */
+.product-card-container {
+  container-type: inline-size;
+}
+
+@media (max-width: 1023px) {
+  .product-grid.grid-home .zl-card-actions button svg,
+  .product-grid.grid-catalog .zl-card-actions button svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* Phones: the card is horizontal, so the action shares a row with price and
+   stock. Default to a compact icon-only square; as soon as the card itself is
+   wide enough, reveal the full "Add to cart" label again. */
+@media (max-width: 767px) {
+  .product-grid.grid-home .zl-card-actions button,
+  .product-grid.grid-catalog .zl-card-actions button {
+    width: 44px !important;
+    min-width: 44px;
+    height: 36px;
+    padding: 0;
+    gap: 0;
+    flex: 0 0 44px;
+  }
+
+  .product-grid.grid-home .cart-action-label,
+  .product-grid.grid-catalog .cart-action-label {
+    display: none !important;
+  }
+
+  @container (min-width: 330px) {
+    .product-grid.grid-home .product-card-container .zl-card-actions button,
+    .product-grid.grid-catalog .product-card-container .zl-card-actions button {
+      width: auto !important;
+      min-width: 44px;
+      padding: 0 12px;
+      gap: 6px;
+      flex: 0 1 auto;
+    }
+
+    .product-grid.grid-home .product-card-container .cart-action-label,
+    .product-grid.grid-catalog .product-card-container .cart-action-label {
+      display: inline !important;
+    }
+  }
+}
+
+@media (min-width: 768px) {
+  .product-card-container .cart-action-label {
+    display: inline !important;
+  }
+  .product-card-container .zl-card-actions button {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 0 12px !important;
+    gap: 6px !important;
+  }
+}
+
+/* Small cards still have enough vertical room for the same full cart action
+   used on desktop. Put the button on its own row instead of collapsing it to
+   an icon beside the price and stock. */
+@media (max-width: 767px) {
+  .product-grid.grid-home .zl-card-meta,
+  .product-grid.grid-catalog .zl-card-meta {
+    display: block;
+    margin-top: 8px;
+  }
+
+  .product-grid.grid-home .zl-card-price-row,
+  .product-grid.grid-catalog .zl-card-price-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 27px;
+    width: 100%;
+  }
+
+  .product-grid.grid-home .zl-card-stock,
+  .product-grid.grid-catalog .zl-card-stock {
+    justify-content: flex-end;
+  }
+
+  .product-grid.grid-home .zl-card-actions,
+  .product-grid.grid-catalog .zl-card-actions {
+    position: static !important;
+    display: block;
+    width: 100% !important;
+    margin: 12px 0 0 !important;
+    padding: 0;
+  }
+
+  .product-grid.grid-home .zl-card-actions button,
+  .product-grid.grid-catalog .zl-card-actions button {
+    width: 100% !important;
+    min-width: 0;
+    height: 36px;
+    padding: 0 12px;
+    gap: 6px;
+    flex: none;
+  }
+
+  .product-grid.grid-home .cart-action-label,
+  .product-grid.grid-catalog .cart-action-label {
+    display: inline !important;
+  }
+}
+
+.category-tile {
+  container-type: inline-size;
+}
+
+@container (min-width: 220px) {
+  .home-categories-section .category-tile {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 10px;
+    text-align: left;
+  }
+
+  .home-categories-section .category-tile strong {
+    flex: 1;
+    min-width: 0;
+    font-size: 12px;
+  }
+}
+
+/* Keep homepage section headers and compact product cards aligned with their
+   loading skeleton on phones. */
+@media (max-width: 767px) {
+  .zl-sec-head > div:first-child > p {
+    display: block;
+  }
+
+  .product-grid.grid-home .zl-card-meta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 7px;
+    margin-top: 8px;
+  }
+
+  .product-grid.grid-home .zl-card-price-row {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .product-grid.grid-home .zl-card-price {
+    grid-column: 1;
+    grid-row: 1;
+    width: auto;
+    margin-top: 0;
+  }
+
+  .product-grid.grid-home .zl-card-stock {
+    grid-column: auto;
+    grid-row: auto;
+    width: auto;
+    justify-content: flex-start;
+  }
+
+  .product-grid.grid-home .zl-card-actions {
+    grid-column: 2;
+    grid-row: 1;
+    position: static !important;
+    display: block;
+    width: auto !important;
+    margin: 0 !important;
+    padding: 0;
+    align-self: center;
+  }
+
+  .product-grid.grid-home .zl-card-actions button {
+    width: 44px !important;
+    min-width: 44px;
+    height: 36px;
+    padding: 0;
+    gap: 0;
+  }
+
+  .product-grid.grid-home .cart-action-label {
+    display: none !important;
+  }
+}
+
+@media (min-width: 380px) and (max-width: 767px) {
+  .product-grid.grid-home .zl-card-actions button {
+    width: auto !important;
+    min-width: 44px;
+    padding-inline: 10px;
+    gap: 6px;
+  }
+
+  .product-grid.grid-home .cart-action-label {
+    display: inline !important;
+  }
+}
+
+/* Category tiles use the available screen width: stacked on mobile, inline on tablet. */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .home-categories-section .category-grid > a,
+  .home-categories-section .category-grid .zl-skel-cat {
+    flex-direction: row;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .home-categories-section .category-grid > a strong,
+  .home-categories-section .category-grid .zl-skel-cat > .skeleton:last-child {
+    flex: 0 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    font-size: 12px;
+  }
+}
+
+@media (min-width: 480px) and (max-width: 767px) {
+  .home-categories-section .category-grid > a,
+  .home-categories-section .category-grid .zl-skel-cat {
+    flex-direction: row;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .home-categories-section .category-grid > a strong,
+  .home-categories-section .category-grid .zl-skel-cat > .skeleton:last-child {
+    flex: 0 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 767px) {
+  .site-footer .text-body-lg {
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+
+  .site-footer .text-body-md {
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  .site-footer .footer-mobile-contact,
+  .site-footer .footer-mobile-newsletter {
+    min-width: 0;
+    padding-right: 4px;
+  }
+
+  .site-footer .footer-contact a,
+  .site-footer .footer-contact span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .site-footer .footer-mobile-newsletter form > div {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .site-footer .footer-mobile-newsletter form input,
+  .site-footer .footer-mobile-newsletter form button {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+/* Mobile footer final polish: compact type, tidy alignment, responsive text */
+@media (max-width: 767px) {
+  .site-footer .text-body-md { font-size: 12px; line-height: 1.5; }
+  .site-footer .text-body-lg { font-size: 13px; line-height: 1.3; }
+  .site-footer h2 { font-size: 1rem !important; font-weight: 800; line-height: 1.3; margin-bottom: 6px; letter-spacing: .08em; }
+  .site-footer .footer-mobile-contact,
+  .site-footer .footer-mobile-newsletter { grid-column: span 1 !important; padding-right: 0; }
+  .site-footer .footer-mobile-newsletter form,
+  .site-footer .footer-mobile-newsletter form input,
+  .site-footer .footer-mobile-newsletter form button { max-width: none; }
+  .site-footer .footer-link { min-height: 30px; font-size: 12px !important; line-height: 1.4 !important; }
+  .site-footer p,
+  .site-footer .footer-contact a,
+  .site-footer .footer-contact span { overflow-wrap: anywhere; }
+  .site-footer .footer-mobile-newsletter p { margin-bottom: 10px; }
+  .site-footer .footer-bottom { padding-top: 12px; padding-bottom: 10px; }
+  .site-footer .footer-bottom p { font-size: 11px; }
+}
+
+@media (min-width: 768px) {
+  .site-footer > .hidden .grid > div:last-child form input,
+  .site-footer > .hidden .grid > div:last-child form button {
+    flex: 1 1 0 !important;
+    width: 0 !important;
+    min-width: 0 !important;
+  }
 }

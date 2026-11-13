@@ -8,12 +8,12 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AdminStatusBadge } from "@/components/admin-status-badge";
 import { AdminTable } from "@/components/admin-table";
-import { OrderNotesDialog } from "@/components/order-notes-dialog";
 import { Card } from "@/components/ui";
 import { AdminOrderEditDialog } from "@/components/admin-order-edit-dialog";
-import { getAdminOrder, updateAdminOrderStatus } from "@/lib/api";
+import { getAdminOrder, getAdminOrders, updateAdminOrderStatus } from "@/lib/api";
 import { statuses } from "@/lib/data";
 import { money, shortDate } from "@/lib/utils";
+import { safeImageSrc } from "@/components/clean-product-image";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
 
 export function AdminDashboardContent({ orders, topProducts, lowStock, salesOverview }) {
@@ -21,7 +21,8 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
   const [tableOrders, setTableOrders] = useState(orders || []);
   const [pendingOrderId, setPendingOrderId] = useState("");
   const [editingOrder, setEditingOrder] = useState(null);
-  const numberedOrders = tableOrders.map((order, index) => ({ ...order, serial: index + 1 }));
+  const [compactChart, setCompactChart] = useState(false);
+  const numberedOrders = tableOrders.slice(0, 5).map((order, index) => ({ ...order, serial: index + 1 }));
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -30,6 +31,32 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
 
     return () => window.clearTimeout(timeout);
   }, [orders]);
+
+  useEffect(() => {
+    if (!token) return undefined;
+    let active = true;
+    const refreshOrders = async () => {
+      try {
+        const data = await getAdminOrders({ page: 1, limit: 5 }, token);
+        if (active && Array.isArray(data.orders)) setTableOrders(data.orders);
+      } catch {
+        // Keep the dashboard summary visible if the background refresh fails.
+      }
+    };
+    refreshOrders();
+    const interval = window.setInterval(refreshOrders, 30000);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, [token]);
+
+  useEffect(() => {
+    const updateChartMode = () => setCompactChart(window.innerWidth < 640);
+    updateChartMode();
+    window.addEventListener("resize", updateChartMode);
+    return () => window.removeEventListener("resize", updateChartMode);
+  }, []);
 
   async function handleOrderStatusChange(order, nextStatus) {
     const previousOrders = tableOrders;
@@ -58,15 +85,19 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
 
   const orderColumns = [
     { key: "serial", header: "#", sortable: true, accessor: "serial", cellClassName: "font-semibold tabular-nums text-on-surface" },
-    { key: "orderNumber", header: "Order", sortable: true, accessor: "publicOrderId", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => order.publicOrderId || order.orderNumber || order.id || order.ingramOrderNumber },
-    { key: "customer", header: "Customer", sortable: true, accessor: (order) => order.customer?.name || "—", cellClassName: "max-w-[200px] truncate font-semibold text-on-surface" },
-    { key: "payment", header: "Payment", accessor: "payment", render: (order) => <AdminStatusBadge className="text-label-md font-normal text-on-surface-variant">{order.payment}</AdminStatusBadge> },
-    { key: "notes", header: "Notes", accessor: "notes", render: (order) => <OrderNotesDialog notes={order.notes} label={`View notes for order ${order.publicOrderId || order.orderNumber || order.id}`} /> },
+    { key: "orderNumber", header: "Order ID", sortable: true, accessor: "publicOrderId", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => order.publicOrderId || order.orderNumber || order.ingramOrderNumber || order.id },
+    { key: "customerName", header: "Name", sortable: true, accessor: (order) => customerDisplayName(order), cellClassName: "min-w-[160px] max-w-[220px] truncate text-on-surface", render: (order) => <span className="truncate" title={customerDisplayName(order)}>{customerDisplayName(order)}</span> },
+    { key: "payment", header: "Payment", accessor: "payment", render: (order) => <AdminStatusBadge className="text-label-md font-normal text-on-surface">{order.payment}</AdminStatusBadge> },
     { key: "total", header: "Total", sortable: true, accessor: "total", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => money(order.total) },
+    { key: "commissionTotal", header: "Commission", sortable: true, accessor: "commissionTotal", cellClassName: "font-semibold tabular-nums text-on-surface", render: (order) => money(order.commissionTotal || 0) },
     { key: "date", header: "Date", sortable: true, accessor: "date", render: (order) => shortDate(order.date) },
     { key: "status", header: "Status", accessor: "status", render: (order) => <OrderStatusSelect order={order} pending={pendingOrderId === order.id} onChange={handleOrderStatusChange} /> },
   ];
   const trend = chartTrend(salesOverview);
+  const maxRevenue = Math.max(0, ...salesOverview.map((item) => Number(item.revenue) || 0));
+  const chartMax = Math.max(2500, Math.ceil(maxRevenue / 2500) * 2500);
+  const chartStep = compactChart ? Math.max(5000, Math.ceil(chartMax / 4 / 5000) * 5000) : 2500;
+  const chartTicks = Array.from({ length: Math.floor(chartMax / chartStep) + 1 }, (_, index) => index * chartStep);
 
   return (
     <>
@@ -81,18 +112,18 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
           </div>
           <div className="mt-6 min-h-60 flex-1 rounded-lg bg-surface-container-low/70 p-3 ring-1 ring-outline-variant/70">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={salesOverview} margin={{ left: 0, right: 10, top: 12, bottom: 0 }}>
+              <AreaChart data={salesOverview} margin={{ left: 0, right: 12, top: 14, bottom: 8 }}>
                 <defs>
                   <linearGradient id="salesRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.38} />
-                    <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0.02} />
+                    <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.28} />
+                    <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgb(var(--color-outline) / 0.35)" vertical={false} />
-                <XAxis dataKey="date" tickFormatter={(value) => String(value)} axisLine={false} tickLine={false} tickMargin={10} fontSize={12} />
-                <YAxis tickFormatter={(value) => `$${value}`} axisLine={false} tickLine={false} tickMargin={8} width={44} fontSize={12} />
-                <Tooltip formatter={(value) => [money(value), "Revenue"]} labelFormatter={(value) => String(value)} contentStyle={{ borderRadius: 12, border: "1px solid rgb(var(--color-outline-variant))", boxShadow: "0 18px 55px rgb(15 23 42 / 0.12)", background: "var(--color-surface-container-lowest)" }} />
-                <Area type="monotone" dataKey="revenue" stroke="var(--color-primary)" strokeWidth={3} fill="url(#salesRevenue)" dot={{ r: 3, strokeWidth: 2, fill: "var(--color-surface-container-lowest)" }} activeDot={{ r: 5 }} />
+                <CartesianGrid stroke="var(--color-outline-variant)" strokeOpacity={0.55} vertical={false} />
+                <XAxis dataKey="date" tickFormatter={(value) => String(value)} axisLine={false} tickLine={false} tickMargin={14} fontSize={12} />
+                <YAxis type="number" domain={[0, chartMax]} ticks={chartTicks} allowDecimals={false} tickFormatter={(value) => formatChartCurrency(value)} axisLine={false} tickLine={false} tickMargin={compactChart ? 7 : 12} width={compactChart ? 58 : 72} fontSize={compactChart ? 10 : 12} />
+                <Tooltip formatter={(value) => [money(value), "Revenue"]} labelFormatter={(value) => String(value)} contentStyle={{ borderRadius: 14, border: "1px solid rgb(var(--color-outline-variant))", boxShadow: "0 20px 60px rgb(15 23 42 / 0.15)", background: "var(--color-surface-container-lowest)" }} />
+                <Area type="monotoneX" dataKey="revenue" connectNulls stroke="var(--color-primary)" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" fill="url(#salesRevenue)" dot={false} activeDot={{ r: 6, fill: "var(--color-primary)", stroke: "var(--color-surface-container-lowest)", strokeWidth: 3 }} isAnimationActive animationDuration={700} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -106,7 +137,7 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
                 <div key={`${item.productId || item.sku || "low-stock"}-${item.sku || item.productName || index}-${index}`} className="flex items-center justify-between gap-3 rounded-lg border border-amber-200/70 bg-amber-50/80 p-3 dark:border-amber-500/20 dark:bg-amber-500/10">
                   <div className="flex min-w-0 items-center gap-3">
                     {item.image ? (
-                      <Image src={item.image} alt={item.productName} width={40} height={40} className="size-10 shrink-0 rounded-md object-cover ring-1 ring-amber-200 dark:ring-amber-500/30" />
+                      <Image src={safeImageSrc(item.image)} alt={item.productName} width={40} height={40} className="size-10 shrink-0 rounded-md object-cover ring-1 ring-amber-200 dark:ring-amber-500/30" />
                     ) : null}
                     <div className="min-w-0">
                       <p className="truncate text-body-md font-semibold text-on-secondary-container">{item.productName}</p>
@@ -132,10 +163,10 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
         </div>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {topProducts.length ? (
-            topProducts.map((product, index) => (
+              topProducts.slice(0, 5).map((product, index) => (
               <div key={`${product.productId}-${index}`} className="flex min-w-0 items-center gap-3 rounded-lg border border-outline-variant bg-surface-container-low/60 p-3">
                 {product.image ? (
-                  <Image src={product.image} alt={product.name} width={56} height={56} className="size-12 shrink-0 rounded-lg object-cover ring-1 ring-outline-variant" />
+                  <Image src={safeImageSrc(product.image)} alt={product.name} width={56} height={56} className="size-12 shrink-0 rounded-lg object-cover ring-1 ring-outline-variant" />
                 ) : (
                   <div className="grid size-12 shrink-0 place-items-center rounded-lg bg-surface-container text-xs font-semibold text-on-surface-variant">IT</div>
                 )}
@@ -159,7 +190,7 @@ export function AdminDashboardContent({ orders, topProducts, lowStock, salesOver
         columns={orderColumns}
         data={numberedOrders}
         searchPlaceholder="Search order or customer"
-        searchKeys={["orderNumber", "id", (order) => order.customer?.name, "status", "payment", "total"]}
+        searchKeys={["orderNumber", "publicOrderId", "id", (order) => customerDisplayName(order), "status", "payment", "total"]}
         filters={[{ key: "status", label: "Filter recent orders by status", allLabel: "All statuses", options: statuses, value: (order) => order.status }]}
          rowActions={(order) => [
             { label: "View", href: `/admin/orders/${order.id}`, icon: Eye, ariaLabel: "View order" },
@@ -207,6 +238,13 @@ function OrderStatusSelect({ order, pending, onChange }) {
   );
 }
 
+function customerDisplayName(order) {
+  if (!order?.customer?.isVisitor) return order?.customer?.name || "—";
+  const billing = order.billing || {};
+  const name = `${billing.firstName || ""} ${billing.lastName || ""}`.trim();
+  return name || billing.email || "Guest";
+}
+
 function statusClassName(status) {
   if (["Delivered", "Invoiced"].includes(status)) return "bg-emerald-100 text-emerald-700 focus:ring-emerald-500/20 dark:bg-emerald-950/50 dark:text-emerald-300";
   if (["Cancelled", "Voided"].includes(status)) return "bg-rose-100 text-rose-700 focus:ring-rose-500/20 dark:bg-rose-950/50 dark:text-rose-300";
@@ -221,4 +259,8 @@ function chartTrend(data) {
   if (!first) return "0%";
   const percent = ((last - first) / first) * 100;
   return `${percent >= 0 ? "+" : ""}${percent.toFixed(1)}%`;
+}
+
+function formatChartCurrency(value) {
+  return `$${Number(value || 0).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 }

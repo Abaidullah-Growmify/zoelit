@@ -24,7 +24,6 @@ import {
 import { money } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
 import { useCartStore } from "@/store/cart-store";
-import { useProductStore } from "@/store/product-store";
 import { Button, Card, ErrorText, Input, Label, PageHeader } from "@/components/ui";
 import { BulletTextarea } from "@/components/bullet-notes";
 
@@ -97,8 +96,6 @@ function forgetVoucherCode() {
 export default function CheckoutPage() {
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
-  const getById = useProductStore((state) => state.getById);
-  const fetchProducts = useProductStore((state) => state.fetchProducts);
   const items = useCartStore((state) => state.items);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const restoreCart = useCartStore((state) => state.restoreCart);
@@ -109,10 +106,10 @@ export default function CheckoutPage() {
   // so the applied discount below is only ever read from `voucher`.
   const [appliedCode, setAppliedCode] = useState("");
   const [voucher, setVoucher] = useState(null);
+  const voucherRef = useRef(null);
   const [voucherError, setVoucherError] = useState("");
   const [voucherChecking, setVoucherChecking] = useState(false);
   // Bumped on every manual "Apply" so re-entering the same code revalidates.
-  const [voucherAttempt, setVoucherAttempt] = useState(0);
   // Offer list behind the "Apply Voucher" button. Manual code entry stays
   // available as the secondary path for codes that are not listed.
   const [offersOpen, setOffersOpen] = useState(false);
@@ -121,6 +118,8 @@ export default function CheckoutPage() {
   const [manualEntryOpen, setManualEntryOpen] = useState(true);
   const [conflictOpen, setConflictOpen] = useState(false);
   const [conflictVoucher, setConflictVoucher] = useState(null);
+
+  voucherRef.current = voucher;
   const offersRequestRef = useRef(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [checkoutSessionKey, setCheckoutSessionKey] = useState("");
@@ -143,25 +142,25 @@ export default function CheckoutPage() {
   const scopedUserId = String(user?.id || user?._id || "").trim();
   const draftStorageKey = token && scopedUserId ? `zoelit-checkout-draft:${scopedUserId}` : null;
 
-  function readDraft() {
-    if (!draftStorageKey) return null;
-    if (typeof localStorage === "undefined") return null;
-    try {
-      const raw = localStorage.getItem(draftStorageKey);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      return parsed && typeof parsed === "object" ? parsed : null;
-    } catch {
-      return null;
-    }
+  const readDraft = useCallback(() => {
+  if (!draftStorageKey) return null;
+   if (typeof sessionStorage === "undefined") return null;
+   try {
+     const raw = sessionStorage.getItem(draftStorageKey);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
   }
+}, [draftStorageKey]);
 
-  function saveDraft(values, sessionKey = checkoutSessionKey, lastSubmittedSignature = null) {
+  const saveDraft = useCallback((values, sessionKey = checkoutSessionKey, lastSubmittedSignature = null) => {
     if (!draftStorageKey) return;
-    if (typeof localStorage === "undefined") return;
-    try {
-      const existing = readDraft();
-      localStorage.setItem(
+     if (typeof sessionStorage === "undefined") return;
+     try {
+       const existing = readDraft();
+       sessionStorage.setItem(
         draftStorageKey,
         JSON.stringify({
           sessionKey: sessionKey || "",
@@ -172,8 +171,9 @@ export default function CheckoutPage() {
             lastName: String(values.lastName || ""),
             address: String(values.address || ""),
             city: String(values.city || ""),
-            state: String(values.state || ""),
-            postal: String(values.postal || ""),
+             state: String(values.state || ""),
+             postal: String(values.postal || ""),
+             country: String(values.country || ""),
             email: String(values.email || ""),
             phone: String(values.phone || ""),
             notes: String(values.notes || ""),
@@ -183,7 +183,7 @@ export default function CheckoutPage() {
     } catch {
       // Ignore storage failures.
     }
-  }
+  }, [draftStorageKey, checkoutSessionKey, readDraft]);
 
   function buildCheckoutPayloadSignature(values, voucherCode) {
     return JSON.stringify({
@@ -200,6 +200,7 @@ export default function CheckoutPage() {
         city: String(values.city || ""),
         state: String(values.state || ""),
         postal: String(values.postal || ""),
+        country: String(values.country || ""),
         email: String(values.email || ""),
         phone: String(values.phone || ""),
       },
@@ -217,6 +218,7 @@ export default function CheckoutPage() {
       city: "",
       state: "",
       postal: "",
+      country: "",
       email: "",
       phone: "",
       notes: "",
@@ -233,6 +235,17 @@ export default function CheckoutPage() {
   }, []);
 
   useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    const frame = window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
     tokenRef.current = token;
   }, [token]);
 
@@ -241,11 +254,19 @@ export default function CheckoutPage() {
 
     if (!draftStorageKey) {
       try {
+        sessionStorage.removeItem("zoelit-checkout-draft:guest");
         localStorage.removeItem("zoelit-checkout-draft:guest");
       } catch {
         // Ignore storage failures.
       }
       return;
+    }
+
+    try {
+      // Remove drafts created by older versions before reading the temporary draft.
+      localStorage.removeItem(draftStorageKey);
+    } catch {
+      // Ignore storage failures.
     }
 
     const draft = readDraft();
@@ -256,8 +277,9 @@ export default function CheckoutPage() {
       lastName: draft.values.lastName || "",
       address: draft.values.address || "",
       city: draft.values.city || "",
-      state: draft.values.state || "",
-      postal: draft.values.postal || "",
+             state: draft.values.state || "",
+             postal: draft.values.postal || "",
+             country: draft.values.country || "",
       email: draft.values.email || "",
       phone: draft.values.phone || "",
       notes: draft.values.notes || "",
@@ -266,13 +288,13 @@ export default function CheckoutPage() {
     if (draft.sessionKey) {
       setCheckoutSessionKey(draft.sessionKey);
     }
-  }, [draftStorageKey, form, isMounted]);
+  }, [draftStorageKey, form, isMounted, readDraft]);
 
   const cartItems = items
     .map((item) => ({
       ...item,
       quantity: Math.floor(Number(item.quantity)) || 0,
-      product: item.name ? item : getById(item.productId),
+      product: item.name ? item : null,
     }))
     .filter((item) => item.product);
 
@@ -299,6 +321,7 @@ export default function CheckoutPage() {
               city: values.city,
               state: values.state,
               postal: values.postal,
+              country: values.country,
               notes: values.notes,
             },
           },
@@ -308,7 +331,7 @@ export default function CheckoutPage() {
     });
 
     return () => subscription.unsubscribe();
-  }, [cartItems, checkoutSessionKey, form, isMounted, token]);
+  }, [cartItems, checkoutSessionKey, form, isMounted, token, saveDraft]);
 
   // Every checkout visit is recorded on its own. The cart snapshot is taken
   // from the same summary the visitor is looking at, and the backend keeps the
@@ -323,9 +346,10 @@ export default function CheckoutPage() {
     startCaptureIntent({
       items,
       subtotal,
-      shipping,
-      total,
-      token,
+       shipping,
+       total,
+       checkoutAsGuest: !user,
+       token,
     })
       .then((intent) => {
         captureIntentRef.current = intent;
@@ -335,7 +359,7 @@ export default function CheckoutPage() {
       .catch(() => {
         // Capture is best effort and must never block checkout.
       });
-  }, [cartItems, isMounted, token, validatedPrices]);
+  }, [cartItems, isMounted, token, user, validatedPrices]);
 
   // Quantity edits inside this visit stay on the same record: the backend
   // re-prices the snapshot, so the abandoned record always mirrors the cart
@@ -370,10 +394,6 @@ export default function CheckoutPage() {
     };
   }, [isMounted]);
 
-  useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
-
   const priceOf = (item) =>
     Number(validatedPrices[item.productId] ?? item.product.price ?? item.price ?? 0) || 0;
 
@@ -386,10 +406,11 @@ export default function CheckoutPage() {
 
   function applyVoucherCode() {
     const code = voucherInput.trim().toUpperCase();
-    if (!code || voucherChecking) return;
+    if (!code) return;
+    // Always reset checking state before applying
+    setVoucherChecking(true);
     setVoucherError("");
     setAppliedCode(code);
-    setVoucherAttempt((attempt) => attempt + 1);
   }
 
   function removeVoucher() {
@@ -469,6 +490,7 @@ export default function CheckoutPage() {
       form.setValue("city", address.city || "");
       form.setValue("state", address.region || "");
       form.setValue("postal", address.postal || "");
+      form.setValue("country", address.country || "");
       form.setValue("phone", address.phone || user?.phone || "");
     },
     [form, user?.phone]
@@ -535,7 +557,7 @@ export default function CheckoutPage() {
           quantity: Math.floor(Number(item.quantity)) || 1,
         })),
         email: getValues("email") || "",
-        voucher: voucher || null,
+         voucher: voucherRef.current || null,
       },
       token
     )
@@ -555,7 +577,7 @@ export default function CheckoutPage() {
         if (!active) return;
         const code = error?.code || "";
         if (code === "VOUCHER_CONFLICT") {
-          setConflictVoucher(error?.currentVoucher || voucher || null);
+           setConflictVoucher(error?.currentVoucher || voucherRef.current || null);
           setConflictOpen(true);
           // Keep the current applied voucher intact; do not clear.
           setVoucherChecking(false);
@@ -573,61 +595,7 @@ export default function CheckoutPage() {
     return () => {
       active = false;
     };
-  }, [isMounted, appliedCode, voucherAttempt, items, token, getValues]);
-
-  // Continuously revalidate the applied voucher when the cart changes. If it
-  // becomes ineligible (e.g. products removed, minimum no longer met), remove
-  // it with a clear message.
-  useEffect(() => {
-    if (!isMounted || !voucher || !appliedCode) return undefined;
-
-    let active = true;
-    const timer = setTimeout(async () => {
-      try {
-        const data = await validateVoucher(
-          {
-            code: appliedCode,
-            products: items.map((item) => ({
-              ingramPartNumber: item.productId,
-              quantity: Math.floor(Number(item.quantity)) || 1,
-            })),
-            email: getValues("email") || "",
-            voucher: voucher,
-          },
-          token
-        );
-        if (!active) return;
-        // Still valid — refresh voucher state.
-        setVoucher({
-          code: data.voucher?.code || appliedCode,
-          name: data.voucher?.name || "",
-          type: data.discount?.type || "percentage",
-          value: Number(data.discount?.value) || 0,
-          discountAmount: Number(data.discountAmount) || 0,
-        });
-        setVoucherError("");
-      } catch (error) {
-        if (!active) return;
-        const code = error?.code || "";
-        if (code === "VOUCHER_CONFLICT") {
-          // Conflict handled by the modal; do not auto-remove.
-          setConflictVoucher(error?.currentVoucher || voucher || null);
-          setConflictOpen(true);
-          return;
-        }
-        // Any other failure means the voucher is no longer eligible.
-        setVoucher(null);
-        setVoucherError("This voucher is no longer valid for your cart and has been removed.");
-        forgetVoucherCode();
-        setAppliedCode("");
-      }
-    }, 300);
-
-    return () => {
-      active = false;
-      clearTimeout(timer);
-    };
-  }, [items, isMounted, appliedCode, token, getValues, voucher]);
+  }, [isMounted, appliedCode, items, token, getValues]);
 
   useEffect(() => {
     if (!isMounted) return;
@@ -661,7 +629,7 @@ export default function CheckoutPage() {
     if (readDraft()?.values) return;
     if (user.email) form.setValue("email", user.email || "");
     if (user.phone) form.setValue("phone", user.phone || "");
-  }, [draftStorageKey, form, user]);
+  }, [draftStorageKey, form, user, readDraft]);
 
   useEffect(() => {
     if (!token) return;
@@ -682,7 +650,7 @@ export default function CheckoutPage() {
     return () => {
       active = false;
     };
-  }, [applyAddress, draftStorageKey, token]);
+  }, [applyAddress, draftStorageKey, token, readDraft]);
 
   if (!isMounted) {
     return null;
@@ -716,6 +684,10 @@ export default function CheckoutPage() {
             {
               products,
               checkoutSessionKey: nextSessionKey,
+              // The UI is the source of truth for whether this checkout was
+              // started as a visitor. This prevents an old auth cookie from
+              // attaching a guest order to another account.
+              checkoutAsGuest: !user,
               // Ties this Stripe session to this exact checkout visit, so the
               // order later converts that one record and nothing else.
               captureId: captureIntentRef.current?.id,
@@ -726,9 +698,10 @@ export default function CheckoutPage() {
                 lastName: billing.lastName,
                 address: billing.address,
                 city: billing.city,
-                state: billing.state,
-                postal: billing.postal,
-                email: billing.email,
+                 state: billing.state,
+                 postal: billing.postal,
+                 country: billing.country,
+                 email: billing.email,
                 phone: billing.phone,
               },
               notes: billing.notes || "",
@@ -783,9 +756,10 @@ export default function CheckoutPage() {
               phone: billing.phone,
               address: billing.address,
               city: billing.city,
-              state: billing.state,
-              postal: billing.postal,
-              notes: billing.notes,
+               state: billing.state,
+               postal: billing.postal,
+               country: billing.country,
+               notes: billing.notes,
             },
           },
           token
@@ -881,15 +855,16 @@ export default function CheckoutPage() {
           <div className="grid gap-5 md:grid-cols-2">
             <Field label="First Name" name="firstName" required form={form} error={errors.firstName?.message} placeholder="First name" />
             <Field label="Last Name" name="lastName" required form={form} error={errors.lastName?.message} placeholder="Last name" />
-            <Field label="Email Address" name="email" type="email" required form={form} error={errors.email?.message} placeholder="you@example.com" className="md:col-span-2" />
-            <Field label="Phone" name="phone" type="tel" required form={form} error={errors.phone?.message} placeholder="Phone number" className="md:col-span-2" />
+            <Field label="Email Address" name="email" type="email" required form={form} error={errors.email?.message} placeholder="you@example.com" />
+            <Field label="Phone" name="phone" type="tel" required form={form} error={errors.phone?.message} placeholder="Phone number" />
             <Field label="Address" name="address" required form={form} error={errors.address?.message} placeholder="Street address" className="md:col-span-2" />
             <Field label="Town / City" name="city" required form={form} error={errors.city?.message} placeholder="Town / City" />
-            <Field label="State / County" name="state" required form={form} error={errors.state?.message} placeholder="State / County" />
+            <Field label="State" name="state" required form={form} error={errors.state?.message} placeholder="State" />
             <Field label="Postcode / Zip" name="postal" required form={form} error={errors.postal?.message} placeholder="Postcode / Zip" />
+            <Field label="Country" name="country" required form={form} error={errors.country?.message} placeholder="Country" />
             <div className="md:col-span-2">
-              <Label className="font-medium">Order Notes</Label>
-              <BulletTextarea {...form.register("notes")} rows={4} placeholder="Notes about your order, e.g. delivery instructions." />
+              <Label htmlFor="checkout-notes" className="font-medium">Order Notes</Label>
+              <BulletTextarea id="checkout-notes" {...form.register("notes")} rows={4} placeholder="Notes about your order, e.g. delivery instructions." />
             </div>
           </div>
         </Card>
@@ -916,18 +891,18 @@ export default function CheckoutPage() {
 
           <div className="mt-6 border-t border-slate-200 pt-5 dark:border-slate-800">
             {voucher ? (
-              <div className="mb-5 flex items-start justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 dark:border-emerald-900/60 dark:bg-emerald-950/40">
-                <div className="flex min-w-0 items-start gap-2.5">
+              <div className="mb-5 flex items-center justify-between gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-900/60 dark:bg-emerald-950/40">
+                <div className="flex min-w-0 flex-1 items-start gap-2">
                   <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-emerald-600 text-white">
                     <Check className="size-3.5" />
                   </span>
                   <div className="min-w-0">
-                    <p className="flex flex-wrap items-center gap-x-1.5 text-sm font-semibold text-emerald-800 dark:text-emerald-200">
+                    <p className="flex min-w-0 flex-wrap items-center gap-x-1 text-sm font-semibold text-emerald-800 dark:text-emerald-200">
                       <Ticket className="size-3.5 shrink-0" />
                       <span className="uppercase">{voucher.code}</span>
                       <span className="font-normal opacity-80">applied</span>
                     </p>
-                    <p className="mt-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                    <p className="mt-0.5 text-[11px] font-medium leading-4 text-emerald-700 dark:text-emerald-300">
                       {voucher.type === "fixed" ? `${money(voucher.value)} off` : `${voucher.value}% off`}
                       {voucher.name ? ` · ${voucher.name}` : ""} · You save {money(voucher.discountAmount)}
                     </p>
@@ -936,8 +911,7 @@ export default function CheckoutPage() {
                 <button
                   type="button"
                   onClick={removeVoucher}
-                  disabled={voucherChecking}
-                  className="shrink-0 rounded-md px-2 py-1 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:opacity-60 dark:text-emerald-300 dark:hover:bg-emerald-900/60"
+                  className="shrink-0 rounded-md px-1.5 py-1 text-[11px] font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:text-emerald-300 dark:hover:bg-emerald-900/60"
                   aria-label={`Remove voucher ${voucher.code}`}
                 >
                   Remove
@@ -954,7 +928,7 @@ export default function CheckoutPage() {
                     <Button
                       type="button"
                       onClick={openOffers}
-                      disabled={voucherChecking}
+                      disabled={false}
                       className="h-9 shrink-0 px-4"
                     >
                       Apply Voucher
@@ -1022,13 +996,13 @@ export default function CheckoutPage() {
                               type="button"
                               size="sm"
                               onClick={() => applyOffer(offer)}
-                              disabled={voucherChecking || !offer.available}
+                              disabled={!offer.available}
                               className="shrink-0"
                             >
                               {voucherChecking ? (
                                 <Loader2 className="size-4 animate-spin" />
                               ) : (
-                                "Apply"
+                                Apply
                               )}
                             </Button>
                           </div>
@@ -1072,10 +1046,10 @@ export default function CheckoutPage() {
                     <Button
                       type="button"
                       onClick={applyVoucherCode}
-                      disabled={voucherChecking || !voucherInput.trim()}
+                      disabled={voucherChecking && !!appliedCode}
                       className="h-11 shrink-0"
                     >
-                      {voucherChecking ? <Loader2 className="size-4 animate-spin" /> : "Apply"}
+                      {voucherChecking && !!appliedCode ? <Loader2 className="size-4 animate-spin" /> : "Apply"}
                     </Button>
                   </div>
                 )}
@@ -1134,8 +1108,7 @@ export default function CheckoutPage() {
               </div>
             ) : null}
 
-            <Row label="Cart Subtotal" value={money(cartSubtotal)} />
-            <Row label="Sub Total" value={money(cartSubtotal)} />
+            <Row label="Subtotal" value={money(cartSubtotal)} />
             <Row label="Shipping Cost" value={shipping === 0 ? "Free" : money(shipping)} tone={shipping === 0 ? "blue" : undefined} />
             <Row
               label="Discount"
@@ -1149,7 +1122,7 @@ export default function CheckoutPage() {
 
           <Button
             type="submit"
-            disabled={isProcessing || voucherChecking}
+            disabled={isProcessing}
             className="mt-6 h-12 w-full text-base shadow-xl shadow-blue-600/20"
           >
             {isProcessing ? (
@@ -1172,19 +1145,37 @@ export default function CheckoutPage() {
 }
 
 function Field({ label, name, form, error, type = "text", placeholder, required, className }) {
+  const fieldId = `checkout-${name}`;
+  const errorId = `${fieldId}-error`;
+  const autocomplete = {
+    firstName: "given-name",
+    lastName: "family-name",
+    email: "email",
+    phone: "tel",
+    address: "street-address",
+    city: "address-level2",
+    state: "address-level1",
+    postal: "postal-code",
+    country: "country",
+  }[name];
   return (
     <div className={className}>
-      <Label className="font-medium">
+      <Label htmlFor={fieldId} className="font-medium">
         {label} {required ? <span className="text-error">*</span> : null}
       </Label>
       <Input
+        id={fieldId}
         type={type}
         placeholder={placeholder}
+        autoComplete={autocomplete}
+        required={required}
+        aria-required={required ? "true" : undefined}
         aria-invalid={Boolean(error)}
+        aria-describedby={error ? errorId : undefined}
         className="mt-2"
         {...form.register(name, required ? { required: `${label} is required` } : undefined)}
       />
-      <ErrorText>{error}</ErrorText>
+      <ErrorText id={errorId}>{error}</ErrorText>
     </div>
   );
 }
