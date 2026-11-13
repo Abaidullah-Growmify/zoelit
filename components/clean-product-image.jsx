@@ -15,11 +15,26 @@ const SAFE_IMAGE_HOSTS = new Set([
 export const SAFE_IMAGE_FALLBACK =
   "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?auto=format&fit=crop&w=900&q=80";
 
+function dummyImagePlaceholder(value) {
+  try {
+    const url = new URL(value);
+    if (url.hostname !== "dummyimage.com") return null;
+    const [size = "600x400", background = "e2e8f0", foreground = "475569"] = url.pathname.split("/").filter(Boolean);
+    const [width = "600", height = "400"] = size.split("x");
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="#${background}"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#${foreground}" font-family="Arial,sans-serif" font-size="32">${width} × ${height}</text></svg>`;
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  } catch {
+    return null;
+  }
+}
+
 export function safeImageSrc(value) {
   if (!value) return SAFE_IMAGE_FALLBACK;
   if (value.startsWith("/") || value.startsWith("data:") || value.startsWith("blob:")) return value;
   try {
     const url = new URL(value);
+    const placeholder = dummyImagePlaceholder(value);
+    if (placeholder) return placeholder;
     if (url.protocol === "https:" && (SAFE_IMAGE_HOSTS.has(url.hostname) || url.hostname.endsWith(".icecat.biz"))) return value;
   } catch {
     // Invalid image URLs use the fallback below.
@@ -29,8 +44,10 @@ export function safeImageSrc(value) {
 
 function sourceUrl(src, width = WORK_WIDTH) {
   const safeSrc = safeImageSrc(src);
-  if (!safeSrc || safeSrc.startsWith("data:") || safeSrc.startsWith("/_next/image")) return safeSrc;
-  return `/_next/image?url=${encodeURIComponent(safeSrc)}&w=${width}&q=75`;
+  // Load catalog images directly. Some upstream image hosts return different
+  // responses through the production Next image optimizer, which can make a
+  // subset of otherwise valid product images appear broken on Vercel.
+  return safeSrc;
 }
 
 // Clears the plain white backdrop of a product photo by flooding inward from
@@ -116,6 +133,11 @@ export function CleanProductImage({ src, alt = "", className = "max-h-full max-w
     decoding: "async",
     loading: priority ? "eager" : "lazy",
     fetchPriority: fetchPriority || (priority ? "high" : "auto"),
+    onError: (event) => {
+      if (event.currentTarget.src !== SAFE_IMAGE_FALLBACK) {
+        event.currentTarget.src = SAFE_IMAGE_FALLBACK;
+      }
+    },
   };
 
   useEffect(() => {
