@@ -408,6 +408,8 @@ export default function CheckoutPage() {
     const code = voucherInput.trim().toUpperCase();
     if (!code) return;
     // Always reset checking state before applying
+    voucherRef.current = null;
+    setVoucher(null);
     setVoucherChecking(true);
     setVoucherError("");
     setAppliedCode(code);
@@ -465,6 +467,8 @@ export default function CheckoutPage() {
   function applyOffer(offer) {
     const code = String(offer?.code || "").trim().toUpperCase();
     if (!code || voucherChecking) return;
+    voucherRef.current = null;
+    setVoucher(null);
     setVoucherError("");
     setAppliedCode(code);
     setVoucherAttempt((attempt) => attempt + 1);
