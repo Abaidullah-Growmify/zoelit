@@ -37,6 +37,7 @@ export default function AdminCommissionsPage() {
   const [statusTarget, setStatusTarget] = useState(null);
   const [duplicateMessage, setDuplicateMessage] = useState("");
   const [viewTarget, setViewTarget] = useState(null);
+  const [formErrors, setFormErrors] = useState({});
 
   const loadRules = useCallback(async () => {
     if (!token) return;
@@ -54,7 +55,7 @@ export default function AdminCommissionsPage() {
     try {
       const [rulesData, categoryData] = await Promise.all([getCommissionRules(token), getAdminCategories(token)]);
       setRules(rulesData.rules || []);
-      setCategories(categoryData.categories || []);
+       setCategories([...(categoryData.categories || [])].sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), undefined, { sensitivity: "base" })));
     } catch (error) { toast.error(error.message || "Could not load commissions"); }
     finally {
        const remaining = Math.max(0, 650 - (Date.now() - startedAt));
@@ -104,6 +105,12 @@ export default function AdminCommissionsPage() {
 
   function change(key, value) {
     setForm((current) => ({ ...current, [key]: value, ...(key === "type" && value !== "product" ? { productId: "" } : {}) }));
+    setFormErrors((current) => {
+      if (!current[key]) return current;
+      const next = { ...current };
+      delete next[key];
+      return next;
+    });
     if (key === "type" && value !== "product") { setProductCategory(""); setProductSearch(""); }
   }
   async function edit(rule) {
@@ -151,7 +158,7 @@ export default function AdminCommissionsPage() {
     const rule = statusTarget;
     await changeRuleStatus(rule, rule.isActive === false);
   }
-  function reset() { setEditingId(""); setForm(empty); setProductCategory(""); setProductSearch(""); setCategoryProducts([]); setProductOpen(false); }
+  function reset() { setEditingId(""); setForm(empty); setFormErrors({}); setProductCategory(""); setProductSearch(""); setCategoryProducts([]); setProductOpen(false); }
   function openAddForm() {
     reset();
     setFormReturnView("all");
@@ -159,7 +166,22 @@ export default function AdminCommissionsPage() {
     setFormOpen(true);
   }
   async function save(event) {
-    event.preventDefault(); setSaving(true);
+    event.preventDefault();
+    const errors = {};
+    const numericValue = Number(form.value);
+    if (!form.type) errors.type = "Rule type is required.";
+    if (form.type === "category" && !form.category) errors.category = "Category is required.";
+    if (form.type === "product") {
+      if (!productCategory) errors.productCategory = "Product category is required.";
+      if (!form.productId) errors.product = "Product is required.";
+    }
+    if (String(form.value).trim() === "") errors.value = "Commission value is required.";
+    else if (!Number.isFinite(numericValue) || numericValue <= 0) errors.value = "Enter a value greater than 0.";
+    else if (form.valueType === "percentage" && numericValue > 100) errors.value = "Percentage cannot exceed 100.";
+    setFormErrors(errors);
+    if (Object.keys(errors).length) return;
+
+    setSaving(true);
     try {
       const payload = { ...form, value: Number(form.value), rate: form.valueType === "percentage" ? Number(form.value) : 0 };
       if (editingId) await updateCommissionRule(editingId, payload, token); else await createCommissionRule(payload, token);
@@ -204,11 +226,11 @@ export default function AdminCommissionsPage() {
         <div className="mb-5 flex items-center justify-between gap-4"><h2 className="font-heading text-xl font-semibold text-on-surface">{editingId ? "Edit commission rule" : "Add commission rule"}</h2><button type="button" onClick={() => { reset(); setRuleView(formReturnView); setFormOpen(false); }} className="grid size-9 shrink-0 place-items-center rounded-md border border-outline-variant text-on-surface-variant transition hover:bg-surface-container-low hover:text-on-surface" aria-label="Close commission form"><X className="size-5" /></button></div>
         <form onSubmit={save} className="space-y-4">
           <div className="rounded-lg border border-outline-variant bg-surface-container-low/20 p-4"><div className="grid gap-4 sm:grid-cols-2">
-            <label className="text-sm font-medium text-on-surface">Rule type<select value={form.type} onChange={(e) => change("type", e.target.value)} className="mt-2 h-11 w-full rounded-md border border-outline-variant bg-surface px-3 text-sm"><option value="product">Specific product</option><option value="category">Category</option><option value="global">General / all products</option></select></label>
-            {form.type === "category" ? <label className="text-sm font-medium text-on-surface">Category<select required value={form.category} onChange={(e) => change("category", e.target.value)} className="mt-2 h-11 w-full rounded-md border border-outline-variant bg-surface px-3 text-sm"><option value="">Choose category</option>{categories.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}</select></label> : null}
-            {form.type === "product" ? <div className="sm:col-span-2"><ProductPicker categories={categories} category={productCategory} onCategoryChange={(value) => { setProductCategory(value); setProductSearch(""); setProductOpen(false); setForm((current) => ({ ...current, productId: "" })); }} value={productSearch} onChange={(value) => { setProductSearch(value); setProductOpen(true); setForm((current) => ({ ...current, productId: "" })); }} products={matchingProducts} loading={productsLoading} open={productOpen} onOpenChange={setProductOpen} onOutside={() => { const product = categoryProducts.find((item) => item.ingramPartNumber === form.productId); if (product) setProductSearch(`${product.name || product.description || "Unnamed product"} · ${product.ingramPartNumber}`); }} onSelect={(product) => { setForm((current) => ({ ...current, productId: product.ingramPartNumber })); setProductSearch(`${product.name || product.description || "Unnamed product"} · ${product.ingramPartNumber}`); setProductOpen(false); }} currentSku={editingId && !productCategory ? form.productId : ""} /></div> : null}
+             <label className="text-sm font-medium text-on-surface">Rule type <RequiredMark /><select required value={form.type} onChange={(e) => change("type", e.target.value)} className={`mt-2 h-11 w-full rounded-md border bg-surface px-3 text-sm ${formErrors.type ? "border-error" : "border-outline-variant"}`}><option value="product">Specific product</option><option value="category">Category</option><option value="global">General / all products</option></select><InlineError message={formErrors.type} /></label>
+             {form.type === "category" ? <label className="text-sm font-medium text-on-surface">Category <RequiredMark /><select required value={form.category} onChange={(e) => change("category", e.target.value)} className={`mt-2 h-11 w-full rounded-md border bg-surface px-3 text-sm ${formErrors.category ? "border-error" : "border-outline-variant"}`}><option value="">Choose category</option>{categories.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}</select><InlineError message={formErrors.category} /></label> : null}
+             {form.type === "product" ? <div className="sm:col-span-2"><ProductPicker categories={categories} category={productCategory} productError={formErrors.product} categoryError={formErrors.productCategory} onCategoryChange={(value) => { setProductCategory(value); setFormErrors((current) => ({ ...current, productCategory: undefined, product: undefined })); setProductSearch(""); setProductOpen(false); setForm((current) => ({ ...current, productId: "" })); }} value={productSearch} onChange={(value) => { setFormErrors((current) => ({ ...current, product: undefined })); setProductSearch(value); setProductOpen(true); setForm((current) => ({ ...current, productId: "" })); }} products={matchingProducts} loading={productsLoading} open={productOpen} onOpenChange={setProductOpen} onOutside={() => { const product = categoryProducts.find((item) => item.ingramPartNumber === form.productId); if (product) setProductSearch(`${product.name || product.description || "Unnamed product"} · ${product.ingramPartNumber}`); }} onSelect={(product) => { setFormErrors((current) => ({ ...current, product: undefined })); setForm((current) => ({ ...current, productId: product.ingramPartNumber })); setProductSearch(`${product.name || product.description || "Unnamed product"} · ${product.ingramPartNumber}`); setProductOpen(false); }} currentSku={editingId && !productCategory ? form.productId : ""} /></div> : null}
           </div><div className="mt-4 border-t border-outline-variant pt-4"><div className="grid gap-4 sm:grid-cols-2">
-             <label className="block text-sm font-medium text-on-surface">{form.valueType === "fixed" ? "Fixed commission per unit" : "Commission percentage"}<div className="mt-2 flex h-11 overflow-hidden rounded-md border border-outline-variant bg-surface transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10"><input required type="number" min="0" max={form.valueType === "percentage" ? "100" : undefined} step={form.valueType === "percentage" ? "1" : "0.01"} inputMode="decimal" value={form.value} onChange={(e) => change("value", e.target.value)} placeholder={form.valueType === "percentage" ? "e.g. 5" : "e.g. 10.00 per unit"} className="min-w-0 flex-1 border-0 bg-transparent px-3.5 text-sm outline-none" /><select value={form.valueType} onChange={(e) => change("valueType", e.target.value)} aria-label="Commission value type" className="w-28 shrink-0 border-0 border-l border-outline-variant bg-surface-container-low px-2 text-center text-sm font-semibold text-on-surface outline-none"><option value="percentage">% Percentage</option><option value="fixed">$ Fixed amount</option></select></div></label>
+              <label className="block text-sm font-medium text-on-surface">{form.valueType === "fixed" ? "Fixed commission per unit" : "Commission percentage"} <RequiredMark /><div className={`mt-2 flex h-11 overflow-hidden rounded-md border bg-surface transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 ${formErrors.value ? "border-error" : "border-outline-variant"}`}><input required type="number" min="0" max={form.valueType === "percentage" ? "100" : undefined} step={form.valueType === "percentage" ? "1" : "0.01"} inputMode="decimal" value={form.value} onChange={(e) => change("value", e.target.value)} placeholder={form.valueType === "percentage" ? "e.g. 5" : "e.g. 10.00 per unit"} className="min-w-0 flex-1 border-0 bg-transparent px-3.5 text-sm outline-none" /><select value={form.valueType} onChange={(e) => change("valueType", e.target.value)} aria-label="Commission value type" className="w-28 shrink-0 border-0 border-l border-outline-variant bg-surface-container-low px-2 text-center text-sm font-semibold text-on-surface outline-none"><option value="percentage">% Percentage</option><option value="fixed">$ Fixed amount</option></select></div><InlineError message={formErrors.value} /></label>
             <label className="text-sm font-medium text-on-surface">Rule name<input value={form.name} onChange={(e) => change("name", e.target.value)} maxLength={RULE_NAME_MAX_LENGTH} placeholder="Optional name" className="mt-2 h-11 w-full rounded-md border border-outline-variant bg-surface px-3 text-sm" /><span className="mt-1.5 block text-xs text-on-surface-variant">{form.name.length}/{RULE_NAME_MAX_LENGTH} characters</span></label>
              <label className="block text-sm font-medium text-on-surface sm:col-span-2"><span className="block">Rule status</span><select value={form.isActive ? "active" : "inactive"} onChange={(e) => change("isActive", e.target.value === "active")} className="mt-2 block h-11 w-full rounded-md border border-outline-variant bg-surface px-3 text-sm sm:max-w-xs"><option value="active">Active rule</option><option value="inactive">Inactive rule</option></select></label>
           </div></div></div>
@@ -363,10 +385,10 @@ function commissionValueLabel(rule) {
 // The order is decided by the rule type and saved in the database, so it is
 // shown as a plain tier instead of an editable number.
 function priorityLabel(rule) {
-  if (rule?.type === "product") return "1st · specific product";
-  if (rule?.type === "category") return "2nd · category";
-  if (rule?.type === "global") return "3rd · all products";
-  return "No priority";
+  if (rule?.type === "product") return "Specific product";
+  if (rule?.type === "category") return "Category";
+  if (rule?.type === "global") return "All products";
+  return "—";
 }
 
 function CommissionControls({ search, onSearch, onAdd }) {
@@ -504,7 +526,15 @@ function DeleteCommissionModal({ rule, deleting, onCancel, onConfirm }) {
   </div>;
 }
 
-function ProductPicker({ categories, category, onCategoryChange, value, onChange, products, loading, open, onOpenChange, onOutside, onSelect, currentSku }) {
+function RequiredMark() {
+  return <span className="text-rose-500" aria-hidden="true">*</span>;
+}
+
+function InlineError({ message }) {
+  return message ? <span className="mt-1 block text-xs font-medium text-error">{message}</span> : null;
+}
+
+function ProductPicker({ categories, category, categoryError, productError, onCategoryChange, value, onChange, products, loading, open, onOpenChange, onOutside, onSelect, currentSku }) {
   const pickerRef = useRef(null);
 
   useEffect(() => {
@@ -517,16 +547,16 @@ function ProductPicker({ categories, category, onCategoryChange, value, onChange
   }, [open, onOpenChange, onOutside]);
 
   return <div className="space-y-5">
-    <label className="block text-sm font-medium text-on-surface">Product category
-      <select value={category} onChange={(event) => onCategoryChange(event.target.value)} title={category} className="mt-1.5 h-10 w-full overflow-hidden text-ellipsis whitespace-nowrap rounded-md border border-outline-variant bg-surface px-3.5 text-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10">
-        <option value="">Choose a category first</option>
-        {categories.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}
-      </select>
-    </label>
-    <label className="block text-sm font-medium text-on-surface">Product
+     <label className="block text-sm font-medium text-on-surface">Product category <RequiredMark />
+       <select required value={category} onChange={(event) => onCategoryChange(event.target.value)} title={category} className={`mt-1.5 h-10 w-full overflow-hidden text-ellipsis whitespace-nowrap rounded-md border bg-surface px-3.5 text-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 ${categoryError ? "border-error" : "border-outline-variant"}`}>
+         <option value="">Choose a category first</option>
+         {categories.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}
+       </select><InlineError message={categoryError} />
+     </label>
+     <label className="block text-sm font-medium text-on-surface">Product <RequiredMark />
       <div ref={pickerRef} className="relative mt-1.5">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
-        <div className="overflow-hidden rounded-md border border-outline-variant bg-surface transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10">
+         <div className={`overflow-hidden rounded-md border bg-surface transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 ${productError ? "border-error" : "border-outline-variant"}`}>
           <input required={!currentSku} value={value} disabled={!category || loading} onFocus={() => onOpenChange(true)} onChange={(event) => onChange(event.target.value)} placeholder={category ? "Search product name or SKU..." : "Select a category first"} title={value} className="h-10 w-full overflow-hidden text-ellipsis whitespace-nowrap border-0 bg-transparent pl-10 pr-10 text-sm outline-none placeholder:text-on-surface-variant disabled:cursor-not-allowed disabled:opacity-60" />
         </div>
         <button type="button" disabled={!category || loading} onMouseDown={(event) => event.preventDefault()} onClick={() => onOpenChange(!open)} className="absolute right-1 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-md text-on-surface-variant transition hover:bg-surface-container-low hover:text-on-surface disabled:cursor-not-allowed disabled:opacity-50" aria-label={open ? "Close product options" : "Open product options"}>
@@ -535,8 +565,8 @@ function ProductPicker({ categories, category, onCategoryChange, value, onChange
         {open && category && !loading ? <div className="absolute left-0 right-0 top-full z-20 max-h-72 overflow-y-auto rounded-b-md border border-t-0 border-outline-variant bg-surface p-1.5 shadow-xl">
           {products.length ? products.slice(0, 50).map((product) => <button type="button" key={product.ingramPartNumber} onClick={() => onSelect(product)} className="flex w-full items-center justify-between gap-3 rounded-md px-3 py-2.5 text-left transition hover:bg-surface-container-low"><span className="min-w-0"><span className="block truncate text-sm font-semibold text-on-surface">{product.name || product.description || "Unnamed product"}</span><span className="block truncate text-xs text-on-surface-variant">{product.ingramPartNumber}</span></span>{value.includes(product.ingramPartNumber) ? <Check className="size-4 shrink-0 text-primary" /> : null}</button>) : <p className="px-3 py-6 text-center text-sm text-on-surface-variant">No matching products found</p>}
         </div> : null}
-      </div>
-    </label>
+       </div><InlineError message={productError} />
+     </label>
     {currentSku ? <p className="text-xs text-on-surface-variant">Selected product: <strong className="text-on-surface">{currentSku}</strong>. Choose a category to change it.</p> : null}
   </div>;
 }

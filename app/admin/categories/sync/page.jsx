@@ -110,7 +110,7 @@ export default function AdminCategorySyncPage() {
     try {
       await startProductSync({
         categories: categoryList.map((category) => category.name),
-        categoryIds: categoryList.map((category) => category.ingramCategoryId || category.id || category.name),
+        categoryIds: categoryList.map((category) => category.ingramCategoryId || ""),
         categoryOnly: true,
       }, token);
       // Synced categories leave this list immediately, because the list only

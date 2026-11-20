@@ -1,4 +1,4 @@
-import { Inter, Plus_Jakarta_Sans, Poppins } from "next/font/google";
+import localFont from "next/font/local";
 import NextTopLoader from "nextjs-toploader";
 import { Toaster } from "sonner";
 import { StoreConfigProvider } from "@/components/store-config-provider";
@@ -6,9 +6,38 @@ import { StoreHydration } from "@/components/store-hydration";
 import { ReduxProvider } from "@/store/provider";
 import "./globals.css";
 
-const plusJakartaSans = Plus_Jakarta_Sans({ variable: "--font-display", subsets: ["latin"], weight: ["400", "600", "700"], display: "swap" });
-const inter = Inter({ variable: "--font-inter", subsets: ["latin"], weight: ["400", "500", "600"] });
-const poppins = Poppins({ variable: "--font-poppins", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
+// Fonts self-hosted hain (app/fonts) — next/font/google ke bajaye local use kar rahe hain.
+// Wajah: Google Fonts kabhi kabhi extensionless /l/font?kit=… URL deta hai, jise
+// Turbopack resolve nahi kar pata ("next/font/google queries have exactly one entry"
+// + "Can't resolve '@vercel/turbopack-next/internal/font/google/font'").
+// Variable fonts (Inter, Plus Jakarta Sans) ek hi woff2 file se poora weight range dete hain.
+const plusJakartaSans = localFont({
+  src: "./fonts/plus-jakarta-sans-latin.woff2",
+  variable: "--font-display",
+  weight: "200 800",
+  style: "normal",
+  display: "swap",
+});
+
+const inter = localFont({
+  src: "./fonts/inter-latin.woff2",
+  variable: "--font-inter",
+  weight: "100 900",
+  style: "normal",
+  display: "swap",
+});
+
+// Poppins static font hai, isliye har weight ki alag file.
+const poppins = localFont({
+  src: [
+    { path: "./fonts/poppins-400-latin.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/poppins-500-latin.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/poppins-600-latin.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/poppins-700-latin.woff2", weight: "700", style: "normal" },
+  ],
+  variable: "--font-poppins",
+  display: "swap",
+});
 
 const themeInitScript = `(() => { try { const theme = localStorage.getItem("theme"); if (theme === "dark") document.documentElement.classList.add("dark"); else if (theme === "light") document.documentElement.classList.remove("dark"); } catch {} })()`;
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://zoelit-frontend.vercel.app").replace(/\/$/, "");

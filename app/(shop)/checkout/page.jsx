@@ -798,6 +798,7 @@ export default function CheckoutPage() {
             eyebrow="Checkout"
             title="Your cart is empty"
             description="Add products to your cart before continuing to Stripe Checkout."
+            align="center"
           />
           <Button asChild href="/products" className="mt-6">
             Continue shopping
@@ -863,7 +864,7 @@ export default function CheckoutPage() {
             <Field label="Phone" name="phone" type="tel" required form={form} error={errors.phone?.message} placeholder="Phone number" />
             <Field label="Address" name="address" required form={form} error={errors.address?.message} placeholder="Street address" className="md:col-span-2" />
             <Field label="Town / City" name="city" required form={form} error={errors.city?.message} placeholder="Town / City" />
-            <Field label="State" name="state" required form={form} error={errors.state?.message} placeholder="State" />
+            <Field label="State" name="state" form={form} error={errors.state?.message} placeholder="State (optional)" />
             <Field label="Postcode / Zip" name="postal" required form={form} error={errors.postal?.message} placeholder="Postcode / Zip" />
             <Field label="Country" name="country" required form={form} error={errors.country?.message} placeholder="Country" />
             <div className="md:col-span-2">

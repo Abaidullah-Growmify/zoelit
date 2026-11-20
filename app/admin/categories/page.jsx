@@ -38,9 +38,6 @@ function buildCategoryColumns(handleToggleCategory) {
         >
           {category.name}
         </p>
-        {category.slug && (
-          <p className="mt-0.5 truncate text-[11px] font-medium text-on-surface-variant sm:text-xs sm:font-bold">{category.slug}</p>
-        )}
       </div>
     ),
   },
@@ -493,8 +490,6 @@ export default function AdminCategoriesPage() {
               pageSize={PAGE_SIZE}
               page={page}
               onPageChange={setPage}
-              totalPages={Math.ceil(filteredRows.length / PAGE_SIZE)}
-              totalItems={filteredRows.length}
               toolbar={(
                 <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                   <div className="relative min-w-0 w-full sm:max-w-md lg:max-w-sm">

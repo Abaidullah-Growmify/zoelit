@@ -61,7 +61,7 @@ export default function AdminNotificationDetailPage() {
     <div className="mx-auto max-w-6xl space-y-5">
       <Card className="overflow-hidden p-0">
          <div className="px-5 py-7 sm:px-8 sm:py-9">
-           <div className="min-w-0"><p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">Notification</p><h1 className="mt-2 break-words font-heading text-2xl font-semibold tracking-tight text-on-surface sm:text-3xl">{notification.title}</h1><p className="mt-2 text-sm text-on-surface-variant">Received {formatDate(notification.createdAt)}</p></div>
+            <div className="min-w-0"><p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">Notification</p><div className="mt-2 flex flex-wrap items-center gap-3"><h1 className="break-words font-heading text-2xl font-semibold tracking-tight text-on-surface sm:text-3xl">{notification.title}</h1>{notification.resolutionStatus === "resolved" ? <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700">Resolved</span> : null}</div><p className="mt-2 text-sm text-on-surface-variant">Received {formatDate(notification.createdAt)}{notification.resolvedAt ? ` · Resolved ${formatDate(notification.resolvedAt)}` : ""}</p></div>
          </div>
          <div className="space-y-6 px-5 py-6 sm:px-8 sm:py-8">
            <div className="rounded-xl border border-outline-variant/70 bg-surface-container-low/45 p-5 sm:p-6"><p className="whitespace-pre-wrap break-words text-base leading-8 text-on-surface">{notification.body}</p></div>

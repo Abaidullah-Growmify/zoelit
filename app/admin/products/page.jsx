@@ -50,6 +50,46 @@ function safeAdminImageSource(value) {
   return FALLBACK_IMAGE;
 }
 
+function AdminProductImage({ src, alt }) {
+  const [imageSrc, setImageSrc] = useState(src || FALLBACK_IMAGE);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setImageSrc(src || FALLBACK_IMAGE);
+    setFailed(false);
+  }, [src]);
+
+  if (failed) {
+    return (
+      <span
+        role="img"
+        aria-label={`${alt} image unavailable`}
+        className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-surface-container-high text-[10px] font-semibold text-on-surface-variant ring-1 ring-outline-variant"
+      >
+        No image
+      </span>
+    );
+  }
+
+  return (
+    <Image
+      src={imageSrc}
+      alt={alt}
+      width={48}
+      height={48}
+      unoptimized
+      className="size-10 shrink-0 rounded-lg object-cover ring-1 ring-outline-variant"
+      onError={() => {
+        if (imageSrc !== FALLBACK_IMAGE) {
+          setImageSrc(FALLBACK_IMAGE);
+        } else {
+          setFailed(true);
+        }
+      }}
+    />
+  );
+}
+
 export default function AdminProductsPage() {
   const token = useAdminAuthStore((state) => state.token);
   const [rows, setRows] = useState(null);
@@ -111,7 +151,8 @@ const [syncing, setSyncing] = useState(false);
   async function handleOpenAddModal() {
     try {
       const data = await getAdminCategories(token);
-      setCategories(data.categories || []);
+      const categoryList = Array.isArray(data?.categories) ? data.categories : Array.isArray(data) ? data : [];
+      setCategories([...categoryList].sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), undefined, { sensitivity: "base" })));
     } catch {
       setCategories([]);
     }
@@ -295,7 +336,7 @@ const [syncing, setSyncing] = useState(false);
 
   return (
     <div className="space-y-6">
-      <TransparentActionLoader open={filterLoading || syncing} label={syncing ? "Syncing products from Ingram… Please wait." : "Switching filter..."} />
+      <TransparentActionLoader open={filterLoading} label="Switching filter..." />
       {rows === null && !error ? (
          <AdminProductsSkeleton rows={PAGE_SIZE} />
       ) : error ? (
@@ -319,11 +360,11 @@ const [syncing, setSyncing] = useState(false);
                      <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" />
                      <Input value={keyword} onChange={(event) => handleSearchChange(event.target.value)} placeholder="Search products, SKU or category" aria-label="Search products" className="h-10 pl-10 shadow-sm" />
                    </div>
-                   <Button onClick={handleOpenAddModal} className="h-10 w-auto shrink-0 gap-1 px-3 text-xs leading-none sm:gap-1.5 sm:text-sm md:w-auto"><Plus className="size-3.5 shrink-0 sm:size-4" /> <span className="sm:hidden">Add</span><span className="hidden sm:inline">Add product</span></Button>
+                    <Button type="button" onClick={handleOpenAddModal} className="h-10 w-auto shrink-0 gap-1 px-3 text-xs leading-none sm:gap-1.5 sm:text-sm md:w-auto"><Plus className="size-3.5 shrink-0 sm:size-4" /> <span className="sm:hidden">Add</span><span className="hidden sm:inline">Add product</span></Button>
                  </div>
                  <div className="grid w-full grid-cols-2 gap-2 md:contents">
                    <Button asChild href="/admin/products/sync" className="h-10 w-full min-w-0 gap-1 whitespace-nowrap px-2 text-xs leading-none sm:gap-1.5 sm:px-3 sm:text-sm md:w-auto"><RefreshCw className="size-3.5 shrink-0 sm:size-4" /><span className="sm:hidden">Sync</span><span className="hidden sm:inline">Sync from Ingram</span></Button>
-                   <Button onClick={handlePriceSync} disabled={syncing} className="h-10 w-full min-w-0 gap-1 whitespace-nowrap px-2 text-xs leading-none sm:gap-1.5 sm:px-3 sm:text-sm md:w-auto"><RefreshCw className={`size-3.5 shrink-0 sm:size-4 ${syncing ? "animate-spin" : ""}`} /><span className="sm:hidden">Prices</span><span className="hidden sm:inline">Sync prices</span></Button>
+                   <Button onClick={handlePriceSync} disabled={syncing} className="h-10 w-full min-w-0 gap-1 whitespace-nowrap px-2 text-xs leading-none sm:gap-1.5 sm:px-3 sm:text-sm md:w-auto"><RefreshCw className={`size-3.5 shrink-0 sm:size-4 ${syncing ? "animate-spin" : ""}`} /><span className="sm:hidden">Prices</span><span className="hidden sm:inline">{syncing ? "Syncing..." : "Sync prices"}</span></Button>
                  </div>
                </>
             )}
@@ -451,7 +492,7 @@ isActive: product.isActive,
 function ProductCell({ product }) {
   return (
     <div className="flex min-w-0 max-w-64 items-center gap-3">
-      <Image src={product.image} alt={product.name} width={48} height={48} className="size-10 shrink-0 rounded-lg object-cover ring-1 ring-outline-variant" />
+      <AdminProductImage src={product.image} alt={product.name} />
        <div className="min-w-0">
          <p title={product.name} className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-base font-bold text-on-surface">{product.name}</p>
         <p className="mt-0.5 truncate text-xs font-bold text-on-surface-variant">SKU: {product.sku}</p>

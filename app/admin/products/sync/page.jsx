@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Button, Card, Input, Skeleton } from "@/components/ui";
 import { TransparentActionLoader } from "@/components/action-feedback";
 import Pagination from "@/components/pagination";
-import { applyIngramSyncChange, getIngramCategories, getIngramCategoryProducts, startProductSync, syncSelectedProducts } from "@/lib/api";
+import { applyIngramSyncChange, checkExistingCatalogProducts, getIngramCategories, getIngramCategoryProducts, getSyncStatus, startProductSync, syncSelectedProducts } from "@/lib/api";
 import { safeImageSrc } from "@/components/clean-product-image";
 import { money } from "@/lib/utils";
 import { matchesSyncSearch, mergePendingChanges, normalizeSyncSku, removePendingChange, toggleSyncSelection } from "@/lib/ingram-sync-state.mjs";
@@ -43,6 +43,9 @@ export default function AdminProductSyncPage() {
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [syncingTarget, setSyncingTarget] = useState(null); // "all" | "category" | null
+  const syncingAll = syncing && syncingTarget === "all";
+  const syncingCategory = syncing && syncingTarget === "category";
   const [progress, setProgress] = useState({ percent: 0, label: "" });
   const [productPage, setProductPage] = useState(1);
   const [pendingPage, setPendingPage] = useState(1);
@@ -58,6 +61,19 @@ export default function AdminProductSyncPage() {
   const loadedRemotePagesRef = useRef(new Set());
   const remotePageRef = useRef(0);
   const loadRemotePageRef = useRef(null);
+  const syncPollRef = useRef(null);
+  const savedCheckRef = useRef(null);
+  const savedCheckBusyRef = useRef(false);
+  const productsRef = useRef([]);
+  const pendingChangesRef = useRef([]);
+
+  useEffect(() => {
+    productsRef.current = products;
+  }, [products]);
+
+  useEffect(() => {
+    pendingChangesRef.current = pendingChanges;
+  }, [pendingChanges]);
 
   // Reconciliation status for every loaded page is initially "queued", so each
   // page used to schedule its own reload every 1.2s. A large category created
@@ -100,11 +116,25 @@ export default function AdminProductSyncPage() {
     const requestId = categoryRequestRef.current;
     if (!silent) setLoadingProducts(true);
     try {
+      const syncApiUrl = `/api/admin/products/categories/ingram/products?categoryId=${category.ingramCategoryId || category.id || category.name}&categoryName=${encodeURIComponent(category.name)}&pageNumber=${page}&pageSize=${REMOTE_PAGE_SIZE}`;
+      console.log("[Product Sync] API call:", syncApiUrl);
       const data = await getIngramCategoryProducts(
         category.ingramCategoryId || category.id || category.name,
         { categoryName: category.name, pageNumber: page, pageSize: REMOTE_PAGE_SIZE },
         token
       );
+      console.log("[Product Sync] Full API response (pura data):", data);
+      console.log("[Product Sync] Summary:", {
+        success: data?.success,
+        category: data?.category,
+        productsReturned: data?.products?.length ?? 0,
+        pendingChanges: data?.changes?.length ?? 0,
+        hasMore: data?.hasMore,
+        pagination: data?.pagination,
+        reconciliation: data?.reconciliation,
+      });
+      console.log("[Product Sync] First product detail (sample):", data?.products?.[0]);
+      console.log("[Product Sync] First product detail JSON:", JSON.stringify(data?.products?.[0] ?? null, null, 2));
        if (requestId !== categoryRequestRef.current) return null;
       const incoming = data.products || [];
       setProducts((current) => {
@@ -261,18 +291,49 @@ export default function AdminProductSyncPage() {
     setProcessingProductSkus((current) => new Set(current).add(sku));
     try {
       const data = await syncSelectedProducts([sku], token);
+      console.log("[Product Sync] syncSelectedProducts (single) response:", data);
       const saved = new Set(data.saved || []);
+      const skipped = Array.isArray(data.skipped) ? data.skipped : [];
+      const skip = skipped.find((item) => item?.ingramPartNumber === sku) || skipped[0] || null;
+      const removeFromList = (reason) => {
+        setProducts((current) => current.filter((item) => item.ingramPartNumber !== sku));
+        setSelectedProducts((current) => {
+          if (!current.has(sku)) return current;
+          const next = new Set(current);
+          next.delete(sku);
+          return next;
+        });
+        return reason;
+      };
+
+      if (saved.has(sku) || (saved.size > 0 && !skip)) {
+        removeFromList();
+        toast.success("Product synced from Ingram");
+        return;
+      }
+
+      if (skip?.reason === "already_saved") {
+        removeFromList();
+        toast.success("Product already in database");
+        return;
+      }
+      if (skip?.reason === "discontinued") {
+        removeFromList();
+        toast.error("Product is discontinued on Ingram");
+        return;
+      }
+      if (skip?.reason === "not_found") {
+        toast.error("Ingram did not return this product");
+        return;
+      }
+
+      // Backward compatibility: old backend returned empty saved without reasons.
       if (!saved.size) {
         toast.error("Ingram did not return this product");
         return;
       }
-      setProducts((current) => current.filter((item) => item.ingramPartNumber !== sku));
-      setSelectedProducts((current) => {
-        if (!current.has(sku)) return current;
-        const next = new Set(current);
-        next.delete(sku);
-        return next;
-      });
+
+      removeFromList();
       toast.success("Product synced from Ingram");
     } catch (error) {
       toast.error(error.message || "Could not sync product");
@@ -312,17 +373,45 @@ export default function AdminProductSyncPage() {
     if (!token || startedRef.current) return undefined;
     startedRef.current = true;
     loadCategories();
+    // If a catalog sync is already running, keep the buttons disabled.
+    (async () => {
+      try {
+        const data = await getSyncStatus(token);
+        const catalog = data?.sync?.catalog || {};
+        if (catalog.status === "started" || catalog.status === "processing") {
+          setSyncing(true);
+          setSyncingTarget("all");
+          setProgress({ percent: 0, label: "Sync already running..." });
+          // eslint-disable-next-line react-hooks/immutability
+          pollCatalogSync(String(catalog.jobId || ""));
+        }
+      } catch {
+        // ignore
+      }
+    })();
     return undefined;
   }, [loadCategories, token]);
 
   useEffect(() => {
-    if (!categories.length) return;
     if (!categoryParam) return;
     const category = categories.find((item) => categoryRouteKey(item) === categoryParam);
     if (category && categoryRouteKey(selectedCategoryRef.current) !== categoryParam) {
       void selectCategory(category, false);
     }
   }, [categories, categoryParam, selectCategory]);
+
+  useEffect(() => {
+    return () => {
+      if (syncPollRef.current) {
+        window.clearInterval(syncPollRef.current);
+        syncPollRef.current = null;
+      }
+      if (savedCheckRef.current) {
+        window.clearInterval(savedCheckRef.current);
+        savedCheckRef.current = null;
+      }
+    };
+  }, []);
 
   const filteredCategories = useMemo(() => {
     const query = categorySearch.trim().toLowerCase();
@@ -406,10 +495,34 @@ export default function AdminProductSyncPage() {
     setSyncing(true);
     try {
       let saved = new Set();
+      let resolvedSkus = new Set();
+      let alreadySavedCount = 0;
+      let notFoundCount = 0;
+      let discontinuedCount = 0;
       if (skus.length) {
         const data = await syncSelectedProducts(skus, token);
-        saved = new Set(data.saved || skus);
-        setProducts((current) => current.filter((product) => !saved.has(product.ingramPartNumber)));
+        console.log("[Product Sync] syncSelectedProducts (bulk) response:", data);
+        saved = new Set(data.saved || []);
+        const skipped = Array.isArray(data.skipped) ? data.skipped : [];
+        // Backward compatibility: agar backend ne reasons nahi bheje to purana behavior.
+        if (!data.saved && !skipped.length) {
+          saved = new Set(skus);
+        }
+        resolvedSkus = new Set([...saved]);
+        for (const item of skipped) {
+          const sku = item?.ingramPartNumber;
+          if (!sku) continue;
+          if (item.reason === "already_saved") {
+            resolvedSkus.add(sku);
+            alreadySavedCount += 1;
+          } else if (item.reason === "discontinued") {
+            resolvedSkus.add(sku);
+            discontinuedCount += 1;
+          } else if (item.reason === "not_found") {
+            notFoundCount += 1;
+          }
+        }
+        setProducts((current) => current.filter((product) => !resolvedSkus.has(product.ingramPartNumber)));
       }
 
       const pendingResults = await Promise.allSettled(
@@ -420,9 +533,17 @@ export default function AdminProductSyncPage() {
       setSelectedPendingChanges(new Set());
       setSelectedProducts(new Set());
       setProductPage(1);
+
       const failedChanges = pendingResults.filter((result) => result.status === "rejected").length;
+      const messages = [];
+      if (saved.size) messages.push(`${saved.size} synced`);
+      if (appliedIds.size) messages.push(`${appliedIds.size} pending change(s) applied`);
+      if (alreadySavedCount) messages.push(`${alreadySavedCount} already in database`);
+      if (discontinuedCount) messages.push(`${discontinuedCount} discontinued`);
       if (failedChanges) toast.error(`${failedChanges} pending change(s) could not be applied`);
-      else toast.success(`${saved.size + appliedIds.size} selected item(s) synced`);
+      if (notFoundCount) toast.error(`Ingram did not return ${notFoundCount} product(s)`);
+      if (messages.length) toast.success(messages.join(", "));
+      else if (!failedChanges && !notFoundCount) toast.error("No selected items were synced");
     } catch (error) {
       toast.error(error.message || "Could not sync selected products");
     } finally {
@@ -430,18 +551,178 @@ export default function AdminProductSyncPage() {
     }
   }
 
-  async function startFullSync(payload, message, addOnly = true) {
-    if (syncing) return;
+  async function startFullSync(payload, message, addOnly = true, target = "all") {
+    // Double-check syncing state since setSyncing is async
+    if (syncing) {
+      toast.error("Sync already in progress, please wait for it to complete");
+      return;
+    }
     setSyncing(true);
-    setProgress({ percent: 10, label: message });
+    setSyncingTarget(target);
+    setProgress({ percent: 0, label: message });
     try {
-      await startProductSync({ ...payload, addOnly }, token);
+      const started = await startProductSync({ ...payload, addOnly }, token);
+      const jobId = String(started?.jobId || "");
       toast.success(`${message} started`);
+      // Button tabhi enable hoga jab yahi job completed/failed ho. Purana
+      // "completed" record ya timeout kabhi bhi galat "done" nahi dikhaega.
+      await pollCatalogSync(jobId);
     } catch (error) {
       toast.error(error.message || "Could not start sync");
-    } finally {
       setSyncing(false);
+      setSyncingTarget(null);
+      setProgress({ percent: 0, label: "" });
     }
+  }
+
+  // Sync All = poori Ingram catalog (sari categories), sirf saved categories
+  // nahi. addOnly=false hai taaki maujuda products bhi update ho jayein.
+  const startFullCatalogSync = async () => {
+    if (syncing) {
+      toast.error("Sync already in progress, please wait for it to complete");
+      return;
+    }
+    await startFullSync(
+      { fullCatalog: true },
+      "All Ingram categories sync",
+      false,
+      "all"
+    );
+  };
+
+  // Sync Category = sirf selected category. Real Ingram id bhi bhejte hain taaki
+  // stale/alias label ke bawajud products usi category me save hon.
+  const startSelectedCategorySync = () => {
+    if (!selectedCategory) return;
+    return startFullSync(
+      {
+        category: selectedCategory.name || "",
+        categoryId: selectedCategory.ingramCategoryId || "",
+      },
+      `Syncing ${selectedCategory.name}`,
+      false,
+      "category"
+    );
+  };
+
+  // Sync ke dauran jo products DB me save ho jayen unhe list se hatao. Ye
+  // check status-poll se alag, har 1 second chalta hai taaki products ek-ek
+  // karke (dheere-dheere) list se ghayab hotay dikhein.
+  const removeSavedCatalogProducts = useCallback(async () => {
+    if (savedCheckBusyRef.current) return;
+    const currentSkus = [...new Set((productsRef.current || []).map((p) => p.ingramPartNumber).filter(Boolean))];
+    if (!currentSkus.length) return;
+    savedCheckBusyRef.current = true;
+    try {
+      const existingRes = await checkExistingCatalogProducts(currentSkus, token);
+      const existing = new Set(existingRes?.existing || []);
+      if (!existing.size) return;
+      setProducts((current) => current.filter((product) => !existing.has(product.ingramPartNumber)));
+      setSelectedProducts((current) => {
+        if (!current.size) return current;
+        const next = new Set([...current].filter((sku) => !existing.has(sku)));
+        return next.size === current.size ? current : next;
+      });
+    } catch {
+      // ignore - agla check dobara try karega
+    } finally {
+      savedCheckBusyRef.current = false;
+    }
+  }, [token]);
+
+  const startSavedProductChecks = useCallback(() => {
+    if (savedCheckRef.current) return;
+    savedCheckRef.current = window.setInterval(() => {
+      void removeSavedCatalogProducts();
+    }, 1000);
+  }, [removeSavedCatalogProducts]);
+
+  const stopSavedProductChecks = useCallback(() => {
+    if (savedCheckRef.current) {
+      window.clearInterval(savedCheckRef.current);
+      savedCheckRef.current = null;
+    }
+  }, []);
+
+  function pollCatalogSync(expectedJobId = "") {
+    return new Promise((resolve) => {
+      if (syncPollRef.current) window.clearInterval(syncPollRef.current);
+      let trackedJobId = String(expectedJobId || "");
+      let mismatchedTerminalPolls = 0;
+      const finish = (label, isFailed = false) => {
+        if (syncPollRef.current) window.clearInterval(syncPollRef.current);
+        syncPollRef.current = null;
+        stopSavedProductChecks();
+        setSyncing(false);
+        setSyncingTarget(null);
+        setProgress({ percent: isFailed ? 0 : 100, label });
+        window.setTimeout(() => setProgress({ percent: 0, label: "" }), 2500);
+        resolve();
+      };
+      const timer = window.setInterval(async () => {
+        try {
+          const data = await getSyncStatus(token);
+          const catalog = data?.sync?.catalog || {};
+          const status = catalog.status;
+          const running = status === "started" || status === "processing";
+          const remoteJobId = String(catalog.jobId || "");
+
+          // Purana terminal record tab tak ignore karo jab tak naya job status me
+          // na aaye. Agar koi doosra job chal raha hai to usi ko track karo —
+          // button disabled rehna chahiye jab tak koi bhi sync chal rahi hai.
+          if (running && remoteJobId && trackedJobId && remoteJobId !== trackedJobId) {
+            trackedJobId = remoteJobId;
+          }
+
+          if (running) {
+            mismatchedTerminalPolls = 0;
+            startSavedProductChecks();
+            void removeSavedCatalogProducts();
+            const total = Number(catalog.total || 0);
+            const processed = Number(catalog.totalProcessed || 0);
+            const inserted = Number(catalog.inserted || 0);
+            const updated = Number(catalog.updated || 0);
+            const percent = total > 0 ? Math.min(95, Math.round((processed / total) * 100)) : 0;
+            setProgress({
+              percent,
+              label: total > 0
+                ? `Saving products ${processed}/${total} (${inserted} new, ${updated} updated)…`
+                : `Saving products ${processed} (${inserted} new, ${updated} updated)…`,
+            });
+            return;
+          }
+
+          const isTerminal = status === "completed" || status === "failed";
+          const jobMatches = !trackedJobId || !remoteJobId || remoteJobId === trackedJobId;
+          if (!isTerminal || !jobMatches) {
+            // Kabhi-kabhi queue aur status write me thoda gap hota hai. Kuch
+            // polls ke baad bhi doosra terminal job dikhe to is request ko
+            // failed maan kar button wapas active kar dete hain (hang nahi).
+            if (isTerminal && !jobMatches) mismatchedTerminalPolls += 1;
+            if (mismatchedTerminalPolls > 5) {
+              finish("Sync failed", true);
+              return;
+            }
+            setProgress({ percent: 0, label: "Starting sync…" });
+            return;
+          }
+
+          if (status === "completed") {
+            // Final check to remove saved products from UI list after sync completes
+            await removeSavedCatalogProducts();
+            finish("Done!");
+          } else if (status === "failed") {
+            finish("Sync failed", true);
+          } else {
+            setProgress({ percent: 0, label: "Starting sync…" });
+          }
+        } catch {
+          // Network hiccup par button disabled rehte hue agla poll try karega.
+          setProgress((current) => (current.label ? current : { percent: 0, label: "Checking sync status…" }));
+        }
+      }, 2000);
+      syncPollRef.current = timer;
+    });
   }
 
   const totalPages = Math.max(1, Math.ceil(syncItems.length / UI_PAGE_SIZE) + (remoteHasMore ? 1 : 0));
@@ -454,32 +735,31 @@ export default function AdminProductSyncPage() {
   }, [reconciliationPages, scanProgress.complete]);
   const rowSyncing = processingChangeIds.size > 0 || processingProductSkus.size > 0;
 
-  if (loadingCategories && !categories.length) return <><div className="hidden md:block"><ProductSyncSkeleton /></div><div className="md:hidden"><MobileCategoryList categories={categories} filteredCategories={filteredCategories} loadingCategories={loadingCategories} categorySearch={categorySearch} setCategorySearch={setCategorySearch} selectedCategory={selectedCategory} onSelectCategory={selectCategory} onSyncAll={() => {}} syncing={syncing} /></div></>;
+  if (loadingCategories && !categories.length) return <><div className="hidden md:block"><ProductSyncSkeleton /></div><div className="md:hidden"><MobileCategoryList categories={categories} filteredCategories={filteredCategories} loadingCategories={loadingCategories} categorySearch={categorySearch} setCategorySearch={setCategorySearch} selectedCategory={selectedCategory} onSelectCategory={selectCategory} onSyncAll={() => {}} syncing={syncing}
+            syncingAll={syncingAll} /></div></>;
 
   return (
     <div className="space-y-5">
       <TransparentActionLoader
-        open={syncing || rowSyncing}
-        label={syncing
-          ? (progress.label ? `${progress.label}… Please wait.` : "Syncing products from Ingram… Please wait.")
-          : "Syncing product from Ingram… Please wait."}
+        open={rowSyncing}
+        label="Syncing product from Ingram… Please wait."
       />
        <div className="hidden lg:block"><Card className="p-0">
         <div className="border-b border-outline-variant px-5 py-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div><h1 className="font-heading text-lg font-semibold tracking-tight text-on-surface">Ingram Product Sync</h1><p className="mt-1 text-sm text-on-surface-variant">Select one saved Ingram category to view and sync its products.</p></div>
-            <div className="flex flex-wrap gap-2"><Button onClick={() => startFullSync({ categories: categories.map((category) => category.name), categoryIds: categories.map((category) => category.ingramCategoryId || category.name), savedCategoriesOnly: true }, "Saved category product sync")} disabled={syncing || loadingCategories || !categories.length} variant="outline" size="sm"><RefreshCw className="size-3.5" /> Sync All</Button></div>
+            <div className="flex flex-wrap gap-2"><Button onClick={startFullCatalogSync} disabled={syncing || loadingCategories || !categories.length} variant="outline" size="sm">{syncingAll ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />} {syncingAll ? "Syncing..." : "Sync All"}</Button></div>
           </div>
         </div>
 
           <div className="grid min-w-0 gap-4 p-3 sm:p-4 md:grid-cols-[250px_minmax(0,1fr)] md:items-start lg:grid-cols-[300px_minmax(0,1fr)]">
-           <Card className="flex min-w-0 flex-col p-0 md:sticky md:top-4 md:max-h-[calc(100vh-7rem)]">
+           <Card className="flex min-w-0 flex-col p-0">
             <div className="border-b border-outline-variant p-4"><h2 className="font-heading text-base font-semibold text-on-surface">Ingram Categories</h2><p className="mt-1 text-xs text-on-surface-variant">Saved Ingram categories from the database.</p><div className="relative mt-4"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" /><Input value={categorySearch} onChange={(event) => setCategorySearch(event.target.value)} placeholder="Search category" className="h-10 pl-10" /></div></div>
-             <div className="min-h-0 flex-1 overflow-y-auto p-2">{loadingCategories && !categories.length ? <LoadingState label="Loading saved categories..." /> : filteredCategories.length ? filteredCategories.map((category) => { const active = selectedCategory && categoryKey(selectedCategory) === categoryKey(category); return <button key={categoryKey(category)} type="button" onClick={() => selectCategory(category)} className={`w-full rounded-lg px-3 py-2.5 text-left transition ${active ? "bg-primary/10 text-primary" : "text-on-surface hover:bg-surface-container-low"}`}><div className="flex flex-wrap items-center gap-2"><p className="truncate text-label-md font-semibold">{category.name}</p>{category.source === "manual" ? <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700" title="This Ingram category also contains manually added products">Manual products</span> : null}</div></button>; }) : <div className="px-4 py-8 text-center text-body-sm text-on-surface-variant">No saved Ingram categories found.</div>}</div>
+             <div className="min-h-0 flex-1 p-2 pb-3">{loadingCategories && !categories.length ? <LoadingState label="Loading saved categories..." /> : filteredCategories.length ? filteredCategories.map((category) => { const active = selectedCategory && categoryKey(selectedCategory) === categoryKey(category); return <button key={categoryKey(category)} type="button" onClick={() => selectCategory(category)} className={`w-full rounded-lg px-3 py-2.5 text-left transition ${active ? "bg-primary/10 text-primary" : "text-on-surface hover:bg-surface-container-low"}`}><div className="flex min-w-0 flex-1 flex-wrap items-center gap-2"><p className="min-w-0 truncate text-label-md font-semibold" title={category.name}>{category.name}</p>{category.source === "manual" ? <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700" title="This Ingram category also contains manually added products">Manual products</span> : null}</div></button>; }) : <div className="px-4 py-8 text-center text-body-sm text-on-surface-variant">No saved Ingram categories found.</div>}</div>
           </Card>
 
            <Card className="flex min-w-0 flex-col p-0">
-              <div className="border-b border-outline-variant p-4"><div className="flex flex-col gap-3"><h2 className="min-w-0 truncate font-heading text-base font-semibold text-on-surface">{selectedCategory?.name || "Select a category"}</h2><div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 lg:grid-cols-[minmax(150px,1fr)_auto_auto]"><div className="relative col-span-2 min-w-0 lg:col-span-1"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" /><Input value={productSearch} onChange={(event) => { setProductSearch(event.target.value); setProductPage(1); }} placeholder="Search products or SKU" className="h-9 w-full pl-9 text-sm" /></div><Button variant="outline" onClick={() => startFullSync({ category: selectedCategory?.name || "" }, "Category sync", false)} disabled={!selectedCategory || syncing} size="sm" className="h-9 w-full min-w-0 overflow-hidden px-1.5 text-[10px] sm:px-2 sm:text-xs lg:w-auto lg:whitespace-nowrap lg:px-3 lg:text-sm"><RefreshCw className="size-3.5 shrink-0" /> <span className="min-w-0 truncate">Sync Category</span></Button><Button onClick={handleSyncSelected} disabled={(!selectedProducts.size && !selectedPendingChanges.size) || syncing} size="sm" className="h-9 w-full min-w-0 overflow-hidden px-1.5 text-[10px] sm:px-2 sm:text-xs lg:w-auto lg:whitespace-nowrap lg:px-3 lg:text-sm"><RefreshCw className="size-3.5 shrink-0" /> <span className="min-w-0 truncate">Sync Selected ({selectedProducts.size + selectedPendingChanges.size})</span></Button></div></div>{progress.label ? <div className="mt-3 overflow-hidden rounded-full bg-primary/15"><div className="h-2 rounded-full bg-primary" style={{ width: `${progress.percent}%` }} /></div> : null}</div>
+              <div className="border-b border-outline-variant p-4"><div className="flex flex-col gap-3"><h2 className="min-w-0 truncate font-heading text-base font-semibold text-on-surface">{selectedCategory?.name || "Select a category"}</h2><div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2 lg:grid-cols-[minmax(150px,1fr)_auto_auto]"><div className="relative col-span-2 min-w-0 lg:col-span-1"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" /><Input value={productSearch} onChange={(event) => { setProductSearch(event.target.value); setProductPage(1); }} placeholder="Search products or SKU" className="h-9 w-full pl-9 text-sm" /></div><Button variant="outline" onClick={startSelectedCategorySync} disabled={!selectedCategory || syncing} size="sm" className="h-9 w-full min-w-0 overflow-hidden px-1.5 text-[10px] sm:px-2 sm:text-xs lg:w-auto lg:whitespace-nowrap lg:px-3 lg:text-sm">{syncingCategory ? <Loader2 className="size-3.5 shrink-0 animate-spin" /> : <RefreshCw className="size-3.5 shrink-0" />} <span className="min-w-0 truncate">Sync Category</span></Button><Button onClick={handleSyncSelected} disabled={(!selectedProducts.size && !selectedPendingChanges.size) || syncing} size="sm" className="h-9 w-full min-w-0 overflow-hidden px-1.5 text-[10px] sm:px-2 sm:text-xs lg:w-auto lg:whitespace-nowrap lg:px-3 lg:text-sm"><RefreshCw className="size-3.5 shrink-0" /> <span className="min-w-0 truncate">Sync Selected ({selectedProducts.size + selectedPendingChanges.size})</span></Button></div></div>{progress.label ? <div className="mt-3 overflow-hidden rounded-full bg-primary/15"><div className="h-2 rounded-full bg-primary" style={{ width: `${progress.percent}%` }} /></div> : null}</div>
                  <div className="min-w-0 overflow-y-auto p-3 sm:p-4"><ProductResultsPanel selectedCategory={selectedCategory} loadingProducts={loadingProducts} products={products} pendingChanges={pendingChanges} filteredPendingChanges={filteredPendingChanges} syncPageItems={syncPageItems} productPage={productPage} totalPages={totalPages} remoteHasMore={remoteHasMore} scanProgress={scanProgress} reconciliationStatus={reconciliationStatus} selectedProducts={selectedProducts} selectedPendingChanges={selectedPendingChanges} processingChangeIds={processingChangeIds} processingProductSkus={processingProductSkus} allVisibleProductsSelected={allVisibleProductsSelected} onToggle={toggleProduct} onTogglePending={togglePendingChange} onToggleVisible={toggleVisibleProducts} onPageChange={changeProductPage} onChange={handlePendingChange} onSyncProduct={handleSyncProduct} /></div>
              </Card>
            </div>
@@ -493,7 +773,7 @@ export default function AdminProductSyncPage() {
            categorySearch={categorySearch}
            setCategorySearch={setCategorySearch}
            onSelectCategory={selectCategory}
-            onSyncAll={() => startFullSync({ categories: categories.map((category) => category.name), categoryIds: categories.map((category) => category.ingramCategoryId || category.name), savedCategoriesOnly: true }, "Saved category product sync")}
+            onSyncAll={startFullCatalogSync}
             loadingProducts={loadingProducts}
             products={products}
             productSearch={productSearch}
@@ -517,9 +797,11 @@ export default function AdminProductSyncPage() {
            onPendingPageChange={setPendingPage}
            onChange={handlePendingChange}
            onSyncProduct={handleSyncProduct}
-            onSyncCategory={() => startFullSync({ category: selectedCategory?.name || "" }, "Category sync", false)}
+            onSyncCategory={startSelectedCategorySync}
            onSyncSelected={handleSyncSelected}
            syncing={syncing}
+           syncingCategory={syncingCategory}
+            syncingAll={syncingAll}
          />
        </div>
        <div className="md:hidden">
@@ -544,7 +826,7 @@ export default function AdminProductSyncPage() {
              remoteHasMore={remoteHasMore}
              allVisibleProductsSelected={allVisibleProductsSelected}
               onBack={() => router.push(pathname, { scroll: false })}
-              onSyncCategory={() => startFullSync({ category: selectedCategory?.name || "" }, "Category sync", false)}
+              onSyncCategory={startSelectedCategorySync}
              onSyncSelected={handleSyncSelected}
              onToggle={toggleProduct}
              onTogglePending={togglePendingChange}
@@ -554,6 +836,8 @@ export default function AdminProductSyncPage() {
              onChange={handlePendingChange}
              onSyncProduct={handleSyncProduct}
              syncing={syncing}
+             syncingCategory={syncingCategory}
+            syncingAll={syncingAll}
            />
          ) : (
            <MobileCategoryList
@@ -564,8 +848,10 @@ export default function AdminProductSyncPage() {
              setCategorySearch={setCategorySearch}
              selectedCategory={selectedCategory}
              onSelectCategory={selectCategory}
-             onSyncAll={() => startFullSync({ categories: categories.map((category) => category.name), categoryIds: categories.map((category) => category.ingramCategoryId || category.name), savedCategoriesOnly: true }, "Saved category product sync")}
+             onSyncAll={startFullCatalogSync}
              syncing={syncing}
+             syncingCategory={syncingCategory}
+            syncingAll={syncingAll}
            />
          )}
         </div>
@@ -577,14 +863,14 @@ function categoryRouteKey(category) {
   return String(category?.ingramCategoryId || category?.id || category?.name || "").trim();
 }
 
-function MobileCategoryList({ categories, filteredCategories, loadingCategories, categorySearch, setCategorySearch, selectedCategory, onSelectCategory, onSyncAll, syncing }) {
+function MobileCategoryList({ categories, filteredCategories, loadingCategories, categorySearch, setCategorySearch, selectedCategory, onSelectCategory, onSyncAll, syncing, syncingAll }) {
   return <div className="min-h-screen bg-background px-4 py-3">
     <div className="mx-auto max-w-2xl overflow-hidden rounded-xl border border-outline-variant/80 bg-surface">
     <div className="space-y-1 px-4 pb-3 pt-4">
       <h1 className="truncate text-lg font-semibold text-on-surface">Ingram Product Sync</h1>
       <p className="truncate text-sm text-on-surface-variant">Choose a category.</p>
     </div>
-    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-2 px-4 pb-3"><div className="relative min-w-0"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" /><Input value={categorySearch} onChange={(event) => setCategorySearch(event.target.value)} placeholder="Search category" className="h-11 w-full pl-10 text-base" /></div><Button onClick={onSyncAll} disabled={syncing || loadingCategories || !categories.length} className="h-11 w-32 shrink-0 px-2">{syncing ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />} <span className="hidden min-[480px]:inline">{syncing ? "Syncing..." : "Sync All"}</span><span className="min-[480px]:hidden">Sync</span></Button></div>
+    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-2 px-4 pb-3"><div className="relative min-w-0"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" /><Input value={categorySearch} onChange={(event) => setCategorySearch(event.target.value)} placeholder="Search category" className="h-11 w-full pl-10 text-base" /></div><Button onClick={onSyncAll} disabled={syncing || loadingCategories || !categories.length} className="h-11 w-32 shrink-0 px-2">{syncingAll ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />} <span className="hidden min-[480px]:inline">{syncingAll ? "Syncing..." : "Sync All"}</span><span className="min-[480px]:hidden">Sync</span></Button></div>
     <div className="overflow-hidden border-t border-outline-variant/70">
       {loadingCategories && !categories.length ? <LoadingState label="Loading saved categories..." /> : filteredCategories.length ? filteredCategories.map((category, index) => {
         const active = selectedCategory && categoryKey(selectedCategory) === categoryKey(category);
@@ -595,7 +881,7 @@ function MobileCategoryList({ categories, filteredCategories, loadingCategories,
   </div>;
 }
 
-function MobileCategoryDetail({ category, loadingProducts, products, syncPageItems, filteredPendingChanges, productSearch, setProductSearch, productPage, totalPages, selectedProducts, selectedPendingChanges, processingChangeIds, processingProductSkus, scanProgress, reconciliationStatus, allVisibleProductsSelected, onBack, onSyncCategory, onSyncSelected, onToggle, onTogglePending, onToggleVisible, onProductPageChange, onChange, onSyncProduct, syncing }) {
+function MobileCategoryDetail({ category, loadingProducts, products, syncPageItems, filteredPendingChanges, productSearch, setProductSearch, productPage, totalPages, selectedProducts, selectedPendingChanges, processingChangeIds, processingProductSkus, scanProgress, reconciliationStatus, allVisibleProductsSelected, onBack, onSyncCategory, onSyncSelected, onToggle, onTogglePending, onToggleVisible, onProductPageChange, onChange, onSyncProduct, syncing, syncingCategory }) {
   const scanLabel = scanProgress.totalPages ? `${scanProgress.complete ? "Scanned" : "Scanning"} page ${Math.min(scanProgress.page || 1, scanProgress.totalPages)} of ${scanProgress.totalPages}` : "Loading first Ingram page...";
   const pendingLoading = !scanProgress.complete || reconciliationStatus === "running";
   return <div className="min-h-screen bg-background pb-28">
@@ -604,7 +890,7 @@ function MobileCategoryDetail({ category, loadingProducts, products, syncPageIte
        <h1 className="min-w-0 flex-1 break-words text-base font-semibold leading-5 text-on-surface">{category.name}</h1>
     </div>
     <main className="space-y-3 px-4 py-3">
-       <div className="grid min-w-0 grid-cols-1 gap-2 min-[380px]:grid-cols-[minmax(0,1fr)_auto]"><div className="relative min-w-0"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" /><Input value={productSearch} onChange={(event) => setProductSearch(event.target.value)} placeholder="Search products or SKU" className="h-11 w-full pl-10 text-base" /></div><Button variant="outline" onClick={onSyncCategory} disabled={syncing} className="h-11 w-full min-w-0 px-3 min-[380px]:w-auto">{syncing ? <Loader2 className="size-4 shrink-0 animate-spin" /> : <RefreshCw className="size-4 shrink-0" />} <span className="truncate">Sync Category</span></Button></div>
+       <div className="grid min-w-0 grid-cols-1 gap-2 min-[380px]:grid-cols-[minmax(0,1fr)_auto]"><div className="relative min-w-0"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" /><Input value={productSearch} onChange={(event) => setProductSearch(event.target.value)} placeholder="Search products or SKU" className="h-11 w-full pl-10 text-base" /></div><Button variant="outline" onClick={onSyncCategory} disabled={syncing} className="h-11 w-full min-w-0 px-3 min-[380px]:w-auto">{syncingCategory ? <Loader2 className="size-4 shrink-0 animate-spin" /> : <RefreshCw className="size-4 shrink-0" />} <span className="truncate">Sync Category</span></Button></div>
       {!scanProgress.complete ? <p className="text-xs text-on-surface-variant">{scanLabel}. New products and pending changes appear as each page is checked.</p> : null}
       {reconciliationStatus === "failed" ? <p className="rounded-lg border border-red-300/70 bg-red-50 p-3 text-xs text-red-800">Some pages failed reconciliation. Retry the category to check them again.</p> : null}
       <section className="space-y-3">
@@ -632,12 +918,12 @@ function MobileLoadingCards() {
   return <div className="space-y-2">{Array.from({ length: 3 }).map((_, index) => <div key={index} className="h-24 animate-pulse rounded-lg border border-outline-variant bg-surface" />)}</div>;
 }
 
-function TabletSyncLayout({ categories, filteredCategories, selectedCategory, loadingCategories, categorySearch, setCategorySearch, onSelectCategory, onSyncAll, loadingProducts, products, productSearch, setProductSearch, filteredPendingChanges, syncPageItems, productPage, totalPages, remoteHasMore, scanProgress, reconciliationStatus, selectedProducts, selectedPendingChanges, processingChangeIds, processingProductSkus, allVisibleProductsSelected, onToggle, onTogglePending, onToggleVisible, onPageChange, onChange, onSyncProduct, onSyncCategory, onSyncSelected, syncing }) {
+function TabletSyncLayout({ categories, filteredCategories, selectedCategory, loadingCategories, categorySearch, setCategorySearch, onSelectCategory, onSyncAll, loadingProducts, products, productSearch, setProductSearch, filteredPendingChanges, syncPageItems, productPage, totalPages, remoteHasMore, scanProgress, reconciliationStatus, selectedProducts, selectedPendingChanges, processingChangeIds, processingProductSkus, allVisibleProductsSelected, onToggle, onTogglePending, onToggleVisible, onPageChange, onChange, onSyncProduct, onSyncCategory, onSyncSelected, syncing, syncingCategory, syncingAll }) {
   return <div className="space-y-4">
-    <div className="flex items-center justify-between gap-4"><div className="min-w-0"><h1 className="truncate text-lg font-semibold text-on-surface">Ingram Product Sync</h1><p className="mt-1 truncate text-sm text-on-surface-variant">Select one saved Ingram category to view and sync its products.</p></div><Button onClick={onSyncAll} disabled={syncing || loadingCategories || !categories.length} variant="outline" size="sm" className="h-10 shrink-0">{syncing ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />} Sync All</Button></div>
+    <div className="flex items-center justify-between gap-4"><div className="min-w-0"><h1 className="truncate text-lg font-semibold text-on-surface">Ingram Product Sync</h1><p className="mt-1 truncate text-sm text-on-surface-variant">Select one saved Ingram category to view and sync its products.</p></div><Button onClick={onSyncAll} disabled={syncing || loadingCategories || !categories.length} variant="outline" size="sm" className="h-10 shrink-0">{syncingAll ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />} Sync All</Button></div>
     <div className="grid min-w-0 grid-cols-[220px_minmax(0,1fr)] gap-4">
-      <Card className="flex min-w-0 flex-col p-0 md:sticky md:top-4 md:self-start"><div className="border-b border-outline-variant p-3"><h2 className="text-sm font-semibold text-on-surface">Ingram Categories</h2><div className="relative mt-3"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" /><Input value={categorySearch} onChange={(event) => setCategorySearch(event.target.value)} placeholder="Search category" className="h-10 pl-9 text-sm" /></div></div><div className="max-h-[calc(100vh-14rem)] min-h-0 overflow-y-auto p-2">{loadingCategories && !categories.length ? <LoadingState label="Loading saved categories..." /> : filteredCategories.length ? filteredCategories.map((category, index) => <button key={categoryRouteKey(category) || index} type="button" onClick={() => onSelectCategory(category)} className={`flex min-h-10 w-full min-w-0 items-center rounded-md px-2 py-2 text-left text-sm transition ${selectedCategory && categoryKey(selectedCategory) === categoryKey(category) ? "bg-primary/10 font-medium text-primary" : "text-on-surface hover:bg-surface-container-low"}`}><span className="min-w-0 truncate">{category.name}</span></button>) : <div className="px-2 py-8 text-center text-sm text-on-surface-variant">No categories found</div>}</div></Card>
-      <Card className="min-w-0 p-3"><div className="flex min-w-0 flex-col gap-3"><h2 className="truncate text-base font-semibold text-on-surface">{selectedCategory?.name || "Select a category"}</h2><div className="grid grid-cols-2 gap-2"><Input value={productSearch} onChange={(event) => { setProductSearch(event.target.value); setProductPage(1); setPendingPage(1); }} placeholder="Search products or SKU" className="col-span-2 h-10 text-base" /><Button variant="outline" onClick={onSyncCategory} disabled={!selectedCategory || syncing} className="h-10 w-full">{syncing ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />} Sync Category</Button><Button onClick={onSyncSelected} disabled={(!selectedProducts.size && !selectedPendingChanges.size) || syncing} className="h-10 w-full"><RefreshCw className="size-4" /> Sync Selected ({selectedProducts.size + selectedPendingChanges.size})</Button></div>{!scanProgress.complete ? <p className="text-xs text-on-surface-variant">{scanProgress.totalPages ? `Scanning page ${scanProgress.page} of ${scanProgress.totalPages}.` : "Loading products..."}</p> : null}<div className="space-y-2"><div className="flex flex-wrap items-center justify-between gap-2 text-xs text-on-surface-variant"><span>{filteredPendingChanges.length} pending · {products.length} new products loaded</span><button type="button" onClick={onToggleVisible} className="font-semibold text-primary">{allVisibleProductsSelected ? "Clear visible selection" : "Select visible products"}</button></div>{loadingProducts && !products.length && !filteredPendingChanges.length ? <MobileLoadingCards /> : syncPageItems.length ? <div className="grid gap-2">{syncPageItems.map((item) => <SyncListItem key={item.type === "pending" ? item.value._id || item.value.ingramPartNumber : item.value.ingramPartNumber} item={item} categoryName={selectedCategory?.name || ""} selectedProducts={selectedProducts} selectedPendingChanges={selectedPendingChanges} processingChangeIds={processingChangeIds} processingProductSkus={processingProductSkus} onToggle={onToggle} onTogglePending={onTogglePending} onChange={onChange} onSyncProduct={onSyncProduct} />)}</div> : reconciliationStatus === "complete" ? <EmptyPanel label="No new products or pending changes found in this category." /> : null}{totalPages > 1 ? <Pagination page={productPage} totalPages={totalPages} onPageChange={onPageChange} /> : null}{remoteHasMore && products.length ? <p className="text-center text-xs text-on-surface-variant">Continuing to scan Ingram pages...</p> : null}</div></div></Card>
+      <Card className="flex min-w-0 flex-col p-0 md:self-start"><div className="border-b border-outline-variant p-3"><h2 className="text-sm font-semibold text-on-surface">Ingram Categories</h2><div className="relative mt-3"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-on-surface-variant" /><Input value={categorySearch} onChange={(event) => setCategorySearch(event.target.value)} placeholder="Search category" className="h-10 pl-9 text-sm" /></div></div><div className="min-h-0 p-2 pb-3">{loadingCategories && !categories.length ? <LoadingState label="Loading saved categories..." /> : filteredCategories.length ? filteredCategories.map((category, index) => <button key={categoryRouteKey(category) || index} type="button" onClick={() => onSelectCategory(category)} className={`flex min-h-10 w-full min-w-0 items-center rounded-md px-2 py-2 text-left text-sm transition ${selectedCategory && categoryKey(selectedCategory) === categoryKey(category) ? "bg-primary/10 font-medium text-primary" : "text-on-surface hover:bg-surface-container-low"}`}><span className="min-w-0 truncate">{category.name}</span></button>) : <div className="px-2 py-8 text-center text-sm text-on-surface-variant">No categories found</div>}</div></Card>
+      <Card className="min-w-0 p-3"><div className="flex min-w-0 flex-col gap-3"><h2 className="truncate text-base font-semibold text-on-surface">{selectedCategory?.name || "Select a category"}</h2><div className="grid grid-cols-2 gap-2"><Input value={productSearch} onChange={(event) => { setProductSearch(event.target.value); setProductPage(1); setPendingPage(1); }} placeholder="Search products or SKU" className="col-span-2 h-10 text-base" /><Button variant="outline" onClick={onSyncCategory} disabled={!selectedCategory || syncing} className="h-10 w-full">{syncingCategory ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />} Sync Category</Button><Button onClick={onSyncSelected} disabled={(!selectedProducts.size && !selectedPendingChanges.size) || syncing} className="h-10 w-full"><RefreshCw className="size-4" /> Sync Selected ({selectedProducts.size + selectedPendingChanges.size})</Button></div>{!scanProgress.complete ? <p className="text-xs text-on-surface-variant">{scanProgress.totalPages ? `Scanning page ${scanProgress.page} of ${scanProgress.totalPages}.` : "Loading products..."}</p> : null}<div className="space-y-2"><div className="flex flex-wrap items-center justify-between gap-2 text-xs text-on-surface-variant"><span>{filteredPendingChanges.length} pending · {products.length} new products loaded</span><button type="button" onClick={onToggleVisible} className="font-semibold text-primary">{allVisibleProductsSelected ? "Clear visible selection" : "Select visible products"}</button></div>{loadingProducts && !products.length && !filteredPendingChanges.length ? <MobileLoadingCards /> : syncPageItems.length ? <div className="grid gap-2">{syncPageItems.map((item) => <SyncListItem key={item.type === "pending" ? item.value._id || item.value.ingramPartNumber : item.value.ingramPartNumber} item={item} categoryName={selectedCategory?.name || ""} selectedProducts={selectedProducts} selectedPendingChanges={selectedPendingChanges} processingChangeIds={processingChangeIds} processingProductSkus={processingProductSkus} onToggle={onToggle} onTogglePending={onTogglePending} onChange={onChange} onSyncProduct={onSyncProduct} />)}</div> : reconciliationStatus === "complete" ? <EmptyPanel label="No new products or pending changes found in this category." /> : null}{totalPages > 1 ? <Pagination page={productPage} totalPages={totalPages} onPageChange={onPageChange} /> : null}{remoteHasMore && products.length ? <p className="text-center text-xs text-on-surface-variant">Continuing to scan Ingram pages...</p> : null}</div></div></Card>
     </div>
   </div>;
 }
@@ -691,7 +977,7 @@ const ProductRow = memo(function ProductRow({ product, checked, categoryName, pr
     <input type="checkbox" aria-label={`Select ${product.ingramPartNumber}`} checked={checked} onChange={() => onToggle(product.ingramPartNumber)} className="mt-1 size-4 shrink-0 accent-primary" />
     <Image src={safeImageSrc(product.imageUrl)} alt={name} width={48} height={48} className={SYNC_ROW_IMAGE_CLASS} />
     <div className="min-w-0">
-      <p className="break-words text-label-md font-semibold leading-4 text-on-surface" title={name}>{name}</p>
+       <p className="line-clamp-2 max-h-8 overflow-hidden break-words text-label-md font-semibold leading-4 text-on-surface" title={name}>{name}</p>
       <p className="break-all text-meta text-on-surface-variant">SKU {product.ingramPartNumber}{product.vendorName || categoryName ? ` · ${product.vendorName || categoryName}` : ""}</p>
       <p className="mt-1 whitespace-normal break-words text-[11px] font-semibold leading-4 tabular-nums text-on-surface sm:text-xs">Price {money(product.price || 0)}</p>
       <p className="whitespace-normal break-words text-[11px] leading-4 text-on-surface-variant sm:text-meta">Stock {product.stock ?? 0}</p>
@@ -733,6 +1019,11 @@ function PendingChangeRow({ change, checked, processing, onToggle, onChange }) {
   const productName = change.productSnapshot?.name || change.productSnapshot?.description || "Ingram product";
   const priceChanged = Boolean(change.priceChanged || (change.newPrice != null && Number(change.newPrice) !== Number(change.oldPrice ?? 0)));
   const stockChanged = Boolean(change.stockChanged || (change.newStock != null && Number(change.newStock) !== Number(change.oldStock ?? 0)));
+  const detailsChanged = Boolean(change.detailsChanged);
+  const oldRefurb = change.oldIsRefurbished;
+  const newRefurb = change.newIsRefurbished;
+  const refurbKnown = typeof oldRefurb === "boolean" && typeof newRefurb === "boolean";
+  const refurbChanged = refurbKnown && oldRefurb !== newRefurb;
   const priceText = priceChanged ? `${money(change.oldPrice)} → ${money(change.newPrice)}` : null;
   const stockText = stockChanged ? `${change.oldStock ?? 0} → ${change.newStock ?? 0}` : null;
   const nextPrice = priceChanged ? change.newPrice : change.oldPrice;
@@ -744,12 +1035,13 @@ function PendingChangeRow({ change, checked, processing, onToggle, onChange }) {
       <input type="checkbox" aria-label={`Select pending change ${change.ingramPartNumber}`} checked={checked} disabled={processing} onChange={onToggle} className="mt-1 size-4 shrink-0 accent-primary" />
       <Image src={safeImageSrc(change.productSnapshot?.imageUrl)} alt={productName} width={48} height={48} className={SYNC_ROW_IMAGE_CLASS} />
       <div className="min-w-0">
-        <p className="break-words text-label-md font-semibold leading-4 text-on-surface" title={productName}>{productName}</p>
+         <p className="line-clamp-2 max-h-8 overflow-hidden break-words text-label-md font-semibold leading-4 text-on-surface" title={productName}>{productName}</p>
         <p className="break-all text-meta text-on-surface-variant" title={`${change.ingramPartNumber}${change.productSnapshot?.vendorName ? ` · ${change.productSnapshot.vendorName}` : ""}`}>
           SKU {change.ingramPartNumber}{change.productSnapshot?.vendorName ? ` · ${change.productSnapshot.vendorName}` : ""}
         </p>
         <p className="mt-1 whitespace-normal break-words text-[11px] font-semibold leading-4 tabular-nums text-on-surface sm:text-xs">Price {priceLine}</p>
         <p className="whitespace-normal break-words text-[11px] leading-4 text-on-surface-variant sm:text-meta">Stock {stockLine}</p>
+        {detailsChanged ? <p className="whitespace-normal break-words text-[11px] leading-4 text-amber-700 sm:text-meta">Details changed{refurbChanged ? ` (Refurbished: ${change.oldIsRefurbished ? "Yes" : "No"} → ${change.newIsRefurbished ? "Yes" : "No"})` : ""}</p> : null}
       </div>
       <div className={SYNC_ROW_ACTION_CLASS}>
         <span className={`${SYNC_BADGE_CLASS} bg-amber-100 text-amber-700`}>PENDING</span>

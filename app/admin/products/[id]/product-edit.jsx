@@ -7,6 +7,7 @@ import { AdminProductEditSkeleton } from "@/components/skeletons";
 import { getAdminProduct } from "@/lib/api";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
 import { ProductForm } from "../product-form";
+import { IngramProductDetails } from "@/components/ingram-product-details";
 
 export function AdminProductEdit({ id }) {
   const token = useAdminAuthStore((state) => state.token);
@@ -51,6 +52,7 @@ export function AdminProductEdit({ id }) {
           Ingram-synced products are read-only. You can activate or deactivate them from the product list.
         </p>
       ) : null}
+      <IngramProductDetails product={product} onProductChange={setProduct} />
       <ProductForm product={product} mode="edit" readOnly={isIngram} />
     </Card>
   );

@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { clearAdminPushToken } from "@/lib/firebase";
 import { useAdminAuthStore } from "@/store/admin-auth-store";
 import { AdminNotificationListener } from "@/components/admin-notification-listener";
+import { getAdminNotifications } from "@/lib/api";
 
 const items = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -43,12 +44,30 @@ export function AdminShell({ children }) {
   const admin = useAdminAuthStore((state) => state.admin);
   const ready = useAdminAuthStore((state) => state.hasHydrated);
   const logout = useAdminAuthStore((state) => state.logout);
+  const token = useAdminAuthStore((state) => state.token);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     if (ready) return;
     const timer = window.setTimeout(() => setHydrationTimedOut(true), 2500);
     return () => window.clearTimeout(timer);
   }, [ready]);
+
+  useEffect(() => {
+    if (!token || !admin) return undefined;
+    let active = true;
+    const fetchUnread = async () => {
+      try {
+        const data = await getAdminNotifications(token, { limit: 1 });
+        if (active) setUnreadCount(data?.unread || 0);
+      } catch {
+        // ignore
+      }
+    };
+    fetchUnread();
+    const timer = window.setInterval(fetchUnread, 30000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [token, admin]);
 
   useEffect(() => {
     const publicAdminPaths = ["/admin/login", "/admin/forgot-password", "/admin/reset-password"];
@@ -132,7 +151,7 @@ export function AdminShell({ children }) {
         <Link href="/admin" className="mr-1 flex min-w-0 flex-1 items-center justify-start border-r border-outline-variant/70 pr-3 text-left"><BrandLogo className="w-[clamp(75px,22vw,90px)] max-w-full object-contain" /></Link>
          <Link href="/admin/notifications" className="icon-btn relative shrink-0" aria-label="Notifications">
            <Bell className="size-4" />
-           <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-primary" />
+           {unreadCount > 0 ? <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-primary" /> : null}
          </Link>
         <div className="relative shrink-0" ref={mobileProfileRef}>
           <button type="button" onClick={() => setProfileOpen((open) => !open)} className="grid size-10 place-items-center rounded-md border border-outline-variant bg-surface" aria-expanded={profileOpen} aria-haspopup="menu" aria-label="Open account menu">
@@ -188,7 +207,7 @@ export function AdminShell({ children }) {
               </button>
                <Link href="/admin/notifications" className="icon-btn relative" aria-label="Notifications">
                  <Bell className="size-4" />
-                 <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-primary" />
+                 {unreadCount > 0 ? <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-primary" /> : null}
                </Link>
               <div className="relative" ref={profileRef}>
                 <button type="button" onClick={() => setProfileOpen((open) => !open)} className="flex h-10 items-center gap-2 rounded-md border border-outline-variant bg-surface px-2 text-left transition hover:bg-surface-container-low" aria-expanded={profileOpen} aria-haspopup="menu">

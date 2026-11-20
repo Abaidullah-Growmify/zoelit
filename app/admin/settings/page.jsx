@@ -50,10 +50,22 @@ const REQUIRED_FIELDS_BY_SECTION = {
   email: ["email.smtpHost", "email.smtpPort", "email.smtpSecure", "email.smtpUser", "email.smtpPassword", "email.fromAddress", "email.senderName", "email.supportEmail", "email.templatesEnabled", "email.adminEmails", "email.customerOrderEmails"],
   firebase: ["firebase.apiKey", "firebase.authDomain", "firebase.databaseURL", "firebase.projectId", "firebase.storageBucket", "firebase.messagingSenderId", "firebase.appId", "firebase.vapidKey", "firebase.clientEmail", "firebase.privateKey"],
   cloudinary: ["cloudinary.cloudName", "cloudinary.apiKey", "cloudinary.apiSecret", "cloudinary.productsFolder"],
-  notifications: ["notifications.newOrder", "notifications.orderStatus", "notifications.paymentFailed", "notifications.orderCancelled", "notifications.ingramFailed", "notifications.refundProcessed", "notifications.contactMessage"],
+  notifications: ["notifications.newOrder", "notifications.orderStatus", "notifications.paymentFailed", "notifications.orderCancelled", "notifications.ingramFailed", "notifications.contactMessage"],
 };
 
 const REQUIRED_FIELD_KEYS = new Set(Object.values(REQUIRED_FIELDS_BY_SECTION).flat());
+
+// Ingram switches are independent from the credentials/configuration. They
+// must be saveable on their own, including when every switch is turned off.
+const INGRAM_TOGGLE_KEYS = new Set([
+  "ingram.autoCategoryDiscovery",
+  "ingram.autoCatalogSyncEnabled",
+  "ingram.syncImagesEnabled",
+  "ingram.autoSyncEnabled",
+]);
+const INGRAM_CONFIG_KEYS = REQUIRED_FIELDS_BY_SECTION.catalog.filter(
+  (key) => !INGRAM_TOGGLE_KEYS.has(key)
+);
 
 const SECRET_KEYS = new Set([
   "ingram.clientId",
@@ -211,11 +223,22 @@ const SECTIONS = [
       { key: "notifications.paymentFailed", label: "Payment failures", hint: "Receive an alert when a payment cannot be completed.", type: "toggle" },
       { key: "notifications.orderCancelled", label: "Cancelled orders", hint: "Receive an alert when an order is cancelled.", type: "toggle" },
       { key: "notifications.ingramFailed", label: "Ingram sync failures", hint: "Receive an alert when an order cannot be submitted or synced with Ingram.", type: "toggle" },
-      { key: "notifications.refundProcessed", label: "Refunds processed", hint: "Receive an alert when a refund is completed.", type: "toggle" },
       { key: "notifications.contactMessage", label: "Contact messages", hint: "Receive an alert when a visitor submits the contact form.", type: "toggle" },
     ],
   },
 ];
+
+const TOGGLE_FIELD_KEYS = new Set(
+  SECTIONS.flatMap((section) => section.fields.filter((field) => field.type === "toggle").map((field) => field.key))
+);
+
+// Switch-only changes never depend on the data inputs in the same section.
+const REQUIRED_CONFIG_FIELDS_BY_SECTION = Object.fromEntries(
+  Object.entries(REQUIRED_FIELDS_BY_SECTION).map(([sectionId, keys]) => [
+    sectionId,
+    keys.filter((key) => !TOGGLE_FIELD_KEYS.has(key)),
+  ])
+);
 
 function mergeSettings(raw) {
   const settings = {};
@@ -343,11 +366,40 @@ export default function AdminSettingsPage() {
     }
   }
 
+  function getDirtyFields(section) {
+    return section.fields.filter((field) => (
+      field.type !== "readonly" &&
+      (values[field.key] ?? "") !== (loaded[field.key] ?? "")
+    ));
+  }
+
   function buildPayload(section) {
     const payload = {};
+    const dirtyFields = getDirtyFields(section);
+    const toggleOnly = dirtyFields.length > 0 && dirtyFields.every((field) => field.type === "toggle");
+
     for (const field of section.fields) {
       if (field.type === "readonly") continue;
       const raw = values[field.key];
+
+      // Switch-only saves send only the changed switches. Existing
+      // credentials/inputs and untouched switches stay exactly as they were.
+      if (toggleOnly) {
+        if (field.type !== "toggle" || !dirtyFields.some((dirtyField) => dirtyField.key === field.key)) {
+          continue;
+        }
+      }
+
+      // Do not send empty Ingram credential/config fields when only a toggle
+      // is being changed. This preserves existing saved credentials and lets
+      // the backend distinguish a toggle-only update from a partial config.
+      if (
+        section.id === "catalog" &&
+        INGRAM_CONFIG_KEYS.includes(field.key) &&
+        (raw === undefined || raw === null || String(raw).trim() === "")
+      ) {
+        continue;
+      }
       if (SECRET_KEYS.has(field.key)) {
         if (raw !== undefined && raw !== null && raw !== "") {
           payload[field.key] = raw;
@@ -365,6 +417,18 @@ export default function AdminSettingsPage() {
     if (!token) throw new Error("Admin session expired");
     const data = await updateAdminSettings(payload, token);
     const merged = mergeSettings(data.settings || {});
+    // The API hides stored values, including switches. Keep the saved switch
+    // state visible instead of letting the sentinel collapse it back to off.
+    for (const section of SECTIONS) {
+      for (const field of section.fields) {
+        if (field.type !== "toggle") continue;
+        if (Object.prototype.hasOwnProperty.call(payload, field.key)) {
+          merged.settings[field.key] = Boolean(payload[field.key]);
+        } else if (merged.settings[field.key] === "") {
+          merged.settings[field.key] = Boolean(values[field.key]);
+        }
+      }
+    }
     setValues(merged.settings);
     setLoaded(merged.settings);
     setConfigured(merged.configured);
@@ -380,7 +444,13 @@ export default function AdminSettingsPage() {
   }
 
   function validateSection(section) {
-    const required = REQUIRED_FIELDS_BY_SECTION[section.id] || [];
+    const dirtyFields = getDirtyFields(section);
+    if (!dirtyFields.length) return [];
+    // Toggles are independent. A toggle-only save must not require unrelated
+    // data fields in the same section to be filled first.
+    if (dirtyFields.every((field) => field.type === "toggle")) return [];
+
+    const required = REQUIRED_CONFIG_FIELDS_BY_SECTION[section.id] || [];
     const missing = [];
     for (const key of required) {
       const value = values[key];
@@ -416,16 +486,17 @@ export default function AdminSettingsPage() {
 
   async function saveAll() {
     const allMissing = [];
+    const payload = {};
     for (const section of SECTIONS) {
+      if (!dirtySections[section.id]) continue;
       const missing = validateSection(section);
       for (const key of missing) allMissing.push(key);
+      Object.assign(payload, buildPayload(section));
     }
     if (allMissing.length) {
       toast.error(`Required fields missing: ${allMissing.join(", ")}`);
       return;
     }
-    const payload = {};
-    for (const section of SECTIONS) Object.assign(payload, buildPayload(section));
     setSaving("all");
     try {
       await persist(payload);

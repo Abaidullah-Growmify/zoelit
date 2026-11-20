@@ -232,21 +232,23 @@ export default function AdminNotificationsPage() {
 
 function NotificationRow({ notification, index, onDelete, onView }) {
   const date = formatNotificationDate(notification.createdAt);
+  const resolved = notification.resolutionStatus === "resolved";
   return (
     <tr
       tabIndex={0}
       onClick={onView}
       onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onView(); } }}
-      className={`group cursor-pointer transition hover:bg-surface-container-low focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${notification.isRead ? "" : "bg-primary/[0.035]"}`}
+      className={`group cursor-pointer transition hover:bg-surface-container-low focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${resolved ? "opacity-70" : notification.isRead ? "" : "bg-primary/[0.035]"}`}
     >
       <td className="px-4 py-3 align-top text-xs font-semibold text-on-surface-variant sm:px-6 sm:py-4 sm:text-sm">{index}</td>
       <td className="px-4 py-3 align-top sm:px-3 sm:py-4">
         <div className="flex items-start gap-2">
-          <strong className="break-words text-sm font-semibold text-on-surface">{notification.title}</strong>
+            <strong className="break-words text-sm font-semibold text-on-surface">{notification.title}</strong>
+            {resolved ? <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">Resolved</span> : null}
           {notification.isRead ? null : <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />}
         </div>
       </td>
-      <td className="px-4 py-3 align-top text-[13px] leading-5 text-on-surface-variant sm:px-3 sm:py-4 sm:text-sm sm:leading-6">{notification.body}</td>
+      <td className="px-4 py-3 align-top text-[13px] leading-5 text-on-surface-variant sm:px-3 sm:py-4 sm:text-sm sm:leading-6">{notification.body}{resolved && notification.resolvedAt ? <span className="mt-1 block text-xs text-emerald-700">Resolved {formatNotificationDate(notification.resolvedAt)}</span> : null}</td>
       <td className="whitespace-nowrap px-4 py-3 align-top text-xs text-on-surface-variant sm:px-3 sm:py-4">{date}</td>
       <td className="px-4 py-3 align-top sm:px-4 sm:py-4" onClick={(event) => event.stopPropagation()}>
         <div className="flex justify-center">
